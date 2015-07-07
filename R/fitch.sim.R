@@ -172,7 +172,7 @@ x <- rev(c(1:nrow(tree$edge)))
 #############################
 ## For Loop to get new nts ##
 #############################
-for(i in 1:length(x)){
+for(i in x){
   ## for all genomes other than root, we mutate the 
   ## genome of the node preceding it, according to snps.loci.
   ## Draw new nts for each locus selected for mutation: 
@@ -180,12 +180,12 @@ for(i in 1:length(x)){
     if(biallelic==FALSE){
       new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e) 
         sample(c("a", "c", "g", "t")[-which(c("a", "c", "g", "t") 
-                                            %in% genomes[[tree$edge[x[i],1]]]
+                                            %in% genomes[[tree$edge[i,1]]]
                                             [snps.loci.unique[[i]][e]])], 1))
     }else{
       new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e) 
         selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t") 
-                                                       %in% genomes[[tree$edge[x[i],1]]]
+                                                       %in% genomes[[tree$edge[i,1]]]
                                                        [snps.loci.unique[[i]][e]])]))        
     }
     ## if any loci are selected for multiple mutations 
@@ -232,16 +232,17 @@ for(i in 1:length(x)){
     } # end of if statement for repeaters
     
     ## update ancestral genotype with new.nts:
-    temp <- genomes[[tree$edge[x[i],1]]]
+    temp <- genomes[[tree$edge[i,1]]]
     temp[snps.loci.unique[[i]]] <- new.nts[[i]]    
-    genomes[[tree$edge[x[i],2]]] <- temp 
+    genomes[[tree$edge[i,2]]] <- temp 
     
   }else{
     ## if no mts occur on branch, set genotype of 
     ## downstream individual to be equal to ancestor's
-    genomes[[tree$edge[x[i],2]]] <- genomes[[tree$edge[x[i],1]]]    
+    genomes[[tree$edge[i,2]]] <- genomes[[tree$edge[i,1]]]    
   }  
 } # end of for loop selecting new nts at mutator loci
+
 
 # 
 # 
