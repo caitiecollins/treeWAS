@@ -968,8 +968,8 @@ coalescent.sim <- function(n.ind=100, gen.size=10000,
     names(phenotype) <- c("plot.colors", "variables")
     
     ## add phen info to results list
-    #     out <- list(genomes, tree, phenotype)
-    #     names(out) <- c("genomes", "tree", "phenotype")
+    #     out <- list(snps, snps.gen, tree, phenotype)
+    #     names(out) <- c("snps", "snps.gen", "tree", "phenotype")
     out <- list(snps, tree, phenotype)
     names(out) <- c("snps", "tree", "phenotype")
   }

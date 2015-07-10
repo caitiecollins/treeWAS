@@ -69,12 +69,12 @@ simTest <- function(
   ## data and output from each of n.reps runs: ##
   ###############################################
   SNPS <- PHEN <- TREE <- OUT <- RES <-
-                FISHER.RESULTS <- PLINK.ASSOC.RESULTS <- 
+                FISHER.RESULTS <- PLINK.RESULTS <- 
                       ARGS <- PERFORMANCE <- list()
   ## and make lists for saving filenames
   filename.snps <- filename.phen <- filename.tree <- 
     filename.out <- filename.res <- filename.fisher.results <- 
-    filename.plink.assoc.results <- 
+    filename.plink.results <- 
     filename.args <- filename.performance <- 
     filename.plot <- filename.tree.plot <- list() 
   
@@ -303,6 +303,9 @@ simTest <- function(
     snps <- foo[[1]]
     tree <- foo[[2]]
     
+    ## snps names:
+    snps.names <- colnames(snps)
+    
     ##########################################
     ## isolate set-specific elements of foo ##
     ##########################################
@@ -335,6 +338,8 @@ simTest <- function(
     #################
     ## RUN treeWAS ##
     #################
+    set.seed(seed)
+    
     out <- treeWAS(x = snps, 
                    y = phen, 
                    tree = tree, 
@@ -437,18 +442,20 @@ simTest <- function(
     ## two.sided bc we want to know if 
     ## inds w the phen have EITHER more 1s or 0s
     
+    p.thresh <- p.value
+    
     ## WITHOUT CORRECTION, identify sig.snps    
-    fisher.snps.uncorr <- colnames(snps)[which(pval.fisher < 0.05)]
+    fisher.snps.uncorr <- colnames(snps)[which(pval.fisher < p.thresh)]
     n.fisher.snps.uncorr <- length(fisher.snps.uncorr)
     
     ## w BONFERRONI CORRECTION, identify sig.snps
     pval.bonf <- p.adjust(pval.fisher, method="bonferroni", n=length(pval.fisher))
-    fisher.snps.bonf <- colnames(snps)[which(pval.bonf < 0.05)]
+    fisher.snps.bonf <- colnames(snps)[which(pval.bonf < p.thresh)]
     n.fisher.snps.bonf <- length(fisher.snps.bonf)
     
     ## w FDR CORRECTION, identify sig.snps
     pval.fdr <- p.adjust(pval.fisher, method="fdr", n=length(pval.fisher))
-    fisher.snps.fdr <- colnames(snps)[which(pval.fdr < 0.05)]
+    fisher.snps.fdr <- colnames(snps)[which(pval.fdr < p.thresh)]
     n.fisher.snps.fdr <- length(fisher.snps.fdr)
     
     ## CONVERT 0-LENGTH RESULTS TO NULL
@@ -677,7 +684,7 @@ simTest <- function(
     ## to view the file you created, just read it in with R:
     filename <- paste("C:/PLINK/", uniqueID, ".assoc", sep="")
     plink.res <- read.table(filename, header=TRUE)
-    head(plink.res)
+    #head(plink.res)
     
     
     ## get p.vals
@@ -686,10 +693,8 @@ simTest <- function(
     ## get sig ##
     
     ## p.thresh:
-    p.thresh <- 0.05 # 0.05 # 0.01 # 0.001 # ??
+    p.thresh <- p.value # 0.05 # 0.01 # 0.001 # ??
     
-    ## snps names:
-    snps.names <- colnames(snps)
     
     ## Uncorrected ##
     plink.assoc.snps.uncorr <- snps.names[which(pval.plink.assoc < p.thresh)]
@@ -713,6 +718,67 @@ simTest <- function(
     plink.assoc.results <- list(pval.plink.assoc, plink.assoc.snps.uncorr, plink.assoc.snps.bonf, plink.assoc.snps.fdr)
     names(plink.assoc.results) <- c("pval.plink.assoc", "plink.assoc.snps.uncorr", "plink.assoc.snps.bonf", "plink.assoc.snps.fdr")
     
+    ############################################
+    
+    ########################################################
+    ## association w control for genomic inflation factor ##
+    ########################################################
+    ##--> 1df chi-square test
+    
+    ## perform a basic association analysis on the disease trait for all single SNPs
+    filename <- paste("C:\\PLINK\\", uniqueID, sep="")
+    command <- paste("plink --bfile ",  filename, " --assoc --adjust --gc --counts --allow-no-sex --out ", filename, sep="")
+    shell(command)
+    
+    ## to view the file you created, just read it in with R:
+    filename <- paste("C:/PLINK/", uniqueID, ".assoc.adjusted", sep="")
+    plink.res <- read.table(filename, header=TRUE)
+    #head(plink.res) 
+    ## NOT SURE WHY, BUT THE "UNADJ" p-values and the "GC" p-values are the same
+    ## in this table (even though the "UNADJ" p-values are not actually the same
+    ## as those in the plink.res from the basic association test above, 
+    ## AND, in this case, lambdaGC was 5.12 and the mean chi-squared was 4.63!!!!!)
+    
+    
+    ## get p.vals
+    pval.plink.assoc.gc <- plink.res$P
+    
+    ## get sig ##
+    
+    ## p.thresh:
+    p.thresh <- p.value # 0.05 # 0.01 # 0.001 # ??
+    
+    
+    ## Uncorrected ##
+    plink.assoc.gc.snps.uncorr <- snps.names[which(pval.plink.assoc.gc < p.thresh)]
+    
+    ## Bonferonni ##
+    p.vals.bonf <- p.adjust(pval.plink.assoc.gc, "bonferroni")
+    p.bonf <- which(p.vals.bonf < p.thresh)
+    plink.assoc.gc.snps.bonf <- snps.names[p.bonf]
+    
+    ## FDR ##
+    p.vals.fdr <- p.adjust(pval.plink.assoc.gc, "fdr")
+    p.fdr <- which(p.vals.fdr < p.thresh)
+    plink.assoc.gc.snps.fdr <- snps.names[p.fdr]
+    
+    ## CONVERT 0-LENGTH RESULTS TO NULL
+    if(length(plink.assoc.snps.uncorr) == 0) plink.assoc.gc.snps.uncorr <- NULL
+    if(length(plink.assoc.snps.bonf) == 0) plink.assoc.gc.snps.bonf <- NULL
+    if(length(plink.assoc.snps.fdr) == 0) plink.assoc.gc.snps.fdr <- NULL                    
+    
+    
+    ## STORE PLINK TEST RESULTS ##    
+    plink.assoc.gc.results <- list(pval.plink.assoc.gc, plink.assoc.gc.snps.uncorr, plink.assoc.gc.snps.bonf, plink.assoc.gc.snps.fdr)
+    names(plink.assoc.gc.results) <- c("pval.plink.assoc.gc", "plink.assoc.gc.snps.uncorr", "plink.assoc.gc.snps.bonf", "plink.assoc.gc.snps.fdr")
+    
+    
+    ############################################
+    
+    ## STORE COMBINED PLINK RESULTS ##
+    plink.results <- list(plink.assoc.results, 
+                          plink.assoc.gc.results)
+    
     ###########################################################################################################################
     ############################################# *** PERFORMANCE *** #########################################################
     ###########################################################################################################################
@@ -728,8 +794,6 @@ simTest <- function(
     ####################
     ## get n.tests
     n.tests <- dim(snps)[2]
-    ## get names of SNPs
-    snps.names <- colnames(snps)
     
     ###########################################
     ## performance[[1]] contains snps.assoc: ##
@@ -740,13 +804,15 @@ simTest <- function(
     ##############################
     ## FOR LOOP FOR ALL 3 TESTS ##
     ##############################
-    for(j in 2:6){
+    for(j in 2:8){
       
       if(j==2) test <- "treeWAS"
       if(j==3) test <- "fisher.bonf"
       if(j==4) test <- "fisher.fdr"  
       if(j==5) test <- "plink.assoc.bonf"
       if(j==6) test <- "plink.assoc.fdr"
+      if(j==7) test <- "plink.assoc.gc.bonf"
+      if(j==8) test <- "plink.assoc.gc.fdr"
       
       #############
       ## treeWAS ##
@@ -777,6 +843,8 @@ simTest <- function(
       ## PLINK ## ########### ########### ########### ########### ########### ###########
       ###########
       
+      ## Basic association ##
+      
       ######################
       ## plink.assoc.bonf ##
       ######################
@@ -789,6 +857,23 @@ simTest <- function(
       #####################
       if(test == "plink.assoc.fdr"){
         test.positive <- plink.assoc.snps.fdr
+      } # end test = plink.assoc.fdr
+      
+      
+      ## Corrected w Genomic Control ##
+      
+      #########################
+      ## plink.assoc.gc.bonf ##
+      #########################
+      if(test == "plink.assoc.bonf"){
+        test.positive <- plink.assoc.gc.snps.bonf
+      } # end test = plink.assoc.bonf
+      
+      ########################
+      ## plink.assoc.gc.fdr ##
+      ########################
+      if(test == "plink.assoc.fdr"){
+        test.positive <- plink.assoc.gc.snps.fdr
       } # end test = plink.assoc.fdr
       
       ########### ########### ########### ########### ########### ########### ########### 
@@ -916,7 +1001,11 @@ simTest <- function(
       
     } # end for loop
     
-    names(performance) <- c("snps.assoc", "treeWAS", "fisher.bonf", "fisher.fdr", "plink.assoc.bonf", "plink.assoc.fdr")
+    names(performance) <- c("snps.assoc", 
+                            "treeWAS", 
+                            "fisher.bonf", "fisher.fdr", 
+                            "plink.assoc.bonf", "plink.assoc.fdr", 
+                            "plink.assoc.gc.bonf", "plink.assoc.gc.fdr")
     
     ################################    ################################    ################################    
     
@@ -955,8 +1044,8 @@ simTest <- function(
     filename.fisher.results[[i]] <- paste("./", uniqueID, "_fisher.results", ".Rdata", sep="")
     save(fisher.results, file=filename.fisher.results[[i]])
     ## save plink.assoc.results
-    filename.plink.assoc.results[[i]] <- paste("./", uniqueID, "_plink.assoc.results", ".Rdata", sep="")
-    save(plink.assoc.results, file=filename.plink.assoc.results[[i]])
+    filename.plink.results[[i]] <- paste("./", uniqueID, "_plink.results", ".Rdata", sep="")
+    save(plink.results, file=filename.plink.results[[i]])
     ## save performance
     filename.args[[i]] <- paste("./", uniqueID, "_args", ".Rdata", sep="")
     save(args, file=filename.args[[i]])    
@@ -980,8 +1069,8 @@ simTest <- function(
     names(RES)[[i]] <- uniqueID
     FISHER.RESULTS[[i]] <- fisher.results
     names(FISHER.RESULTS)[[i]] <- uniqueID
-    PLINK.ASSOC.RESULTS[[i]] <- plink.assoc.results
-    names(PLINK.ASSOC.RESULTS)[[i]] <- uniqueID
+    PLINK.RESULTS[[i]] <- plink.results
+    names(PLINK.RESULTS)[[i]] <- uniqueID
     ARGS[[i]] <- args
     names(ARGS)[[i]] <- uniqueID
     PERFORMANCE[[i]] <- performance
