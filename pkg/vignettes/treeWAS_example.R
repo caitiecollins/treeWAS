@@ -29,12 +29,21 @@ data(dist)
 ## but you may need to change the file path here for now.
 #dist <- get(load("./data/example.output_distribution.Rdata"))
 
-out <- coalescent.sim(n.ind=100, gen.size=10000, sim.by="locus",
-                      theta=1*2, dist=dist,
-                      theta_p=15, phen=NULL,
-                      n.snp.assoc=20, assoc.option="all", assoc.prob=90,
-                      haploid=TRUE, biallelic=TRUE, seed=1,
-                      plot=TRUE, heatmap=FALSE, plot2=FALSE)
+# out <- coalescent.sim(n.ind=100, gen.size=10000, sim.by="locus",
+#                       theta=1*2, dist=dist,
+#                       theta_p=15, phen=NULL,
+#                       n.snp.assoc=20, assoc.option="all", assoc.prob=90,
+#                       haploid=TRUE, biallelic=TRUE, seed=1,
+#                       plot=TRUE, heatmap=FALSE, plot2=FALSE)
+
+out <- coalescent.sim(n.ind=100,
+                      n.snps=10000, n.subs=dist,
+                      n.snp.assoc=10, assoc.prob=90,
+                      n.phen.subs=15, phen=NULL,
+                      plot=TRUE,
+                      heatmap=FALSE, reconstruct=FALSE,
+                      seed=1)
+
 
 ## side note: if you set plot2="UPGMA", we can see how the reconstructed tree
 ## can be quite different (at least in terms of branch lengths) from the
@@ -44,8 +53,8 @@ out <- coalescent.sim(n.ind=100, gen.size=10000, sim.by="locus",
 #############################
 ## isolate elements of out ##
 #############################
-snps <- out[[1]]
-tree <- out[[2]]
+snps <- out$snps
+tree <- out$tree
 
 ## snps names:
 snps.names <- colnames(snps)
@@ -55,8 +64,8 @@ snps.indices <- c(1:ncol(snps))
 ##########################################
 ## isolate set-specific elements of foo ##
 ##########################################
-phen <- out[[3]][[2]][[5]]
-snps.assoc <- out[[3]][[2]][[6]]
+phen <- out$phen
+snps.assoc <- out$snps.assoc
 snps.assoc
 
 #################
@@ -80,7 +89,7 @@ str(foo)
 ##############
 ## EVALUATE ##
 ##############
-test.positive <- foo[[4]][,1]
+test.positive <- foo$"Significant SNPs"$SNP.locus
 test.negative <- snps.indices[-which(snps.indices %in% test.positive)]
 ## get true positives
 snps.not <- snps.names[-which(snps.indices %in% snps.assoc)]

@@ -220,3 +220,19 @@ selectBiallelicSNP <- function(x, DNA=TRUE){
   if(x == "S") out <- "R"
   return(out)
 } # end .switch.phen
+
+###############
+## .getFixed ##
+###############
+.getFixed <- function(locus, posi,
+                     exp.char=c("a","t","g","c"),
+                     polyThres=0.01){
+  vec <- as.character(locus)
+  vec[!vec %in% exp.char] <- NA
+  N <- sum(!is.na(vec)) # N: number of sequences
+  if(N==0 || sum(table(vec)/N >= polyThres )<2){
+    return(TRUE) # escape if untyped locus or no SNPs
+  }else{
+    return(FALSE)
+  }
+} # end getFixed
