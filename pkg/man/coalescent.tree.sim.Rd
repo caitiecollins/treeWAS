@@ -17,10 +17,10 @@ Longer proper discription of function...
 \examples{
 
 ## basic use of fn
-fn(arg1, arg2)
+tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
 
-#' ## more elaborate use of fn
-fn(arg1, arg2)
+## plot output
+plot(tree)
 
 }
 \author{
