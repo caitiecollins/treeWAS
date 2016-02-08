@@ -37,37 +37,6 @@
 #                       haploid=TRUE, biallelic=TRUE, seed=1,
 #                       plot=TRUE, heatmap=FALSE, plot2="UPGMA")
 
-########################################################################
-
-###################
-## DOCUMENTATION ##
-###################
-
-#' Short one-phrase description.
-#'
-#' Longer proper discription of function...
-#'
-#' @param n.ind description.
-#'
-#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
-#' @examples
-#'
-#' ## load data
-#' data(dist)
-#' str(dist)
-#'
-#' ## basic use of fn
-#' fn(arg1, arg2)
-#'
-#' #' ## more elaborate use of fn
-#' fn(arg1, arg2)
-#'
-#' @import adegenet ape phangorn
-
-########################################################################
-
-
 
 
 coalescent.sim <- function(n.ind=100, gen.size=10000, sim.by="locus",

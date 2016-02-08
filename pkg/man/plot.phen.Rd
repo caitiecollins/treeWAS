@@ -4,16 +4,18 @@
 \alias{plot.phen}
 \title{Short one-phrase description.}
 \usage{
-plot.phen(tree, phen.nodes, phen.edges = NULL, plot = TRUE)
+plot.phen(tree, phen.nodes, plot = TRUE)
 }
 \arguments{
 \item{tree}{A phylo object.}
 
 \item{phen.nodes}{A vector containing the phenotypic state of either
-(i) only terminal nodes in \texttt{tree} or
-(ii) all nodes, terminal and internal in \texttt{tree}.}
+(i) only terminal nodes in tree or
+(ii) all nodes, terminal and internal in tree.}
 
-\item{phen.branch}{An optional vector containing the phenotypic}
+\item{plot}{A logical specifying whether to display a plot
+of the inputted phylogenetic tree with edges coloured to show the
+simulated phenotypic substitution process.}
 }
 \description{
 Longer proper discription of function...

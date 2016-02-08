@@ -48,7 +48,45 @@
 #'
 #' Longer proper discription of function...
 #'
-#' @param n.ind description.
+#' @param n.ind An integer specifying the number of individual genomes to simulate
+#' (ie. the number of terminal nodes in the tree).
+#' @param n.snps An integer specifying the number of genetic loci to simulate.
+#' @param n.subs Either an integer or a vector (containing a distribution) that is
+#' used to determine the number of substitutions
+#' to occur on the phylogenetic tree for each genetic locus (see details).
+#' @param n.snp.assoc An optional integer specifying the number of genetic loci
+#' @param assoc.prob An optional integer (> 0, <= 100) specifying the strength of the
+#' association between the n.snp.assoc loci and the phenotype (see details).
+#' @param n.phen.subs An integer specifying the expected number of phenotypic
+#' substitutions to occur on the phylogenetic tree (through the same process as
+#' the n.subs parameter when n.subs is an integer (see details)).
+#' @param phen An optional vector containing a phenotype for each of the
+#' n.ind individuals if no phenotypic simulation is desired.
+#' @param heatmap A logical indicating whether to produce a heatmap of the genetic distance
+#' between the simulated genomes of the n.ind individuals.
+#' @param reconstruct Either a logical indicating whether to attempt to reconstruct
+#' a phylogenetic tree using the simulated genetic data, or one of c("UPGMA", "nj", "ml")
+#' to specify that tree reconstruction is desired by one of these three methods
+#' (Unweighted Pair Group Method with Arithmetic Mean, Neighbour-Joining, Maximum-Likelihood).
+#' @param seed An optional integer controlling the pseudo-random process of simulation. Two
+#' instances of coalescent.sim with the same seed and arguments will produce identical output.
+#'
+#' @details #### n.subs ####
+#' If the value of the n.subs parameter is set to an integer, this integer is
+#' used as the parameter of a Poisson distribution from which the number of substitutions to
+#' occur on the phylogenetic tree is drawn for each of the n.snps simulated genetic loci.
+#' If n.subs is a vector containing a distribution, this is used directly (in proportion to n.snps)
+#' to define the number of substitutions per site. For example, if n.subs=c(3000, 900, 70, 20, 0, 10)
+#' and n.snps=8000, then 6000 simulated sites will undergo exactly
+#' one substitution somewhere on the phylogenetic tree, 1800 will undergo two,
+#' 140 three, 40 four, 0 five, and 20 six.
+#' #### assoc.prob ####
+#' The assoc.prob parameter controls the strength of association through a process analagous to dilution.
+#' All n.snp.assoc loci are initially simulated to undergo a substitution
+#' every time the phenotype undergoes a substitution (ie. perfect association).
+#' The assoc.prob parameter then acts like a dilution factor, removing (100 - assoc.prob)%
+#' of the substitutions that occurred during simulation under perfect association.
+#'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -85,18 +123,16 @@
 
 coalescent.sim <- function(n.ind=100,
                            n.snps=10000, n.subs=1,
-                           n.snp.assoc=10, assoc.prob=100,
+                           n.snp.assoc=0, assoc.prob=100,
                            n.phen.subs=15, phen=NULL,
                            plot=TRUE,
                            heatmap=FALSE, reconstruct=FALSE,
+                           dist.dna.model="JC69",
                            seed=1){
-
+  ## load packages:
   require(adegenet)
   require(ape)
   require(phangorn)
-
-  #   ## load utils.R for selectBiallelicSNP switch.phen .is.integer0 .is.even .is.odd
-  #   source("C:/Users/Caitlin/treeWAS/pkg/R/utils.R")
 
   if(plot==TRUE && heatmap==FALSE && reconstruct==FALSE){
     par(ask=FALSE)
@@ -107,7 +143,6 @@ coalescent.sim <- function(n.ind=100,
   ################################
   ## Simulate Phylogenetic Tree ##
   ################################
-
   tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
 
   ########################
@@ -124,10 +159,6 @@ coalescent.sim <- function(n.ind=100,
     ## terminal and internal
     phen.nodes <- phen.list$phen.nodes
 
-    ## get phenotype for all edges in tree
-    ## (ie. "A", "B", or "A"-and-"B")
-    phen.edges <- phen.list$phen.edges
-
     ## get the indices of phen.subs (ie. branches)
     phen.loci <- phen.list$phen.loci
   }else{
@@ -135,17 +166,15 @@ coalescent.sim <- function(n.ind=100,
     ## User-provided Phenotype ##
     #############################
     phen.nodes <- phen
-    phen.edges <- NULL
+    phen.loci <- NULL
   }
 
   #################################
   ## Plot Tree showing Phenotype ##
   #################################
-
   if(plot==TRUE){
     phen.plot.col <- plot.phen(tree = tree,
                               phen.nodes = phen.nodes,
-                              phen.edges = phen.edges,
                               plot = plot)
   }
 
@@ -158,6 +187,7 @@ coalescent.sim <- function(n.ind=100,
                        tree=tree,
                        phen.loci=phen.loci,
                        heatmap=heatmap, reconstruct=reconstruct,
+                       dist.dna.model=dist.dna.model,
                        seed=seed)
   snps <- snps.list$snps
   snps.assoc <- snps.list$snps.assoc
@@ -165,7 +195,6 @@ coalescent.sim <- function(n.ind=100,
   ################
   ## Get Output ##
   ################
-
   out <- list(snps, snps.assoc, phen, phen.plot.col, tree)
   names(out) <- c("snps", "snps.assoc", "phen", "phen.plot.col", "tree")
   return(out)

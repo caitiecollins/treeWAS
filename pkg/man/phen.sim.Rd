@@ -14,7 +14,7 @@ phen.sim(tree, n.subs = 15)
 \description{
 The parameter n.subs controls the simulation of the phenotype by specifying
 the expected value of the number of phenotypic substitions to occur on the tree provided.
-The true number of phenotypic substitions is drawn from a Poisson distribution with parameter \texttt{n.subs}.
+The true number of phenotypic substitions is drawn from a Poisson distribution with parameter n.subs.
 }
 \details{
 Longer proper discription of function...

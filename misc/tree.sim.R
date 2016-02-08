@@ -19,35 +19,6 @@
 # biallelic=FALSE, seed=2,
 # plot=TRUE, heatmap=FALSE, plot2="ml")
 
-########################################################################
-
-###################
-## DOCUMENTATION ##
-###################
-
-#' Short one-phrase description.
-#'
-#' Longer proper discription of function...
-#'
-#' @param n.ind description.
-#'
-#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
-#' @examples
-#'
-#' ## load data
-#' data(dist)
-#' str(dist)
-#'
-#' ## basic use of fn
-#' fn(arg1, arg2)
-#'
-#' #' ## more elaborate use of fn
-#' fn(arg1, arg2)
-#'
-#' @import adegenet ape phangorn
-
-########################################################################
 
 
 

@@ -4,12 +4,11 @@
 \alias{treeWAS}
 \title{Short one-phrase description.}
 \usage{
-treeWAS(x, y, tree = NULL, mt.rate = NULL, p.value = 0.001,
-  mt.correct = FALSE, p.value.option = "count", plot.null.dist = TRUE,
-  plot.dist = FALSE, plot.Fitch = TRUE, plot.tree = FALSE,
-  tree.method = "ml", n.reps = 1, sim.gen.size = 10000,
-  sim.by = "locus", dist = NULL, method = "Didelot", test = "score",
-  corr.dat.fisher = NULL)
+treeWAS(snps, phen, n.subs = NULL, tree = c("UPGMA", "nj", "ml"),
+  dist.dna.model = "JC69", plot.tree = FALSE, test = "score",
+  p.value = 0.001, p.value.correct = c("bonf", "fdr"),
+  p.value.by = "count", sim.n.snps = 10000, n.reps = 1,
+  plot.null.dist = TRUE, plot.dist = FALSE)
 }
 \arguments{
 \item{x}{description.}

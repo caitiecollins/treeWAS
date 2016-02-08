@@ -1,72 +1,85 @@
 
-######################
-## Checking treeWAS ##
-######################
-
-## Check diff btw coalescent.sim.R and coalescent.sim.SP.R
-## --> Currently using coalescent.sim.R...
-
-## Check SOURCE lines in treeWAS.R (for fitch.sim.R and tree.sim.R)
-## Or, better yet, get package to compile properly...
-
-## Check adegenet sequences.R source -- still needed for coalescent.sim?
-## If SO, either push to adegenet and/or include in treeWAS (for now)
 
 #############
 ## EXAMPLE ##
 #############
 
-## load sample distribution
+#######################
+## Clear environment ##
+#######################
+## NOTE TO USER: his step will delete all variables from your environment.
+## You may want to save unsaved variables or skip this step.
+rm(list=ls())
+
+##############################
+## Load sample distribution ##
+##############################
 ## (currently using the ClonalFrame Saureus output
 ## just so we can see what happens when we
 ## simulate data based on this distribution
 ## AND then use it to inform treeWAS
 ## (as compared to treeWAS's performance with dist=NULL))
-
 data(dist)
 
-## NOTE: if data(dist) not working, you may load the file like this,
-## but you may need to change the file path here for now.
-#dist <- get(load("./data/example.output_distribution.Rdata"))
+################################
+## Simulate a coalescent tree ##
+################################
+tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
 
-# out <- coalescent.sim(n.ind=100, gen.size=10000, sim.by="locus",
-#                       theta=1*2, dist=dist,
-#                       theta_p=15, phen=NULL,
-#                       n.snp.assoc=20, assoc.option="all", assoc.prob=90,
-#                       haploid=TRUE, biallelic=TRUE, seed=1,
-#                       plot=TRUE, heatmap=FALSE, plot2=FALSE)
+#######################################################
+## Simulate a phenotype for individuals in this tree ##
+#######################################################
+## get list of phenotype simulation output
+phen.output <- phen.sim(tree, n.subs = 15)
 
-out <- coalescent.sim(n.ind=100,
-                      n.snps=10000, n.subs=dist,
-                      n.snp.assoc=10, assoc.prob=90,
-                      n.phen.subs=15, phen=NULL,
-                      plot=TRUE,
-                      heatmap=FALSE, reconstruct=FALSE,
-                      seed=1)
+## get phenotype for terminal nodes only
+phen <- phen.output$phen
 
+## get phenotype for all nodes,
+## terminal and internal
+phen.nodes <- phen.output$phen.nodes
 
-## side note: if you set plot2="UPGMA", we can see how the reconstructed tree
-## can be quite different (at least in terms of branch lengths) from the
-## real tree used to generate the data
-## --> implications for treeWAS performance if based on reconstructed tree?
+## get the indices of phen.subs (ie. branches)
+phen.loci <- phen.output$phen.loci
 
-#############################
-## isolate elements of out ##
-#############################
-snps <- out$snps
-tree <- out$tree
+#################################
+## Plot Tree showing Phenotype ##
+#################################
+phen.plot.colours <- plot.phen(tree = tree,
+                               phen.nodes = phen.nodes,
+                               plot = TRUE)
 
-## snps names:
+###################################################################
+## Simulate genetic data (SNPs) that fit this tree and phenotype ##
+###################################################################
+snps.output <- snp.sim(n.ind = 100,
+                     n.snps = 10000, n.subs=dist,
+                     n.snp.assoc = 10, assoc.prob = 90,
+                     tree = tree,
+                     phen.loci = phen.loci,
+                     heatmap = FALSE, reconstruct = FALSE,
+                     dist.dna.model="JC69",
+                     seed = 1)
+snps <- snps.output$snps
+snps.assoc <- snps.output$snps.assoc
 snps.names <- colnames(snps)
-## snps indices:
 snps.indices <- c(1:ncol(snps))
 
-##########################################
-## isolate set-specific elements of foo ##
-##########################################
-phen <- out$phen
-snps.assoc <- out$snps.assoc
-snps.assoc
+################################################################################
+## Note that all previous steps can be performed with this combined function: ##
+################################################################################
+# sim.output <- coalescent.sim(n.ind=100,
+#                       n.snps=10000, n.subs=1,
+#                       n.snp.assoc=10, assoc.prob=90,
+#                       n.phen.subs=15, phen=NULL,
+#                       plot=TRUE,
+#                       heatmap=FALSE, reconstruct=FALSE,
+#                       seed=1)
+# snps <- sim.output$snps
+# tree <- sim.output$tree
+# phen <- sim.output$phen
+# snps.assoc <- sim.output$snps.assoc
+
 
 #################
 ## Run treeWAS ##
@@ -76,20 +89,20 @@ snps.assoc
 ## (so it will use the default Poisson with parameter 1 to
 ## get the number of substitutions per site to simulate)
 
-foo <- treeWAS(x=snps, y=phen, tree=tree,
-               mt.rate=NULL,
-               p.value=0.001, mt.correct=FALSE, p.value.option="count",
-               plot.null.dist=TRUE, plot.dist=FALSE, plot.Fitch=TRUE,
-               plot.tree=FALSE, tree.method="ml",
-               n.reps=1, sim.gen.size=10000, sim.by="locus", dist=NULL,
-               method="Didelot", test="score", corr.dat.fisher=NULL)
+treeWAS.output <- treeWAS(snps, phen, n.subs = 1,
+                          tree = tree,
+                          dist.dna.model = NULL, plot.tree = FALSE,
+                          test = "score",
+                          p.value = 0.001, p.value.correct = "bonf", p.value.by = "count",
+                          sim.n.snps = 10000, n.reps = 1,
+                          plot.null.dist = TRUE, plot.dist = FALSE)
 
-str(foo)
+str(treeWAS.output)
 
 ##############
 ## EVALUATE ##
 ##############
-test.positive <- foo$"Significant SNPs"$SNP.locus
+test.positive <- treeWAS.output$sig.snps$SNP.locus
 test.negative <- snps.indices[-which(snps.indices %in% test.positive)]
 ## get true positives
 snps.not <- snps.names[-which(snps.indices %in% snps.assoc)]
@@ -104,6 +117,7 @@ FP <- length(false.positive)
 ## get false negatives
 false.negative <- test.negative[which(test.negative %in% snps.assoc)]
 FN <- length(false.negative)
+
 
 #################
 ## sensitivity ##
@@ -120,7 +134,14 @@ sensitivity
 ## ~ Pr(Negative Test | SNP NOT associated)
 specificity <- (TN / (TN + FP)) ## = (1 - FPR)
 specificity
-
+#########
+## PPV ##
+#########
+## ie. Of all the POSITIVE calls you made, how many were CORRECT/ identified truly ASSOCIATED SNPs
+## ~ Pr(SNP ASSOCIATED | Positive Test)
+## --> Set 1: will be 0 (UNLESS you made NO positive calls, then 0/0 = NaN)
+PPV <- (TP / (TP + FP)) ## = (1 - FDR)
+PPV
 
 
 #################    #################    #################    #################
@@ -136,20 +157,20 @@ specificity
 ## (so it will use the true distribution to
 ## identify the number of substitutions per site to simulate)
 
-foo2 <- treeWAS(x=snps, y=phen, tree=tree,
-               mt.rate=NULL,
-               p.value=0.001, mt.correct=FALSE, p.value.option="count",
-               plot.null.dist=TRUE, plot.dist=FALSE, plot.Fitch=TRUE,
-               plot.tree=FALSE, tree.method="ml",
-               n.reps=1, sim.gen.size=10000, sim.by="locus", dist=dist,
-               method="Didelot", test="score", corr.dat.fisher=NULL)
+treeWAS.output2 <- treeWAS(snps, phen, n.subs = dist,
+                           tree = tree,
+                           dist.dna.model = NULL, plot.tree = FALSE,
+                           test = "score",
+                           p.value = 0.001, p.value.correct = "bonf", p.value.by = "count",
+                           sim.n.snps = 10000, n.reps = 1,
+                           plot.null.dist = TRUE, plot.dist = FALSE)
 
-str(foo2)
+str(treeWAS.output2)
 
 ##############
 ## EVALUATE ##
 ##############
-test.positive <- foo2[[4]][,1]
+test.positive <- treeWAS.output2$sig.snps$SNP.locus
 test.negative <- snps.indices[-which(snps.indices %in% test.positive)]
 ## get true positives
 snps.not <- snps.names[-which(snps.indices %in% snps.assoc)]
@@ -180,3 +201,77 @@ sensitivity
 ## ~ Pr(Negative Test | SNP NOT associated)
 specificity <- (TN / (TN + FP)) ## = (1 - FPR)
 specificity
+#########
+## PPV ##
+#########
+## ie. Of all the POSITIVE calls you made, how many were CORRECT/ identified truly ASSOCIATED SNPs
+## ~ Pr(SNP ASSOCIATED | Positive Test)
+## --> Set 1: will be 0 (UNLESS you made NO positive calls, then 0/0 = NaN)
+PPV <- (TP / (TP + FP)) ## = (1 - FDR)
+PPV
+
+#################    #################    #################    #################
+
+## COMPARE TO: ##
+
+#################
+## Run treeWAS ##
+#################
+
+## Third, we can try treeWAS with dist=NULL
+## So we will use the Fitch parsimony functions from R pkg phangorn
+## (reconfigured for our purposes in treeWAS function get.fitch.n.mts)
+## to reconstruct the distribution of n.subs-per-site from the snps data and tree.
+
+treeWAS.output3 <- treeWAS(snps, phen, n.subs = NULL,
+                           tree = tree,
+                           dist.dna.model = NULL, plot.tree = FALSE,
+                           test = "score",
+                           p.value = 0.001, p.value.correct = "bonf", p.value.by = "count",
+                           sim.n.snps = 10000, n.reps = 1,
+                           plot.null.dist = TRUE, plot.dist = FALSE)
+
+str(treeWAS.output3)
+
+##############
+## EVALUATE ##
+##############
+test.positive <- treeWAS.output3$sig.snps$SNP.locus
+test.negative <- snps.indices[-which(snps.indices %in% test.positive)]
+## get true positives
+snps.not <- snps.names[-which(snps.indices %in% snps.assoc)]
+true.positive <- test.positive[which(test.positive %in% snps.assoc)]
+TP <- length(true.positive)
+## get true negatives
+true.negative <- test.negative[which(test.negative %in% snps.not)]
+TN <- length(true.negative)
+## get false positives
+false.positive <- test.positive[which(test.positive %in% snps.not)]
+FP <- length(false.positive)
+## get false negatives
+false.negative <- test.negative[which(test.negative %in% snps.assoc)]
+FN <- length(false.negative)
+
+#################
+## sensitivity ##
+#################
+## ie. How many truly ASSOCIATED SNPs did you manage to catch
+## ~ Pr(Positive Test | SNP ASSOCIATED)
+## --> Set 1: will be 0/0 = NaN
+sensitivity <- (TP / (TP + FN))
+sensitivity
+#################
+## specificity ##
+#################
+## ie. Of all the truly NOT associated SNPs, how many did you manage to rule out?
+## ~ Pr(Negative Test | SNP NOT associated)
+specificity <- (TN / (TN + FP)) ## = (1 - FPR)
+specificity
+#########
+## PPV ##
+#########
+## ie. Of all the POSITIVE calls you made, how many were CORRECT/ identified truly ASSOCIATED SNPs
+## ~ Pr(SNP ASSOCIATED | Positive Test)
+## --> Set 1: will be 0 (UNLESS you made NO positive calls, then 0/0 = NaN)
+PPV <- (TP / (TP + FP)) ## = (1 - FDR)
+PPV

@@ -25,6 +25,7 @@
 #' @param phen.nodes A vector containing the phenotypic state of either
 #' (i) only terminal nodes in tree or
 #' (ii) all nodes, terminal and internal in tree.
+#' @param phen.edges An optional vector containing the phenotypic
 #' @param plot A logical specifying whether to display a plot
 #' of the inputted phylogenetic tree with edges coloured to show the
 #' simulated phenotypic substitution process.
@@ -45,15 +46,14 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import adegenet phangorn
+#' @import adegenet ape phangorn
 
 ########################################################################
 
 
-plot.phen <- function(tree, phen.nodes, plot=TRUE){
+plot.phen <- function(tree, phen.nodes, phen.edges=NULL, plot=TRUE){
 
   require(phangorn)
-  require(adegenet)
 
   #############################################################################
   ######################## PLOT phylo with PHEN ###############################
@@ -65,65 +65,73 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE){
   ## check if phen provided is for all nodes or only terminal nodes:
   if(length(phen.nodes == (n.ind + tree$Nnode))){
 
-    ## get COLOR for NODES
-    nodeCol <- as.vector(phen.nodes)
-    nodeCol <- replace(nodeCol, which(nodeCol == "B"), "red")
-    nodeCol <- replace(nodeCol, which(nodeCol == "A"), "blue")
-    nodeCol <- as.vector(unlist(nodeCol))
-    ## get COLOR for LEAVES ONLY
-    leafCol <- nodeCol[1:n.ind]
-    ## get COLOR of INTERNAL nodes ONLY
-    internalNodeCol <- nodeCol[(n.ind+1):length(nodeCol)]
+    ## if phen for edges is provided,
+    ## get colours and plot:
+    if(!is.null(phen.edges)){
 
-    ## get COLOR for EDGES
-    edgeCol <- rep("black", nrow(tree$edge))
-    for(i in 1:nrow(tree$edge)){
-      edgeCol[i] <- nodeCol[tree$edge[i,2]]
-      if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "green"
-    }
-    edgeLabCol <- edgeCol
+      ## get COLOR for NODES
+      nodeCol <- as.vector(phen.nodes)
+      nodeCol <- replace(nodeCol, which(nodeCol == "B"), "red")
+      nodeCol <- replace(nodeCol, which(nodeCol == "A"), "blue")
+      nodeCol <- as.vector(unlist(nodeCol))
+      ## get COLOR for LEAVES ONLY
+      leafCol <- nodeCol[1:n.ind]
+      ## get COLOR of INTERNAL nodes ONLY
+      internalNodeCol <- nodeCol[(n.ind+1):length(nodeCol)]
 
+      ## get COLOR for EDGES
+      edgeCol <- phen.edges
+      ## FOR NOW--all edges w > 1 phen (either c("A", "B") OR c("B", "A")) --> green...
+      l_edgeCol <- which(sapply(c(1:length(edgeCol)),
+                                function(e) length(edgeCol[[e]])) == 2)
+      edgeCol <- replace(edgeCol, l_edgeCol, "green")
+      edgeCol <- replace(edgeCol, which(edgeCol == "A"), "blue")
+      edgeCol <- replace(edgeCol, which(edgeCol == "B"), "red")
+      edgeCol <- as.vector(unlist(edgeCol))
+      ## get COLOR for EDGE LABELS
+      phen.loci <- which(sapply(c(1:length(phen.edges)),
+                                function(e) length(phen.edges[[e]])==2))
+      edgeLabCol <- rep("green", nrow(tree$edge))
+      edgeLabCol <- replace(edgeLabCol, phen.loci, "green") # "mediumorchid1"
 
-    ###############
-    ## plot TREE ##
-    ###############
-    if(plot==TRUE){
-      if(n.ind <= 20){
-        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol) # edgeCol
-        title("Coalescent tree w/ phenotypic changes")
-        axisPhylo()
-        edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
-                   cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
-        tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
-        nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
-      }else{
-        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol) # edgeCol
-        title("Coalescent tree w/ phenotypic changes")
-        axisPhylo()
-        #edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
-        #           cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
-        tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col=leafCol, frame="none")
-        ## make sure this isn't backward...:
-        #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
-        ## should be numbered s.t. the root node is n.term+1
-        ## RECALL: terminal nodes are numbered 1:n.ind from bottom to top of plot of tree;
-        ## edges are numbered 1:nrow(edges) by following the lowest trace on the plot
-        ## (starting from the root down to the lowermost tips);
-        ## thus, internal nodes are numbered (n.ind+1):(n.ind+(n.ind-1)),
-        ## from root to the top-most internal node to be connected (ie. the highest in the plot)
-      }
-    } # end plot = TRUE
-
+      ###############
+      ## plot TREE ##
+      ###############
+      if(plot==TRUE){
+        if(n.ind <= 20){
+          plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol) # edgeCol
+          title("Coalescent tree w/ phenotypic changes")
+          axisPhylo()
+          edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+                     cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
+          tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
+          nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+        }else{
+          plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol) # edgeCol
+          title("Coalescent tree w/ phenotypic changes")
+          axisPhylo()
+          #edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+          #           cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
+          tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col=leafCol, frame="none")
+          ## make sure this isn't backward...:
+          #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+          ## should be numbered s.t. the root node is n.term+1
+          ## RECALL: terminal nodes are numbered 1:n.ind from bottom to top of plot of tree;
+          ## edges are numbered 1:nrow(edges) by following the lowest trace on the plot
+          ## (starting from the root down to the lowermost tips);
+          ## thus, internal nodes are numbered (n.ind+1):(n.ind+(n.ind-1)),
+          ## from root to the top-most internal node to be connected (ie. the highest in the plot)
+        }
+      } # end plot = TRUE
+    } # end !is.null(phen.edges)
   }else{ # end phen for all nodes
 
     #######################################################################
 
+
     ####################################################################
     ## If the user has PROVIDED a phenotype (for terminal nodes only) ##
     ####################################################################
-
-    phen <- phen.nodes
-
     if(!is.null(phen)){
       # phen <- as.factor(sample(c("A", "B", "C", "D"), 100, replace=TRUE))
 
@@ -141,7 +149,7 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE){
       leafCol <- leafCol[scheme]
 
       ## get COLOR for EDGES
-      edgeCol <- edgeLabCol <- "black" ## for NOW...
+      edgeCol <- "black" ## for NOW...
       ########
       ## TO DO-- color ~ terminal edges red/blue same as phen of terminal node...
       #### ... UNTIL two edge colors meet at any internal node (then just black edges to root)

@@ -43,9 +43,10 @@
 snp.sim <- function(n.ind=100,
                     n.snps=10000, n.subs=1,
                     n.snp.assoc=10, assoc.prob=100,
-                    tree=rtree(100),
+                    tree=coalescent.tree.sim(match.arg(n.ind)),
                     phen.loci=NULL,
                     heatmap=FALSE, reconstruct=FALSE,
+                    dist.dna.model="JC69",
                     seed=1){
 
   require(adegenet)
@@ -110,61 +111,61 @@ snp.sim <- function(n.ind=100,
     }
     }else{
 
-    ##################
-    ## DISTRIBUTION ##
-    ##################
+      ##################
+      ## DISTRIBUTION ##
+      ##################
 
-    ## if a distribution is provided by the user,
-    ## we use this to determine the number of substitutions
-    ## to occur at what proportion of sites (note that
-    ## we may not be simulating the same number of sites)
+      ## if a distribution is provided by the user,
+      ## we use this to determine the number of substitutions
+      ## to occur at what proportion of sites (note that
+      ## we may not be simulating the same number of sites)
 
-    ## get dist.prop, a distribution containing the counts
-    ## of the number of SNPs to be simulated that will have
-    ## i many substitutions
-    dist.sum <- sum(dist)
-    dist.prop <- round((dist/dist.sum)*gen.size)
-    ## check that these counts sum to gen.size,
-    ## else add the remainder to the largest n.subs count
-    ## (OR should we just add these to the n.subs=1 set ??? ###
-    ## likely to be the same thing, but could not be...)
-    if(sum(dist.prop) != gen.size){
-      m <- which.max(dist.prop)
-      #m <- 1
-      if(sum(dist.prop) < gen.size){
-        dist.prop[m] <- dist.prop[m] + (gen.size - sum(dist.prop))
-      }
-      if(sum(dist.prop) > gen.size){
-        dist.prop[m] <- dist.prop[m] - (sum(dist.prop) - gen.size)
-      }
-    }
-
-    ## get rid of useless trailing 0s
-    while(dist.prop[length(dist.prop)] == 0){
-      dist.prop <- dist.prop[c(1:(length(dist.prop)-1))]
-    }
-
-    ## make n.mts, a vector of length ncol(snps)
-    n.mts <- rep(1111, gen.size)
-    loci.available <- c(1:gen.size)
-    ## assign dist.prop[i] elements of n.mts
-    ## to be the same as the n.subs
-    ## indicated by i, the given element of dist.prop
-    for(j in 1:length(dist.prop)){
-      ## provided there are not 0 sites to have this number of substitutions...
-      if(dist.prop[j] > 0){
-        if(length(loci.available) > 1){
-          ## assign dist.prop[i] elements of n.mts to be i
-          loci.selected <- sample(loci.available, dist.prop[j], replace = FALSE)
-          loci.available <- loci.available[-which(loci.available %in% loci.selected)]
-        }else{
-          ## if there is only 1 (the last) loci available,
-          ## we select this one:
-          loci.selected <- loci.available
+      ## get dist.prop, a distribution containing the counts
+      ## of the number of SNPs to be simulated that will have
+      ## i many substitutions
+      dist.sum <- sum(dist)
+      dist.prop <- round((dist/dist.sum)*gen.size)
+      ## check that these counts sum to gen.size,
+      ## else add the remainder to the largest n.subs count
+      ## (OR should we just add these to the n.subs=1 set ??? ###
+      ## likely to be the same thing, but could not be...)
+      if(sum(dist.prop) != gen.size){
+        m <- which.max(dist.prop)
+        #m <- 1
+        if(sum(dist.prop) < gen.size){
+          dist.prop[m] <- dist.prop[m] + (gen.size - sum(dist.prop))
         }
-        n.mts[loci.selected] <- j
+        if(sum(dist.prop) > gen.size){
+          dist.prop[m] <- dist.prop[m] - (sum(dist.prop) - gen.size)
+        }
       }
-    }
+
+      ## get rid of useless trailing 0s
+      while(dist.prop[length(dist.prop)] == 0){
+        dist.prop <- dist.prop[c(1:(length(dist.prop)-1))]
+      }
+
+      ## make n.mts, a vector of length ncol(snps)
+      n.mts <- rep(1111, gen.size)
+      loci.available <- c(1:gen.size)
+      ## assign dist.prop[i] elements of n.mts
+      ## to be the same as the n.subs
+      ## indicated by i, the given element of dist.prop
+      for(j in 1:length(dist.prop)){
+        ## provided there are not 0 sites to have this number of substitutions...
+        if(dist.prop[j] > 0){
+          if(length(loci.available) > 1){
+            ## assign dist.prop[i] elements of n.mts to be i
+            loci.selected <- sample(loci.available, dist.prop[j], replace = FALSE)
+            loci.available <- loci.available[-which(loci.available %in% loci.selected)]
+          }else{
+            ## if there is only 1 (the last) loci available,
+            ## we select this one:
+            loci.selected <- loci.available
+          }
+          n.mts[loci.selected] <- j
+        }
+      }
   } # end dist
 
   ############################
@@ -340,83 +341,22 @@ snp.sim <- function(n.ind=100,
   ## HEATMAP ##
   #############
   if(heatmap==TRUE){
-    ## get a distance matrix between the genomes
-    D <- dist.dna(dna, model="JC69")
-
-    mat <- t(as.matrix(D))
-    mat <- mat[,ncol(mat):1]
-    par(mar=c(1,5,5,1))
-    image(x=1:ncol(mat), y=1:ncol(mat), mat,
-          col=rev(heat.colors(100)),
-          xaxt="n", yaxt="n", xlab="", ylab="")
-    axis(side=2, at=c(1:ncol(mat)),
-         lab=rev(names(dna)), las=2, cex.axis=1)
-    axis(side=3, at=c(1:ncol(mat)),
-         lab=names(dna), las=1, cex.axis=1)
-    ## return margin parameter to default:
-    par(mar=c(5,4,4,2)+0.1)
+    heatmap.DNAbin(dna=dna,
+                   dist.dna.model=dist.dna.model)
   }
 
   ##########################################
   ## PLOT 2: RECONSTRUCTING THE PHYLOGENY ##
   ##########################################
-  tree.reconstruct <- NULL
-  ## TO DO: ADD PHENOTYPE-COLORING OPTIONS TO RECONSTRUCTED PHYLO PLOTS
   if(reconstruct!=FALSE){
-    D <- dist.dna(dna[1:n.ind], model="JC69")
-  if(reconstruct==TRUE){
-    warning("reconstruct should be one of UPGMA, nj, ml. Choosing UPGMA.")
-  }
-  ###########
-  ## UPGMA ##
-  ###########
-  if(reconstruct=="UPGMA"){
-    tree.reconstruct <- hclust(D, method="average")
-    tree.reconstruct <- as.phylo(tree.reconstruct)
-    #tree.reconstruct <- midpoint(ladderize(tree.reconstruct))
-    tree.reconstruct <- midpoint(tree.reconstruct)
-    plot(tree.reconstruct, main="")
-    title("UPGMA tree")
-  }
-  ########
-  ## NJ ##
-  ########
-  if(reconstruct=="nj"){
-    tree.reconstruct <- nj(D)
-    #tree.reconstruct <- midpoint(ladderize(tree.reconstruct))
-    tree.reconstruct <- midpoint(tree.reconstruct)
-    plot(tree.reconstruct, edge.width=2)
-    title("Neighbour-joining tree")
-    axisPhylo()
-  }
-  ########
-  ## ML ##
-  ########
-  if(reconstruct=="ml"){
-    dna4 <- as.phyDat(dna[1:n.ind])
-    tre.ini <- nj(dist.dna(dna[1:n.ind], model="JC69"))
-    fit.ini <- pml(tre.ini, dna4, k=n.ind)
-    fit <- optim.pml(fit.ini, optNni = TRUE, optBf = TRUE,
-                     optQ = TRUE, optGamma = TRUE)
+    if(reconstruct==TRUE){
+      warning("reconstruct should be one of 'UPGMA', 'nj', 'ml'. Choosing 'UPGMA'.")
+    }
 
-    ## NOTE--you may want to store these in a results.ml list
-    ## and return it with your results instead of printing
-    ## OR at least print a message
-    ## (eg. "Printing maximum-likelihood calculations...")
-    ## before printing these numbers...
-
-    #     anova(fit.ini, fit)
-    #     AIC(fit.ini)
-    #     AIC(fit)
-
-    tree.reconstruct <- fit$tree
-    #tree.reconstruct <- midpoint(ladderize(tree.reconstruct))
-    tree.reconstruct <- midpoint(tree.reconstruct)
-    plot(tree.reconstruct, show.tip=TRUE, edge.width=2)
-    title("Maximum-likelihood tree")
-    axisPhylo()
-  }
-  par(ask=FALSE)
+    tree.reconstruct <- tree.reconstruct(dna[1:n.ind],
+                                         method=reconstruct,
+                                         dist.dna.model=dist.dna.model,
+                                         plot=TRUE)
   }
 
   ##################
@@ -488,24 +428,25 @@ snp.sim <- function(n.ind=100,
     if(!is.null(snps.names.ori)) colnames(snps) <- snps.names.ori
     if(!is.null(ind.names.ori)) rownames(snps) <- ind.names.ori
     snps.assoc <- snps.assoc.loci
+
+    ## update names of snps.assoc
+    gen.size <- ncol(snps)
+    names(snps.assoc) <- as.vector(unlist(sapply(c(1:length(snps.assoc)),
+                                                 function(e)
+                                                   paste("L",
+                                                         paste(rep(0, (nchar(gen.size)-
+                                                                         nchar(snps.assoc[e]))),
+                                                               sep="",
+                                                               collapse=""),
+                                                         snps.assoc[e], sep=""))))
   }
 
   ##################
   ## get RESULTS: ##
   ##################
-
-  ## update names of snps.assoc
-  gen.size <- ncol(snps)
-  names(snps.assoc) <- as.vector(unlist(sapply(c(1:length(snps.assoc)),
-                                 function(e)
-                                   paste("L",
-                                         paste(rep(0, (nchar(gen.size)-
-                                                         nchar(snps.assoc[e]))),
-                                               sep="",
-                                               collapse=""),
-                                         snps.assoc[e], sep=""))))
-
   out <- list(snps, snps.assoc, tree.reconstruct)
   names(out) <- c("snps", "snps.assoc", "tree.reconstruct")
+
   return(out)
+
 } # end snp.sim

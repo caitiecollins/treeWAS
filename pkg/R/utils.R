@@ -224,6 +224,9 @@ selectBiallelicSNP <- function(x, DNA=TRUE){
 ###############
 ## .getFixed ##
 ###############
+
+#' @export
+
 .getFixed <- function(locus, posi,
                      exp.char=c("a","t","g","c"),
                      polyThres=0.01){
