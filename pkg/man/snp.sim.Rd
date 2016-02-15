@@ -4,10 +4,9 @@
 \alias{snp.sim}
 \title{Short one-phrase description.}
 \usage{
-snp.sim(n.ind = 100, n.snps = 10000, n.subs = 1, n.snp.assoc = 10,
-  assoc.prob = 100, tree = coalescent.tree.sim(match.arg(n.ind)),
-  phen.loci = NULL, heatmap = FALSE, reconstruct = FALSE,
-  dist.dna.model = "JC69", seed = 1)
+snp.sim(n.snps = 10000, n.subs = 1, n.snps.assoc = 10, assoc.prob = 100,
+  tree = coalescent.tree.sim(100), phen.loci = NULL, heatmap = FALSE,
+  reconstruct = FALSE, dist.dna.model = "JC69", seed = 1)
 }
 \arguments{
 \item{snps}{description.}

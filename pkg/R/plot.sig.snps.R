@@ -38,8 +38,10 @@
 
 plot.sig.snps <- function(corr.dat, corr.sim,
                           sig.corrs, sig.snps,
-                          thresh, test,
+                          sig.thresh, test,
                           plot.null.dist=TRUE, plot.dist=FALSE){
+
+  thresh <- sig.thresh
 
   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=TRUE)
 

@@ -52,14 +52,13 @@ phen.plot.colours <- plot.phen(tree = tree,
 ###################################################################
 ## Simulate genetic data (SNPs) that fit this tree and phenotype ##
 ###################################################################
-snps.output <- snp.sim(n.ind = 100,
-                     n.snps = 10000, n.subs=dist,
-                     n.snp.assoc = 10, assoc.prob = 90,
-                     tree = tree,
-                     phen.loci = phen.loci,
-                     heatmap = FALSE, reconstruct = FALSE,
-                     dist.dna.model="JC69",
-                     seed = 1)
+snps.output <- snp.sim(n.snps = 10000, n.subs=dist,
+                       n.snps.assoc = 10, assoc.prob = 90,
+                       tree = tree,
+                       phen.loci = phen.loci,
+                       heatmap = FALSE, reconstruct = FALSE,
+                       dist.dna.model="JC69",
+                       seed = 1)
 snps <- snps.output$snps
 snps.assoc <- snps.output$snps.assoc
 snps.names <- colnames(snps)
@@ -70,7 +69,7 @@ snps.indices <- c(1:ncol(snps))
 ################################################################################
 # sim.output <- coalescent.sim(n.ind=100,
 #                       n.snps=10000, n.subs=1,
-#                       n.snp.assoc=10, assoc.prob=90,
+#                       n.snps.assoc=10, assoc.prob=90,
 #                       n.phen.subs=15, phen=NULL,
 #                       plot=TRUE,
 #                       heatmap=FALSE, reconstruct=FALSE,
@@ -98,6 +97,11 @@ treeWAS.output <- treeWAS(snps, phen, n.subs = 1,
                           plot.null.dist = TRUE, plot.dist = FALSE)
 
 str(treeWAS.output)
+
+# out <- treeWAS.output
+# corr.dat <- out$corr.dat
+# corr.sim <- out$corr.sim
+
 
 ##############
 ## EVALUATE ##

@@ -182,8 +182,8 @@ treeWAS <- function(snps, phen, n.subs=NULL,
 
   for(i in 1:n.reps){
     ## SIMULATE A DATASET | your tree ##
-    out[[i]] <- snp.sim(n.ind = n.ind, n.snps = sim.n.snps,
-                        n.subs = n.subs, n.snp.assoc = 0, assoc.prob = 100,
+    out[[i]] <- snp.sim(n.snps = sim.n.snps,
+                        n.subs = n.subs, n.snps.assoc = 0, assoc.prob = 100,
                         tree = tree, phen.loci = NULL,
                         heatmap = FALSE,
                         reconstruct = FALSE, dist.dna.model = "JC69",
@@ -242,7 +242,7 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   ##################################
 
   plot.sig.snps(corr.dat, corr.sim, sig.corrs, sig.snps,
-                thresh=sig.thresh, test,
+                sig.thresh=sig.thresh, test,
                 plot.null.dist = plot.null.dist,
                 plot.dist = plot.dist)
 
@@ -313,7 +313,7 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   results <- list()
   results[[1]] <- corr.dat
   results[[2]] <- corr.sim
-  results[[3]] <- thresh
+  results[[3]] <- sig.thresh
   results[[4]] <- df
   results[[5]] <- min.p
 

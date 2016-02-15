@@ -1,8 +1,8 @@
 
 
-#############
-## snp.sim ##
-#############
+#################
+## fwd.snp.sim ##
+#################
 
 ########################################################################
 
@@ -40,13 +40,12 @@
 ## phen.loci <- a vector containing the indices of the edges on which phen subs occurred
 
 
-snp.sim <- function(n.snps=10000, n.subs=1,
-                    n.snps.assoc=10, assoc.prob=100,
-                    tree=coalescent.tree.sim(100),
-                    phen.loci=NULL,
-                    heatmap=FALSE, reconstruct=FALSE,
-                    dist.dna.model="JC69",
-                    seed=1){
+fwd.snp.sim <- function(n.snps=10000, n.subs=1,
+                        n.snps.assoc=0, n.subs.assoc=15,
+                        tree=coalescent.tree.sim(100),
+                        heatmap=FALSE, reconstruct=FALSE,
+                        dist.dna.model="JC69",
+                        seed=1){
 
   require(adegenet)
   require(ape)
@@ -108,63 +107,101 @@ snp.sim <- function(n.snps=10000, n.subs=1,
         n.mts[i] <- rpois(n=1, lambda=(n.subs))
       }
     }
-    }else{
 
-      ##################
-      ## DISTRIBUTION ##
-      ##################
+    ################
+    ## SNPS.ASSOC ##
+    ################
+    if(n.snps.assoc != 0){
 
-      ## if a distribution is provided by the user,
-      ## we use this to determine the number of substitutions
-      ## to occur at what proportion of sites (note that
-      ## we may not be simulating the same number of sites)
+      ##############
+      ## OPTIONS: ##
+      ##############
 
-      ## get dist.prop, a distribution containing the counts
-      ## of the number of SNPs to be simulated that will have
-      ## i many substitutions
-      dist.sum <- sum(dist)
-      dist.prop <- round((dist/dist.sum)*gen.size)
-      ## check that these counts sum to gen.size,
-      ## else add the remainder to the largest n.subs count
-      ## (OR should we just add these to the n.subs=1 set ??? ###
-      ## likely to be the same thing, but could not be...)
-      if(sum(dist.prop) != gen.size){
-        m <- which.max(dist.prop)
-        #m <- 1
-        if(sum(dist.prop) < gen.size){
-          dist.prop[m] <- dist.prop[m] + (gen.size - sum(dist.prop))
-        }
-        if(sum(dist.prop) > gen.size){
-          dist.prop[m] <- dist.prop[m] - (sum(dist.prop) - gen.size)
-        }
-      }
+      ## NOTE: Only Poisson currently implemented..
 
-      ## get rid of useless trailing 0s
-      while(dist.prop[length(dist.prop)] == 0){
-        dist.prop <- dist.prop[c(1:(length(dist.prop)-1))]
-      }
+      ## OTHER POSSIBILITIES:
+      ## Use a second inputted distribution as the snps.assoc dist.
+      ## Use the upper X% tail of the regular n.subs dist for the snps.assoc.
+      ## Allow all possible combinations of the two n.subs & n.subs.assoc arguments.
+      ## Re-enable the backward simulation options w phen.loci & assoc.prob w/in one fn?
 
-      ## make n.mts, a vector of length ncol(snps)
-      n.mts <- rep(1111, gen.size)
-      loci.available <- c(1:gen.size)
-      ## assign dist.prop[i] elements of n.mts
-      ## to be the same as the n.subs
-      ## indicated by i, the given element of dist.prop
-      for(j in 1:length(dist.prop)){
-        ## provided there are not 0 sites to have this number of substitutions...
-        if(dist.prop[j] > 0){
-          if(length(loci.available) > 1){
-            ## assign dist.prop[i] elements of n.mts to be i
-            loci.selected <- sample(loci.available, dist.prop[j], replace = FALSE)
-            loci.available <- loci.available[-which(loci.available %in% loci.selected)]
-          }else{
-            ## if there is only 1 (the last) loci available,
-            ## we select this one:
-            loci.selected <- loci.available
+      #############
+      ## POISSON ##
+      #############
+      ## draw n.subs per snp.assoc site from
+      ## Poisson dist w param n.subs.assoc:
+
+      if(length(n.subs.assoc) == 1){
+        ## draw the number of mutations to occur at each site:
+        n.mts.assoc <- rpois(n=n.snps.assoc, lambda=(n.subs.assoc))
+        ## for any n.mts==0, re-sample
+        for(i in 1:length(n.mts.assoc)){
+          while(n.mts.assoc[i]==0){
+            n.mts.assoc[i] <- rpois(n=1, lambda=(n.subs.assoc))
           }
-          n.mts[loci.selected] <- j
         }
+        ## add the n.mts assoc to the general (non.ssoc) n.mts vector:
+        n.mts <- c(n.mts, n.mts.assoc)
       }
+    }
+
+  }else{
+
+    ##################
+    ## DISTRIBUTION ##
+    ##################
+
+    ## if a distribution is provided by the user,
+    ## we use this to determine the number of substitutions
+    ## to occur at what proportion of sites (note that
+    ## we may not be simulating the same number of sites)
+
+    ## get dist.prop, a distribution containing the counts
+    ## of the number of SNPs to be simulated that will have
+    ## i many substitutions
+    dist.sum <- sum(dist)
+    dist.prop <- round((dist/dist.sum)*gen.size)
+    ## check that these counts sum to gen.size,
+    ## else add the remainder to the largest n.subs count
+    ## (OR should we just add these to the n.subs=1 set ??? ###
+    ## likely to be the same thing, but could not be...)
+    if(sum(dist.prop) != gen.size){
+      m <- which.max(dist.prop)
+      #m <- 1
+      if(sum(dist.prop) < gen.size){
+        dist.prop[m] <- dist.prop[m] + (gen.size - sum(dist.prop))
+      }
+      if(sum(dist.prop) > gen.size){
+        dist.prop[m] <- dist.prop[m] - (sum(dist.prop) - gen.size)
+      }
+    }
+
+    ## get rid of useless trailing 0s
+    while(dist.prop[length(dist.prop)] == 0){
+      dist.prop <- dist.prop[c(1:(length(dist.prop)-1))]
+    }
+
+    ## make n.mts, a vector of length ncol(snps)
+    n.mts <- rep(1111, gen.size)
+    loci.available <- c(1:gen.size)
+    ## assign dist.prop[i] elements of n.mts
+    ## to be the same as the n.subs
+    ## indicated by i, the given element of dist.prop
+    for(j in 1:length(dist.prop)){
+      ## provided there are not 0 sites to have this number of substitutions...
+      if(dist.prop[j] > 0){
+        if(length(loci.available) > 1){
+          ## assign dist.prop[i] elements of n.mts to be i
+          loci.selected <- sample(loci.available, dist.prop[j], replace = FALSE)
+          loci.available <- loci.available[-which(loci.available %in% loci.selected)]
+        }else{
+          ## if there is only 1 (the last) loci available,
+          ## we select this one:
+          loci.selected <- loci.available
+        }
+        n.mts[loci.selected] <- j
+      }
+    }
   } # end dist
 
   ############################
@@ -173,13 +210,13 @@ snp.sim <- function(n.snps=10000, n.subs=1,
 
   ## whether n.mts is chosen by Poisson or according to a Distribution...
 
-  if(n.snps.assoc != 0){
-    ## for snps.assoc (the last n.snps.assoc snps, for now),
-    ## add n.mts == n.phen.loci s.t these sites mutate at each
-    ## and every phen.loci (for now, to be diluted later
-    ## according to assoc.prob if !=100)
-    n.mts <- c(n.mts, rep(length(phen.loci), n.snps.assoc))
-  }
+  #   if(n.snps.assoc != 0){
+  #     ## for snps.assoc (the last n.snps.assoc snps, for now),
+  #     ## add n.mts == n.phen.loci s.t these sites mutate at each
+  #     ## and every phen.loci (for now, to be diluted later
+  #     ## according to assoc.prob if !=100)
+  #     n.mts <- c(n.mts, rep(length(phen.loci), n.snps.assoc))
+  #   }
 
   ## for each site, draw the branches to which
   ## you will assign the mts for this site
@@ -190,13 +227,14 @@ snp.sim <- function(n.snps=10000, n.subs=1,
                                n.mts[e],
                                replace=FALSE,
                                prob=tree$edge.length))
-  if(n.snps.assoc != 0){
-    ## get snps.loci for the ASSOCIATED snps (ie. set to phen.loci) ##
-    for(i in 1:n.snps.assoc){
-      snps.loci[[snps.assoc[i]]] <- phen.loci
-      #print(snps.loci[[snps.assoc[i]]])
-    }
-  }
+  #   if(n.snps.assoc != 0){
+  #     ## get snps.loci for the ASSOCIATED snps (ie. set to phen.loci) ##
+  #     for(i in 1:n.snps.assoc){
+  #       snps.loci[[snps.assoc[i]]] <- phen.loci
+  #       #print(snps.loci[[snps.assoc[i]]])
+  #     }
+  #   }
+
   ## rearrange snps.loci s.t it becomes a
   ## list of length tree$edge.length,
   ## each element of which contains the
@@ -287,45 +325,45 @@ snp.sim <- function(n.snps=10000, n.subs=1,
   ###############################################
   ## MODIFY SNPS.ASSOC ACCORDING TO ASSOC.PROB ##
   ###############################################
-  if(n.snps.assoc != 0){
-    ## if we have any imperfect associations... ##
-    if(any(assoc.prob != 100)){
-      ## check length
-      if(length(assoc.prob) != n.snps.assoc){
-        ## if only 1 prob value given...
-        if(length(assoc.prob) == 1){
-          ## ... assume uniform assoc.prob;
-          assoc.prob <- rep(assoc.prob, n.snps.assoc)
-          ## no warning needed
-        }else{
-          ## BUT if assoc.prob of random length:
-          ## repeat until of length n.snps.assoc
-          assoc.prob <- rep(assoc.prob, length.out=n.snps.assoc)
-          ## and print warning (only if not of length n.snps.assoc OR 1)
-          warning("assoc.prob not of length n.snps.assoc;
-                  sequence will be repeated until correct length is reached.")
-        }
-        } # end checks
-
-      ## for each associated SNP,
-      ## we undo some associations | assoc.prob for that snp.assoc
-      for(i in 1:n.snps.assoc){
-        prob <- assoc.prob[i]
-        ## only if the association is imperfect
-        if(prob != 100){
-          ## draw genomes to change at snps.assoc[i]
-          n.toChange <- round(length(genomes)*(1 - (prob/100)))
-          toChange <- sample(c(1:length(genomes)), n.toChange)
-
-          ## change those genomes at snps.assoc[i]
-          for(j in 1:length(toChange)){
-            genomes[[toChange[j]]][snps.assoc[i]] <-
-              selectBiallelicSNP(genomes[[toChange[j]]][snps.assoc[i]])
-          } # end for loop
-        }
-      } # end for loop
-    } # end any assoc.prob != 100
-  } # end modification | assoc.prob
+  #   if(n.snps.assoc != 0){
+  #     ## if we have any imperfect associations... ##
+  #     if(any(assoc.prob != 100)){
+  #       ## check length
+  #       if(length(assoc.prob) != n.snps.assoc){
+  #         ## if only 1 prob value given...
+  #         if(length(assoc.prob) == 1){
+  #           ## ... assume uniform assoc.prob;
+  #           assoc.prob <- rep(assoc.prob, n.snps.assoc)
+  #           ## no warning needed
+  #         }else{
+  #           ## BUT if assoc.prob of random length:
+  #           ## repeat until of length n.snps.assoc
+  #           assoc.prob <- rep(assoc.prob, length.out=n.snps.assoc)
+  #           ## and print warning (only if not of length n.snps.assoc OR 1)
+  #           warning("assoc.prob not of length n.snps.assoc;
+  #                   sequence will be repeated until correct length is reached.")
+  #         }
+  #         } # end checks
+  #
+  #       ## for each associated SNP,
+  #       ## we undo some associations | assoc.prob for that snp.assoc
+  #       for(i in 1:n.snps.assoc){
+  #         prob <- assoc.prob[i]
+  #         ## only if the association is imperfect
+  #         if(prob != 100){
+  #           ## draw genomes to change at snps.assoc[i]
+  #           n.toChange <- round(length(genomes)*(1 - (prob/100)))
+  #           toChange <- sample(c(1:length(genomes)), n.toChange)
+  #
+  #           ## change those genomes at snps.assoc[i]
+  #           for(j in 1:length(toChange)){
+  #             genomes[[toChange[j]]][snps.assoc[i]] <-
+  #               selectBiallelicSNP(genomes[[toChange[j]]][snps.assoc[i]])
+  #           } # end for loop
+  #         }
+  #       } # end for loop
+  #       } # end any assoc.prob != 100
+  #   } # end modification | assoc.prob
 
   ##############################
   ## PLOTS & TREECONSTRUCTION ##
@@ -354,9 +392,9 @@ snp.sim <- function(n.snps=10000, n.subs=1,
     }
 
     tree.reconstructed <- tree.reconstruct(dna[1:n.ind],
-                                         method=reconstruct,
-                                         dist.dna.model=dist.dna.model,
-                                         plot=TRUE)
+                                           method=reconstruct,
+                                           dist.dna.model=dist.dna.model,
+                                           plot=TRUE)
   }
 
   ##################
@@ -449,4 +487,4 @@ snp.sim <- function(n.snps=10000, n.subs=1,
 
   return(out)
 
-} # end snp.sim
+} # end fwd.snp.sim

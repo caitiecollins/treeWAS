@@ -1,7 +1,7 @@
 
-####################
-## coalescent.sim ##
-####################
+########################
+## fwd.coalescent.sim ##
+########################
 
 ## a function for simulating trees under a fully-linked coalescent model.
 ## optional simulation of a phenotype and phenotypically-associated SNPs is implemented.
@@ -112,23 +112,14 @@
 ## theta_p changed to n.phen.subs (and just n.subs in phen.sim.R)
 
 
-## OLD ARGS: ##
-# (n.ind=100, gen.size=10000, sim.by="locus",
-#  theta=1*2, dist=NULL,
-#  n.phen.subs=15, phen=NULL,
-#  n.snps.assoc=5, assoc.option="all", assoc.prob=90,
-#  haploid=TRUE, biallelic=TRUE, seed=NULL,
-#  plot=TRUE, heatmap=FALSE, plot2="UPGMA")
 
-
-coalescent.sim <- function(n.ind=100,
-                           n.snps=10000, n.subs=1,
-                           n.snps.assoc=0, assoc.prob=100,
-                           n.phen.subs=15, phen=NULL,
-                           plot=TRUE,
-                           heatmap=FALSE, reconstruct=FALSE,
-                           dist.dna.model="JC69",
-                           seed=1){
+fwd.coalescent.sim <- function(n.ind=100,
+                               n.snps=10000, n.subs=1,
+                               n.snps.assoc=10, n.subs.assoc=15,
+                               p=1,
+                               heatmap=FALSE, reconstruct=FALSE,
+                               dist.dna.model="JC69",
+                               seed=1){
   ## load packages:
   require(adegenet)
   require(ape)
@@ -145,57 +136,28 @@ coalescent.sim <- function(n.ind=100,
   ################################
   tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
 
-  ########################
-  ## Simulate Phenotype ##
-  ########################
-  if(is.null(phen)){
-    ## get list of phenotype simulation output
-    phen.list <- phen.sim(tree, n.subs = n.phen.subs)
-
-    ## get phenotype for terminal nodes only
-    phen <- phen.list$phen
-
-    ## get phenotype for all nodes,
-    ## terminal and internal
-    phen.nodes <- phen.list$phen.nodes
-
-    ## get the indices of phen.subs (ie. branches)
-    phen.loci <- phen.list$phen.loci
-  }else{
-    #############################
-    ## User-provided Phenotype ##
-    #############################
-    phen.nodes <- phen
-    phen.loci <- NULL
-  }
-
-  #################################
-  ## Plot Tree showing Phenotype ##
-  #################################
-  if(plot==TRUE){
-    phen.plot.col <- plot.phen(tree = tree,
-                              phen.nodes = phen.nodes,
-                              plot = plot)
-  }
-
   ###################
   ## Simulate SNPs ##
   ###################
-  snps.list <- snp.sim(n.snps=n.snps, n.subs=n.subs,
-                       n.snps.assoc=n.snps.assoc, assoc.prob=assoc.prob,
-                       tree=tree,
-                       phen.loci=phen.loci,
-                       heatmap=heatmap, reconstruct=reconstruct,
-                       dist.dna.model=dist.dna.model,
-                       seed=seed)
+  snps.list <- fwd.snp.sim(n.snps=n.snps, n.subs=n.subs,
+                           n.snps.assoc=n.snps.assoc, n.subs.assoc=n.subs.assoc,
+                           tree=tree,
+                           heatmap=heatmap, reconstruct=reconstruct,
+                           dist.dna.model=dist.dna.model,
+                           seed=seed)
   snps <- snps.list$snps
   snps.assoc <- snps.list$snps.assoc
+
+  ########################
+  ## Simulate Phenotype ##
+  ########################
+  phen <- fwd.phen.sim(tree, snps.assoc=snps[,snps.assoc], p=p)
 
   ################
   ## Get Output ##
   ################
-  out <- list(snps, snps.assoc, phen, phen.plot.col, tree)
-  names(out) <- c("snps", "snps.assoc", "phen", "phen.plot.col", "tree")
+  out <- list(snps, snps.assoc, phen, tree)
+  names(out) <- c("snps", "snps.assoc", "phen", "tree")
   return(out)
 
-} # end coalescent.sim
+} # end fwd.coalescent.sim

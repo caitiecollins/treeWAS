@@ -150,22 +150,69 @@ get.sig.snps <- function(snps, snps.sim, phen,
   #####################
   ## p.value.correct ##
   #####################
-  if(p.value.correct == "fdr"){
-    warning("p.value.correct == 'fdr' is temporarily incomplete; using bonferroni method instead.")
-    p.value.correct <- "bonf"
-    ## p.value fdr --> a whole list of p.values, corrected (as opposed to just a p.value threshold corrected... )
-    #   p.value <- p.adjust(corr.dat,
-    #                       method="fdr",
-    #                       n=length(corr.dat))
+  if(p.value.correct == "bonf"){
+    ##########
+    ## bonf ##
+    ##########
+    p.value <- p.value/length(corr.dat)
+
+    ################
+    ## p.value.by ##
+    ################
+    if(p.value.by == "count") thresh <- quantile(corr.sim, probs=1-p.value)
+    if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=1-p.value)
   }
 
-  if(p.value.correct == "bonf") p.value <- p.value/length(corr.dat)
 
-  ################
-  ## p.value.by ##
-  ################
-  if(p.value.by == "count") thresh <- quantile(corr.sim, probs=1-p.value)
-  if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=1-p.value)
+  if(p.value.correct == "fdr"){
+    #########
+    ## fdr ##
+    #########
+
+    p.vals <- sapply(c(1:length(corr.sim)),
+                     function(e)
+                       length(which(corr.sim > corr.sim[e]))
+                     /length(corr.sim))
+    p.vals <- sort(p.vals, decreasing=TRUE)
+    p.fdr <- p.adjust(p.vals, method="fdr", n=length(p.vals))
+    p.thresh <- quantile(p.fdr, probs=1-p.value)
+    thresh <- quantile(corr.sim, probs=p.thresh)
+
+    ################
+    ## p.value.by ##
+    ################
+    if(p.value.by == "count") thresh <- quantile(corr.sim, probs=p.thresh)
+    if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=p.thresh)
+
+    #     colnames(snps)[which(pval.fdr < p.thresh)]
+
+    #     ## COMPARING THRESHOLDS ATTAINED BY DIFFERENT METHODS ##
+    #
+    #     ## get threshold by counts
+    #     thresh.uncorr <- quantile(corr.sim, probs=1-p.value)
+    #     thresh.bonf <- quantile(corr.sim, probs=1-(p.value/length(corr.sim)))
+    #     thresh.fdr <- quantile(corr.sim, probs=p.thresh)
+    #
+    #     ## plot
+    #     hist(corr.sim, breaks=50, xlim=c(0,1))
+    #     abline(v=thresh.uncorr, col="black", lwd=2)
+    #     abline(v=thresh.bonf, col="red", lwd=2)
+    #     abline(v=thresh.fdr, col="blue", lwd=2)
+    #
+    #     ## get threshold by density
+    #     thresh.uncorr.d <- quantile(density(corr.sim)$x, probs=1-p.value)
+    #     thresh.bonf.d <- quantile(density(corr.sim)$x, probs=1-(p.value/length(corr.sim)))
+    #     thresh.fdr.d <- quantile(density(corr.sim)$x, probs=p.thresh)
+    #
+    #     ## plot
+    #     par(new=TRUE)
+    #     plot(density(corr.sim), xlim=c(0,1), col="blue")
+    #     abline(v=thresh.uncorr.d, col="black", lwd=2, lty=2)
+    #     abline(v=thresh.bonf.d, col="red", lwd=2, lty=2)
+    #     abline(v=thresh.fdr.d, col="blue", lwd=2, lty=2)
+
+  } # end p.value.correct == "fdr"
+
 
   ##################################
   ## GET SIGNIFICANT CORRELATIONS ##
@@ -174,15 +221,18 @@ get.sig.snps <- function(snps, snps.sim, phen,
     ## Identify (real) SNPs w correlations > thresh:
     sig.snps <- which(corr.dat < thresh)
     p.vals <- sapply(c(1:length(sig.snps)),
-                     function(e) length(which(corr.sim <
-                                                corr.dat[sig.snps[e]]))/length(corr.sim))
+                     function(e)
+                       length(which(corr.sim < corr.dat[sig.snps[e]]))
+                     /length(corr.sim))
   }else{
     ## Identify (real) SNPs w correlations > thresh:
     sig.snps <- which(corr.dat > thresh)
     p.vals <- sapply(c(1:length(sig.snps)),
-                     function(e) length(which(corr.sim >
-                                                corr.dat[sig.snps[e]]))/length(corr.sim))
+                     function(e)
+                       length(which(corr.sim > corr.dat[sig.snps[e]]))
+                     /length(corr.sim))
   }
+
 
   ## 0 p.vals
   min.p <- paste("p-values listed as 0 are <",
