@@ -50,7 +50,7 @@
 ########################################################################
 
 
-plot.phen <- function(tree, phen.nodes, plot=TRUE){
+plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
 
   require(phangorn)
   require(adegenet)
@@ -89,7 +89,7 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE){
     ###############
     if(plot==TRUE){
       if(n.ind <= 20){
-        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol) # edgeCol
+        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
         title("Coalescent tree w/ phenotypic changes")
         axisPhylo()
         edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
@@ -97,7 +97,7 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE){
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
         nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
       }else{
-        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol) # edgeCol
+        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
         title("Coalescent tree w/ phenotypic changes")
         axisPhylo()
         #edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
@@ -150,7 +150,7 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE){
       ## plot TREE ##
       ###############
       if(plot==TRUE){
-        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol)
+        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...)
         title("Coalescent tree w/ phenotypes of leaves")
         axisPhylo()
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))

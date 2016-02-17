@@ -72,7 +72,7 @@ phen.sim <- function(tree, n.subs=15){
   ## (indicating that they want to generate a NEW phenotype for the tree provided)
   if(!is.null(n.phen.subs)){
 
-    ## draw the number of mutations to occur at each site:
+    ## draw the number of mutations to occur:
     n.subs <- rpois(n=1, lambda=n.phen.subs)
     ## if n.subs==0 or ==1, re-sample
     while(n.subs <= 1){
@@ -115,7 +115,7 @@ phen.sim <- function(tree, n.subs=15){
         phen.nodes[[tree$edge[x[i],2]]] <- .switch.phen(phen.nodes[[tree$edge[x[i],1]]])
       }else{
         ## if no phen subs occur on branch i, set phen of
-        ## downstram individual to be equal to ancestor's
+        ## downstream individual to be equal to ancestor's
         phen.nodes[[tree$edge[x[i],2]]] <- phen.nodes[[tree$edge[x[i], 1]]]
       }
     } # end for loop

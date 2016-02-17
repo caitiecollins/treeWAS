@@ -4,7 +4,7 @@
 \alias{plot.phen}
 \title{Short one-phrase description.}
 \usage{
-plot.phen(tree, phen.nodes, plot = TRUE)
+plot.phen(tree, phen.nodes, plot = TRUE, ...)
 }
 \arguments{
 \item{tree}{A phylo object.}

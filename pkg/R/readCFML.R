@@ -29,22 +29,57 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import ape
+#' @import ape adegenet
 
 ########################################################################
 
-
+######################################
+# dist_0 <- readCFML(prefix="~/ClonalFrameML/src/CFML.R.0")
+# str(dist_0) #
+# barplot(dist_0, main="Number of substitutions per site \n R = 0",
+#         names.arg=c(1:length(dist_0)), ylab="Frequency",  col=transp("royalblue", alpha=0.5))
+# save(dist_0, file="~/ClonalFrameML/src/CFML_R_0_dist.Rdata")
+######################################
+# setwd("/media/caitiecollins/Seagate Backup Plus Drive/SimBac")
+# dist_0.1 <- readCFML(prefix="./CFML_R_0.1")
+# str(dist_0.1)
+# save(dist_0.1, file="./CFML_R_0.1_dist.Rdata")
+# barplot(dist_0.1, main="Number of substitutions per site \n R = 0.1",
+#         names.arg=c(1:length(dist_0.1)), ylab="Frequency", col=transp("royalblue", alpha=0.5))
+######################################
+# data(dist)
+# barplot(dist, main="Number of substitutions per site",
+#         names.arg=c(1:length(dist)), ylab="Frequency", col=transp("royalblue", alpha=0.5))
+# title(substitute(paste("(", italic("S. aureus"), " empirical dataset)", sep="")), line=0.5)
+######################################
+# set.seed(1)
+# dist <- rpois(n=1000000, lambda=1)
+# for(i in 1:length(dist)){
+#   while(dist[i]==0){
+#     dist[i] <- rpois(n=1, lambda=1)
+#   }
+# }
+# dist <- table(dist) # NB: always check to make sure you have no missing n.subs in 1:max(dist)
+# barplot(dist, main="Number of substitutions per site",
+#         names.arg=c(1:length(dist)), ylab="Frequency", col=transp("royalblue", alpha=0.5))
+# title(substitute(paste("(Poisson distribution, ", italic("lambda"), " = 1)", sep="")), line=0.5)
+######################################
 
 
 #This function reads the output of CFML and outputs the distribution of substitutions per site
-readCFML <- function(prefix) {
+readCFML <- function(prefix, plot=TRUE) {
 
   require(ape)
+  require(adegenet)
 
   tree<-read.tree(sprintf('%s.labelled_tree.newick',prefix))
   seqs<-read.dna(sprintf('%s.ML_sequence.fasta',prefix),format='fasta')
   mapping<-scan(sprintf('%s.position_cross_reference.txt',prefix),sep=',',quiet=T)
   l<-length(seqs[1,])
+
+  ## check tree (violations cause problems, eg. in phen.sim)
+  if(!is.binary.tree(tree)) tree <- multi2di(tree)
+  if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder")
 
   #Modify the edge matrix so that it uses the same indices as the fasta file
   labs<-labels(seqs)
@@ -63,5 +98,16 @@ readCFML <- function(prefix) {
   #Build distribution
   dist=rep(0,max(subs))
   for (i in 1:max(subs)) dist[i]=sum(num[which(subs==i)])
+
+  ## Plot distribution
+  if(plot==TRUE){
+    barplot(dist,
+            main="Number of substitutions per site",
+            names.arg=c(1:length(dist)),
+            ylab="Frequency",
+            col=transp("royalblue", alpha=0.5))
+  }
+
+
   return(dist)
 }
