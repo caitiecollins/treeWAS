@@ -1,10 +1,8 @@
 
 
-# setwd("/media/caitiecollins/Seagate Backup Plus Drive/SimBac")
+setwd("/media/caitiecollins/Seagate Backup Plus Drive/SimBac")
 
-prefix <- ("CFML_R_0.1")
-
-require(ape)
+prefix <- ("CFML_R_0")
 
 tree<-read.tree(sprintf('%s.labelled_tree.newick',prefix))
 seqs<-read.dna(sprintf('%s.ML_sequence.fasta',prefix),format='fasta')
@@ -61,6 +59,9 @@ phen.plot.col <- plot.phen(tree = tree,
                            phen.nodes = phen.nodes,
                            plot = TRUE,
                            type="c", use.edge.length=FALSE)
+require(ape)
+
+
 edgeLabCol <- "purple"
 edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
            cex=0.7, font=2,
