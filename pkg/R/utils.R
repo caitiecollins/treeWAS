@@ -122,13 +122,13 @@ get.tip.order <- function(tree){
 ## DOCUMENTATION ##
 ###################
 
-#' Truncate to keep only the \textit{last} N characters.
+#' Truncate to keep only the \emph{last} N characters.
 #'
 #' Truncate an element, or each element of a vector, by
 #' removing all but the last N characters of each element.
 #'
 #' @param x A vector whose element(s) will be truncated.
-#' @param n An integer specifying the number of characters to \textit{keep}.
+#' @param n An integer specifying the number of characters to \emph{keep}.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -151,13 +151,13 @@ keepLastN <- function(x, n){
 ## DOCUMENTATION ##
 ###################
 
-#' Truncate to keep only the \textit{first} N characters.
+#' Truncate to keep only the \emph{first} N characters.
 #'
 #' Truncate an element, or each element of a vector, by
 #' removing all but the first N characters of each element.
 #'
 #' @param x A vector whose element(s) will be truncated.
-#' @param n An integer specifying the number of characters to \textit{keep}.
+#' @param n An integer specifying the number of characters to \emph{keep}.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -180,13 +180,13 @@ keepFirstN <- function(x, n){
 ## DOCUMENTATION ##
 ###################
 
-#' Truncate to remove all of the \textit{last} N characters.
+#' Truncate to remove all of the \emph{last} N characters.
 #'
 #' Truncate an element, or each element of a vector, by
 #' removing the last N characters of each element.
 #'
 #' @param x A vector whose element(s) will be truncated.
-#' @param n An integer specifying the number of characters to \textit{remove}.
+#' @param n An integer specifying the number of characters to \emph{remove}.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -210,13 +210,13 @@ removeLastN <- function(x, n){
 ## DOCUMENTATION ##
 ###################
 
-#' Truncate to remove all of the \textit{first} N characters.
+#' Truncate to remove all of the \emph{first} N characters.
 #'
 #' Truncate an element, or each element of a vector, by
 #' removing the first N characters of each element.
 #'
 #' @param x A vector whose element(s) will be truncated.
-#' @param n An integer specifying the number of characters to \textit{remove}.
+#' @param n An integer specifying the number of characters to \emph{remove}.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export

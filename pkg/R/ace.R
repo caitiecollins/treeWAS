@@ -14,7 +14,7 @@
 #'
 #' @param snps A matrix containing binary snps for all individuals.
 #' @param phen A factor containing the phenotype for which to test for association.
-#' @pram tree A phylo object containing the tree representing the ancestral relationships
+#' @param tree A phylo object containing the tree representing the ancestral relationships
 #' between individuals for which snps and phen are known.
 #' @param method A character string specifying the type of ACE method to implement.
 #' @param snps.ace A logical indicating whether to run ACE on all snps (TRUE, slower)

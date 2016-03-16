@@ -4,10 +4,20 @@
 \alias{ace.test}
 \title{Short one-phrase description.}
 \usage{
-ace.test(snps, phen, tree, method = "discrete")
+ace.test(snps, phen, tree, method = "discrete", snps.ace = FALSE)
 }
 \arguments{
-\item{data}{A matrix or data.frame.}
+\item{snps}{A matrix containing binary snps for all individuals.}
+
+\item{phen}{A factor containing the phenotype for which to test for association.}
+
+\item{tree}{A phylo object containing the tree representing the ancestral relationships
+between individuals for which snps and phen are known.}
+
+\item{method}{A character string specifying the type of ACE method to implement.}
+
+\item{snps.ace}{A logical indicating whether to run ACE on all snps (TRUE, slower)
+or to run parsimony on snps instead (FALSE, faster; the default).}
 }
 \description{
 Longer proper discription of function...

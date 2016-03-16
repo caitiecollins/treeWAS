@@ -9,4 +9,5 @@ RoxygenNote: 5.0.1
 Imports: adegenet,
     ape,
     phangorn,
-    ade4
+    ade4,
+    diversitree

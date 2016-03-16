@@ -488,10 +488,14 @@ temp <- sapply(c(1:length(lab)),
 tiptext <- as.vector(unlist(temp))
 
 par(mar=c(1,1,1,2)-0.5)
+edgeCol <- "black"
 plot(tree, show.tip=FALSE, edge.width=2,
      edge.color=edgeCol, type="c", use.edge.length=FALSE)
-# title("Coalescent tree w/ phenotypic changes")
-tiplabels(text=tiptext, cex=0.6, adj=c(-.4, 0), col=leafCol, frame="none")
+## phen-coloured tip labels:
+myCol <- c("blue", "red")
+## convert phen to 1s and 2s (to indicate myCol 1 or 2)
+tipCol.pattern <- as.numeric(as.factor(as.character(phen)))
+tiplabels(text=tiptext, cex=0.6, adj=c(-.4, 0), col=myCol[tipCol.pattern], frame="none")
 
 
 ## try plotting ~ example: ##
