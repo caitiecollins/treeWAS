@@ -258,7 +258,7 @@ edgeCol[c(111)] <- "green"# "blue"
 ###############
 ## load data ##
 ###############
-setwd("/media/caitiecollins/Seagate Backup Plus Drive/SimBac")
+setwd("/media/caitiecollins/Seagate Backup Plus Drive/MRC Seminar")
 
 tree <- get(load("./MRC_tree.Rdata"))
 phen <- get(load("./MRC_phen.Rdata"))
@@ -462,7 +462,7 @@ tree <- tree.ace
 #########
 
 ## DISCRETE
-var <- snps[,10]
+var <- snps[,1]
 
 snps.ace.d <- ace(var, tree, type="discrete")
 str(snps.ace.d)
@@ -521,7 +521,7 @@ nodelabels(thermo = df/100, piecol = transp(myCol, 0.8), cex = 0.25)
 edges <- tree$edge
 
 ## get variable
-var <- snps[,3]
+var <- snps[,1]
 var.terminal <- var
 snps.ace.d <- ace(var, tree, type="discrete")
 var.internal <- snps.ace.d$lik.anc[,2]
@@ -607,6 +607,470 @@ out <- ace.test(snps[,1:10], phen, tree, method="discrete")
 
 ## examine output
 round(out, 4)
+
+
+
+###########################################################################
+
+###############
+## PARSIMONY ##
+###############
+
+##############
+## phangorn ##   ###   ###   ###   ###   ###   ###   ###   ###
+##############
+require(phangorn)
+
+lev <- unique(as.vector(snps))
+dna <- as.phyDat(snps, type="USER", levels=lev)
+D <- dist.gene(snps)
+## NOTE--dist.gene does not have the model arg that
+## dist.dna has (allowing user to specify, eg. "raw", "JC69")
+## Why not? Does it matter? If so, how to coerce binary snps into DNAbin??
+
+####
+
+snps.nt <- replace(snps, which(snps==0), "A")
+snps.nt <- replace(snps.nt, which(snps==1), "G")
+
+dna <- as.phyDat(snps.nt)
+dna.bin <- as.DNAbin(dna)
+D <- dist.dna(dna.bin, model="raw")
+
+####
+
+tree.ini <- nj(D)
+
+plot(tree.ini, cex=0.5)
+title("NJ tree")
+
+plot(midpoint(tree.ini), cex=0.5)
+title("NJ tree, midpoint")
+
+## get parsimony (ie. overall parsimony cost)
+cost <- parsimony(tree.ini, dna)
+cost
+#15004 # w snps 0/1
+#5668 # w snps.nt
+
+## get site-wise parsimony scores
+cost <- parsimony(tree.ini, dna, site="site")
+cost
+
+#######################################
+## ALL ABOVE STEPS CAN BE DONE WITH: ##
+#######################################
+cost <- get.fitch.n.mts(snps, tree)
+## possibly replacing tree w nj...
+cost <- get.fitch.n.mts(snps, tree.ini)
+
+## OR w sankoff:
+sank <- sankoff(tree, dna, site="site")
+str(sank)
+
+##############################################
+## get optimised parsimony
+tree.pars <- optim.parsimony(tree.ini, dna)
+tree.pars
+#Final p-score 15004 after  0 nni operations
+## WHY DID IT NOT UNDERGO ANY NNIs???
+
+plot(tree.pars, cex=0.5)
+## AND YET WHY DOES THE OUTPUT TREE LOOK SO VERY DIFFERENT???
+
+## phangorn doc claims the parsimony ratchet
+## is the preferred way to search for the best tree
+tree.prat <- pratchet(dna)
+str(tree.prat)
+
+########################################
+## try parsimony on individual snps ? ##
+########################################
+
+## NB: branch lengths corrsond to n.subs
+# foo.ori <- foo
+# states.ori <- states
+# mpr.ori <- mpr
+# dna.ori <- dna
+
+snp <- snps[,1:10]
+
+lev <- unique(as.vector(snp))
+dna <- as.phyDat(snp, type="USER", levels=lev)
+
+D <- dist.gene(snps)
+## NOTE--dist.gene does not have the model arg that
+## dist.dna has (allowing user to specify, eg. "raw", "JC69")
+## Why not? Does it matter? If so, how to coerce binary snps into DNAbin??
+tree.ini <- nj(D)
+plot(tree.ini, cex=0.5)
+plot(midpoint(tree.ini), cex=0.5)
+
+## get parsimony (ie. overall parsimony cost)
+cost <- parsimony(tree.ini, dna)
+cost
+#39
+
+## get optimised parsimony
+tree.pars <- optim.parsimony(tree.ini, dna)
+str(tree.pars)
+#Final p-score 19 after  1 nni operations
+## WHY DID IT UNDERGO 1 NNI NOW W ONE SNP BUT NOT UNDERGO ANY BEFORE????
+
+plot(tree.pars, cex=0.5)
+## AND YET WHY DOES THE OUTPUT TREE LOOK SO VERY DIFFERENT???
+
+## phangorn doc claims the parsimony ratchet
+## is the preferred way to search for the best tree
+tree.prat <- pratchet(dna)
+str(tree.prat)
+
+#######################################
+## ALL ABOVE STEPS CAN BE DONE WITH: ##
+#######################################
+cost <- get.fitch.n.mts(snps, tree)
+## possibly replacing tree w nj...
+cost1 <- get.fitch.n.mts(snps, tree.ini)
+
+## OR w sankoff:
+sank <- sankoff(tree, dna, site="site")
+str(sank)
+
+#############################################
+## get SNP states of all internal nodes ?? ##
+#############################################
+
+#########
+## MPR ##
+#########
+
+## pace == ancestral.pars
+pa.MPR <- pace(tree, dna, type="MPR")
+str(pa.MPR)
+
+#############
+## ACCTRAN ##
+#############
+
+## pace == ancestral.pars
+pa.ACCTRAN <- pace(tree, dna, type="ACCTRAN")
+str(pa.ACCTRAN)
+
+## pace  --> diff resuls w MPR vs. ACCTRAN
+diffs <- sapply(c(1:length(pa.ACCTRAN)), function(e) identical(pa.MPR[[e]], pa.ACCTRAN[[e]]))
+which(diffs==FALSE) # 101:199
+
+###########################################
+## convert reconstruction back to snps.. ##
+###########################################
+## each of the n.ind elements of pa is a matrix w n.snps rows and 4 columns, each for the 4 nts possible (acgt)
+
+# rec <- pa.MPR
+rec <- pa.ACCTRAN
+
+# str(rec)
+snps.rec <- list()
+for(i in 1:length(rec)){
+  snps.rec[[i]] <- rec[[i]][,3]
+}
+snps.rec <- do.call("rbind", snps.rec)
+rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):((nrow(snps)*2)-1)))
+colnames(snps.rec) <- colnames(snps)
+# identical(snps.rec[1:nrow(snps),], snps)
+
+
+##############################################
+## get LOCATIONS (branches) of snps subs ?? ##
+##############################################
+subs.edges <- rep(list(NULL), ncol(snps))
+for(i in 1:ncol(snps)){
+  snp <- snps.rec[, i]
+  subs.logical <- sapply(c(1:nrow(edges)),
+                       function(e)
+                         snp[edges[e,1]]
+                       ==
+                         snp[edges[e,2]])
+  ## get indices of all edges containing a substitution
+  subs.total <- which(subs.logical == FALSE)
+  ## get df of states of ancestor and descendants nodes on these edges
+  df <- data.frame(snp[edges[subs.total,1]], snp[edges[subs.total,2]])
+  names(df) <- c("anc", "dec")
+  ## get indices of all edges w a positive sub (0 --> 1)
+  subs.pos <- subs.total[which(df$anc==0)]
+  ## get indices of all edges w a negative sub (1 --> 0)
+  subs.neg <- subs.total[which(df$anc==1)]
+
+  ## get output list
+  subs.edges[[i]] <- rep(list(NULL), 3)
+  names(subs.edges[[i]]) <- c("total", "pos", "neg")
+  if(length(subs.total) > 0) subs.edges[[i]][["total"]] <- subs.total
+  if(length(subs.pos) > 0) subs.edges[[i]][["pos"]] <- subs.pos
+  if(length(subs.neg) > 0) subs.edges[[i]][["neg"]] <- subs.neg
+}
+
+cost3 <- sapply(c(1:length(subs.edges)), function(e) length(subs.edges[[e]]))
+head(cost3)
+
+## check:
+## for SNP1, does it identify the correct/reasonable branches?
+## see plot w edgeCol2--reasonable yes, but not the real simulated branches...
+# temp <- rep(0, nrow(edges))
+# temp <- replace(temp, subs.edges[[1]], 1)
+
+#######################################
+## test for association w phen (ACE) ##
+#######################################
+ace.score <- list()
+## NB: length(subs.edges) == ncol(snps.unique)
+for(i in 1:length(subs.edges)){
+  ## get the absolute value of
+  ## the sum of all the positive (0-->1) and negative (1-->0) subs
+  ace.score[[i]] <- abs(sum(phen.diffs[subs.edges[[i]][["pos"]]])) +
+    abs(sum(phen.diffs[subs.edges[[i]][["neg"]]]))
+}
+ace.score <- as.vector(unlist(ace.score))
+max(ace.score) # 5.96
+min(ace.score) # 0
+
+#par(mar=c(5,4,4,1)+0.1)
+hist(ace.score)
+
+table(round(ace.score, 2))
+
+head(round(ace.score, 2), 20)
+
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+
+
+#########################
+## MAXIMUM LIKELIHOOD? ##
+#########################
+snps.nt <- replace(snps, which(snps==0), "A")
+snps.nt <- replace(snps.nt, which(snps==1), "G")
+
+dna.bin <- as.DNAbin(dna)
+D <- dist.dna(dna.bin, model="raw")
+
+dna4 <- as.phyDat(dna.bin)
+tre.ini <- nj(D)
+fit.ini <- pml(tre.ini, dna4, k=n.ind)
+fit <- optim.pml(fit.ini, optNni = TRUE, optBf = TRUE,
+                 optQ = TRUE, optGamma = TRUE)
+
+# anova(fit.ini, fit)
+# AIC(fit.ini)
+# AIC(fit)
+
+tree.ml <- fit$tree
+#tree.ml <- midpoint(ladderize(tree.ml))
+tree.ml <- midpoint(tree.ml)
+
+## plot
+plot(tree.ml, show.tip=TRUE, edge.width=2)
+title("Maximum-likelihood tree")
+axisPhylo()
+
+str(tree.ml)
+
+#fit$lv # what is this?
+#
+
+
+
+#
+
+
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+#########
+## ape ##   ###   ###   ###   ###   ###   ###   ###   ###   ###
+#########
+require(ape)
+
+mpr <- MPR(phen, unroot(tree), outgroup=1)
+str(mpr)
+
+#############
+## get.mpr ##
+#############
+get.mpr <- function(snps){
+
+  ###############################
+  ## get unique SNPs patterns: ##
+  ###############################
+  tab.out <- table.matrix(t(snps))
+  snps.unique <- t(as.matrix(tab.out$unique.data))
+  index <- tab.out$index
+  #   if(ncol(snps.unique) == ncol(snps)){
+  #     all.unique <- TRUE
+  #   }else{
+  #     all.unique <- FALSE
+  #   }
+
+  ## work w only unique snps:
+  snps.ori <- snps
+  snps <- snps.unique
+
+  n.ind <- nrow(snps)
+
+  mpr <- list()
+  # system.time # 35 elapsed
+  # w 2500 unique snps
+  for(i in 1:ncol(snps)){
+    mpr[[i]] <- MPR(snps[,i], unroot(tree), outgroup=n.ind)
+    ## MPR returns a df w states for all internal nodes
+    ## the df has 2 columns for the lower and upper bound of these states
+    ## bc it treats the snp 0/1 as an integer value.
+    ## NOTE--we hope that all lower/upper pairs will be the same
+    ## (ie. that MPR is confident in the SNP selected... ).
+    ## If not ??????
+  }
+
+  return(mpr)
+} # end get.mpr
+
+foo <- mpr[[1]]
+foo
+
+edges <- tree$edge
+tail(edges)
+
+## check if all upper and lower MPR estimates are the same:
+temp <- sapply(c(1:nrow(foo)),
+               function(e) foo[e,1]==foo[e,2])
+## identify which are different...
+diffs <- which(temp==FALSE)
+## deal with these later!
+foo[diffs,]
+
+## get a vector of SNPi states for all internal nodes
+## (use MPR lower estimate for now)
+states.int <- foo[,1]
+###########
+## NOTE--THIS IS SPECIFIC TO YOUR DATASET ###################
+## 1 = SNP state for ind n.ind (ie 100) thus c(x, 0)
+states.int <- c(foo[,1], 1) ## NEED to FIX OUtGROUP PROBLEM!
+## reorder??
+noms <- names(states.int)
+## remove "NODE_" from noms
+## ie. NODE_112 --> 112
+noms <- as.numeric(removeFirstN(noms, 5))
+
+## get a vector of SNPi states for all terminal nodes
+x <- 1
+states.term <- snps[,x]
+## concatenate to get vector of SNPi states for all nodes
+states <- c(states.term, states.int)
+
+## go through edges from root down to identify  branches where change occurs.
+subs <- list()
+for(i in 1:nrow(edges)){
+  state.anc <- states[edges[i,1]]
+  state.dec <- states[edges[i,2]]
+  subs[[i]] <- state.anc==state.dec
+}
+subs <- as.vector(unlist(subs))
+subs.edges <- which(subs==FALSE)
+subs.edges
+length(subs.edges) # 40...
+## should only be 10 edges w a sub for snp 1...
+
+################
+## ape MPR eg ##
+################
+## the example in Narushima and Hanazawa (1997):
+tr <- read.tree(text = "(((i,j)c,(k,l)b)a,(h,g)e,f)d;")
+x <- c(1, 3, 0, 6, 5, 2, 4)
+names(x) <- letters[6:12]
+o <- MPR(x, tr, "f")
+plot(tr)
+nodelabels(paste("[", o[, 1], ",", o[, 2], "]", sep = ""))
+tiplabels(x[tr$tip.label], adj = -2)
+
+## some random data:
+x <- rpois(30, 1)
+tr <- rtree(30, rooted = FALSE)
+p <- MPR(x, tr, "t1")
+plot(tr, type="c", use.edge.length=FALSE)
+nodelabels(paste("[", p[, 1], ",", p[, 2], "]", sep = ""), cex=0.7)
+tiplabels(x[1:length(tr$tip.label)], adj = -5, cex=0.7)
+
+
+#
+
+
+###############
+## plot tree ##
+###############
+
+## ACE ##
+## DISCRETE
+var <- snps[,1]
+
+snps.ace.d <- ace(var, tree, type="discrete")
+probs.d <- snps.ace.d$lik.anc[,2]*100
+## convert probs to show on tree pies:
+probs.ori <- probs.d
+df <- data.frame(100-probs.ori, probs.ori)
+names(df) <- c("prob.A", "prob.B")
+lab <- as.character(tree$tip.label)
+temp <- sapply(c(1:length(lab)),
+               function(e)
+                 paste(
+                   paste(rep(c("-"), 3-nchar(lab[e])), collapse=""),
+                   "-", lab[e], sep=""))
+tiptext <- as.vector(unlist(temp))
+par(mar=c(1,1,1,2)-0.5)
+plot(tree, show.tip=FALSE, edge.width=2,
+     edge.color=edgeCol, type="c", use.edge.length=FALSE)
+tiplabels(text=tiptext, cex=0.6, adj=c(-.4, 0), col=leafCol, frame="none")
+## try plotting ~ example: ##
+#### Showing the probs and inverse probs on each node:
+myCol <- c("blue", "red")
+## convert phen to 1s and 2s (to indicate myCol 1 or 2)
+tipCol.pattern <- as.numeric(as.factor(as.character(var[1:100])))
+## plot terminal squares
+tiplabels(pch = 22, bg = myCol[tipCol.pattern], cex = 0.7, adj = 1)
+## plot internal pies
+nodelabels(thermo = df/100, piecol = transp(myCol, 0.8), cex = 0.25, adj=1.5)
+##########
+# nodelabels(paste("[", foo[, 1], ",", foo[, 2], "]", sep = ""), cex=0.7)
+# tiplabels(states.term[1:length(tree$tip.label)], adj = -5, cex=0.7)
+##########
+nodelabels(states.int, cex=0.5)
+tiplabels(states.term, adj = -5, cex=0.7, frame="none")
+##########
+edgeCol2 <- replace(temp, which(temp==0), "black")
+edgeCol2 <- replace(edgeCol2, which(temp==1), "yellow")
+edgelabels(text=temp,
+           cex=0.7, font=2, bg=transp(edgeCol2, 0.3))
+##########
+plot(tree, cex=0.5)
+edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+          cex=0.5, font=2, bg=transp("yellow", 0.3), adj=c(1,1))
+nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp("blue", 0.3))
+## should be numbered s.t. the root node is n.term+1
+## RECALL: terminal nodes are numbered 1:n.ind from bottom to top of plot of tree;
+## edges are numbered 1:nrow(edges) by following the lowest trace on the plot??
+## (starting from the root down to the lowermost tips);
+## thus, internal nodes are numbered (n.ind+1):(n.ind+(n.ind-1)),
+## from root to the top-most internal node to be connected (ie. the highest in the plot)
+
+
+
+# ## branch and bound? ##
+# ## WAYYY TO SlOW!
+# # dna = phyDat
+# tree.bab <- bab(dna) # trace=0
+# str(tree.bab)
+#
+# cost.bab <- parsimony(tree.bab, dna)
+#
+
+
+
+#
 
 
 

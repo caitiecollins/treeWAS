@@ -71,6 +71,13 @@ get.tip.order <- function(tree){
 # } # end get.tip.order
 
 
+#########   ###   ###   ###   ###   ###   ###   ###   ###   ###   #########
+#########   ###   ###   ###   ###   ###   ###   ###   ###   ###   #########
+
+## NOTE: THESE ARE BEING RENAMED --> SET OF 4 FNS!
+## NEED TO KEEP OLD 2 FOR NOW UNTIL YOU CAN SEARCH THROUGH
+## ALL YOUR OTHER FNS FOR INSTANCES OF THEIR USE
+## AND REPLACE THE OLD FN NAMES W THE NEW!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ##################
 ## .substrRight ##
@@ -82,8 +89,8 @@ get.tip.order <- function(tree){
 #' @export
 
 .substrRight <- function(x, n){
-  sapply(x, function(xx)
-    substr(xx, (nchar(xx)-n+1), nchar(xx))
+  sapply(x, function(e)
+    substr(e, (nchar(e)-n+1), nchar(e))
   )
 } # end .substrRight
 
@@ -98,11 +105,133 @@ get.tip.order <- function(tree){
 #' @export
 
 .substrLeft <- function(x, n){
-  sapply(x, function(xx)
-    substr(xx, 0, n)
+  sapply(x, function(e)
+    substr(e, 0, n)
   )
 } # end .substrLeft
 
+#########   ###   ###   ###   ###   ###   ###   ###   ###   ###   #########
+
+###############
+## keepLastN ##
+###############
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Truncate to keep only the \textit{last} N characters.
+#'
+#' Truncate an element, or each element of a vector, by
+#' removing all but the last N characters of each element.
+#'
+#' @param x A vector whose element(s) will be truncated.
+#' @param n An integer specifying the number of characters to \textit{keep}.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+########################################################################
+
+keepLastN <- function(x, n){
+  sapply(x, function(e)
+    substr(e, (nchar(e)-n+1), nchar(e))
+  )
+} # end keepLastN
+
+################
+## keepFirstN ##
+################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Truncate to keep only the \textit{first} N characters.
+#'
+#' Truncate an element, or each element of a vector, by
+#' removing all but the first N characters of each element.
+#'
+#' @param x A vector whose element(s) will be truncated.
+#' @param n An integer specifying the number of characters to \textit{keep}.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+########################################################################
+
+keepFirstN <- function(x, n){
+  sapply(x, function(e)
+    substr(e, (nchar(e)-n+1), nchar(e))
+  )
+} # end keepFirstN
+
+#################
+## removeLastN ##
+#################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Truncate to remove all of the \textit{last} N characters.
+#'
+#' Truncate an element, or each element of a vector, by
+#' removing the last N characters of each element.
+#'
+#' @param x A vector whose element(s) will be truncated.
+#' @param n An integer specifying the number of characters to \textit{remove}.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+########################################################################
+
+removeLastN <- function(x, n){
+  sapply(x, function(e)
+    substr(e, 0, (nchar(e)-n))
+  )
+} # end removeLastN
+
+
+##################
+## removeFirstN ##
+##################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Truncate to remove all of the \textit{first} N characters.
+#'
+#' Truncate an element, or each element of a vector, by
+#' removing the first N characters of each element.
+#'
+#' @param x A vector whose element(s) will be truncated.
+#' @param n An integer specifying the number of characters to \textit{remove}.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+########################################################################
+
+removeFirstN <- function(x, n){
+  sapply(x, function(e)
+    substr(e, n+1, nchar(e))
+  )
+} # end removeFirstN
+
+
+#########   ###   ###   ###   ###   ###   ###   ###   ###   ###   #########
+#########   ###   ###   ###   ###   ###   ###   ###   ###   ###   #########
 
 ##################
 ## .is.integer0 ##

@@ -12,7 +12,14 @@
 #'
 #' Longer proper discription of function...
 #'
-#' @param data A matrix or data.frame.
+#' @param snps A matrix containing binary snps for all individuals.
+#' @param phen A factor containing the phenotype for which to test for association.
+#' @pram tree A phylo object containing the tree representing the ancestral relationships
+#' between individuals for which snps and phen are known.
+#' @param method A character string specifying the type of ACE method to implement.
+#' @param snps.ace A logical indicating whether to run ACE on all snps (TRUE, slower)
+#' or to run parsimony on snps instead (FALSE, faster; the default).
+#'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -40,14 +47,14 @@
 
 
 
-ace.test <- function(snps, phen, tree, method="discrete"){
+ace.test <- function(snps, phen, tree, method="discrete", snps.ace=FALSE){
 
   edges <- tree$edge
 
   ###############################
   ## get unique SNPs patterns: ##
   ###############################
-  tab.out <- matrix.table(t(snps))
+  tab.out <- table.matrix(t(snps))
   snps.unique <- t(as.matrix(tab.out$unique.data))
   index <- tab.out$index
   if(ncol(snps.unique) == ncol(snps)){
@@ -60,57 +67,166 @@ ace.test <- function(snps, phen, tree, method="discrete"){
   snps.ori <- snps
   snps <- snps.unique
 
-  ##################################
-  ## get diffs for (unique) SNPS: ##
-  ##################################
-  diffs <- list()
-  # system.time == 105.042 elapsed
-  # w unique ncol(snps) == 2500
-  for(i in 1:ncol(snps)){
-    ## get variable
-    var <- snps[,i]
-    var.terminal <- var
-    snps.ace.d <- ace(var, tree, type=method)
-    var.internal <- snps.ace.d$lik.anc[,2]
-    var <- c(var.terminal, var.internal)
+  ##########################################
+  ## RUN ACE on PHEN & PARSIMONY on SNPS: ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ##########################################
+  if(snps.ace == FALSE){
 
-    ## get differences for this variable's ace likelihoods
-    diffs[[i]] <- get.ace.diffs(var, edges)
+    ## get n.subs per site:
+    cost <- get.fitch.n.mts(snps, tree)
+
+    #############################################
+    ## get SNP states of all internal nodes ?? ##
+    #############################################
+
+    #########
+    ## MPR ##
+    #########
+
+    ## pace == ancestral.pars
+    #pa.MPR <- pace(tree, dna, type="MPR")
+
+    #############
+    ## ACCTRAN ##
+    #############
+
+    ## pace == ancestral.pars
+    pa.ACCTRAN <- pace(tree, dna, type="ACCTRAN")
+
+    ## pace  --> diff resuls w MPR vs. ACCTRAN
+    diffs <- sapply(c(1:length(pa.ACCTRAN)), function(e) identical(pa.MPR[[e]], pa.ACCTRAN[[e]]))
+
+    ## TO DO -- STILL NEED TO FIGURE OUT HOW TO HANDLE MPR/ACCTRAN RESULTS W DIFFERENT UPPER AND LOWER ESTIMATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    ###########################################
+    ## convert reconstruction back to snps.. ##
+    ###########################################
+    ## each of the n.ind elements of pa is a matrix w n.snps rows and 4 columns, each for the 4 nts possible (acgt)
+
+    # rec <- pa.MPR
+    rec <- pa.ACCTRAN
+
+    # str(rec)
+    snps.rec <- list()
+    for(i in 1:length(rec)){
+      snps.rec[[i]] <- rec[[i]][,3]
+    }
+    snps.rec <- do.call("rbind", snps.rec)
+    rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):((nrow(snps)*2)-1)))
+    colnames(snps.rec) <- colnames(snps)
+    # identical(snps.rec[1:nrow(snps),], snps)
+
+
+    ##############################################
+    ## get LOCATIONS (branches) of snps subs ?? ##
+    ##############################################
+    subs.edges <- rep(list(NULL), ncol(snps))
+    for(i in 1:ncol(snps)){
+      snp <- snps.rec[, i]
+      subs.logical <- sapply(c(1:nrow(edges)),
+                             function(e)
+                               snp[edges[e,1]]
+                             ==
+                               snp[edges[e,2]])
+      ## get indices of all edges containing a substitution
+      subs.total <- which(subs.logical == FALSE)
+      ## get df of states of ancestor and descendants nodes on these edges
+      df <- data.frame(snp[edges[subs.total,1]], snp[edges[subs.total,2]])
+      names(df) <- c("anc", "dec")
+      ## get indices of all edges w a positive sub (0 --> 1)
+      subs.pos <- subs.total[which(df$anc==0)]
+      ## get indices of all edges w a negative sub (1 --> 0)
+      subs.neg <- subs.total[which(df$anc==1)]
+
+      ## get output list
+      subs.edges[[i]] <- rep(list(NULL), 3)
+      names(subs.edges[[i]]) <- c("total", "pos", "neg")
+      if(length(subs.total) > 0) subs.edges[[i]][["total"]] <- subs.total
+      if(length(subs.pos) > 0) subs.edges[[i]][["pos"]] <- subs.pos
+      if(length(subs.neg) > 0) subs.edges[[i]][["neg"]] <- subs.neg
+    }
+
+    cost3 <- sapply(c(1:length(subs.edges)), function(e) length(subs.edges[[e]]))
+
+    ## check:
+    ## for SNP1, does it identify the correct/reasonable branches?
+    ## see plot w edgeCol2--reasonable yes, but not the real simulated branches...
+    # temp <- rep(0, nrow(edges))
+    # temp <- replace(temp, subs.edges[[1]], 1)
+
+    #######################################
+    ## test for association w phen (ACE) ##
+    #######################################
+    ace.score <- list()
+    ## NB: length(subs.edges) == ncol(snps.unique)
+    for(i in 1:length(subs.edges)){
+      ## get the absolute value of
+      ## the sum of all the positive (0-->1) and negative (1-->0) subs
+      ace.score[[i]] <- abs(sum(phen.diffs[subs.edges[[i]][["pos"]]])) +
+        abs(sum(phen.diffs[subs.edges[[i]][["neg"]]]))
+    }
+    ace.score <- as.vector(unlist(ace.score))
   }
 
+  ####################################
+  ## RUN ACE on BOTH SNPS AND PHEN: ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ####################################
 
-  #########################
-  ## get diffs for PHEN: ##
-  #########################
-  ## do we need to check phen is numeric??
-  phen.terminal <- phen
-  phen.ace.d <- ace(phen, tree, type=method)
-  phen.internal <- phen.ace.d$lik.anc[,2]
-  var <- c(phen.terminal, phen.internal)
+  if(snps.ace == TRUE){
+    ##################################
+    ## get diffs for (unique) SNPS: ##
+    ##################################
+    diffs <- list()
+    # system.time == 105.042 elapsed
+    # w unique ncol(snps) == 2500
+    for(i in 1:ncol(snps)){
+      ## get variable
+      var <- snps[,i]
+      var.terminal <- var
+      snps.ace.d <- ace(var, tree, type=method)
+      var.internal <- snps.ace.d$lik.anc[,2]
+      var <- c(var.terminal, var.internal)
 
-  phen.diffs <-  get.ace.diffs(var, edges)
+      ## get differences for this variable's ace likelihoods
+      diffs[[i]] <- get.ace.diffs(var, edges)
+    }
 
-  ###########################################
-  ## compare diffs for each SNPs vs. PHEN: ##
-  ###########################################
-  diff.corrs <- list()
-  for(i in 1:ncol(snps)){
-    snps.diffs <- diffs[[i]]
-    sp.diffs <- snps.diffs * phen.diffs
 
-    diff.corrs[[i]] <- sum(sp.diffs)
+    #########################
+    ## get diffs for PHEN: ##
+    #########################
+    ## do we need to check phen is numeric??
+    phen.terminal <- phen
+    phen.ace.d <- ace(phen, tree, type=method)
+    phen.internal <- phen.ace.d$lik.anc[,2]
+    var <- c(phen.terminal, phen.internal)
+
+    phen.diffs <-  get.ace.diffs(var, edges)
+
+    ###########################################
+    ## compare diffs for each SNPs vs. PHEN: ##
+    ###########################################
+    ace.score <- list()
+    for(i in 1:ncol(snps)){
+      snps.diffs <- diffs[[i]]
+      sp.diffs <- snps.diffs * phen.diffs
+
+      ace.score[[i]] <- sum(sp.diffs)
+    }
+    ace.score <- as.vector(unlist(ace.score))
   }
-  diff.corrs <- as.vector(unlist(diff.corrs))
+
 
   ############################################
   ## get values for duplicate snps columns: ##
   ############################################
   if(all.unique == TRUE){
-    diff.corrs.complete <- diff.corrs
+    ace.score.complete <- ace.score
   }else{
-    diff.corrs.complete <- rep(NA, ncol(snps.ori))
+    ace.score.complete <- rep(NA, ncol(snps.ori))
     for(i in 1:ncol(snps.unique)){
-      diff.corrs.complete[which(index == i)] <- diff.corrs[i]
+      ace.score.complete[which(index == i)] <- ace.score[i]
     }
   }
 
@@ -120,7 +236,7 @@ ace.test <- function(snps, phen, tree, method="discrete"){
   ## Return vector containing measure of
   ## correlation btw SNPi and PHENi diffs across nodes in tree
   ## for all snps in original snps matrix.
-  return(diff.corrs.complete)
+  return(ace.score.complete)
 
 } # end ace.test
 
@@ -196,12 +312,12 @@ get.ace.diffs <- function(var, edges){
 ########################################################################
 
 ##################
-## matrix.table ##
+## table.matrix ##
 ##################
 ## Get just the unique rows of a matrix,
 ## the pattern/index to map duplicate rows to,
 ## and a table counting repeats of unique rows.
-matrix.table <- function(data){
+table.matrix <- function(data){
   ## get df
   if(!is.data.frame(data)){
     data <- as.data.frame(data, stringsAsFactors = FALSE)
@@ -230,5 +346,5 @@ matrix.table <- function(data){
               table = tab,
               unique.data = data[unique.inds,])
   return(out)
-} # end matrix.table
+} # end table.matrix
 
