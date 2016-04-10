@@ -456,6 +456,7 @@ snps <- snps.ace
 phen <- phen.ace
 tree <- tree.ace
 
+################################################################################################################################################################
 
 #########
 ## ACE ##
@@ -464,10 +465,16 @@ tree <- tree.ace
 ## DISCRETE
 var <- snps[,1]
 
+system.time(snps.ace.d <- ace(var, tree, type="discrete"))
+
+# x <- ace(var, tree, type="discrete")
+# str(x)
+
 snps.ace.d <- ace(var, tree, type="discrete")
-str(snps.ace.d)
-round(snps.ace.d$lik.anc, 3)
+# str(snps.ace.d)
+# round(snps.ace.d$lik.anc, 3)
 probs.d <- snps.ace.d$lik.anc[,2]*100
+probs.d <- fit.iQ$lik.anc[,2]*100
 
 ##########
 ## PLOT ##
@@ -491,7 +498,7 @@ par(mar=c(1,1,1,2)-0.5)
 edgeCol <- "black"
 plot(tree, show.tip=FALSE, edge.width=2,
      edge.color=edgeCol, type="c", use.edge.length=FALSE)
-## phen-coloured tip labels:
+## PHEN-coloured tip labels:
 myCol <- c("blue", "red")
 ## convert phen to 1s and 2s (to indicate myCol 1 or 2)
 tipCol.pattern <- as.numeric(as.factor(as.character(phen)))
@@ -502,13 +509,14 @@ tiplabels(text=tiptext, cex=0.6, adj=c(-.4, 0), col=myCol[tipCol.pattern], frame
 #### Showing the probs and inverse probs on each node:
 myCol <- c("blue", "red")
 ## convert phen to 1s and 2s (to indicate myCol 1 or 2)
-tipCol.pattern <- as.numeric(as.factor(as.character(var[1:100])))
+tipCol.pattern <- as.numeric(as.factor(as.character(var[1:(tree$Nnode+1)])))
 ## plot terminal squares
 tiplabels(pch = 22, bg = myCol[tipCol.pattern], cex = 0.7, adj = 1)
 ## plot internal pies
 nodelabels(thermo = df/100, piecol = transp(myCol, 0.8), cex = 0.25)
+nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp("blue", 0.3), adj=2)
 
-
+################################################################################################################################################################
 
 ##########
 ## TEST ##

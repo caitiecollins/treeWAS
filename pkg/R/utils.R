@@ -9,6 +9,48 @@
 ## here and within all other fns s.t. no documentation required
 ## (unless we want to release these for public use?)
 
+#####################
+## get.unique.snps ##
+#####################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Get the order of the tip labels of a phylogenetic tree as plotted.
+#'
+#' Longer proper discription of function...
+#'
+#' @param snps A matrix of SNPs, potentially containing non-unique patterns.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+#' @examples
+#'
+#' @import phangorn
+
+
+########################################################################
+###############################
+## get unique SNPs patterns: ##
+###############################
+
+get.unique.snps <- function(snps){
+
+  ## Identify unique SNP patterns:
+  tab.out <- table.matrix(t(snps))
+  snps.unique <- t(as.matrix(tab.out$unique.data))
+  index <- tab.out$index
+  colnames(snps.unique) <- c(1:ncol(snps.unique))
+
+  out <- list(snps.unique=snps.unique,
+              index=index)
+  return(out)
+} # end get.unique.snps
+
+
 
 ###################
 ## get.tip.order ##
@@ -41,7 +83,7 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import ape
+#' @import ape Hmisc
 
 
 ########################################################################
@@ -49,8 +91,9 @@
 
 get.tip.order <- function(tree){
   require(ape)
+  require(Hmisc)
   tree2 <- read.tree(text=write.tree(tree))
-  if(is.numeric(tree2$tip.label)){
+  if(all.is.numeric(tree2$tip.label)){
     out <- as.numeric(tree2$tip.label)
     out <- rev(out)
   }else{

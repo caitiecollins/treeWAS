@@ -61,6 +61,7 @@ get.fitch.n.mts <- function(snps, tree){
   fitch.phangorn <- phangorn::fitch
   ## get parsimony score for all unique patterns in snps
   fitch.unique <- fitch.phangorn(tree, snps.phyDat, site="site")
+  # table(fitch.unique)
 
   ## get score for all original sites
   fitch.complete <- rep(NA, ncol(snps))

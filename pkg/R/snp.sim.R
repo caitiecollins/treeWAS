@@ -41,6 +41,7 @@
 
 
 snp.sim <- function(n.snps=10000, n.subs=1,
+                    snp.root=NULL,
                     n.snps.assoc=10, assoc.prob=100,
                     tree=coalescent.tree.sim(100),
                     phen.loci=NULL,
@@ -59,8 +60,34 @@ snp.sim <- function(n.snps=10000, n.subs=1,
   gen.size <- n.snps
 
   if(!is.null(seed)) set.seed(seed)
-  ## simulate genotype for root individual:
-  gen.root <- sample(c("a", "c", "g", "t"), gen.size, replace=TRUE)
+
+  ## Simulate genotype for root individual:
+  if(class(n.subs) != "matrix"){
+
+    ## For n.subs = n or = dist approaches:
+    gen.root <- sample(c("a", "c", "g", "t"), gen.size, replace=TRUE)
+
+  }else{
+    ## For ACE/Pagel-test approach:
+    ## Input = either:
+    ## one state (chosen by directly selecting the more likely state), or
+    ## two likelihoods (taken from fit.iQ$lik.anc[1,] from w/in fitPagel).
+
+    ## One state:
+    if(!is.null(snp.root)){
+      if(length(snp.root) == 1){
+        ## select only root state --> different SNP sim method (???)
+        if(snp.root == 0) gen.root <- "a"
+        if(snp.root == 1) gen.root <- "t"
+
+        ## select root state & assign this state to all nodes,
+        ## to be changed later by a modifiction of the existing SNP sim method...
+        #if(snp.root == 0) gen.root <- rep("a", gen.size)
+        #if(snp.root == 1) gen.root <- rep("t", gen.size)
+      }
+    }
+
+  }
   ## get the sum of all branch lengths in the tree:
   time.total <- sum(tree$edge.length)
 
@@ -109,6 +136,10 @@ snp.sim <- function(n.snps=10000, n.subs=1,
       }
     }
     }else{
+
+      ###############################################
+      ## DISTRIBUTION or RATES (fitPagel Q matrix) ##
+      ###############################################
 
       ##################
       ## DISTRIBUTION ##
@@ -165,7 +196,8 @@ snp.sim <- function(n.snps=10000, n.subs=1,
           n.mts[loci.selected] <- j
         }
       }
-  } # end dist
+      # } # end dist
+  } # end fitPagel or dist
 
   ############################
   ## Assign mts to branches ##

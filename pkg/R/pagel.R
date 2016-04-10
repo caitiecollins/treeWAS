@@ -1,159 +1,485 @@
 
+##################
+## Pagel 94 fns ##
+##################
 
-################
-## Pagel 1994 ##
-################
 
-#######################
-## Example w my data ##
-#######################
+# #' #######################################################################
+# #'
+# #' ##################
+# #' # DOCUMENTATION ##
+# #' ##################
+# #'
+# #' Short one-phrase description.
+# #'
+# #' Longer proper discription of function...
+# #'
+# #' @param tree A phylo object.
+# #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+# #' @examples
+# #'
+# #' @import phytools geiger ape phangorn
+# #' @export
+# #'
+# #' #######################################################################
+#
+# get.n.subs <- function(n){
+#   Q <- matrix(c(-1/n, 1/n, 1/n, -1/n), 2, 2)
+#   rownames(Q) <- colnames(Q) <- letters[1:2]
+#   tt1 <- sim.history(tree, Q)
+#   ## Done simulation(s).
+#
+#   maps <- tt1$maps
+#   n.subs <- length(as.vector(unlist(maps)))-length(maps)
+#   return(n.subs)
+# } # end get.n.subs
 
-data("snps.ace")
-data("phen.ace")
-data("tree.ace")
-snps <- snps.ace
-phen <- phen.ace
-tree <- tree.ace
 
-## Attempt w SNP1 ##
-var <- snps[,1]
 
-x <- var
-y <- phen
 
-fit.ape<-fitPagel(tree,x,y, method="ace") # warnings OK (?? if perfectly correlated only??)
-fit.ape
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
-fit.Mk<-fitPagel(tree,x,y, method="fitMk")
-fit.Mk
+########################################################################
 
-## Not sure why this one is giving me p-values of 1 and disagreeing w ape's ace...??
-fit.geiger<-fitPagel(tree,x,y,method="fitDiscrete") # warnings OK
-fit.geiger
+###################
+## DOCUMENTATION ##
+###################
 
-###############
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param tree A phylo object.
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @examples
+#'
+#' @import phytools geiger ape phangorn
+#' @export
 
-n.ind <- 100
+########################################################################
 
-set.seed(1)
-tree <- pbtree(n=n.ind, scale=1)
+##########
+## mexp ##
+##########
+# library(rmutil)
+mexp <- function(x, type="spectral decomposition", t=1, n=20, k=3){
 
+  if(!is.matrix(x))stop("x must be a matrix")
+  if(length(dim(x))!=2)stop("x must be a two dimensional matrix")
+  if(dim(x)[1]!=dim(x)[2])stop("x must be a square matrix")
+
+  type <- match.arg(type,c("spectral decomposition","series approximation"))
+  d <- ncol(x)
+
+  if(type=="spectral decomposition"){
+    z <- eigen(t*x,sym=F)
+    p <- z$vectors%*%diag(exp(z$values))%*%solve(z$vectors)
+
+  }else{
+    xx <- x*t/2^k
+    p <- diag(d)
+    q <- p
+    for(r in 1:n){
+      q <- xx%*%q/r
+      p <- p+q
+    }
+    for(i in 1:k)
+      p <- p%*%p
+  }
+  p
+} # end mexp
+
+
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param tree A phylo object.
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @examples
+#'
+#' @import phytools geiger ape phangorn
+#' @export
+
+########################################################################
+
+#########
+## Q2P ##
+#########
+Q2P <- function(Q, type=NULL){
+
+  #requires fn mexp
+
+  ## GET PROBABILITY MATRIX:
+  P <- mexp(0.05 * Q)
+  row.names(P) <- row.names(Q)
+  colnames(P) <- colnames(Q)
+
+  ## SPECIFIC COMPONENTS FOR fitPagel x|y VARIABLES:
+  ## (ie. if Q is a rate matrix for
+  ## a single variable that combines 2 variables as x|y,
+  ## for example, as used/returned by fitPagel)
+  if(!is.null(type)){
+    ## INDEPENDENT RATES
+    if(type=="independent"){
+      ## CHECK: if type=="idependent"
+      ## Make sure pairs of cells add up to same probabilities.
+      #       if(
+      #         any(c(
+      #         !identical(round(sum(P[1,1:2]), 10), round(sum(P[2,1:2]), 10)),
+      #         !identical(round(sum(P[1,3:4]), 10), round(sum(P[2,3:4]), 10)),
+      #         !identical(round(sum(P[3,1:2]), 10), round(sum(P[4,1:2]), 10)),
+      #         !identical(round(sum(P[3,3:4]), 10), round(sum(P[4,3:4]), 10))))
+      #         ){
+      #         warning("If type == independent,
+      #                  pairs of cells in quadrants of
+      #                  the probability matrix
+      #                  should sum to the same thing.
+      #                  They do not.")
+      #       }
+
+      P00 <- sum(P[1, 1:2])
+      P01 <- sum(P[1, 3:4])
+      P11 <- sum(P[3, 1:2])
+      P10 <- sum(P[3, 3:4])
+
+      probs <- c(P00, P01, P10, P11)
+      names(probs) <- c("P00", "P01", "P10", "P11")
+    }else{
+      ## DEPENDENT RATES
+      ## NOTE-- Only set up for 4x4 matrices right now.
+      ## ... Could generalise later if useful to user.
+      if(ncol(P) == 4){
+        ## remove diagonals
+        probs <- as.vector(unlist(t(P)))[c(2,3,5,8,9,12,14,15)]
+        ## reorder in terms of var1 first
+        probs <- probs[c(1,3,2,4,5,7,6,8)]
+
+        v1 <- as.character(c(0, 0, 1, 1))
+        v2 <- as.character(c(0, 1, 0, 1))
+
+        noms <- list()
+        noms[[1]] <- paste("P", v1[1], v1[2], "|", v2[1], v2[2], sep="")
+        noms[[2]] <- paste("P", v1[2], v1[1], "|", v2[2], v2[1], sep="")
+        noms[[3]] <- paste("P", v1[1], v1[3], "|", v2[1], v2[3], sep="")
+        noms[[4]] <- paste("P", v1[2], v1[4], "|", v2[2], v2[4], sep="")
+        noms[[5]] <- paste("P", v1[3], v1[1], "|", v2[3], v2[1], sep="")
+        noms[[6]] <- paste("P", v1[4], v1[2], "|", v2[4], v2[2], sep="")
+        noms[[7]] <- paste("P", v1[3], v1[4], "|", v2[3], v2[4], sep="")
+        noms[[8]] <- paste("P", v1[4], v1[3], "|", v2[4], v2[3], sep="")
+        noms <- as.vector(unlist(noms))
+
+        names(probs) <- noms
+      }
+    }
+    ## return both P matrix and individual probs vector:
+    out <- list(P, probs)
+    names(out) <- c("P", "probs")
+  }else{
+
+    ## if not a fitPagel xy variable, just return P, the whole prob matrix
+    out <- list(P)
+    names(out) <- c("P")
+  }
+
+  return(out)
+
+} # end Q2P
+
+
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param tree A phylo object.
+#' @param Q A matrix containing transition rates (as returned )
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @examples
+#'
+#' @import phytools
+#' @export
+
+########################################################################
 
 ################
 ## get.n.subs ##
 ################
 
-## identify the n.subs generated by sim.history
-## if the transition rate matrix Q is -1, 1, 1, -1 divided by n.
+## Get n.subs for a given SNP
+## from rate.mat Q (fitPagel iQ)
+## & tree height + branch lengths
 
-## HYPOTHESIS:
-## Setting n to sum(tree$edge.length) should make
-## the expected value of n.subs to be 1 sub per tree...
+## ASSUMPTION (guess):
+## Rates from fitPagel/ace in Q are in units of
+## number of substitutions (in a given direction)
+## per tree height.
+## Therefore, the expected value of the n.subs in the tree
+## is the sum(rates)*(sum(branch.lengths)/tree.height)
 
-## EG:
-# foo <- replicate(100, get.n.subs(sum(tree$edge.length)))
-# hist(foo)
-# summary(foo)
+get.n.subs <- function(Q, tree){
 
-get.n.subs <- function(n){
-  Q <- matrix(c(-1/n, 1/n, 1/n, -1/n), 2, 2)
-  rownames(Q) <- colnames(Q) <- letters[1:2]
-  tt1 <- sim.history(tree, Q)
-  ## Done simulation(s).
+  require(phytools)
 
-  maps <- tt1$maps
-  n.subs <- length(as.vector(unlist(maps)))-length(maps)
+  ## get height of tree:
+  H <- nodeHeights(tree)
+  tree.height <- max(H)
+
+  ## get branch lengths in tree:
+  branch.lengths <- tree$edge.length
+
+  ## get the number of units of time contained in the tree:
+  n.unit <- sum(branch.lengths)/tree.height
+  # n.unit # 6.88 (for snps[,5])
+
+  ## estimate the expected number of substitutions
+  ## given rates and n.unit time:
+  if(ncol(Q) == 4){
+    rate01 <- Q[1,3]
+    rate10 <- Q[3,1]
+    n.subs01 <- rate01*n.unit
+    n.subs10 <- rate10*n.unit
+    n.subs <- c(n.subs01, n.subs10)
+    names(n.subs) <- c("n.subs01", "n.subs10")
+  }else{
+    n.subs <- Q*n.unit
+  }
+
   return(n.subs)
+
 } # end get.n.subs
 
 
-## plot
-#library(adegenet)
-#par(mfrow=c(1,1))
-plotSimmap(tt1,setNames(c("blue","red"),letters[1:2]),ftype="off",lwd=1)
-edgelabels(c(1:nrow(tree$edge)), cex=0.5, bg=transp("yellow", 0.3))
-
-# states <- list()
-# for(i in 1:length(maps)){
-#   states[[i]] <- names(maps[[i]])
-# }
-
-# subs <- list()
-# subs[[1]] <- length(states[[1]])-1
-# for(i in 2:length(states)){
-#   anc <- states[[i-1]]
-#   dec <- states[[i]]
-#
-#   ## If first or only state in dec
-#   ## is the same as the last or only state of anc,
-#   ## do not add this maintained state to the tally of subs:
-#   if(dec[1] == anc[length(anc)]){
-#     subs[[i]] <- length(dec)-1
-#   }else{
-#     ## If a mt has occurred btw anc and dec,
-#     ## add this to the tally, in addition to length(dec):
-#     subs[[i]] <- length(dec)
-#   }
-# }
-#
-# subs
-# sum(as.vector(unlist(subs)))
-
-# subs <- list()
-# subs[[1]] <- length(states[[1]])-1
-# for(i in 2:length(states)){
-#   anc <- states[[i-1]]
-#   dec <- states[[i]]
-#
-#   ## If first or only state in dec
-#   ## is the same as the last or only state of anc,
-#   ## do not add this maintained state to the tally of subs:
-#   if(dec[1] == anc[length(anc)]){
-#     subs[[i]] <- length(dec)-1
-#   }else{
-#     ## If a mt has occurred btw anc and dec,
-#     ## add this to the tally, in addition to length(dec):
-#     subs[[i]] <- length(dec)
-#   }
-# }
-#
-# subs
-# sum(as.vector(unlist(subs)))
-
-# subs <- list()
-# for(i in 1:nrow(tree$edge)){
-#   anc <- states[[tree$edge[i,1]]]
-#   dec <- states[[tree$edge[i,2]]]
-#
-#   ## If first or only state in dec
-#   ## is the same as the last or only state of anc,
-#   ## do not add this maintained state to the tally of subs:
-#   if(dec[1] == anc[length(anc)]){
-#     if(i == 1){
-#       subs[[i]] <- sum((length(anc)-1), (length(dec)-1))
-#     }else{
-#       subs[[i]] <- length(dec)-1
-#     }
-#   }else{
-#     ## If a mt has occurred btw anc and dec,
-#     ## add this to the tally, in addition to length(dec):
-#     if(i == 1){
-#       subs[[i]] <- sum((length(anc)-1), (length(dec)-1))
-#     }else{
-#       subs[[i]] <- length(dec)-1
-#     }
-#   }
-# }
-
-tt2<-sim.history(tree,Q)
-## Done simulation(s).
-
-## these are uncorrelated, see:
-par(mfrow=c(1,2))
-plotSimmap(tt1,setNames(c("blue","red"),letters[1:2]),ftype="off",lwd=1)
-plotSimmap(tt2,setNames(c("blue","red"),letters[1:2]),ftype="off",lwd=1,direction="leftwards")
 
 ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+##################################################################################
+## FUNCTIONS FROM: ###############################################################
+##################################################################################
+## http://blog.phytools.org/2014/12/r-function-for-pagels-1994-correlation.html ##
+## Posted here: http://www.phytools.org/fitPagel/v0.1/fitPagel.R #################
+##################################################################################
+
+## function fits Pagel '94 model of correlated evolution of two binary characters
+## uses ape::ace or geiger::fitDiscrete internally
+## written by Liam J. Revell 2014
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param tree A phylo object.
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @examples
+#'
+#' @import phytools geiger ape phangorn
+#' @export
+
+########################################################################
+
+fitPagel<-function(tree,x,y, equal=FALSE, ...){
+  if(hasArg(method)){
+    method<-list(...)$method
+  }else{
+    method<-"ace"
+  }
+  if(method=="fitDiscrete"){
+    chk<-.check.pkg("geiger")
+    if(!chk){
+      cat("  method = \"fitDiscrete\" requires the package \"geiger\"\n")
+      cat("  Defaulting to method = \"ace\"\n\n")
+      method<-"ace"
+      fitDiscrete<-function(...) NULL
+    }
+  }
+  noms.x <- names(x)
+  if(!is.factor(x)) x<-as.factor(x)
+  levels.x<-levels(x)
+  names(x) <- noms.x
+  if(!is.factor(y)) y<-as.factor(y)
+  levels.y<-levels(y)
+  y<-y[names(x)]
+  if(length(levels.x)!=2||length(levels.y)!=2)
+    stop("Only binary characters for x & y currently permitted.")
+  if(any(!levels.x %in% levels.y)){
+    ## convert both to binary variables:
+    warning("Levels of x != levels of y; converting both to binary variables.")
+    x <- as.numeric(x)-1
+    y <- as.numeric(y)-1
+    if(!is.factor(x)) x<-as.factor(x)
+    levels.x<-levels(x)
+    if(!is.factor(y)) y<-as.factor(y)
+    levels.y<-levels(y)
+    y<-y[names(x)]
+  }
+  xy<-setNames(factor(paste(x,y,sep="|"),
+                      levels=sapply(levels.x,paste,levels.y,sep="|")),
+               names(x))
+  ## fit independent model
+  if(equal == FALSE){
+    iQ<-matrix(c(0,1,2,0,3,0,0,2,4,0,0,1,0,4,3,0),4,4,byrow=TRUE) ## original (allows for diff rates fwd & bckwd)
+  }
+  if(equal == TRUE){
+    ####iQ<-matrix(c(0,1,2,0,3,0,0,2,2,0,0,1,0,2,3,0),4,4,byrow=TRUE) ## w EQUAL rates (for SNP only???) ## NOT INVERTIBLE
+    iQ<-matrix(c(0,1,2,0,1,0,0,2,2,0,0,1,0,2,1,0),4,4,byrow=TRUE) ## w EQUAL rates (for SNP & PHEN both)
+  }
+  rownames(iQ)<-colnames(iQ)<-levels(xy)
+  fit.iQ<-if(method=="fitDiscrete") fitDiscrete(tree,xy,model=iQ) else ace(xy,tree,type="discrete",model=iQ)
+  ## fit dependendent model
+  if(equal ==FALSE){
+    dQ<-matrix(c(0,1,2,0,3,0,0,4,5,0,0,6,0,7,8,0),4,4,byrow=TRUE)
+  }
+  if(equal == TRUE){
+    ###dQ<-matrix(c(0,1,2,0,3,0,0,4,2,0,0,5,0,4,6,0),4,4,byrow=TRUE) ## w EQUAL rates (for SNP only???) ## NOT INVERTIBLE
+    dQ<-matrix(c(0,1,2,0,1,0,0,3,2,0,0,4,0,3,4,0),4,4,byrow=TRUE) ## w EQUAL rates (for SNP & PHEN both)
+  }
+  rownames(dQ)<-colnames(dQ)<-levels(xy)
+  if(method=="fitDiscrete"){
+    fit.dQ <-fitDiscrete(tree,xy,model=dQ)
+  }else{
+    fit.dQ <-try(ace(xy,tree,type="discrete",model=dQ), silent=TRUE)
+    if(class(fit.dQ) == "try-error") fit.dQ <- NULL
+  }
+  ## back translate independent model
+  if(method=="fitDiscrete"){
+    iQ<-geiger:::.Qmatrix.from.gfit(fit.iQ)
+  }else{
+    I<-fit.iQ$index.matrix
+    I[I==0]<-NA
+    iQ<-apply(I,2,function(i,x) x[i],x=fit.iQ$rates)
+    iQ[is.na(iQ)]<-0
+    diag(iQ)<--rowSums(iQ)
+    rownames(iQ)<-colnames(iQ)
+  }
+  ## dependent model
+  if(!is.null(fit.dQ)){
+    if(method=="fitDiscrete"){
+      dQ<-geiger:::.Qmatrix.from.gfit(fit.dQ)
+    }else{
+      I<-fit.dQ$index.matrix
+      I[I==0]<-NA
+      dQ<-apply(I,2,function(i,x) x[i],x=fit.dQ$rates)
+      dQ[is.na(dQ)]<-0
+      diag(dQ)<--rowSums(dQ)
+      rownames(dQ)<-colnames(dQ)
+    }
+    ## assemble object to return
+    obj<-list(independent.Q=iQ,
+              dependent.Q=dQ,
+              independent.lik.anc = fit.iQ$lik.anc,
+              dependent.lik.anc = fit.dQ$lik.anc,
+              independent.logL=logLik(fit.iQ),
+              dependent.logL=logLik(fit.dQ),
+              lik.ratio=2*(logLik(fit.dQ)-logLik(fit.iQ)),
+              P=pchisq(2*(logLik(fit.dQ)-logLik(fit.iQ)),
+                       df=length(levels(x))+length(levels(y)),
+                       lower.tail=FALSE))
+    class(obj)<-"fitPagel"
+  }else{
+    ## assemble object to return
+    obj<-list(independent.Q=iQ,
+              # dependent.Q=dQ,
+              independent.lik.anc = fit.iQ$lik.anc,
+              # dependent.lik.anc = fit.dQ$lik.anc,
+              independent.logL=logLik(fit.iQ),
+              # dependent.logL=logLik(fit.dQ),
+              # lik.ratio=2*(logLik(fit.dQ)-logLik(fit.iQ)),
+              #               P=pchisq(2*(logLik(fit.dQ)-logLik(fit.iQ)),
+              #                        df=length(levels(x))+length(levels(y)),
+              #                        lower.tail=FALSE)
+              P = 1
+              )
+  }
+
+  obj
+
+} # end fitPagel
+
+
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param tree A phylo object.
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @examples
+#'
+#' @import phytools geiger ape phangorn
+#' @export
+
+########################################################################
+
+print.fitPagel<-function(x,...){
+  cat("\n  Pagel's binary character correlation test:\n")
+  cat("\nIndepedent model rate matrix:\n")
+  print(x$independent.Q)
+  cat("\nDependent model rate matrix:\n")
+  print(x$dependent.Q)
+  cat("\nIndependent ancestral state likelihoods:\n")
+  print(x$independent.lik.anc)
+  cat("\nDependent ancestral state likelihoods:\n")
+  print(x$dependent.lik.anc)
+  cat("\nModel fit:\n")
+  obj<-matrix(c(x$independent.logL,x$dependent.logL),2,1)
+  rownames(obj)<-c("independent","dependent")
+  colnames(obj)<-"log-likelihood"
+  print(obj)
+  cat("\nHypothesis test result:\n")
+  cat(paste("  likelihood-ratio: ",signif(x$lik.ratio,7),"\n"))
+  cat(paste("  p-value: ",signif(x$P,7),"\n"))
+} # end print.fitPagel
+
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param tree A phylo object.
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @examples
+#'
+#' @import phytools geiger ape phangorn
+#' @export
+
+########################################################################
+
+## fn from phytools github, March 17, 2016.
+## https://github.com/liamrevell/phytools/blob/master/R/fitMk.R
 
 fitMk<-function(tree,x,model="SYM",fixedQ=NULL,...){
   if(hasArg(output.liks)) output.liks<-list(...)$output.liks
@@ -291,340 +617,4 @@ fitMk<-function(tree,x,model="SYM",fixedQ=NULL,...){
   }
   class(obj)<-"fitMk"
   return(obj)
-}
-
-## print method for objects of class "fitMk"
-print.fitMk<-function(x,digits=6,...){
-  cat("Object of class \"fitMk\".\n\n")
-  cat("Fitted (or set) value of Q:\n")
-  Q<-matrix(NA,length(x$states),length(x$states))
-  Q[]<-c(0,x$rates)[x$index.matrix+1]
-  diag(Q)<-0
-  diag(Q)<--rowSums(Q)
-  colnames(Q)<-rownames(Q)<-x$states
-  print(round(Q,digits))
-  cat("\nFitted (or set) value of pi:\n")
-  print(x$pi)
-  cat(paste("\nLog-likelihood:",round(x$logLik,digits),"\n\n"))
-}
-
-## summary method for objects of class "fitMk"
-summary.fitMk<-function(object,...){
-  if(hasArg(digits)) digits<-list(...)$digits
-  else digits<-6
-  if(hasArg(quiet)) quiet<-list(...)$quiet
-  else quiet<-FALSE
-  if(!quiet) cat("Fitted (or set) value of Q:\n")
-  Q<-matrix(NA,length(object$states),length(object$states))
-  Q[]<-c(0,object$rates)[object$index.matrix+1]
-  diag(Q)<-0
-  diag(Q)<--rowSums(Q)
-  colnames(Q)<-rownames(Q)<-object$states
-  if(!quiet) print(round(Q,digits))
-  if(!quiet) cat(paste("\nLog-likelihood:",round(object$logLik,digits),"\n\n"))
-  invisible(list(Q=Q,logLik=object$logLik))
-}
-
-## logLik method for objects of class "fitMk"
-logLik.fitMk<-function(object,...) object$logLik
-
-## AIC method
-AIC.fitMk<-function(object,...,k=2){
-  np<-length(object$rates)
-  -2*logLik(object)+np*k
-}
-
-
-fitPagel<-function(tree,x,y,method="fitMk",...){
-  if(!inherits(tree,"phylo")) stop("tree should be object of class \"phylo\".")
-  if(method=="fitDiscrete"){
-    chk<-.check.pkg("geiger")
-    if(!chk){
-      cat("  method = \"fitDiscrete\" requires the package \"geiger\"\n")
-      cat("  Defaulting to method = \"fitMk\"\n\n")
-      method<-"fitMk"
-      fitDiscrete<-function(...) NULL
-    }
-  }
-  if(!is.factor(x)) x<-as.factor(x)
-  levels.x<-levels(x)
-  if(!is.factor(y)) y<-as.factor(y)
-  levels.y<-levels(y)
-  y<-y[names(x)]
-  if(length(levels.x)!=2||length(levels.y)!=2)
-    stop("Only binary characters for x & y currently permitted.")
-  xy<-setNames(factor(paste(x,y,sep="|"),
-                      levels=sapply(levels.x,paste,levels.y,sep="|")),
-               names(x))
-  ## fit independent model
-  iQ<-matrix(c(0,1,2,0,3,0,0,2,4,0,0,1,0,4,3,0),4,4,byrow=TRUE)
-  rownames(iQ)<-colnames(iQ)<-levels(xy)
-  fit.iQ<-if(method=="fitDiscrete") fitDiscrete(tree,xy,model=iQ,...)
-  else if(method=="ace") ace(xy,tree,type="discrete",model=iQ,...)
-  else fitMk(tree,xy,model=iQ,...)
-  ## fit dependendent model
-  dQ<-matrix(c(0,1,2,0,3,0,0,4,5,0,0,6,0,7,8,0),4,4,byrow=TRUE)
-  rownames(dQ)<-colnames(dQ)<-levels(xy)
-  fit.dQ<-if(method=="fitDiscrete") fitDiscrete(tree,xy,model=dQ,...)
-  else if(method=="ace") ace(xy,tree,type="discrete",model=dQ,...)
-  else fitMk(tree,xy,model=dQ,...)
-  ## back translate independent model
-  if(method=="fitDiscrete") iQ<-.Qmatrix.from.gfit(fit.iQ)
-  else {
-    I<-fit.iQ$index.matrix
-    I[I==0]<-NA
-    iQ<-apply(I,2,function(i,x) x[i],x=fit.iQ$rates)
-    iQ[is.na(iQ)]<-0
-    diag(iQ)<--rowSums(iQ)
-    rownames(iQ)<-colnames(iQ)
-  }
-  ## dependent model
-  if(method=="fitDiscrete") dQ<-.Qmatrix.from.gfit(fit.dQ)
-  else {
-    I<-fit.dQ$index.matrix
-    I[I==0]<-NA
-    dQ<-apply(I,2,function(i,x) x[i],x=fit.dQ$rates)
-    dQ[is.na(dQ)]<-0
-    diag(dQ)<--rowSums(dQ)
-    rownames(dQ)<-colnames(dQ)
-  }
-  ## assemble object to return
-  obj<-list(independent.Q=iQ,
-            dependent.Q=dQ,
-            independent.logL=logLik(fit.iQ),
-            dependent.logL=logLik(fit.dQ),
-            lik.ratio=2*(logLik(fit.dQ)-logLik(fit.iQ)),
-            P=pchisq(2*(logLik(fit.dQ)-logLik(fit.iQ)),
-                     df=length(levels(x))+length(levels(y)),
-                     lower.tail=FALSE),
-            method=method)
-  class(obj)<-"fitPagel"
-  obj
-}
-
-## print method for objects of class "fitPagel"
-## written by Liam J. Revell 2014
-
-print.fitPagel<-function(x,...){
-  cat("\n  Pagel's binary character correlation test:\n")
-  cat("\nIndependent model rate matrix:\n")
-  print(x$independent.Q)
-  cat("\nDependent model rate matrix:\n")
-  print(x$dependent.Q)
-  cat("\nModel fit:\n")
-  obj<-matrix(c(x$independent.logL,x$dependent.logL),2,1)
-  rownames(obj)<-c("independent","dependent")
-  colnames(obj)<-"log-likelihood"
-  print(obj)
-  cat("\nHypothesis test result:\n")
-  cat(paste("  likelihood-ratio: ",signif(x$lik.ratio,7),"\n"))
-  cat(paste("  p-value: ",signif(x$P,7),"\n"))
-  cat(paste("\nModel fitting method used was",x$method,"\n\n"))
-}
-
-## function borrowed from geiger to pull the Q-matrix from a fit returned by fitDiscrete
-
-.Qmatrix.from.gfit<-function(x){
-  if(!.check.pkg("geiger")) argn<-function(...) NULL
-  lik=x$lik
-  numberize=function(x){
-    y=gsub("q","",x)
-    sp=(nn<-nchar(y))/2
-    as.numeric(c(substring(y,1,sp),substring(y,sp+1,
-                                             nn)))
-  }
-  att=attributes(lik)
-  att$k=length(att$levels)
-  Qmat=matrix(0,att$k,att$k)
-  nms=att$argn[att$trns]
-  other=att$argn[!att$trns]
-  if("constrained"%in%class(lik)){
-    cpars=x$opt[argn(lik)]
-    apars=names(lik(unlist(cpars),pars.only=TRUE))
-    nms=apars[!apars%in%other]
-  }
-  trns=x$opt[nms]
-  for(i in 1:length(trns)){
-    nm=names(trns)[i]
-    idx=numberize(nm)
-    Qmat[idx[1],idx[2]]=trns[[i]]
-  }
-  diag(Qmat)=-rowSums(Qmat)
-  rownames(Qmat)<-colnames(Qmat)<-levels(lik)
-  Qmat
-}
-
-## BELOW NOW IN PHYTOOLS (?!) ######################################################################
-
-
-
-##################################################################################
-## EXAMPLE FROM: #################################################################
-##################################################################################
-## http://blog.phytools.org/2014/12/r-function-for-pagels-1994-correlation.html ##
-##################################################################################
-
-## first load packages & source code
-library(phytools)
-library(geiger)
-# source("fitPagel.R")
-.check.pkg<-phytools:::.check.pkg
-
-##################
-## UNcorrelated ##
-##################
-
-set.seed(1)
-## now let's simulate some uncorrelated data
-tree<-pbtree(n=300,scale=1)
-Q<-matrix(c(-1,1,1,-1),2,2)
-rownames(Q)<-colnames(Q)<-letters[1:2]
-tt1<-sim.history(tree,Q)
-## Done simulation(s).
-
-tt2<-sim.history(tree,Q)
-## Done simulation(s).
-
-## these are uncorrelated, see:
-par(mfrow=c(1,2))
-plotSimmap(tt1,setNames(c("blue","red"),letters[1:2]),ftype="off",lwd=1)
-plotSimmap(tt2,setNames(c("blue","red"),letters[1:2]),ftype="off",lwd=1,direction="leftwards")
-
-
-## run Pagel's binary character correlation test:
-x<-tt1$states
-y<-tt2$states
-
-fit.ape<-fitPagel(tree,x,y, method="ace")
-fit.ape
-
-fit.Mk <- fitPagel(tree, x, y, method="fitMk")
-fit.Mk
-
-fit.geiger<-fitPagel(tree,x,y,method="fitDiscrete") # warnings OK
-fit.geiger
-
-
-################
-## CORRELATED ##
-################
-
-Q<-matrix(c(0,0.5,0.5,0,2,0,0,2,2,0,0,2,0,0.5,0.5,0),4,4,byrow=TRUE)
-rownames(Q)<-colnames(Q)<-c("aa","ab","ba","bb")
-diag(Q)<--rowSums(Q)
-tt<-sim.history(tree,t(Q))
-
-tt1<-mergeMappedStates(tt,c("aa","ab"),"a")
-tt1<-mergeMappedStates(tt1,c("ba","bb"),"b")
-tt2<-mergeMappedStates(tt,c("aa","ba"),"a")
-tt2<-mergeMappedStates(tt2,c("ab","bb"),"b")
-
-## these data are correlated, see:
-par(mfrow=c(1,2))
-plotSimmap(tt1,setNames(c("blue","red"),letters[1:2]),ftype="off",lwd=1)
-plotSimmap(tt2,setNames(c("blue","red"),letters[1:2]),ftype="off",lwd=1,direction="leftwards")
-
-x<-getStates(tt1,"tips")
-y<-getStates(tt2,"tips")
-
-fit.ape<-fitPagel(tree,x,y, method="ace")
-fit.ape
-
-fit.Mk <- fitPagel(tree, x, y, method="fitMk")
-fit.Mk
-
-fit.geiger<-fitPagel(tree,x,y,method="fitDiscrete") # warnings OK
-fit.geiger
-
-
-
-
-##################################################################################
-## FUNCTIONS FROM: ###############################################################
-##################################################################################
-## http://blog.phytools.org/2014/12/r-function-for-pagels-1994-correlation.html ##
-## Posted here: http://www.phytools.org/fitPagel/v0.1/fitPagel.R #################
-##################################################################################
-
-## function fits Pagel '94 model of correlated evolution of two binary characters
-## uses ape::ace or geiger::fitDiscrete internally
-## written by Liam J. Revell 2014
-
-fitPagel<-function(tree,x,y,...){
-  if(hasArg(method)) method<-list(...)$method
-  else method<-"ace"
-  if(method=="fitDiscrete"){
-    chk<-.check.pkg("geiger")
-    if(!chk){
-      cat("  method = \"fitDiscrete\" requires the package \"geiger\"\n")
-      cat("  Defaulting to method = \"ace\"\n\n")
-      method<-"ace"
-      fitDiscrete<-function(...) NULL
-    }
-  }
-  if(!is.factor(x)) x<-as.factor(x)
-  levels.x<-levels(x)
-  if(!is.factor(y)) y<-as.factor(y)
-  levels.y<-levels(y)
-  y<-y[names(x)]
-  if(length(levels.x)!=2||length(levels.y)!=2)
-    stop("Only binary characters for x & y currently permitted.")
-  xy<-setNames(factor(paste(x,y,sep="|"),
-                      levels=sapply(levels.x,paste,levels.y,sep="|")),
-               names(x))
-  ## fit independent model
-  iQ<-matrix(c(0,1,2,0,3,0,0,2,4,0,0,1,0,4,3,0),4,4,byrow=TRUE)
-  rownames(iQ)<-colnames(iQ)<-levels(xy)
-  fit.iQ<-if(method=="fitDiscrete") fitDiscrete(tree,xy,model=iQ) else ace(xy,tree,type="discrete",model=iQ)
-  ## fit dependendent model
-  dQ<-matrix(c(0,1,2,0,3,0,0,4,5,0,0,6,0,7,8,0),4,4,byrow=TRUE)
-  rownames(dQ)<-colnames(dQ)<-levels(xy)
-  fit.dQ<-if(method=="fitDiscrete") fitDiscrete(tree,xy,model=dQ) else ace(xy,tree,type="discrete",model=dQ)
-  ## back translate independent model
-  if(method=="fitDiscrete") iQ<-geiger:::.Qmatrix.from.gfit(fit.iQ)
-  else {
-    I<-fit.iQ$index.matrix
-    I[I==0]<-NA
-    iQ<-apply(I,2,function(i,x) x[i],x=fit.iQ$rates)
-    iQ[is.na(iQ)]<-0
-    diag(iQ)<--rowSums(iQ)
-    rownames(iQ)<-colnames(iQ)
-  }
-  ## dependent model
-  if(method=="fitDiscrete") dQ<-geiger:::.Qmatrix.from.gfit(fit.dQ)
-  else {
-    I<-fit.dQ$index.matrix
-    I[I==0]<-NA
-    dQ<-apply(I,2,function(i,x) x[i],x=fit.dQ$rates)
-    dQ[is.na(dQ)]<-0
-    diag(dQ)<--rowSums(dQ)
-    rownames(dQ)<-colnames(dQ)
-  }
-  ## assemble object to return
-  obj<-list(independent.Q=iQ,
-            dependent.Q=dQ,
-            independent.logL=logLik(fit.iQ),
-            dependent.logL=logLik(fit.dQ),
-            lik.ratio=2*(logLik(fit.dQ)-logLik(fit.iQ)),
-            P=pchisq(2*(logLik(fit.dQ)-logLik(fit.iQ)),
-                     df=length(levels(x))+length(levels(y)),
-                     lower.tail=FALSE))
-  class(obj)<-"fitPagel"
-  obj
-} # end fitPagel
-
-print.fitPagel<-function(x,...){
-  cat("\n  Pagel's binary character correlation test:\n")
-  cat("\nIndepedent model rate matrix:\n")
-  print(x$independent.Q)
-  cat("\nDependent model rate matrix:\n")
-  print(x$dependent.Q)
-  cat("\nModel fit:\n")
-  obj<-matrix(c(x$independent.logL,x$dependent.logL),2,1)
-  rownames(obj)<-c("independent","dependent")
-  colnames(obj)<-"log-likelihood"
-  print(obj)
-  cat("\nHypothesis test result:\n")
-  cat(paste("  likelihood-ratio: ",signif(x$lik.ratio,7),"\n"))
-  cat(paste("  p-value: ",signif(x$P,7),"\n"))
-} # end print.fitPagel
+} # end fitMk

@@ -48,10 +48,12 @@
 ########################################################################
 
 get.sig.snps <- function(snps, snps.sim, phen,
-                         test=c("score", "cor", "fisher"),
+                         test=c("score", "cor", "fisher", "Pagel"),
                          p.value=0.001,
                          p.value.correct=c("bonf", "fdr", FALSE),
-                         p.value.by=c("count", "density")){
+                         p.value.by=c("count", "density"),
+                         Pagel=NULL, Pagel.sim=NULL){
+  if(test != "Pagel"){
   #################
   ## HANDLE PHEN ##
   #################
@@ -122,11 +124,18 @@ get.sig.snps <- function(snps, snps.sim, phen,
 
   corr.dat <- get.corrs(snps=snps, phen=phen)
 
+  }else{
+    ################
+    ## Pagel test ##
+    ################
+    corr.dat <- Pagel
+  }
+
 
   #############################################################
   ## Calculate correlations btw SIMULATED SNPs and phenotype ##
   #############################################################
-
+  if(test != "Pagel"){
   if(class(snps.sim) == "matrix"){
     corr.sim <- get.corrs(snps=snps.sim, phen=phen)
   }else{
@@ -142,6 +151,13 @@ get.sig.snps <- function(snps, snps.sim, phen,
 
     corr.sim <- as.vector(unlist(corr.sim))
   } # end corr.sim
+  }else{
+
+    ################
+    ## Pagel test ##
+    ################
+    corr.sim <- Pagel.sim
+  }
 
   ############################
   ## HANDLE P.VALUE OPTIONS ##
@@ -217,7 +233,8 @@ get.sig.snps <- function(snps, snps.sim, phen,
   ##################################
   ## GET SIGNIFICANT CORRELATIONS ##
   ##################################
-  if(test=="fisher"){
+  if(test=="fisher" | test=="Pagel"){
+    if(test =="Pagel") thresh <- 1 - thresh
     ## Identify (real) SNPs w correlations > thresh:
     sig.snps <- which(corr.dat < thresh)
     p.vals <- sapply(c(1:length(sig.snps)),

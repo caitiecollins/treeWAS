@@ -54,9 +54,9 @@ ace.test <- function(snps, phen, tree, method="discrete", snps.ace=FALSE){
   ###############################
   ## get unique SNPs patterns: ##
   ###############################
-  tab.out <- table.matrix(t(snps))
-  snps.unique <- t(as.matrix(tab.out$unique.data))
-  index <- tab.out$index
+  temp <- get.unique.snps(snps)
+  snps.unique <- temp$snps.unique
+  index <- temp$index
   if(ncol(snps.unique) == ncol(snps)){
     all.unique <- TRUE
   }else{
