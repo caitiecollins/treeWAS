@@ -56,13 +56,17 @@
 
 ########################################################################
 
-## n.subs ## either an integer specifying Poisson parameter OR a distribution OR (if NULL?? or "fitch"??) compute w parsimony
+## n.subs ## either an integer specifying Poisson parameter OR a distribution
+## OR (if NULL?? or "fitch"??) compute w parsimony
 
 
 
 treeWAS <- function(snps, phen, n.subs=NULL,
-                    tree=c("UPGMA", "nj", "ml"), dist.dna.model="JC69", plot.tree=FALSE,
-                    test="score", p.value=0.001, p.value.correct=c("bonf", "fdr"), p.value.by="count",
+                    tree=c("UPGMA", "nj", "ml"),
+                    dist.dna.model="JC69", plot.tree=FALSE,
+                    test=c("score", "cor", "fisher", "Pagel"), # "ace.cum", "ace.pagel"
+                    p.value=0.001,
+                    p.value.correct=c("bonf", "fdr"), p.value.by="count",
                     sim.n.snps=10000, n.reps=1,
                     plot.null.dist=TRUE, plot.dist=FALSE){
 
@@ -245,13 +249,15 @@ treeWAS <- function(snps, phen, n.subs=NULL,
     # )
 
     ## Get p-values for real data:
-    P <- sapply(c(1:length(Pagel.snps.unique)), function(e) Pagel.snps.unique[[e]]$P, simplify=FALSE)
+    P <- sapply(c(1:length(Pagel.snps.unique)),
+      function(e) Pagel.snps.unique[[e]]$P, simplify=FALSE)
     p.vals.unique <- as.vector(unlist(P))
     names(p.vals.unique) <- colnames(snps)
     # hist(p.vals.unique, breaks=100)
     # which(names(sort(p.vals.unique, decreasing=FALSE)) == "4")
     # sort(p.vals.unique, decreasing=FALSE)[1:10]
-    # Q <- sapply(c(1:length(Pagel.snps.unique)), function(e) Pagel.snps.unique[[e]]$independent.Q, simplify=FALSE)
+    # Q <- sapply(c(1:length(Pagel.snps.unique)),
+    #      function(e) Pagel.snps.unique[[e]]$independent.Q, simplify=FALSE)
 
     ## Get. n.subs vector
     l <- sapply(c(1:length(N.SUBS)), function(e) length(N.SUBS[[e]]))
@@ -296,6 +302,8 @@ treeWAS <- function(snps, phen, n.subs=NULL,
     ## ML method can give astronomical rates when true n.subs is rare
     ## and may not be justified (Schluter 97), I am workingn with ACE/
     ## fitPagel under constrained equal rates models for now.
+
+    ## (using same Handle N.Subs code as below:)
 
   }
 
@@ -401,7 +409,8 @@ treeWAS <- function(snps, phen, n.subs=NULL,
       y <- phen
 
       ## NOTE: using treeWAS' version of the fitPagel fn (in pagel.R)
-      Pagel.snps.sim.unique[[i]] <- fitPagel(tree, x, y, method="ace", equal=TRUE)
+      Pagel.snps.sim.unique[[i]] <- fitPagel(tree, x, y,
+                                            method="ace", equal=TRUE)
 
       # foo <- fitPagel(tree, x, y, method="ace", equal=TRUE)
 
@@ -426,7 +435,8 @@ treeWAS <- function(snps, phen, n.subs=NULL,
     # )
 
     ## Get p-values for real data:
-    P <- sapply(c(1:length(Pagel.snps.sim.unique)), function(e) Pagel.snps.sim.unique[[e]]$P, simplify=FALSE)
+    P <- sapply(c(1:length(Pagel.snps.sim.unique)),
+      function(e) Pagel.snps.sim.unique[[e]]$P, simplify=FALSE)
     p.vals.sim.unique <- as.vector(unlist(P))
     names(p.vals.sim.unique) <- colnames(snps.sim)
     hist(p.vals.sim.unique, breaks=100)
@@ -457,7 +467,8 @@ treeWAS <- function(snps, phen, n.subs=NULL,
     #       if(!is.null(n.subs.sim.unique)){
     #         n.subs.sim.complete <- rep(NA, ncol(snps.sim.ori))
     #         for(i in 1:ncol(snps.sim.unique)){
-    #           n.subs.sim.complete[which(snps.sim.index == i)] <- n.subs.sim.unique[i]
+    #           n.subs.sim.complete[which(snps.sim.index == i)] <-
+    #           n.subs.sim.unique[i]
     #         }
     #         n.subs.sim <- n.subs.sim.complete
     #       }else{
@@ -492,7 +503,8 @@ treeWAS <- function(snps, phen, n.subs=NULL,
                              p.value=p.value,
                              p.value.correct=p.value.correct,
                              p.value.by=p.value.by,
-                             Pagel=p.vals.complete, Pagel.sim=p.vals.sim.complete)
+                             Pagel=p.vals.complete,
+                             Pagel.sim=p.vals.sim.complete)
   }else{
   sig.list <- get.sig.snps(snps=snps, snps.sim=snps.mat, phen=phen,
                            test=test,
@@ -575,7 +587,8 @@ treeWAS <- function(snps, phen, n.subs=NULL,
                    "Test.statistic",
                    "S1P1", "S0P0", "S1P0", "S0P1")
 
-    ## NOTE: Could return sig.snps.names somewhere here in addition to sig.snps loci ####    ####    ####    ####
+    ## NOTE: Could return sig.snps.names somewhere here
+    ## in addition to sig.snps loci ####    ####    ####    ####
 
   }else{
     df <- "No significant SNPs found."

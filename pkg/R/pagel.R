@@ -37,7 +37,7 @@
 
 
 
-###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
 ########################################################################
 
@@ -90,7 +90,7 @@ mexp <- function(x, type="spectral decomposition", t=1, n=20, k=3){
 } # end mexp
 
 
-###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
 ########################################################################
 
@@ -265,7 +265,7 @@ get.n.subs <- function(Q, tree){
 
 
 
-###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
 ##################################################################################
 ## FUNCTIONS FROM: ###############################################################
@@ -297,118 +297,132 @@ get.n.subs <- function(Q, tree){
 
 ########################################################################
 
-fitPagel<-function(tree,x,y, equal=FALSE, ...){
+fitPagel <- function(tree,x,y, equal=FALSE, ...){
   if(hasArg(method)){
-    method<-list(...)$method
+    method <- list(...)$method
   }else{
-    method<-"ace"
+    method <- "ace"
   }
   if(method=="fitDiscrete"){
-    chk<-.check.pkg("geiger")
+    chk <- .check.pkg("geiger")
     if(!chk){
       cat("  method = \"fitDiscrete\" requires the package \"geiger\"\n")
       cat("  Defaulting to method = \"ace\"\n\n")
-      method<-"ace"
-      fitDiscrete<-function(...) NULL
+      method <- "ace"
+      fitDiscrete <- function(...) NULL
     }
   }
   noms.x <- names(x)
-  if(!is.factor(x)) x<-as.factor(x)
-  levels.x<-levels(x)
+  if(!is.factor(x)) x <- as.factor(x)
+  levels.x <- levels(x)
   names(x) <- noms.x
-  if(!is.factor(y)) y<-as.factor(y)
-  levels.y<-levels(y)
-  y<-y[names(x)]
+  if(!is.factor(y)) y <- as.factor(y)
+  levels.y <- levels(y)
+  y <- y[names(x)]
   if(length(levels.x)!=2||length(levels.y)!=2)
     stop("Only binary characters for x & y currently permitted.")
   if(any(!levels.x %in% levels.y)){
     ## convert both to binary variables:
-    warning("Levels of x != levels of y; converting both to binary variables.")
+    warning("Levels of x != levels of y;
+            converting both to binary variables.")
     x <- as.numeric(x)-1
     y <- as.numeric(y)-1
-    if(!is.factor(x)) x<-as.factor(x)
-    levels.x<-levels(x)
-    if(!is.factor(y)) y<-as.factor(y)
-    levels.y<-levels(y)
-    y<-y[names(x)]
+    if(!is.factor(x)) x <- as.factor(x)
+    levels.x <- levels(x)
+    if(!is.factor(y)) y <- as.factor(y)
+    levels.y <- levels(y)
+    y <- y[names(x)]
   }
-  xy<-setNames(factor(paste(x,y,sep="|"),
+  xy <- setNames(factor(paste(x,y,sep="|"),
                       levels=sapply(levels.x,paste,levels.y,sep="|")),
                names(x))
+
   ## fit independent model
   if(equal == FALSE){
-    iQ<-matrix(c(0,1,2,0,3,0,0,2,4,0,0,1,0,4,3,0),4,4,byrow=TRUE) ## original (allows for diff rates fwd & bckwd)
+    ## original (allows for diff rates fwd & bckwd)
+    iQ <- matrix(c(0,1,2,0,3,0,0,2,4,0,0,1,0,4,3,0),4,4,byrow=TRUE)
   }
   if(equal == TRUE){
-    ####iQ<-matrix(c(0,1,2,0,3,0,0,2,2,0,0,1,0,2,3,0),4,4,byrow=TRUE) ## w EQUAL rates (for SNP only???) ## NOT INVERTIBLE
-    iQ<-matrix(c(0,1,2,0,1,0,0,2,2,0,0,1,0,2,1,0),4,4,byrow=TRUE) ## w EQUAL rates (for SNP & PHEN both)
+    ## w EQUAL rates (for SNP only???) ## NOT INVERTIBLE
+    #### iQ <- matrix(c(0,1,2,0,3,0,0,2,2,0,0,1,0,2,3,0),4,4,byrow=TRUE)
+
+    ## w EQUAL rates (for SNP & PHEN both)
+    iQ <- matrix(c(0,1,2,0,1,0,0,2,2,0,0,1,0,2,1,0),4,4,byrow=TRUE)
   }
-  rownames(iQ)<-colnames(iQ)<-levels(xy)
-  fit.iQ<-if(method=="fitDiscrete") fitDiscrete(tree,xy,model=iQ) else ace(xy,tree,type="discrete",model=iQ)
+  rownames(iQ) <- colnames(iQ) <- levels(xy)
+  fit.iQ <- if(method=="fitDiscrete") fitDiscrete(tree,xy,model=iQ) else ace(xy,tree,type="discrete",model=iQ)
+
   ## fit dependendent model
   if(equal ==FALSE){
-    dQ<-matrix(c(0,1,2,0,3,0,0,4,5,0,0,6,0,7,8,0),4,4,byrow=TRUE)
+    dQ <- matrix(c(0,1,2,0,3,0,0,4,5,0,0,6,0,7,8,0),4,4,byrow=TRUE)
   }
   if(equal == TRUE){
-    ###dQ<-matrix(c(0,1,2,0,3,0,0,4,2,0,0,5,0,4,6,0),4,4,byrow=TRUE) ## w EQUAL rates (for SNP only???) ## NOT INVERTIBLE
-    dQ<-matrix(c(0,1,2,0,1,0,0,3,2,0,0,4,0,3,4,0),4,4,byrow=TRUE) ## w EQUAL rates (for SNP & PHEN both)
+    ## w EQUAL rates (for SNP only???) ## NOT INVERTIBLE
+    ### dQ <- matrix(c(0,1,2,0,3,0,0,4,2,0,0,5,0,4,6,0),4,4,byrow=TRUE)
+
+    ## w EQUAL rates (for SNP & PHEN both)
+    dQ <- matrix(c(0,1,2,0,1,0,0,3,2,0,0,4,0,3,4,0),4,4,byrow=TRUE)
   }
-  rownames(dQ)<-colnames(dQ)<-levels(xy)
+  rownames(dQ) <- colnames(dQ) <- levels(xy)
   if(method=="fitDiscrete"){
-    fit.dQ <-fitDiscrete(tree,xy,model=dQ)
+    fit.dQ  <- fitDiscrete(tree,xy,model=dQ)
   }else{
-    fit.dQ <-try(ace(xy,tree,type="discrete",model=dQ), silent=TRUE)
+    fit.dQ  <- try(ace(xy,tree,type="discrete",model=dQ), silent=TRUE)
     if(class(fit.dQ) == "try-error") fit.dQ <- NULL
   }
+
   ## back translate independent model
   if(method=="fitDiscrete"){
-    iQ<-geiger:::.Qmatrix.from.gfit(fit.iQ)
+    iQ <- geiger:::.Qmatrix.from.gfit(fit.iQ)
   }else{
-    I<-fit.iQ$index.matrix
-    I[I==0]<-NA
-    iQ<-apply(I,2,function(i,x) x[i],x=fit.iQ$rates)
-    iQ[is.na(iQ)]<-0
-    diag(iQ)<--rowSums(iQ)
-    rownames(iQ)<-colnames(iQ)
+    I <- fit.iQ$index.matrix
+    I[I==0] <- NA
+    iQ <- apply(I,2,function(i,x) x[i],x=fit.iQ$rates)
+    iQ[is.na(iQ)] <- 0
+    diag(iQ) <- -rowSums(iQ)
+    rownames(iQ) <- colnames(iQ)
   }
+
   ## dependent model
   if(!is.null(fit.dQ)){
     if(method=="fitDiscrete"){
-      dQ<-geiger:::.Qmatrix.from.gfit(fit.dQ)
+      dQ <- geiger:::.Qmatrix.from.gfit(fit.dQ)
     }else{
-      I<-fit.dQ$index.matrix
-      I[I==0]<-NA
-      dQ<-apply(I,2,function(i,x) x[i],x=fit.dQ$rates)
-      dQ[is.na(dQ)]<-0
-      diag(dQ)<--rowSums(dQ)
-      rownames(dQ)<-colnames(dQ)
+      I <- fit.dQ$index.matrix
+      I[I==0] <- NA
+      dQ <- apply(I,2,function(i,x) x[i],x=fit.dQ$rates)
+      dQ[is.na(dQ)] <- 0
+      diag(dQ) <- -rowSums(dQ)
+      rownames(dQ) <- colnames(dQ)
     }
+
     ## assemble object to return
-    obj<-list(independent.Q=iQ,
-              dependent.Q=dQ,
-              independent.lik.anc = fit.iQ$lik.anc,
-              dependent.lik.anc = fit.dQ$lik.anc,
-              independent.logL=logLik(fit.iQ),
-              dependent.logL=logLik(fit.dQ),
-              lik.ratio=2*(logLik(fit.dQ)-logLik(fit.iQ)),
-              P=pchisq(2*(logLik(fit.dQ)-logLik(fit.iQ)),
-                       df=length(levels(x))+length(levels(y)),
-                       lower.tail=FALSE))
-    class(obj)<-"fitPagel"
+    obj <- list(independent.Q=iQ,
+                dependent.Q=dQ,
+                independent.lik.anc = fit.iQ$lik.anc,
+                dependent.lik.anc = fit.dQ$lik.anc,
+                independent.logL=logLik(fit.iQ),
+                dependent.logL=logLik(fit.dQ),
+                lik.ratio=2*(logLik(fit.dQ)-logLik(fit.iQ)),
+                P=pchisq(2*(logLik(fit.dQ)-logLik(fit.iQ)),
+                         df=length(levels(x))+length(levels(y)),
+                         lower.tail=FALSE))
+    class(obj) <- "fitPagel"
   }else{
     ## assemble object to return
-    obj<-list(independent.Q=iQ,
-              # dependent.Q=dQ,
-              independent.lik.anc = fit.iQ$lik.anc,
-              # dependent.lik.anc = fit.dQ$lik.anc,
-              independent.logL=logLik(fit.iQ),
-              # dependent.logL=logLik(fit.dQ),
-              # lik.ratio=2*(logLik(fit.dQ)-logLik(fit.iQ)),
-              #               P=pchisq(2*(logLik(fit.dQ)-logLik(fit.iQ)),
-              #                        df=length(levels(x))+length(levels(y)),
-              #                        lower.tail=FALSE)
-              P = 1
-              )
+    obj <- list(independent.Q=iQ,
+                dependent.Q=NULL, # dQ,
+                independent.lik.anc = fit.iQ$lik.anc,
+                dependent.lik.anc = NULL, # fit.dQ$lik.anc,
+                independent.logL=logLik(fit.iQ),
+                dependent.logL=NULL, # logLik(fit.dQ),
+                lik.ratio=NULL,
+                #               2*(logLik(fit.dQ)-logLik(fit.iQ)),
+                #               P=pchisq(2*(logLik(fit.dQ)-logLik(fit.iQ)),
+                #                        df=length(levels(x))+length(levels(y)),
+                #                        lower.tail=FALSE)
+                P = 1
+                )
   }
 
   obj
@@ -416,7 +430,7 @@ fitPagel<-function(tree,x,y, equal=FALSE, ...){
 } # end fitPagel
 
 
-###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
 ########################################################################
 
@@ -437,7 +451,7 @@ fitPagel<-function(tree,x,y, equal=FALSE, ...){
 
 ########################################################################
 
-print.fitPagel<-function(x,...){
+print.fitPagel <- function(x,...){
   cat("\n  Pagel's binary character correlation test:\n")
   cat("\nIndepedent model rate matrix:\n")
   print(x$independent.Q)
@@ -448,16 +462,16 @@ print.fitPagel<-function(x,...){
   cat("\nDependent ancestral state likelihoods:\n")
   print(x$dependent.lik.anc)
   cat("\nModel fit:\n")
-  obj<-matrix(c(x$independent.logL,x$dependent.logL),2,1)
-  rownames(obj)<-c("independent","dependent")
-  colnames(obj)<-"log-likelihood"
+  obj <- matrix(c(x$independent.logL,x$dependent.logL),2,1)
+  rownames(obj) <- c("independent","dependent")
+  colnames(obj) <- "log-likelihood"
   print(obj)
   cat("\nHypothesis test result:\n")
   cat(paste("  likelihood-ratio: ",signif(x$lik.ratio,7),"\n"))
   cat(paste("  p-value: ",signif(x$P,7),"\n"))
 } # end print.fitPagel
 
-###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
 ########################################################################
 
@@ -481,7 +495,7 @@ print.fitPagel<-function(x,...){
 ## fn from phytools github, March 17, 2016.
 ## https://github.com/liamrevell/phytools/blob/master/R/fitMk.R
 
-fitMk<-function(tree,x,model="SYM",fixedQ=NULL,...){
+fitMk <- function(tree,x,model="SYM",fixedQ=NULL,...){
   if(hasArg(output.liks)) output.liks<-list(...)$output.liks
   else output.liks<-FALSE
   N<-Ntip(tree)

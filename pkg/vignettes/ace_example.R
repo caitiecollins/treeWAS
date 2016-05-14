@@ -465,7 +465,9 @@ tree <- tree.ace
 ## DISCRETE
 var <- snps[,1]
 
-system.time(snps.ace.d <- ace(var, tree, type="discrete"))
+system.time(
+  snps.ace.d <- ace(var, tree, type="discrete")
+  )
 
 # x <- ace(var, tree, type="discrete")
 # str(x)
@@ -474,8 +476,7 @@ snps.ace.d <- ace(var, tree, type="discrete")
 # str(snps.ace.d)
 # round(snps.ace.d$lik.anc, 3)
 probs.d <- snps.ace.d$lik.anc[,2]*100
-probs.d <- fit.iQ$lik.anc[,2]*100
-
+# probs.d <- ace.snp$lik.anc[,2]*100
 ##########
 ## PLOT ##
 ##########
@@ -513,8 +514,10 @@ tipCol.pattern <- as.numeric(as.factor(as.character(var[1:(tree$Nnode+1)])))
 ## plot terminal squares
 tiplabels(pch = 22, bg = myCol[tipCol.pattern], cex = 0.7, adj = 1)
 ## plot internal pies
-nodelabels(thermo = df/100, piecol = transp(myCol, 0.8), cex = 0.25)
-nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp("blue", 0.3), adj=2)
+require(adegenet)
+nodelabels(thermo = df/100, piecol = transp(myCol, 0.5), cex = 0.55)
+
+#nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp("blue", 0.3), adj=2)
 
 ################################################################################################################################################################
 
@@ -1061,7 +1064,7 @@ edgelabels(text=temp,
 plot(tree, cex=0.5)
 edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
           cex=0.5, font=2, bg=transp("yellow", 0.3), adj=c(1,1))
-nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp("blue", 0.3))
+nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp("blue", 0.3), adj=2)
 ## should be numbered s.t. the root node is n.term+1
 ## RECALL: terminal nodes are numbered 1:n.ind from bottom to top of plot of tree;
 ## edges are numbered 1:nrow(edges) by following the lowest trace on the plot??
