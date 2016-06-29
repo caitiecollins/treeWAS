@@ -19,7 +19,7 @@
 #' @param tree A phylo object.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #' @examples
 #'
 #' ## generate a tree
@@ -42,31 +42,33 @@
 
 ########################################################################
 
-
 get.fitch.n.mts <- function(snps, tree){
+
   ## load packages
   require(phangorn)
+
   ## checks
   if(!is.matrix(snps)) stop("snps must be of class matrix.")
   if(!is.numeric(snps) | length(unique(as.vector(snps)))!=2){
-    stop("snps must be a numeric matrix with two unique values.")
+    stop("snps must be a numeric matrix with exactly two unique values.")
   }
   snps.levels <- unique(as.vector(snps))
   ## returns only unique patterns...
   snps.phyDat <- as.phyDat(as.matrix(snps),
                            type="USER", levels=snps.levels)
   ## get index of all original snps columns to map to unique pattern
-  phyDat.index <- attr(snps.phyDat, "index")
+  index <- attr(snps.phyDat, "index")
 
   fitch.phangorn <- phangorn::fitch
   ## get parsimony score for all unique patterns in snps
+  ## NB: For fitch.phangorn, snps data must be of class phyDat
   fitch.unique <- fitch.phangorn(tree, snps.phyDat, site="site")
   # table(fitch.unique)
 
   ## get score for all original sites
   fitch.complete <- rep(NA, ncol(snps))
   for(i in 1:length(fitch.unique)){
-    fitch.complete[which(phyDat.index == i)] <- fitch.unique[i]
+    fitch.complete[which(index == i)] <- fitch.unique[i]
   }
   return(fitch.complete)
 } # end get.fitch.n.mts

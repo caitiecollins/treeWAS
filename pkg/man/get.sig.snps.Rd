@@ -2,11 +2,11 @@
 % Please edit documentation in R/get.sig.snps.R
 \name{get.sig.snps}
 \alias{get.sig.snps}
-\title{Short one-phrase description.}
+\title{Get significant SNPs, according to a given test of association.}
 \usage{
-get.sig.snps(snps, snps.sim, phen, test = c("score", "cor", "fisher"),
-  p.value = 0.001, p.value.correct = c("bonf", "fdr", FALSE),
-  p.value.by = c("count", "density"))
+get.sig.snps(snps, snps.sim, phen, tree, test = c("score", "cor", "fisher",
+  "ace.cum", "ace.pagel"), p.value = 0.001, p.value.correct = c("bonf",
+  "fdr", FALSE), p.value.by = c("count", "density"))
 }
 \arguments{
 \item{snps}{A matrix containing the real snps.}
@@ -14,6 +14,9 @@ get.sig.snps(snps, snps.sim, phen, test = c("score", "cor", "fisher"),
 \item{snps.sim}{A matrix or list of matrices containing simulated snps.}
 
 \item{phen}{A factor or vector containing the phenotype (only allowed to contain two levels for now).}
+
+\item{tree}{A phylo object containing a phylogenetic tree in which the number of tips is equal to the
+length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.}
 
 \item{test}{A character string specifying the test to be used to measure correlations between the snps
 (real and simulated) and the phenotype. Must be one of 'score', 'cor', 'fisher' (indicating, respectively,
@@ -30,7 +33,10 @@ either 'count' or 'density' (indicating, respectively, that the p.value threshol
 be determined by exact count or with the use of a density function).}
 }
 \description{
-Longer proper discription of function...
+Identify which SNPs are deemed to be significantly associated with a phenotype,
+according to a given test of association and p-value.
+(Serves as the treeWAS association testing function;
+runs the \code{assoc.test} function internally.)
 }
 \examples{
 

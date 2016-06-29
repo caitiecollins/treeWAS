@@ -61,7 +61,7 @@
 ##########
 ## mexp ##
 ##########
-# library(rmutil)
+# library(rmutil) #??
 mexp <- function(x, type="spectral decomposition", t=1, n=20, k=3){
 
   if(!is.matrix(x))stop("x must be a matrix")
@@ -89,6 +89,16 @@ mexp <- function(x, type="spectral decomposition", t=1, n=20, k=3){
   p
 } # end mexp
 
+# test1 <- t(matrix(c(
+#   4, 2, 0,
+#   1, 4, 1,
+#   1, 1, 4), 3, 3))
+#
+# library(PSM)
+# matexp(test1) # PSM fn
+# mexp(test1) # my fn (modified from online sources...)
+# identical(matexp(test1), mexp(test1)) # FALSE ...
+# identical(round(matexp(test1), 4), round(mexp(test1), 4)) # TRUE!
 
 ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 

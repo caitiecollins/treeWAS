@@ -19,37 +19,57 @@
 ## DOCUMENTATION ##
 ###################
 
-#' Get the order of the tip labels of a phylogenetic tree as plotted.
+#' Get unique rows/columns of a matrix with an index vector.
 #'
-#' Longer proper discription of function...
+#' A wrapper for the \code{table.matrix} function that assigns consecutive
+#' row or column names to the output matrix's unique rows or columns.
 #'
-#' @param snps A matrix of SNPs, potentially containing non-unique patterns.
+#' @param data A matrix or data.frame, potentially containing
+#' non-unique patterns in its rows or columns.
+#' @param MARGIN A single integer specifying the array margin to be held fixed.
+#' (To get unique \emph{rows}, select \code{MARGIN} = 1;
+#' for unique \emph{columns}, select \code{MARGIN} = 2.)
+#'
+#' @details An extension of the base \code{unique.matrix} function that returns
+#' a unique matrix (by removing duplicate rows or columns) and also
+#' an index vector containing the indices (row or column numbers),
+#' in the matrix composed only of unique rows or columns,
+#' to which each row or column in the original matrix corresponds.
+#'
+#' @return A list with the following elements:
+#' \itemize{
+#'    \item{\code{index} \item{An index vector containing the indices (row numbers),
+#'          in a matrix composed only of unique rows,
+#'          to which each row in the original matrix maps.}}
+#'    \item{\code{unique.data} \item{A new matrix
+#'          containing only the unique rows of the input matrix.}}
+#' }
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
-#' @examples
 #'
-#' @import phangorn
+#' @export
 
 
 ########################################################################
-###############################
-## get unique SNPs patterns: ##
-###############################
+## get unique SNPs column patterns: ##
+get.unique.matrix <- function(data, MARGIN=2){
 
-get.unique.snps <- function(snps){
-
-  ## Identify unique SNP patterns:
-  tab.out <- table.matrix(t(snps))
-  snps.unique <- t(as.matrix(tab.out$unique.data))
+  ## Identify unique SNP row/column patterns:
+  tab.out <- table.matrix(data, MARGIN=MARGIN)
+  unique.data <- as.matrix(tab.out$unique.data)
   index <- tab.out$index
-  colnames(snps.unique) <- c(1:ncol(snps.unique))
+  if(MARGIN == 1) row.names(unique.data) <- c(1:nrow(unique.data))
+  if(MARGIN == 2) colnames(unique.data) <- c(1:ncol(unique.data))
 
-  out <- list(snps.unique=snps.unique,
+  ## Get output:
+  out <- list(unique.data=unique.data,
               index=index)
   return(out)
-} # end get.unique.snps
+} # end get.unique.matrix
 
+
+## assign new name to old name (NOT SURE THIS WORKS... CHECK!)
+get.unique.snps <- get.unique.matrix
 
 
 ###################
@@ -67,7 +87,8 @@ get.unique.snps <- function(snps){
 #'
 #' Longer proper discription of function...
 #'
-#' @param tree An object of class phylo containing a tree whose tip order is desired to be known.
+#' @param tree An object of class phylo containing a tree
+#' whose tip order is desired to be known.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -85,13 +106,13 @@ get.unique.snps <- function(snps){
 #'
 #' @import ape Hmisc
 
-
 ########################################################################
 
-
 get.tip.order <- function(tree){
+
   require(ape)
   require(Hmisc)
+
   tree2 <- read.tree(text=write.tree(tree))
   if(all.is.numeric(tree2$tip.label)){
     out <- as.numeric(tree2$tip.label)
@@ -101,7 +122,9 @@ get.tip.order <- function(tree){
     out <- sapply(c(1:length(tree$tip.label)), function(e)
       which(out == tree$tip.label[e]))
   }
+
   return(out)
+
 } # end get.tip.order
 
 ## OLD VERSION (pre-2016) --> NAs if tip labs not numeric!
@@ -112,6 +135,125 @@ get.tip.order <- function(tree){
 #   out <- rev(out)
 #   return(out)
 # } # end get.tip.order
+
+
+
+##################
+## table.matrix ##
+##################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Cross-tabulate the rows or columns of a matrix.
+#'
+#' A version of the base \code{table} function designed for matrices.
+#' Taking a matrix as input, \code{table.matrix} returns a contingency table,
+#' index vector, and unique matrix.
+#'
+#' @param data A matrix or data.frame, potentially containing
+#' non-unique patterns in its rows or columns.
+#' @param MARGIN A single integer specifying the array margin to be held fixed.
+#' (To get unique \emph{rows}, select \code{MARGIN} = 1;
+#' for unique \emph{columns}, select \code{MARGIN} = 2.)
+#'
+#' @details To apply this function to the \emph{columns} of a matrix, simply
+#' transpose the matrix before executing the command, as in:
+#' \code{table.matrix(t(data))}.
+#'
+#' @return A list with the following elements:
+#' \itemize{
+#'    \item{\code{table} \item{A contingency table of the counts of the
+#'          number of occurrences of each unique row in the matrix.}}
+#'    \item{\code{index} \item{An index vector containing the indices (row numbers),
+#'          in a matrix composed only of unique rows,
+#'          to which each row in the original matrix maps.}}
+#'    \item{\code{unique.data} \item{A new matrix
+#'          containing only the unique rows of the input matrix.}}
+#' }
+#'
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
+#' @examples
+#'
+#' ## load example data:
+#' data("snps.ace")
+#' x <- snps.ace
+#'
+#' ## basic use of fn on rows of x:
+#' tab.out <- table.matrix(x)
+#'
+#' ## apply fn to columns of x:
+#' tab.out <- table.matrix(t(x))
+#'
+#' @export
+
+########################################################################
+
+table.matrix <- function(data, MARGIN=1){
+
+  ## handle MARGIN argument:
+  if(is.character(MARGIN)){
+    MARGIN <- tolower(MARGIN)
+    if(MARGIN %in% c("row", "rows", "r")){
+      MARGIN <- 1
+    }else{
+      if(MARGIN %in%
+         c("column", "columns", "col", "cols", "c")){
+        MARGIN <- 2
+      }else{
+        stop("MARGIN argument should be either 1 or 2;
+             or, 'rows' or 'columns'.")
+      }
+    }
+  }
+  ## for columns, transpose matrix at beginning and end:
+  if(MARGIN == 2) data <- t(data)
+
+
+  ## get df
+  if(!is.data.frame(data)){
+    data <- as.data.frame(data, stringsAsFactors = FALSE)
+  }
+  ## concatenate all rows into single elements
+  dat <- do.call("paste", c(data, sep = "\r"))
+  ## get unique rows
+  unique.inds <- !duplicated(dat)
+  ## keep only unique rows
+  levels <- dat[unique.inds]
+  ## make a factor in which each level
+  ## is the smushed single-element vector
+  ## of each unique row
+  cat <- factor(dat, levels = levels)
+  ## get n. unique levels
+  n.levels <- length(levels(cat))
+  ## get the unique index that
+  ## each original ind/row should map to:
+  map.to <- (as.integer(cat) - 1)
+  map.to <- map.to[!is.na(map.to)]
+  if(length(map.to)) map.to <- map.to + 1
+  ## get the number of inds at each unique level:
+  tab <- tabulate(map.to, n.levels)
+
+  ## get output
+  if(MARGIN == 1){
+    out <- list(table = tab,
+                index = map.to,
+                unique.data = data[unique.inds, ])
+  }
+  if(MARGIN == 2){
+    out <- list(table = tab,
+                index = map.to,
+                unique.data = as.data.frame(t(data)[, unique.inds]))
+  }
+
+  return(out)
+
+} # end table.matrix
 
 
 #########   ###   ###   ###   ###   ###   ###   ###   ###   ###   #########
@@ -209,7 +351,7 @@ keepLastN <- function(x, n){
 
 keepFirstN <- function(x, n){
   sapply(x, function(e)
-    substr(e, (nchar(e)-n+1), nchar(e))
+    substr(e, 1, n)
   )
 } # end keepFirstN
 

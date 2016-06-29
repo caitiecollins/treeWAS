@@ -4,7 +4,8 @@
 \alias{ace.test}
 \title{Short one-phrase description.}
 \usage{
-ace.test(snps, phen, tree, method = "discrete", snps.ace = FALSE)
+ace.test(snps, phen, tree, test = c("cum", "pagel"), method = "discrete",
+  snps.ace = FALSE, phen.ace = FALSE)
 }
 \arguments{
 \item{snps}{A matrix containing binary snps for all individuals.}
@@ -17,7 +18,10 @@ between individuals for which snps and phen are known.}
 \item{method}{A character string specifying the type of ACE method to implement.}
 
 \item{snps.ace}{A logical indicating whether to run ACE on all snps (TRUE, slower)
-or to run parsimony on snps instead (FALSE, faster; the default).}
+or to run parsimony on snps instead (FALSE, faster; the default for now).}
+
+\item{phen.ace}{A logical indicating whether to run ACE on the phenotype (TRUE, slower)
+or to run parsimony on phen instead (FALSE, faster; the default for now).}
 }
 \description{
 Longer proper discription of function...

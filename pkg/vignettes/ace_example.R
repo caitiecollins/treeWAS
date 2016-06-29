@@ -584,7 +584,7 @@ for(i in 1:length(snps.diffs)){
   signs[[i]] <- ((snps.diffs[i] < 0 & phen.diffs[i] < 0) | (snps.diffs[i] > 0 & phen.diffs[i] > 0))
 }
 
-length(which(as.vector(unlist(signs)) == FALSE))
+length(which(as.vector(unlist(signs)) == FALSE)) # negative associations
 round(sum(as.vector(unlist(sp.diffs))), 4)
 
 # hist(snps.diffs)

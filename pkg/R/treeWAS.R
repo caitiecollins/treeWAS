@@ -50,7 +50,7 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import adegenet ape phangorn ade4
+#' @import adegenet ape phangorn ade4 Hmisc
 #'
 #' @export
 
@@ -64,9 +64,10 @@
 treeWAS <- function(snps, phen, n.subs=NULL,
                     tree=c("UPGMA", "nj", "ml"),
                     dist.dna.model="JC69", plot.tree=FALSE,
-                    test=c("score", "cor", "fisher", "Pagel"), # "ace.cum", "ace.pagel"
+                    test=c("score", "cor", "fisher", "ace.cum", "ace.pagel"),
                     p.value=0.001,
-                    p.value.correct=c("bonf", "fdr"), p.value.by="count",
+                    p.value.correct=c("bonf", "fdr", FALSE),
+                    p.value.by=c("count", "density"),
                     sim.n.snps=10000, n.reps=1,
                     plot.null.dist=TRUE, plot.dist=FALSE){
 
@@ -77,7 +78,7 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   require(phangorn)
   require(ape)
   require(ade4) #?
-  require(Hmisc)
+  require(Hmisc) # all.is.numeric
 
   #####################################################################
   ## 0) HANDLE INPUT DATA #############################################
@@ -141,19 +142,23 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   }# end tree...
 
 
-  ## tree's tip.labels must be numeric (for Fitch parsimony step)
+  ##############################
+  ## HANDLE TIP & NODE LABELS ##
+  ##############################
+
+  ## Use Fitch Parsimony to get homoplasy distribution (n.subs per site)
+  ## unless n.subs distribution has been provided by the user.
+
+  ## tree's tip.labels and node.labels must be numeric (for Fitch parsimony step)
   tree.ori <- tree
-  ## if we need to run Fitch parsimony step,
-  ## tip & node labels need to be numeric....
 
   ## NOTE--COERCING TO NUMERIC CAN CAUSE BIG PROBLEMS!!!!
-  ## TO DO--FIX FITCH PARSIMONY FN S.T IT CAN WORK WITH TIP.LABELS THAT
-  ## ARE NOTE NUMERIC (AND/OR FIND A WAY TO EXTRACT THE NUMERIC PART OF A VECTOR,
-  ## EG. TIP_12 AND/OR IMPROVE YOUR get.tip.order FN TO BE ACCURATE IN THESE CASES
-  ## (AND IN OTHER !all.is.numeric CASES... ))
+  ## TO DO--FIX FITCH PARSIMONY FN S.T IT CAN WORK WITH
+  ## TIP.LABELS & NODE.LABELS THAT ARE NOT NUMERIC!
 
-  if(is.null(n.subs) & test != "Pagel"){
-    ## tip labels
+  if(is.null(n.subs)){
+
+    ## TIP labels ##
     if(all.is.numeric(tree$tip.label)){
       ## if we can convert to numeric, do so:
       tree$tip.label <- as.numeric(tree$tip.label)
@@ -161,150 +166,31 @@ treeWAS <- function(snps, phen, n.subs=NULL,
       ## else, replace with numeric indices:
       # tree$tip.label <- c(1:length(tree$tip.label))
       warning("Site-wise parsimony scores (phangorn's
-              fitch parsimony function) can not be calculated
-              when tip.labels are not numeric.")
+              fitch parsimony function) may not be calculated correctly
+              when tip.labels are not numeric.
+              Please change tree$tip.label to numeric values.")
     }
-    ## node labels
-    if(!all.is.numeric(tree$node.label)){
+
+    ## NODE labels ##
+    if(all.is.numeric(tree$node.label)){
+      tree$node.label <- as.numeric(tree$node.label)
+    }else{
       ## if we can remove "NODE_" to get numeric, do so:
-      temp <- removeFirstN(tree$node.label, 5)
-      if(all.is.numeric(temp)){
-        tree$node.label <- temp
-      }else{
-        ## else, replace with numeric indices:
-        # tree$node.label <- c((n.ind+1):(n.ind+tree$Nnode))
-        warning("Site-wise parsimony scores (phangorn's
-              fitch parsimony function) can not be calculated correctly
-              when node.labels are not numeric.")
-      }
-    }
-  }
-  ################
-  ## PAGEL TEST ##
-  ################
-
-  ## Must be done in ~ reverse order:
-  ## 1) Pagel test of real data (on each SNP)
-  ## 2) Get n.subs from iQ (for each SNP)
-  ## 3) Simulate data using n.subs (note n.subs01 (may) != n.subs10)
-  ## 4) Pagel test of simulated data (on each SNP)
-  ## 5) Compare real & simulated Pagel test results' p-value distributions...
-
-  if(test == "Pagel"){
-    ####################################################
-    ## 1) Pagel test of real data (on each unque SNP) ##
-    ####################################################
-
-    ## Identify unique SNPs columns:
-    snps.ori <- snps
-    temp <- get.unique.snps(snps)
-    snps.unique <- temp$snps.unique
-    snps.index <- temp$index
-    snps <- snps.unique
-
-    ## record whether all snps are unique or not for later:
-    if(ncol(snps.unique) == ncol(snps.ori)){
-      all.unique <- TRUE
-    }else{
-      all.unique <- FALSE
-    }
-
-    Pagel.snps.unique <- list()
-    # n.subs <- list()
-    N.SUBS <- n.subs01 <- n.subs10 <- list()
-
-    # system.time(
-    for(i in 1:ncol(snps)){ #ncol(snps)
-
-      ## i = 56 (snps eg dataset) --> Error:
-      ## system is computationally singular: reciprocal condition number
-
-      x <- snps[,i]
-      names(x) <- rownames(snps)
-      y <- phen
-
-      ## NOTE: using treeWAS' version of the fitPagel fn (in pagel.R)
-      Pagel.snps.unique[[i]] <- fitPagel(tree, x, y, method="ace", equal=TRUE)
-
-      # foo <- fitPagel(tree, x, y, method="ace", equal=TRUE)
-
-      ##########################################
-      ## 2) Get n.subs from iQ (for each SNP) ##
-      ##########################################
-
-      ## get n.subs
-      N.SUBS[[i]] <- get.n.subs(Pagel.snps.unique[[i]]$independent.Q, tree)
-      ## If fwd rate != bkwd rate, store both:
-      if(class(N.SUBS[[i]]) != "matrix"){
-        if(N.SUBS[[i]]["n.subs01"] != N.SUBS[[i]]["n.subs10"]){
-          n.subs01[[i]] <- N.SUBS[[i]]["n.subs01"]
-          n.subs10[[i]] <- N.SUBS[[i]]["n.subs10"]
+      prefix <- keepFirstN(tree$node.label, 4)
+      if(all(tolower(prefix) == "node")){
+        temp <- removeFirstN(tree$node.label, 5)
+        if(all.is.numeric(temp)){
+          tree$node.label <- as.numeric(temp)
         }else{
-          ## If only one rate (fwd == bkwd), store once:
-          N.SUBS[[i]] <- N.SUBS[[i]]["n.subs01"]
+          ## else, replace with numeric indices:
+          # tree$node.label <- c((n.ind+1):(n.ind+tree$Nnode))
+          warning("Site-wise parsimony scores (phangorn's
+                  fitch parsimony function) may not be calculated correctly
+                  when node.labels are not numeric.
+                  Please change tree$node.label to numeric values.")
         }
       }
-
-    } # end for loop
-    # )
-
-    ## Get p-values for real data:
-    P <- sapply(c(1:length(Pagel.snps.unique)),
-      function(e) Pagel.snps.unique[[e]]$P, simplify=FALSE)
-    p.vals.unique <- as.vector(unlist(P))
-    names(p.vals.unique) <- colnames(snps)
-    # hist(p.vals.unique, breaks=100)
-    # which(names(sort(p.vals.unique, decreasing=FALSE)) == "4")
-    # sort(p.vals.unique, decreasing=FALSE)[1:10]
-    # Q <- sapply(c(1:length(Pagel.snps.unique)),
-    #      function(e) Pagel.snps.unique[[e]]$independent.Q, simplify=FALSE)
-
-    ## Get. n.subs vector
-    l <- sapply(c(1:length(N.SUBS)), function(e) length(N.SUBS[[e]]))
-    if(all(l == 1)){
-      n.subs.unique <- as.vector(unlist(N.SUBS))
-      n.subs.unique <- round(n.subs.unique, 0)
-    }else{
-      n.subs.unique <- NULL
     }
-
-
-    ############################################
-    ## get values for duplicate snps columns: ##
-    ############################################
-    if(all.unique == TRUE){
-      p.vals.complete <- p.vals.unique
-      n.subs.complete <- n.subs.unique
-    }else{
-      p.vals.complete <- rep(NA, ncol(snps.ori))
-      for(i in 1:ncol(snps.unique)){
-        p.vals.complete[which(snps.index == i)] <- p.vals.unique[i]
-      }
-
-      if(!is.null(n.subs.unique)){
-        n.subs.complete <- rep(NA, ncol(snps.ori))
-        for(i in 1:ncol(snps.unique)){
-          n.subs.complete[which(snps.index == i)] <- n.subs.unique[i]
-        }
-        n.subs <- n.subs.complete
-        n.subs <- table(n.subs)
-      }else{
-        n.subs <- NULL
-      }
-    }
-
-    #####################################################################
-    ## 3) Simulate data using n.subs (note n.subs01 (may) != n.subs10) ##
-    #####################################################################
-
-    ## NOTE--Because (A) I am not yet certain how best to simulate data
-    ## given two different mt.rates 01 and 10, and (B) The unconstrained
-    ## ML method can give astronomical rates when true n.subs is rare
-    ## and may not be justified (Schluter 97), I am workingn with ACE/
-    ## fitPagel under constrained equal rates models for now.
-
-    ## (using same Handle N.Subs code as below:)
-
   }
 
 
@@ -318,7 +204,7 @@ treeWAS <- function(snps, phen, n.subs=NULL,
 
   ## if n.subs is a vector (ie. distribution) ##
   ## we use this distribution directly (but in proportion with the number of sites)
-  ## to specify the n.subs per site.
+  ## to specify the n.subs per site. (Handled within snp.sim fn.)
 
   ## if n.subs is NULL ##
   ## we compute the distribution of the n.subs-per-site
@@ -383,8 +269,8 @@ treeWAS <- function(snps, phen, n.subs=NULL,
     colnames(snps.sim) <- c(1:ncol(snps.sim))
     ## Identify unique SNPs columns:
     snps.sim.ori <- snps.sim
-    temp <- get.unique.snps(snps.sim)
-    snps.sim.unique <- temp$snps.unique
+    temp <- get.unique.matrix(snps.sim, MARGIN=2)
+    snps.sim.unique <- temp$unique.data
     snps.sim.index <- temp$index
     snps.sim <- snps.sim.unique
 
@@ -493,26 +379,18 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   #######################
   ## identify sig.snps ##
   #######################
-  if(test == "Pagel"){
-    # save(p.vals.complete, file="~/treeWAS/misc/snps_p.vals.complete")
-    # save(p.vals.sim.complete, file="~/treeWAS/misc/snps_p.vals.sim.complete")
 
-    snps <- snps.ori
-    sig.list <- get.sig.snps(snps=snps, snps.sim=snps.mat, phen=phen,
-                             test=test,
-                             p.value=p.value,
-                             p.value.correct=p.value.correct,
-                             p.value.by=p.value.by,
-                             Pagel=p.vals.complete,
-                             Pagel.sim=p.vals.sim.complete)
-  }else{
-  sig.list <- get.sig.snps(snps=snps, snps.sim=snps.mat, phen=phen,
+  ## Note: UNIQUE snps & snps.sim are identified WITHIN the get.sig.snps fn
+  ## to reduce computational time, but results are identified on the basis of all
+  ## ORIGINAL snps & snps.sim columns inputted.
+
+  sig.list <- get.sig.snps(snps=snps, snps.sim=snps.mat,
+                           phen=phen, tree=tree,
                            test=test,
                            p.value=p.value,
                            p.value.correct=p.value.correct,
-                           p.value.by=p.value.by,
-                           Pagel=NULL, Pagel.sim=NULL)
-  }
+                           p.value.by=p.value.by)
+
   #############################################
   ## isolate elements of get.sig.snps output ##
   #############################################

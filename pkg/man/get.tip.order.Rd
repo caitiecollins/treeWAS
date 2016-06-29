@@ -7,7 +7,8 @@
 get.tip.order(tree)
 }
 \arguments{
-\item{tree}{An object of class phylo containing a tree whose tip order is desired to be known.}
+\item{tree}{An object of class phylo containing a tree
+whose tip order is desired to be known.}
 }
 \description{
 Longer proper discription of function...

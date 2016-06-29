@@ -10,4 +10,5 @@ Imports: adegenet,
     ape,
     phangorn,
     ade4,
-    diversitree
+    diversitree,
+    Hmisc
