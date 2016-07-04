@@ -1,3 +1,6 @@
+
+
+
 ##############
 ## ace.test ##
 ##############
@@ -15,12 +18,19 @@
 #' @param snps A matrix containing binary snps for all individuals.
 #' @param phen A factor containing the phenotype for which to test for association.
 #' @param tree A phylo object containing the tree representing the ancestral relationships
-#' between individuals for which snps and phen are known.
-#' @param method A character string specifying the type of ACE method to implement.
-#' @param snps.ace A logical indicating whether to run ACE on all snps (TRUE, slower)
-#' or to run parsimony on snps instead (FALSE, faster; the default for now).
-#' @param phen.ace A logical indicating whether to run ACE on the phenotype (TRUE, slower)
-#' or to run parsimony on phen instead (FALSE, faster; the default for now).
+#' between the individuals for which snps and phen are known.
+#' @param test A character string containing one or both (the default) of "simultaneous" and "subsequent",
+#' specifying which test(s) of association to perform on the data.
+#' @param snps.reconstruction Either a character string containing one of "parsimony" or "ace",
+#' specifying whether the ancestral states of \code{snps} should be reconstructed by
+#' parsimony (faster; the default for now) or ancestral character estimation (as performed in \emph{ape}, slower),
+#' or an object containing a parsimonious reconstruction previously performed by the user.
+#' @param phen.reconstruction Either a character string containing one of "parsimony" or "ace",
+#' specifying whether the ancestral states of \code{phen} should be reconstructed by
+#' parsimony (the default for now) or ancestral character estimation (as performed in \emph{ape}),
+#' or an object containing a parsimonious reconstruction previously performed by the user.
+#' @param method A character string specifying the type of ACE method to implement (only used if
+#' \code{snps.rec} or \code{phen.rec} is set to "ace").
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -56,28 +66,22 @@
 # snps <- snps.ori <- snps.ace
 # phen <- phen.ori <- phen.ace
 # tree <- tree.ori <- tree.ace
+# test <- c("simultaneous", "subsequent")
+# snps.reconstruction <- "parsimony"
+# phen.reconstruction <- "parsimony"
 # method <- "discrete"
 
+##############################################################################################################################################################
 
+###########################
+## OLD ace.test FUNCTION ##
+###########################
 ace.test <- function(snps, phen, tree,
-                     test=c("cum", "pagel"),
-                     method="discrete",
-                     snps.ace=FALSE,
-                     phen.ace=FALSE){
+                     test = c("simultaneous", "subsequent"),
+                     snps.reconstruction = "parsimony",
+                     phen.reconstruction = "parsimony",
+                     method = "discrete"){
 
-#   ## match.arg ##
-#
-#   ## Allow partial matching of argument names...
-#
-#   arg <- c("simultaneous", "subsequent")
-#
-#   f1 <- function(test = c("simultaneous", "subsequent")){
-#     arg <- match.arg(test)
-#     print(arg)
-#   }
-#
-#   f1(test="smlt")
-#   abbreviate(arg)
 
   ##############
   ## OPTIONS: ##
@@ -85,16 +89,25 @@ ace.test <- function(snps, phen, tree,
 
   ## TEST: ##
   ###########
-  ## (1) Cumulative/multiplicative test for simultaneous substitutions,
+  ## (1) Simultaneous Test for simultaneous substitutions,
   ## allowing for complementary pathways.
-  ## (2) Pagel-inspired test for the effect of one variable's state on the maintenance or
+  ## (2) Subsequent Test for the effect of one variable's state on the maintenance or
   ## substitution of the other variable's state.
+
+  ## Allow partial matching of argument names:
+  test <- match.arg(arg = test,
+                    choices =  c("simultaneous", "subsequent"),
+                    several.ok = TRUE)
+  snps.reconstruction <- match.arg(snps.reconstruction)
+  phen.reconstruction <- match.arg(phen.reconstruction)
 
   ## POSSIBLE SUB-OPTIONS: ##
   ###########################
-  ## (1) Parsimony on BOTH SNPs and Phen
-  ## (2) Parsimony on SNPS and ACE on Phen (or vice versa??)
-  ## (3) ACE on BOTH SNPs and Phen
+  ## (1) Parsimony on SNPs and/or Phen
+  ## (2) ACE on SNPs and/or Phen
+  ## (3) User data on SNPs and/or Phen
+  ## (?????????????? ARE USERS LIKELY TO WANT TO PROVIDE ONLY PARSIMONIOUS RECONSTRUCTIONS OR POSSIBLY ACE AS WELL???? AND HOW TO SPECIFY IF SO ???????????????)
+  ## NOTE: Regardless of combination of sub-options selected, these will be required to be the same choices for all association tests run.
 
   edges <- tree$edge
 
@@ -121,7 +134,7 @@ ace.test <- function(snps, phen, tree,
   ########################################
 
   ## SNPS parsimony ##
-  if(snps.ace == FALSE){
+  if(snps.reconstruction == "parsimony"){
     ## run get.ancestral.pars
     snps.pars <- get.ancestral.pars(var=snps, tree=tree)
 
@@ -131,7 +144,7 @@ ace.test <- function(snps, phen, tree,
   }
 
   ## PHEN parsimony ##
-  if(phen.ace == FALSE){
+  if(phen.reconstruction == "parsimony"){
     ## run get.ancestral.pars
     phen.pars <- get.ancestral.pars(var=phen, tree=tree)
 
@@ -149,7 +162,7 @@ ace.test <- function(snps, phen, tree,
 
   ## SNPS ace ##
 
-  if(snps.ace == TRUE){
+  if(snps.reconstruction == "ace"){
     ##################################
     ## get diffs for (unique) SNPS: ##
     ##################################
@@ -173,7 +186,7 @@ ace.test <- function(snps, phen, tree,
 
   ## PHEN ace ##
 
-  if(phen.ace == TRUE){
+  if(phen.reconstruction == "ace"){
     #########################
     ## get diffs for PHEN: ##
     #########################
@@ -196,10 +209,10 @@ ace.test <- function(snps, phen, tree,
   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
 
-  ######################################################
-  ## CUMULATIVE TEST (for simultaneous substitutions) ##
-  ######################################################
-  if("cum" %in% test){
+  #######################
+  ## SIMULTANEOUS TEST ##
+  #######################
+  if("simultaneous" %in% test){
 
     ## OPTIONS: ##
 
@@ -213,7 +226,7 @@ ace.test <- function(snps, phen, tree,
     ## (ie. allowing for complementary pathways).
     ## So, no denominator term...
 
-    if(snps.ace == FALSE & phen.ace == FALSE){
+    if(snps.reconstruction == "parsimony" & phen.reconstruction == "parsimony"){
       ace.score <- list()
       phen.pos <- phen.subs.edges$pos
       phen.neg <- phen.subs.edges$neg
@@ -242,7 +255,7 @@ ace.test <- function(snps, phen, tree,
 
     ## (2.a) SNPs PARSIMONY & Phen ACE ##
     #####################################
-    if(snps.ace == FALSE & phen.ace == TRUE){
+    if(snps.reconstruction == "parsimony" & phen.reconstruction == "ace"){
       ace.score <- list()
       for(i in 1:length(snps.subs.edges)){
         snps.pos <- snps.subs.edges[[i]]$pos
@@ -263,7 +276,7 @@ ace.test <- function(snps, phen, tree,
 
     ## (2.b) SNPs ACE & Phen PARSIMONY ##
     #####################################
-    if(snps.ace ==TRUE & phen.ace == FALSE){
+    if(snps.reconstruction == "ace" & phen.reconstruction == "parsimony"){
       ace.score <- list()
       phen.pos <- phen.subs.edges$pos
       phen.neg <- phen.subs.edges$neg
@@ -287,14 +300,14 @@ ace.test <- function(snps, phen, tree,
     ## SNPs & Phen ACE ##
     #####################
     ## Multiplicative test: ((ACE.diffs_SNP) * (ACE.diffs_phen))
-    if(snps.ace == TRUE & phen.ace == TRUE){
+    if(snps.reconstruction == "ace" & phen.reconstruction == "ace"){
       ace.score <- list()
       for(i in 1:length(snps.diffs)){
         snp.diffs <- snps.diffs[[i]]
         sp.diffs <- snp.diffs * phen.diffs
 
         ace.score[[i]] <- abs(sum(sp.diffs)) ##
-        ## NOTE: unlike the Cumulative Test variants 1, 2a, 2b, this ace*ace version (3) does NOT
+        ## NOTE: unlike the Simultaneous Test variants 1, 2a, 2b, this ace*ace version (3) does NOT
         ## have an obvious natural denominator, so it cannot be divided to be forced btw 0 and 1...
         ## In light of this, might it be better to be consistent and not divide the other 3 variants above..?
       }
@@ -323,15 +336,15 @@ ace.test <- function(snps, phen, tree,
       names(ace.score.complete) <- colnames(snps.ori)
     }
 
-  } # end "cum" %in% test
-  ## END CUMULATIVE TEST ##
+  } # end "simultaneous" %in% test
+  ## END SIMULTANEOUS TEST ##
 
   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
   #########################
-  ## PAGEL-INSPIRED TEST ##
+  ## SUBSEQUENT TEST ##
   #########################
-  if("pagel" %in% test){
+  if("subsequent" %in% test){
 
     ## OPTIONS: ##
 
@@ -340,7 +353,7 @@ ace.test <- function(snps, phen, tree,
     ############################
     ## ...
 
-    if(snps.ace == FALSE & phen.ace == FALSE){
+    if(snps.reconstruction == "parsimony" & phen.reconstruction == "parsimony"){
 
       ##############
       ## FOR LOOP ##
@@ -383,7 +396,7 @@ ace.test <- function(snps, phen, tree,
 
     ## (2.a) SNPs PARSIMONY & Phen ACE ##
     #####################################
-    if(snps.ace == FALSE & phen.ace == TRUE){
+    if(snps.reconstruction == "parsimony" & phen.reconstruction == "ace"){
 
       #######################
       ## Handle phen probs ##
@@ -448,7 +461,7 @@ ace.test <- function(snps, phen, tree,
 
     ## (2.b) SNPs ACE & Phen PARSIMONY ##
     #####################################
-    if(snps.ace == TRUE & phen.ace == FALSE){
+    if(snps.reconstruction == "ace" & phen.reconstruction == "parsimony"){
 
       ##############
       ## FOR LOOP ##
@@ -500,7 +513,7 @@ ace.test <- function(snps, phen, tree,
     ## (3) ##############
     ## SNPs & Phen ACE ##
     #####################
-    if(snps.ace == TRUE & phen.ace == TRUE){
+    if(snps.reconstruction == "ace" & phen.reconstruction == "ace"){
 
       #######################
       ## Handle phen probs ##
@@ -590,9 +603,9 @@ ace.test <- function(snps, phen, tree,
       }
     }
 
-  } # end "pagel" %in% test
+  } # end "subsequent" %in% test
 
-  ## END ACE.PAGEL TEST ##
+  ## END SUBSEQUENT TEST ##
 
   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
@@ -754,6 +767,51 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l){
 
 
 
+######################
+## get.branch.diffs ##
+######################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param var A vector containing a variable whose change across edges we want to examine.
+#' @param edges A 2-column matrix containing the upstream and downstream nodes
+#'  in columns 1 and 2 of a tree's edge matrix, as found in a phylo object's tree$edge slot.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+#'
+
+########################################################################
+
+## get diffs btw ace prob/likelihood at upstream vs. downstream node
+## for a single variable for which you have a value for all terminal and internal nodes.
+get.branch.diffs <- function(var, edges){
+  ## CHECKS: ##
+  ## var should be a vector or have 2 columns summing to 1 or 100:
+  if(!is.null(dim(var))){
+    if(ncol(var) > 2) warning("var contains more than one discrete variable;
+                              selecting first variable.")
+    var <- var[,2]
+  }
+  ## var and tree$edge should contain the same number of inds:
+  if(length(var) != (nrow(edges)+1)) stop("var contains more
+                                          individuals than tree$edge does.")
+
+  ## ~ FOR LOOP ##
+  diffs <- var[edges[,1]] - var[edges[,2]]
+
+  return(as.vector(diffs))
+} # end get.branch.diffs
+
+
 
 ###################
 ## get.ace.diffs ##
@@ -848,8 +906,22 @@ get.ancestral.pars <- function(var, tree){
 
     snps <- var
 
-    ## get n.subs per site:
-    cost <- get.fitch.n.mts(snps, tree)
+    ###############################
+    ## get unique SNPs patterns: ##
+    ###############################
+    temp <- get.unique.matrix(snps, MARGIN=2)
+    snps.unique <- temp$unique.data
+    index <- temp$index
+
+    if(ncol(snps.unique) == ncol(snps)){
+      all.unique <- TRUE
+    }else{
+      all.unique <- FALSE
+    }
+
+    ## work w only unique snps:
+    snps.ori <- snps
+    snps <- snps.unique
 
     ##########################################
     ## get SNP states of all internal nodes ##
@@ -880,7 +952,7 @@ get.ancestral.pars <- function(var, tree){
     pa.ACCTRAN <- pace(tree, snps.phyDat, type="ACCTRAN")
 
     ## NOTE: pace  --> diff resuls w MPR vs. ACCTRAN
-    #pa.MPR <- pace(tree, dna, type="MPR")
+    # pa.MPR <- pace(tree, snps.phyDat, type="MPR")
     #diffs <- sapply(c(1:length(pa.ACCTRAN)), function(e) identical(pa.MPR[[e]], pa.ACCTRAN[[e]]))
 
     ###########################################
@@ -893,16 +965,20 @@ get.ancestral.pars <- function(var, tree){
     # rec <- pa.MPR
     rec <- pa.ACCTRAN
 
-    # str(rec)
-    snps.rec <- list()
-    for(i in 1:length(rec)){
+    snps.rec <- vector("list", length(rec))
+    ## Handle terminal nodes
+    for(i in 1:nrow(snps)){
+      snps.rec[[which(row.names(snps) == tree$tip.label[i])]] <- rec[[i]][,2]
+    }
+    ## Handle internal nodes
+    for(i in (nrow(snps)+1):length(rec)){
       snps.rec[[i]] <- rec[[i]][,2]
     }
+    ## bind rows together
     snps.rec <- do.call("rbind", snps.rec)
     ## assign rownames for all terminal and internal nodes
     rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):((nrow(snps)*2)-1)))
     colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
-    # identical(snps.rec[1:nrow(snps),], snps)
 
 
     ###########################################
@@ -934,10 +1010,6 @@ get.ancestral.pars <- function(var, tree){
       if(length(subs.neg) > 0) subs.edges[[i]][["neg"]] <- subs.neg
     }
 
-    cost3 <- sapply(c(1:length(subs.edges)), function(e) length(subs.edges[[e]][["total"]]))
-    ## NOTE: cost3 differs noticeably from original fitch cost...
-    ## WHY? Which should we use to get n.subs?????????
-
     ####################
     ## PLOT to CHECK? ##
     ####################
@@ -955,7 +1027,52 @@ get.ancestral.pars <- function(var, tree){
     ################
     ## Get output ##
     ################
-    var.rec <- snps.rec
+
+    ## get reconstruction for all original sites
+    if(ncol(snps.ori) == ncol(snps.rec)){
+      snps.rec.complete <- snps.rec
+    }else{
+      snps.rec.complete <- matrix(NA, nrow=nrow(snps.rec), ncol=ncol(snps.ori))
+      for(i in 1:ncol(snps.rec)){
+        snps.rec.complete[, which(index == i)] <- snps.rec[, i]
+      }
+      rownames(snps.rec.complete) <- rownames(snps.rec)
+      colnames(snps.rec.complete) <- colnames(snps.ori)
+    }
+
+    ## get sub locations on branches for all original sites
+    snps.subs.edges <- subs.edges
+    if(ncol(snps.ori) == ncol(snps.rec)){
+      snps.subs.edges.complete <- snps.subs.edges
+    }else{
+      snps.subs.edges.complete <- vector("list", ncol(snps.ori))
+      for(i in 1:length(snps.subs.edges)){
+        loc <- which(index == i)
+        if(length(loc) == 1){
+          snps.subs.edges.complete[[loc]] <- snps.subs.edges[[i]]
+        }else{
+          for(j in 1:length(loc)){
+            snps.subs.edges.complete[[loc[j]]] <- snps.subs.edges[[i]]
+          }
+        }
+      }
+    }
+
+
+    ## CHECK-- compare cost from fitch and pace: ##
+    ## get n.subs per site by fitch:
+    cost <- get.fitch.n.mts(snps, tree)
+    ## get n.subs per site by pace:
+    cost2 <- sapply(c(1:length(snps.subs.edges.complete)),
+                    function(e) length(snps.subs.edges.complete[[e]][["total"]]))
+    ## NOTE: cost2 differs somewhat noticeably from original fitch cost
+    ## (ie. parsimony shifts distribution toward 1/reduces the weight of the upper tail...)
+    ## WHY? Which should we use to get n.subs????????????????????????????????????????????????????????????
+
+    ## Get final output list:
+    var.rec <- snps.rec.complete
+    subs.edges <- snps.subs.edges.complete
+
     out <- list("var.rec" = var.rec,
                 "subs.edges" = subs.edges)
 

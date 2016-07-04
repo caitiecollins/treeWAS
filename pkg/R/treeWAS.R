@@ -34,7 +34,9 @@
 #'
 #' Longer proper discription of function...
 #'
-#' @param x description.
+#' @param test A character string or vector containing one or more of the following available tests of association:
+#' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the first three tests are run.
+#' See details for more information on what these tests do and when they may be appropriate.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -56,20 +58,40 @@
 
 ########################################################################
 
-## n.subs ## either an integer specifying Poisson parameter OR a distribution
-## OR (if NULL?? or "fitch"??) compute w parsimony
+## EXAMPLE (data/parameters):
 
+# data("snps.ace")
+# data("phen.ace")
+# data("tree.ace")
+#
+# snps <- snps.ori <- snps.ace
+# phen <- phen.ori <- phen.ace
+# tree <- tree.ori <- tree.ace
+#
+# n.subs <- NULL
+# dist.dna.model <- "JC69"
+# plot.tree <- FALSE
+# test <- c("terminal", "simultaneous", "subsequent")
+# p.value <- 0.001
+# p.value.correct <- "fdr"
+# p.value.by <- c("count", "density")
+# sim.n.snps <- ncol(snps)
+# n.reps <- 1
+# plot.null.dist <- TRUE
+# plot.dist <- FALSE
+# snps.reconstruction <- "parsimony"
+# phen.reconstruction <- "parsimony"
 
-
-treeWAS <- function(snps, phen, n.subs=NULL,
-                    tree=c("UPGMA", "nj", "ml"),
-                    dist.dna.model="JC69", plot.tree=FALSE,
-                    test=c("score", "cor", "fisher", "ace.cum", "ace.pagel"),
-                    p.value=0.001,
-                    p.value.correct=c("bonf", "fdr", FALSE),
-                    p.value.by=c("count", "density"),
-                    sim.n.snps=10000, n.reps=1,
-                    plot.null.dist=TRUE, plot.dist=FALSE){
+treeWAS <- function(snps, phen, n.subs = NULL,
+                    tree = c("UPGMA", "nj", "ml"),
+                    dist.dna.model = "JC69", plot.tree = FALSE,
+                    test = c("terminal", "simultaneous", "subsequent"),
+                    p.value = 0.001,
+                    p.value.correct = c("bonf", "fdr", FALSE), ## DO WE WANT TO ALLOW USERS TO RUN MANY DIFFERENT MULTIPLE TESTING CORRECTION METHODS FOR EACH TEST?????????
+                    p.value.by = c("count", "density"),
+                    sim.n.snps = ncol(snps), n.reps = 1,
+                    plot.null.dist = TRUE, plot.dist = FALSE,
+                    snps.reconstruction = "parsimony", phen.reconstruction = "parsimony"){
 
   ###################
   ## LOAD PACKAGES ##
@@ -83,6 +105,15 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   #####################################################################
   ## 0) HANDLE INPUT DATA #############################################
   #####################################################################
+
+  #####################
+  ## HANDLE TEST ARG ##
+  #####################
+
+  ## Allow partial matching of argument names:
+  test <- match.arg(arg = test,
+                    choices = c("terminal", "simultaneous", "subsequent", "cor", "fisher"),
+                    several.ok = TRUE)
 
   ########################
   ## HANDLE SNPS & PHEN ##
@@ -118,9 +149,9 @@ treeWAS <- function(snps, phen, n.subs=NULL,
       tree <- "upgma"
     }
     tree <- tree.reconstruct(snps,
-                             method=tree,
-                             dist.dna.model=dist.dna.model,
-                             plot=plot.tree)
+                             method = tree,
+                             dist.dna.model = dist.dna.model,
+                             plot = plot.tree)
   }else{
 
     ## USER-PROVIDED TREE ##
@@ -198,10 +229,6 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   ## HANDLE N.SUBS ##
   ###################
 
-  ## if n.subs is an integer ##
-  ## we use this as the parameter of a Poisson distribution
-  ## from which the n.subs per site is drawn for each site.
-
   ## if n.subs is a vector (ie. distribution) ##
   ## we use this distribution directly (but in proportion with the number of sites)
   ## to specify the n.subs per site. (Handled within snp.sim fn.)
@@ -211,14 +238,43 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   ## using the Fitch parsimony score calculation fns from phangorn.
 
   if(is.null(n.subs)){
+
+    ###########
+    ## TO DO ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+    ###########
+
+    ## if either test 2 or test 3 will be run with parsimonious/user-provided reconstruction,
+    ## get n.subs from this to avoid duplication..
+    #     if(any(c("simultaneous", "subsequent") %in% test) & snps.reconstruction != "ace"){
+    #
+    #       ## run get.ancestral.pars
+    #       snps.pars <- get.ancestral.pars(var=snps, tree=tree)
+    #
+    #       ## get elements of output
+    #       snps.rec <- snps.pars$var.rec
+    #       snps.subs.edges <- snps.pars$subs.edges
+    #
+    #       ## CHECK--Compare costs:
+    #       cost1 <- get.fitch.n.mts(snps=snps, tree=tree)
+    #       cost2 <- sapply(c(1:length(snps.subs.edges)), function(e) length(snps.subs.edges[[e]][["total"]]))
+    #       table(cost1)
+    #       table(cost2) ## longer tail...
+    #
+    #     }else{
+
+    ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+    ## get parsimomy cost for each SNP locus using fitch:
     n.subs <- get.fitch.n.mts(snps=snps, tree=tree)
     n.subs <- table(n.subs)
+    ## handle n.subs "levels" with 0 SNP loci at those levels:
     noms <- as.numeric(names(n.subs))
     temp <- rep(0, max(noms))
     for(i in 1:max(noms)){
       if(i %in% noms) temp[i] <- n.subs[which(noms==i)]
     }
     n.subs <- temp
+    # }
   }
 
 
@@ -237,7 +293,7 @@ treeWAS <- function(snps, phen, n.subs=NULL,
                         n.subs = n.subs, n.snps.assoc = 0, assoc.prob = 100,
                         tree = tree, phen.loci = NULL,
                         heatmap = FALSE,
-                        reconstruct = FALSE, dist.dna.model = "JC69",
+                        reconstruct = FALSE, dist.dna.model = dist.dna.model,
                         seed = NULL)
 
     genomes[[i]] <- out[[i]][[1]]
@@ -254,127 +310,152 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   } # end for loop
 
 
-  ###################################################
-  ## 4) Pagel test of simulated data (on each SNP) ##
-  ###################################################
-  if(test == "Pagel"){
-
-    ## Get simulated snps:
-    if(length(snps.mat) == 1){
-      if(is.matrix(snps.mat[[1]])) snps.sim <- snps.mat[[1]]
-    }else{
-      snps.sim <- do.call(cbind, snps.mat)
-    }
-    rownames(snps.sim) <- rownames(snps.ori)
-    colnames(snps.sim) <- c(1:ncol(snps.sim))
-    ## Identify unique SNPs columns:
-    snps.sim.ori <- snps.sim
-    temp <- get.unique.matrix(snps.sim, MARGIN=2)
-    snps.sim.unique <- temp$unique.data
-    snps.sim.index <- temp$index
-    snps.sim <- snps.sim.unique
-
-    ## record whether all snps are unique or not for later:
-    if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
-      all.unique <- TRUE
-    }else{
-      all.unique <- FALSE
-    }
-
-    Pagel.snps.sim.unique <- list()
-    # n.subs <- list()
-    N.SUBS <- n.subs01 <- n.subs10 <- list()
-
-    # system.time(
-    ## elapsed time: 3126.880
-    ## ncol(snps.sim) : 6523
-    for(i in 1:ncol(snps.sim)){
-
-      x <- snps.sim[,i]
-      names(x) <- rownames(snps.sim)
-      y <- phen
-
-      ## NOTE: using treeWAS' version of the fitPagel fn (in pagel.R)
-      Pagel.snps.sim.unique[[i]] <- fitPagel(tree, x, y,
-                                            method="ace", equal=TRUE)
-
-      # foo <- fitPagel(tree, x, y, method="ace", equal=TRUE)
-
-      ##########################################
-      ## 2) Get n.subs from iQ (for each SNP) ##
-      ##########################################
-
-      ## get n.subs
-      N.SUBS[[i]] <- get.n.subs(Pagel.snps.sim.unique[[i]]$independent.Q, tree)
-      ## If fwd rate != bkwd rate, store both:
-      if(class(N.SUBS[[i]]) != "matrix"){
-        if(N.SUBS[[i]]["n.subs01"] != N.SUBS[[i]]["n.subs10"]){
-          n.subs01[[i]] <- N.SUBS[[i]]["n.subs01"]
-          n.subs10[[i]] <- N.SUBS[[i]]["n.subs10"]
-        }else{
-          ## If only one rate (fwd == bkwd), store once:
-          N.SUBS[[i]] <- N.SUBS[[i]]["n.subs01"]
-        }
-      }
-
-    } # end for loop
-    # )
-
-    ## Get p-values for real data:
-    P <- sapply(c(1:length(Pagel.snps.sim.unique)),
-      function(e) Pagel.snps.sim.unique[[e]]$P, simplify=FALSE)
-    p.vals.sim.unique <- as.vector(unlist(P))
-    names(p.vals.sim.unique) <- colnames(snps.sim)
-    hist(p.vals.sim.unique, breaks=100)
-
-    # Get. n.subs vector
-    #     l <- sapply(c(1:length(N.SUBS)), function(e) length(N.SUBS[[e]]))
-    #     if(all(l == 1)){
-    #       n.subs.sim.unique <- as.vector(unlist(N.SUBS))
-    #       n.subs.sim.unique <- round(n.subs.sim.unique, 0)
-    #       n.subs.sim.unique <- table(n.subs.sim.unique)
-    #     }else{
-    #       n.subs.sim.unique <- NULL
-    #     }
-
-
-    ############################################
-    ## get values for duplicate snps columns: ##
-    ############################################
-    if(all.unique == TRUE){
-      p.vals.sim.complete <- p.vals.sim.unique
-      n.subs.sim.complete <- n.subs.sim.unique
-    }else{
-      p.vals.sim.complete <- rep(NA, ncol(snps.sim.ori))
-      for(i in 1:ncol(snps.sim.unique)){
-        p.vals.sim.complete[which(snps.sim.index == i)] <- p.vals.sim.unique[i]
-      }
-
-    #       if(!is.null(n.subs.sim.unique)){
-    #         n.subs.sim.complete <- rep(NA, ncol(snps.sim.ori))
-    #         for(i in 1:ncol(snps.sim.unique)){
-    #           n.subs.sim.complete[which(snps.sim.index == i)] <-
-    #           n.subs.sim.unique[i]
-    #         }
-    #         n.subs.sim <- n.subs.sim.complete
-    #       }else{
-    #         n.subs.sim <- NULL
-    #       }
-    }
-
-  }
-  ###############################################################################
-  ## 5) Compare real & simulated Pagel test results' p-value distributions...  ##
-  ###############################################################################
-
 
   ################################################################
   ## 3) Get results:##############################################
-  #### Determine the PC-p-values for all SNP loci | ##############
+  #### Determine the phylogenetially correct p-values for SNPs | #
   ##   null distributions of correlations from simulated data ####
   #### Synthesize results output: List of all significant SNPs, ##
   ##   their names/locations, their p-values for this phenotype ##
   ################################################################
+
+  ##################################################
+  ## RUN CHECKS ONCE BEFORE get.sig.snps FOR LOOP ##
+  ##################################################
+
+  ## NOTE: These checks are repeated within the get.sig.snps fn
+  ## as an extra layer of safety/ in case users want to use it alone,
+  ## but it is more economical to run them once outside of the for loop..
+
+
+  ## NOTE TO CHECK! ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+  ## Are we SLOWING things down significantly by identifying UNIQUE snps & snps.sim WITHIN the get.sig.snps fn??
+  ## And could we identify unique snps/snps.sim HERE (AND add an extra INDEX argument to get.sig.snps)??
+  ## (ie. get.sig.snps INPUT = UNIQUE snps, snps.sim + index & OUTPUT = results for ALL ORIGINAL/NON-unique sites...).
+
+  ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+  #################
+  ## Handle snps ##
+  #################
+  ## Check snps column names
+  if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+
+  ################################
+  ## Handle snps.sim --> matrix ##
+  ################################
+  snps.sim <- snps.mat
+
+  ## Handle matrix/list input:
+  if(class(snps.sim) == "list"){
+    ## If list of length 1...
+    if(length(snps.sim) == 1){
+      ## keep matrix:
+      snps.sim <- snps.sim[[1]]
+    }else{
+      ## If list of multiple matrices...
+      ## merge all elements into one big matrix
+      ## by pasting columns together:
+      snps.sim <- do.call("cbind", snps.sim)
+    }
+  }
+
+  #################
+  ## Handle phen ##
+  #################
+  ## convert phenotype to numeric:
+  ## NOTE--this is also necessary for returning results in step (5)!
+  phen.ori <- phen
+  if(!is.numeric(phen)) phen <- as.numeric(phen)
+  ## for ease of interpretation,
+  ## if phen has 2 levels, 1 and 2,
+  ## make these 0 and 1:
+  if(length(unique(phen))!=2){
+    stop("This function is only designed for phenotypes with two levels.")
+  }else{
+    if(length(phen[-c(which(phen==1), which(phen==2))])==0){
+      phen <- replace(phen, which(phen==1), 0)
+      phen <- replace(phen, which(phen==2), 1)
+    }
+  }
+
+
+  ##############################################################################################
+  ## Reconstruct ancestral SNPs & phen by parsimony/ACE (for tests simultaneous & subsequent) ##
+  ##############################################################################################
+
+  ## Ensure we are only reconstructing ancestral states ONCE here, to be used in MULTIPLE tests later.
+  snps.REC <- snps.sim.REC <- phen.REC <- NULL
+
+  if(any(c("simultaneous", "subsequent") %in% test)){
+
+
+    ############
+    ## TO DO: ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+    ############
+
+    ## ADD CODE TO HANDLE USER-INPUTTED SNPS/PHEN.RECONSTRUCTIONS:
+    ## - Extract code to get subs.edges from within get.ancestral.pars fn in ace.R --> make a get.subs.edges fn.
+    ## --> Determine if user input is from ACE or PARSIMONY (eg. Are all values 0/1/0.5 (= parsimony) or are any in between (=ace))
+    ## --> NOTE--even if reconstruction provided, will still need to perform reconstruction on SNPS.SIM (& probably phen). Will use
+    ##     inferred snps reconstruction method on snps.sim as well... (OR could add another argument to control this??)
+    ## --> If input = from PARSIMONY, run get.subs.edges fn
+    ## --> Store info as list of snps/phen.REC containing inputted data as var.rec (and get.subs.edges output as subs.edges if parsimony)
+    ## --> Proceed by handling this output as you would if snps/phen were reconstructed within treeWAS as below...
+
+
+    ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+
+
+
+    #######################
+    ## Reconstruct SNPs: ##
+    #######################
+
+    ## By PARSIMONY: ##
+    if(snps.reconstruction == "parsimony"){
+      ## Reconstruct REAL SNPs: ##
+      snps.REC <- reconstruct(var = snps, tree = tree, type = "parsimony")
+      snps.rec <- snps.REC$var.rec
+      # snps.subs.edges <- snps.REC$subs.edges ## deprecated
+
+      ## Reconstruct SIMULATED SNPs: ##
+      snps.sim.REC <- reconstruct(var = snps.sim, tree = tree, type = "parsimony")
+      snps.sim.rec <- snps.sim.REC$var.rec
+      # snps.sim.subs.edges <- snps.sim.REC$subs.edges ## deprecated
+    }
+
+    ## By ACE: ##
+    if(snps.reconstruction == "ace"){
+      ## Reconstruct REAL SNPs: ##
+      snps.REC <- reconstruct(var = snps, tree = tree, type = "ace")
+      snps.rec <- snps.REC$var.rec
+
+      ## Reconstruct SIMULATED SNPs: ##
+      snps.sim.REC <- reconstruct(var = snps.sim, tree = tree, type = "ace")
+      snps.sim.rec <- snps.sim.REC$var.rec
+    }
+
+    #######################
+    ## Reconstruct phen: ##
+    #######################
+
+    ## By PARSIMONY: ##
+    if(phen.reconstruction == "parsimony"){
+      phen.REC <- reconstruct(var = phen, tree = tree, type = "parsimony")
+      phen.rec <- phen.REC$var.rec
+      # phen.subs.edges <- phen.REC$subs.edges ## deprecated
+    }
+
+    ## By ACE: ##
+    if(phen.reconstruction == "ace"){
+      phen.REC <- reconstruct(var = phen, tree = tree, type = "ace")
+      phen.rec <- phen.REC$var.rec
+    }
+
+  } # end reconstruction for tests 2 & 3
 
   #######################
   ## identify sig.snps ##
@@ -384,12 +465,24 @@ treeWAS <- function(snps, phen, n.subs=NULL,
   ## to reduce computational time, but results are identified on the basis of all
   ## ORIGINAL snps & snps.sim columns inputted.
 
-  sig.list <- get.sig.snps(snps=snps, snps.sim=snps.mat,
-                           phen=phen, tree=tree,
-                           test=test,
-                           p.value=p.value,
-                           p.value.correct=p.value.correct,
-                           p.value.by=p.value.by)
+  sig.list <- list()
+
+  TEST <- as.list(test)
+
+  ## Run get.sig.snps fn once for each association test:
+  for(i in 1:length(TEST)){
+    sig.list[[i]] <- get.sig.snps(snps = snps,
+                                 snps.sim = snps.sim,
+                                 phen = phen,
+                                 tree = tree,
+                                 test = TEST[[i]],
+                                 p.value = p.value,
+                                 p.value.correct = p.value.correct,
+                                 p.value.by = p.value.by,
+                                 snps.reconstruction = snps.REC,
+                                 snps.sim.reconstruction = snps.sim.REC,
+                                 phen.reconstruction = phen.REC)
+  }
 
   #############################################
   ## isolate elements of get.sig.snps output ##
@@ -430,7 +523,7 @@ treeWAS <- function(snps, phen, n.subs=NULL,
     ## Get counts for n.sig.snps in each cell of the contingency table:
     #     toKeep <- sapply(c(1:length(sig.snps)),
     #                      function(e)
-    #                        which(dimnames(snps)[[2]] == sig.ssig.snps
+    #                        which(dimnames(snps)[[2]] == sig.snps))
     toKeep <- sig.snps
     snps.toKeep <- snps[,toKeep]
 

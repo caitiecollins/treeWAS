@@ -21,9 +21,9 @@
 #' @param phen A factor or vector containing the phenotype (only allowed to contain two levels for now).
 #' @param tree A phylo object containing a phylogenetic tree in which the number of tips is equal to the
 #' length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.
-#' @param test A character string specifying the test to be used to measure correlations between the snps
-#' (real and simulated) and the phenotype. Must be one of 'score', 'cor', 'fisher' (indicating, respectively,
-#' the correlation score, standard correlation, fisher's exact test).
+#' @param test A character string or vector containing one or more of the following available tests of association:
+#' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the first three tests are run.
+#' See details for more information on what these tests do and when they may be appropriate.
 #' @param p.value A single number specifying the p.value below which correlations are deemed to be 'significant'.
 #' @param p.value.correct Specify if/how to correct for multiple testing:
 #' either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
@@ -53,10 +53,13 @@
 
 get.sig.snps <- function(snps, snps.sim,
                          phen, tree,
-                         test=c("score", "cor", "fisher", "ace.cum", "ace.pagel"),
-                         p.value=0.001,
-                         p.value.correct=c("bonf", "fdr", FALSE),
-                         p.value.by=c("count", "density")){
+                         test = c("terminal", "simultaneous", "subsequent", "cor", "fisher"),
+                         p.value = 0.001,
+                         p.value.correct = c("bonf", "fdr", FALSE),
+                         p.value.by = c("count", "density"),
+                         snps.reconstruction = snps.REC,
+                         snps.sim.reconstruction = snps.sim.REC,
+                         phen.reconstruction = phen.REC){
 
   #################
   ## HANDLE SNPS ##
@@ -86,7 +89,6 @@ get.sig.snps <- function(snps, snps.sim,
   ##############
   ## snps.sim ##
   ##############
-
   ## Handle matrix/list input:
   if(class(snps.sim) == "list"){
     ## If list of length 1...
@@ -97,7 +99,7 @@ get.sig.snps <- function(snps, snps.sim,
       ## If list of multiple matrices...
       ## merge all elements into one big matrix
       ## by pasting columns together:
-      snps.sim <- do.call(cbind, snps.sim)
+      snps.sim <- do.call("cbind", snps.sim)
     }
   }
 
@@ -114,6 +116,14 @@ get.sig.snps <- function(snps, snps.sim,
   }else{
     all.unique.sim <- FALSE
   }
+  #################################
+  ## NOTE--change above to below if moving UNIQUE check to OUTSIDE get.sig.snps fn (& add index arguments):
+  #   ## record whether all snps.sim are unique or not for later:
+  #   if(is.null(snps.sim.index)){
+  #     all.unique.sim <- TRUE
+  #   }else{
+  #     all.unique.sim <- FALSE
+  #   }
 
 
   #################
@@ -134,12 +144,12 @@ get.sig.snps <- function(snps, snps.sim,
     }
   }
 
-  #####################
-  ## ACE-BASED TESTS ##
-  #####################
+  #####################################
+  ## SIMULTANEOUS & SUBSEQUENT TESTS ##
+  #####################################
 
-  ## RUN ACE on all UNIQUE snps & snps.sim columns & on phen:
-  if(test %in% c("ace.cum", "ace.pagel")){
+  ## RUN ACE or PARSIMONY on all UNIQUE snps & snps.sim columns & on phen:
+  if("simultaneous" %in% test | "subsequent" %in% test){
 
     ## Get ACE for phen:
     ace.phen <- ace(x=phen, phy=tree, type="discrete",
@@ -165,17 +175,34 @@ get.sig.snps <- function(snps, snps.sim,
   ## ASSOCIATION TEST ##
   ######################
 
-  ########################################################
-  ## Calculate correlations btw REAL SNPs and phenotype ##
-  ########################################################
-  corr.dat <- assoc.test(snps=snps, phen=phen, test=test)
+  if(test != "simultaneous" & test != "subsequent"){
+
+    ########################################################
+    ## Calculate correlations btw REAL SNPs and phenotype ##
+    ########################################################
+    corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test)
 
 
-  #############################################################
-  ## Calculate correlations btw SIMULATED SNPs and phenotype ##
-  #############################################################
-  corr.sim <- assoc.test(snps=snps.sim, phen=phen, test=test)
+    #############################################################
+    ## Calculate correlations btw SIMULATED SNPs and phenotype ##
+    #############################################################
+    corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test)
 
+  }else{
+
+    ## SIMULTANEOUS & SUBSEQUENT TESTS (run w/ RECONSTRUCTIONS) ##
+
+    ########################################################
+    ## Calculate correlations btw REAL SNPs and phenotype ##
+    ########################################################
+    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+
+
+    #############################################################
+    ## Calculate correlations btw SIMULATED SNPs and phenotype ##
+    #############################################################
+    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+  }
 
   ###################################
   ## HANDLE DUPLICATE SNPS COLUMNS ##
@@ -363,10 +390,9 @@ get.sig.snps <- function(snps, snps.sim,
 #'
 #' @param snps A matrix containing the real snps.
 #' @param phen A factor or vector containing the phenotype (only allowed to contain two levels for now).
-#' @param test A character string specifying the test to be used to measure correlations between the snps
-#' (real and simulated) and the phenotype. Must be one of 'score', 'cor', 'fisher', 'ace.cum', 'ace.pagel'
-#' (indicating, respectively, the correlation score, standard correlation, fisher's exact test,
-#' ancestral character estimation (ACE) based cumulative multiplicative test, and ACE-based Pagel-inspired test).
+#' @param test A character string or vector containing one or more of the following available tests of association:
+#' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the first three tests are run.
+#' See details for more information on what these tests do and when they may be appropriate.
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -375,16 +401,19 @@ get.sig.snps <- function(snps, snps.sim,
 
 ########################################################################
 
-assoc.test <- function(snps, phen, test=c("score",
-                                          "cor",
-                                          "fisher",
-                                          "ace.cum",
-                                          "ace.pagel")){
+assoc.test <- function(snps,
+                       phen,
+                       tree = NULL,
+                       test = c("terminal",
+                                "simultaneous",
+                                "subsequent",
+                                "cor",
+                                "fisher")){
 
-  ###########
-  ## SCORE ##
-  ###########
-  if(test=="score"){
+  ##########################################
+  ## TERMINAL (test 1: correlation score) ##
+  ##########################################
+  if(test=="terminal"){
     # ~ Correlation "SCORE" =
     # ((nS1P1 + nS0P0) - (nS1P0 + nS0P1) / (n.total))
     ## must be calculated for each SNP individually...
@@ -394,7 +423,7 @@ assoc.test <- function(snps, phen, test=c("score",
         - (length(which(snps[which(phen==1),e]==0)) +
              length(which(snps[which(phen==0),e]==1))))
        / nrow(snps)))
-  } # end test score
+  } # end test terminal
 
   #################
   ## CORRELATION ##
@@ -416,13 +445,22 @@ assoc.test <- function(snps, phen, test=c("score",
   } # end test fisher
 
 
+  #######################
+  ## SIMULTANEOUS TEST ##
+  #######################
+  if(test == "simultaneous"){
+    corr.dat <- sapply(c(1:ncol(snps)), function(e)
+      simultaneous.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree))
+  } # end test simultaneous
 
   #####################
-  ## ACE-BASED TESTS ##
+  ## SUBSEQUENT TEST ##
   #####################
+  if(test == "subsequent"){
+    corr.dat <- sapply(c(1:ncol(snps)), function(e)
+      subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree))
+  } # end test subsequent
 
-  ## NOTE: For ace-based tests (cum & pagel), instead of inputting snps & phen as variables,
-  ## input ace (or just ace$lik.anc (?)) for snps & phen...
 
 
   ## USE ABSOLUTE VALUE
