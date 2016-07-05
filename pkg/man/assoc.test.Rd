@@ -4,18 +4,17 @@
 \alias{assoc.test}
 \title{Run a test of association between SNPs and a phenotype.}
 \usage{
-assoc.test(snps, phen, test = c("score", "cor", "fisher", "ace.cum",
-  "ace.pagel"))
+assoc.test(snps, phen, tree = NULL, test = c("terminal", "simultaneous",
+  "subsequent", "cor", "fisher"))
 }
 \arguments{
 \item{snps}{A matrix containing the real snps.}
 
 \item{phen}{A factor or vector containing the phenotype (only allowed to contain two levels for now).}
 
-\item{test}{A character string specifying the test to be used to measure correlations between the snps
-(real and simulated) and the phenotype. Must be one of 'score', 'cor', 'fisher', 'ace.cum', 'ace.pagel'
-(indicating, respectively, the correlation score, standard correlation, fisher's exact test,
-ancestral character estimation (ACE) based cumulative multiplicative test, and ACE-based Pagel-inspired test).}
+\item{test}{A character string or vector containing one or more of the following available tests of association:
+"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the first three tests are run.
+See details for more information on what these tests do and when they may be appropriate.}
 }
 \description{
 Run one of five tests of association between each column of a SNPs matrix and a phenotype

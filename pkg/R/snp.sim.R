@@ -40,13 +40,17 @@
 ## phen.loci <- a vector containing the indices of the edges on which phen subs occurred
 
 
-snp.sim <- function(n.snps=10000, n.subs=1,
-                    snp.root=NULL,
-                    n.snps.assoc=10, assoc.prob=100,
-                    tree=coalescent.tree.sim(100),
-                    phen.loci=NULL,
-                    heatmap=FALSE, reconstruct=FALSE,
-                    dist.dna.model="JC69",
+snp.sim <- function(n.snps = 10000,
+                    n.subs = 1,
+                    snp.root = NULL,
+                    n.snps.assoc = 10,
+                    assoc.prob = 100,
+                    tree = coalescent.tree.sim(100),
+                    phen.loci = NULL,
+                    heatmap = FALSE,
+                    reconstruct = FALSE,
+                    dist.dna.model = "JC69",
+                    row.names = NULL,
                     seed=1){
 
   require(adegenet)
@@ -399,7 +403,6 @@ snp.sim <- function(n.snps=10000, n.subs=1,
   genomes <- genomes[1:n.ind]
 
   x <- genomes
-  if(is.null(names(x))) names(x) <- paste("ind", c(1:length(x)), sep=".")
   gen.size <- length(x[[1]])
   ## working with snps in matrix form
   snps <- do.call("rbind", x)
@@ -414,7 +417,8 @@ snp.sim <- function(n.snps=10000, n.subs=1,
 
   ## correct genind for ploidy:
   snps <- snps[,seq(1, ncol(snps), 2)]
-  colnames(snps) <- gsub("[:.:]|.$*", "", colnames(snps))
+  colnames(snps) <- 1:ncol(snps)
+  # colnames(snps) <- gsub("[:.:]|.$*", "", colnames(snps))
 
   if(!is.null(snps.assoc)){
     #############################################
@@ -446,14 +450,15 @@ snp.sim <- function(n.snps=10000, n.subs=1,
 
     snps.indices <- c(1:gen.size.final)
     snps.ori <- snps
-    snps.names.ori <- ind.names.ori <- NULL
-    if(!is.null(dimnames(snps))){
-      snps.names.ori <- dimnames(snps)[[2]]
-      ind.names.ori <- dimnames(snps)[[1]]
-    }
+    #     snps.names.ori <- ind.names.ori <- NULL
+    #     if(!is.null(dimnames(snps))){
+    #       snps.names.ori <- dimnames(snps)[[2]]
+    #       ind.names.ori <- dimnames(snps)[[1]]
+    #     }
     snps.non.assoc <- snps[,c(1:(gen.size.final-n.snps.assoc))]
     snps.assoc <- snps[,snps.assoc.loci.ori]
-    snps.new <- matrix(99, nrow=100, ncol=gen.size.final)
+    snps.new <- matrix(99, nrow=nrow(snps), ncol=gen.size.final)
+    # snps.new <- matrix(99, nrow=100, ncol=gen.size.final)
     snps.new[,snps.indices[-snps.assoc.loci]] <- snps.non.assoc
     snps.new[,snps.assoc.loci] <- snps.assoc
     snps <- snps.new
@@ -461,17 +466,35 @@ snp.sim <- function(n.snps=10000, n.subs=1,
     if(!is.null(ind.names.ori)) rownames(snps) <- ind.names.ori
     snps.assoc <- snps.assoc.loci
 
-    ## update names of snps.assoc
-    gen.size <- ncol(snps)
-    names(snps.assoc) <- as.vector(unlist(sapply(c(1:length(snps.assoc)),
-                                                 function(e)
-                                                   paste("L",
-                                                         paste(rep(0, (nchar(gen.size)-
-                                                                         nchar(snps.assoc[e]))),
-                                                               sep="",
-                                                               collapse=""),
-                                                         snps.assoc[e], sep=""))))
+    ## update names of snps.assoc (??? REMOVED; to change L00NN --> NN 05/07/2016)
+    #     gen.size <- ncol(snps)
+    #     names(snps.assoc) <- as.vector(unlist(sapply(c(1:length(snps.assoc)),
+    #                                                  function(e)
+    #                                                    paste("L",
+    #                                                          paste(rep(0, (nchar(gen.size)-
+    #                                                                          nchar(snps.assoc[e]))),
+    #                                                                sep="",
+    #                                                                collapse=""),
+    #                                                          snps.assoc[e], sep=""))))
   }
+
+  ## Assign row & col names...
+
+  ## assign/generate row.names
+  if(!is.null(row.names)){
+    if(length(row.names) == nrow(snps)){
+      rownames(snps) <- row.names
+    }else{
+      if(is.null(rownames(snps))) rownames(snps) <- c(1:nrow(snps))
+    }
+  }else{
+    if(is.null(rownames(snps))) rownames(snps) <- c(1:nrow(snps))
+  }
+
+  ## ensure colnames are complete & sequential
+  ## CAREFUL----------STILL NEED TO CHECK THAT DROPPING SNPS IS NOT AFFECTING THE SNPS.ASSOC LOCI NAMES BEING REPORTED WITH OUTPUT!!!!!!
+  #################################################################################################################################################################
+  colnames(snps) <- 1:ncol(snps)
 
   ##################
   ## get RESULTS: ##

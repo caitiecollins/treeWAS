@@ -34,6 +34,9 @@
 
 get.ancestral.pars <- function(var, tree){
 
+  require(ape)
+  require(phangorn)
+
   edges <- tree$edge
 
   #############################
@@ -75,7 +78,11 @@ get.ancestral.pars <- function(var, tree){
 
     ## as.phyDat requires row/col names:
     if(is.null(row.names(snps))){
-      if(!is.null(tree$tip.label)) row.names(snps) <- tree$tip.label
+      if(!is.null(tree$tip.label)){
+        row.names(snps) <- tree$tip.label
+      }else{
+        row.names(snps) <- c(1:nrow(snps))
+      }
     }
     if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
     ## get levels (ie. 0, 1)
@@ -103,10 +110,45 @@ get.ancestral.pars <- function(var, tree){
     # rec <- pa.MPR
     rec <- pa.ACCTRAN
 
+    ## Handle terminal nodes (ie. reorder)
+
+    ## (1) Bind rows together:
+    #     REC <- list()
+    #     for(i in 1:length(rec)) REC[[i]] <- rec[[i]][,2]
+    #     REC <- do.call("rbind", REC)
+    #     row.names(REC) <- names(rec)
+    #     colnames(REC) <- colnames(snps)
+    #
+    #     ## (2) Reorder rows to correctly match labels, SNPs...??????????????????????
+    #     df.ori <- data.frame(REC[1:100,1:10], snps[1:100,1:10])
+    #     df.ori[1:10,]
+    #     ## EQUIVALENTLY, EITHER.........
+    #
+    #     ## (2.A)
+    #     ord <- list()
+    #     for(i in 1:nrow(snps)) ord[[i]] <- which(row.names(snps) == i)
+    #     ord <- as.vector(unlist(ord))
+    #     ## check
+    #     df <- data.frame(REC[ord,1:10], snps[1:100,1:10])
+    #
+    #     ## (2.B)
+    #     ord <- as.numeric(row.names(snps))
+    #     REC2 <- matrix(NA, nrow=nrow(REC), ncol=ncol(REC))
+    #     for(i in ord) REC2[i,] <- REC[which(ord == i),]
+    #     REC <- REC2
+    #     row.names(REC) <- names(rec)
+    #     colnames(REC) <- colnames(snps)
+    #     ## check
+    #     df2 <- data.frame(REC2[1:100,1:10], snps[1:100,1:10])
+
+    ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
+    ## First, check to ensure all row.names(snps) are matched in tree$tip.label
     snps.rec <- vector("list", length(rec))
-    ## Handle terminal nodes
-    for(i in 1:nrow(snps)){
-      snps.rec[[which(row.names(snps) == tree$tip.label[i])]] <- rec[[i]][,2]
+
+    if(all(row.names(snps) %in% tree$tip.label)){
+      for(i in 1:nrow(snps)){
+        snps.rec[[which(row.names(snps) == tree$tip.label[i])]] <- rec[[i]][,2]
+      }
     }
     ## Handle internal nodes
     for(i in (nrow(snps)+1):length(rec)){
@@ -162,9 +204,10 @@ get.ancestral.pars <- function(var, tree){
     #             cex.pie=0.1, pos=NULL,
     #             edge.color=edgeCol, edge.width=2, use.edge.length=FALSE, type="c")
 
-    ################
-    ## Get output ##
-    ################
+
+    ############################################
+    ## get values for duplicate snps columns: ##
+    ############################################
 
     ## get reconstruction for all original sites
     if(ncol(snps.ori) == ncol(snps.rec)){
@@ -197,12 +240,19 @@ get.ancestral.pars <- function(var, tree){
     }
 
 
+    ################
+    ## Get output ##
+    ################
+
     ## CHECK-- compare cost from fitch and pace: ##
+    ###########
     ## get n.subs per site by fitch:
-    cost <- get.fitch.n.mts(snps, tree)
+    # cost <- get.fitch.n.mts(snps, tree)
+
     ## get n.subs per site by pace:
-    cost2 <- sapply(c(1:length(snps.subs.edges.complete)),
-                    function(e) length(snps.subs.edges.complete[[e]][["total"]]))
+    # cost2 <- sapply(c(1:length(snps.subs.edges.complete)),
+                    # function(e) length(snps.subs.edges.complete[[e]][["total"]]))
+
     ## NOTE: cost2 differs somewhat noticeably from original fitch cost
     ## (ie. parsimony shifts distribution toward 1/reduces the weight of the upper tail...)
     ## WHY? Which should we use to get n.subs????????????????????????????????????????????????????????????
@@ -317,9 +367,9 @@ get.ancestral.pars <- function(var, tree){
 
 
 
-#################
-## reconstruct ##
-#################
+#########
+## asr ##
+#########
 
 ########################################################################
 
@@ -348,10 +398,10 @@ get.ancestral.pars <- function(var, tree){
 
 ########################################################################
 
-reconstruct <- function(var,
-                        tree,
-                        type = c("parsimony", "ace"),
-                        method = "discrete"){
+asr <- function(var,
+                tree,
+                type = c("parsimony", "ace"),
+                method = "discrete"){
 
   require(ape)
 
@@ -518,6 +568,6 @@ reconstruct <- function(var,
   ## return output
   return(output)
 
-} # end reconstruct
+} # end asr
 
 

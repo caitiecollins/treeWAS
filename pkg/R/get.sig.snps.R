@@ -27,7 +27,7 @@
 #' @param p.value A single number specifying the p.value below which correlations are deemed to be 'significant'.
 #' @param p.value.correct Specify if/how to correct for multiple testing:
 #' either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
-#' the Bonferroni and False Discovery Rate corrections).
+#' the Bonferroni and False Discovery Rate corrections). By default, 'fdr' is selected
 #' @param p.value.by Specify how to determine the location of the p.value threshold:
 #' either 'count' or 'density' (indicating, respectively, that the p.value threshold should
 #' be determined by exact count or with the use of a density function).
@@ -51,12 +51,14 @@
 
 ########################################################################
 
-get.sig.snps <- function(snps, snps.sim,
-                         phen, tree,
-                         test = c("terminal", "simultaneous", "subsequent", "cor", "fisher"),
+get.sig.snps <- function(snps,
+                         snps.sim,
+                         phen,
+                         tree,
+                         test = c("terminal", "simultaneous", "subsequent"),
                          p.value = 0.001,
-                         p.value.correct = c("bonf", "fdr", FALSE),
-                         p.value.by = c("count", "density"),
+                         p.value.correct = "fdr",
+                         p.value.by = "count",
                          snps.reconstruction = snps.REC,
                          snps.sim.reconstruction = snps.sim.REC,
                          phen.reconstruction = phen.REC){
@@ -143,33 +145,9 @@ get.sig.snps <- function(snps, snps.sim,
       phen <- replace(phen, which(phen==2), 1)
     }
   }
+  ## ensure ind names not lost
+  names(phen) <- names(phen.ori)
 
-  #####################################
-  ## SIMULTANEOUS & SUBSEQUENT TESTS ##
-  #####################################
-
-  ## RUN ACE or PARSIMONY on all UNIQUE snps & snps.sim columns & on phen:
-  if("simultaneous" %in% test | "subsequent" %in% test){
-
-    ## Get ACE for phen:
-    ace.phen <- ace(x=phen, phy=tree, type="discrete",
-                    method="ML", model="ER")
-
-    ## Get ACE for SNPs (real):
-    ace.snps <- list()
-    for(i in 1:ncol(snps)){
-      ace.snps[[i]] <- ace(x=snps[, i], phy=tree, type="discrete",
-                           method="ML", model="ER")
-    }
-
-    ## Get ACE for SNPs (simulated):
-    ace.snps.sim <- list()
-    for(i in 1:ncol(snps.sim)){
-      ace.snps.sim[[i]] <- ace(x=snps.sim[, i], phy=tree, type="discrete",
-                              method="ML", model="ER")
-    }
-
-  } # end ACE for ace-based tests
 
   ######################
   ## ASSOCIATION TEST ##
@@ -190,7 +168,10 @@ get.sig.snps <- function(snps, snps.sim,
 
   }else{
 
-    ## SIMULTANEOUS & SUBSEQUENT TESTS (run w/ RECONSTRUCTIONS) ##
+    #####################################
+    ## SIMULTANEOUS & SUBSEQUENT TESTS ##
+    #####################################
+    ## (run w/ RECONSTRUCTIONS) ##
 
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
@@ -212,8 +193,9 @@ get.sig.snps <- function(snps, snps.sim,
   if(all.unique == FALSE){
     corr.dat.complete <- rep(NA, ncol(snps.ori))
     for(i in 1:ncol(snps.unique)){
-      corr.dat.complete[which(snps.index == i)] <- corr.dat.unique[i]
+      corr.dat.complete[which(snps.index == i)] <- corr.dat[i]
     }
+    names(corr.dat.complete) <- colnames(snps.ori)
     corr.dat <- corr.dat.complete
   }
 
@@ -221,8 +203,9 @@ get.sig.snps <- function(snps, snps.sim,
   if(all.unique.sim == FALSE){
     corr.sim.complete <- rep(NA, ncol(snps.sim.ori))
     for(i in 1:ncol(snps.sim.unique)){
-      corr.sim.complete[which(snps.sim.index == i)] <- corr.sim.unique[i]
+      corr.sim.complete[which(snps.sim.index == i)] <- corr.sim[i]
     }
+    names(corr.sim.complete) <- colnames(snps.sim.ori)
     corr.sim <- corr.sim.complete
   }
 
@@ -449,16 +432,14 @@ assoc.test <- function(snps,
   ## SIMULTANEOUS TEST ##
   #######################
   if(test == "simultaneous"){
-    corr.dat <- sapply(c(1:ncol(snps)), function(e)
-      simultaneous.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree))
+    corr.dat <- simultaneous.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree)
   } # end test simultaneous
 
   #####################
   ## SUBSEQUENT TEST ##
   #####################
   if(test == "subsequent"){
-    corr.dat <- sapply(c(1:ncol(snps)), function(e)
-      subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree))
+    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree)
   } # end test subsequent
 
 

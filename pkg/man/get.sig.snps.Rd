@@ -4,9 +4,10 @@
 \alias{get.sig.snps}
 \title{Get significant SNPs, according to a given test of association.}
 \usage{
-get.sig.snps(snps, snps.sim, phen, tree, test = c("score", "cor", "fisher",
-  "ace.cum", "ace.pagel"), p.value = 0.001, p.value.correct = c("bonf",
-  "fdr", FALSE), p.value.by = c("count", "density"))
+get.sig.snps(snps, snps.sim, phen, tree, test = c("terminal", "simultaneous",
+  "subsequent"), p.value = 0.001, p.value.correct = "fdr",
+  p.value.by = "count", snps.reconstruction = snps.REC,
+  snps.sim.reconstruction = snps.sim.REC, phen.reconstruction = phen.REC)
 }
 \arguments{
 \item{snps}{A matrix containing the real snps.}
@@ -18,15 +19,15 @@ get.sig.snps(snps, snps.sim, phen, tree, test = c("score", "cor", "fisher",
 \item{tree}{A phylo object containing a phylogenetic tree in which the number of tips is equal to the
 length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.}
 
-\item{test}{A character string specifying the test to be used to measure correlations between the snps
-(real and simulated) and the phenotype. Must be one of 'score', 'cor', 'fisher' (indicating, respectively,
-the correlation score, standard correlation, fisher's exact test).}
+\item{test}{A character string or vector containing one or more of the following available tests of association:
+"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the first three tests are run.
+See details for more information on what these tests do and when they may be appropriate.}
 
 \item{p.value}{A single number specifying the p.value below which correlations are deemed to be 'significant'.}
 
 \item{p.value.correct}{Specify if/how to correct for multiple testing:
 either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
-the Bonferroni and False Discovery Rate corrections).}
+the Bonferroni and False Discovery Rate corrections). By default, 'fdr' is selected}
 
 \item{p.value.by}{Specify how to determine the location of the p.value threshold:
 either 'count' or 'density' (indicating, respectively, that the p.value threshold should

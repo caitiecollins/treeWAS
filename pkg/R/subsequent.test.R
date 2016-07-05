@@ -23,8 +23,7 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#'
-#' @import ape
+
 
 ########################################################################
 
@@ -37,6 +36,27 @@ subsequent.test <- function(snps.reconstruction,
 
   ## get tree edges:
   edges <- tree$edge
+
+  #########################
+  ## Get UNIQUE snps.rec ##
+  #########################
+  temp <- get.unique.matrix(snps.rec, MARGIN=2)
+  snps.rec.unique <- temp$unique.data
+  index <- temp$index
+
+  if(ncol(snps.rec.unique) == ncol(snps.rec)){
+    all.unique <- TRUE
+  }else{
+    all.unique <- FALSE
+  }
+
+  ## work w only unique snps:
+  snps.rec.ori <- snps.rec
+  snps.rec <- snps.rec.unique
+
+  ###############################
+  ## GET SCORE ACROSS BRANCHES ##
+  ###############################
 
   score <- list()
 
@@ -64,7 +84,24 @@ subsequent.test <- function(snps.reconstruction,
   } # end (i) for loop
 
   score <- as.vector(unlist(score))
-  names(score) <- colnames(snps)
+  names(score) <- colnames(snps.rec)
+
+  ################################################
+  ## get values for duplicate snps.rec columns: ##
+  ################################################
+
+  ## get reconstruction for all original sites
+  if(all.unique == TRUE){
+    score.complete <- score
+  }else{
+    score.complete <- rep(NA, length=ncol(snps.rec.ori))
+    for(i in 1:length(score)){
+      score.complete[which(index == i)] <- score[i]
+    }
+    names(score.complete) <- colnames(snps.rec.ori)
+  }
+
+  score <- score.complete
 
   return(score)
 
@@ -97,7 +134,7 @@ subsequent.test <- function(snps.reconstruction,
 #' or the probability of the state, of the phenotype at a given \emph{descendant} node.
 #' @param Sa A numeric value containing either the state,
 #' or the probability of the state, of SNPi at a given \emph{ancestral} node.
-#' @paran Sd A numeric value containing either the state,
+#' @param Sd A numeric value containing either the state,
 #' or the probability of the state, of SNPi at a given \emph{descendant} node.
 #' @param l A numeric value specifying the length of the branch in the phylogenetic tree
 #' that joins the ancestral and descendant node.

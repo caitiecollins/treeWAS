@@ -5,14 +5,17 @@
 \title{Short one-phrase description.}
 \usage{
 treeWAS(snps, phen, n.subs = NULL, tree = c("UPGMA", "nj", "ml"),
-  dist.dna.model = "JC69", plot.tree = FALSE, test = c("score", "cor",
-  "fisher", "ace.cum", "ace.pagel"), p.value = 0.001,
+  dist.dna.model = "JC69", plot.tree = FALSE, test = c("terminal",
+  "simultaneous", "subsequent"), p.value = 0.001,
   p.value.correct = c("bonf", "fdr", FALSE), p.value.by = c("count",
-  "density"), sim.n.snps = 10000, n.reps = 1, plot.null.dist = TRUE,
-  plot.dist = FALSE)
+  "density"), sim.n.snps = ncol(snps), n.reps = 1, plot.null.dist = TRUE,
+  plot.dist = FALSE, snps.reconstruction = "parsimony",
+  phen.reconstruction = "parsimony")
 }
 \arguments{
-\item{x}{description.}
+\item{test}{A character string or vector containing one or more of the following available tests of association:
+"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the first three tests are run.
+See details for more information on what these tests do and when they may be appropriate.}
 }
 \description{
 Longer proper discription of function...

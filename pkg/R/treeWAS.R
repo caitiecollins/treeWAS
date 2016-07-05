@@ -74,7 +74,7 @@
 # test <- c("terminal", "simultaneous", "subsequent")
 # p.value <- 0.001
 # p.value.correct <- "fdr"
-# p.value.by <- c("count", "density")
+# p.value.by <- "count"
 # sim.n.snps <- ncol(snps)
 # n.reps <- 1
 # plot.null.dist <- TRUE
@@ -244,7 +244,7 @@ treeWAS <- function(snps, phen, n.subs = NULL,
     ###########
 
     ## if either test 2 or test 3 will be run with parsimonious/user-provided reconstruction,
-    ## get n.subs from this to avoid duplication..
+    ## get n.subs from this to avoid duplication..?
     #     if(any(c("simultaneous", "subsequent") %in% test) & snps.reconstruction != "ace"){
     #
     #       ## run get.ancestral.pars
@@ -290,10 +290,15 @@ treeWAS <- function(snps, phen, n.subs = NULL,
   for(i in 1:n.reps){
     ## SIMULATE A DATASET | your tree ##
     out[[i]] <- snp.sim(n.snps = sim.n.snps,
-                        n.subs = n.subs, n.snps.assoc = 0, assoc.prob = 100,
-                        tree = tree, phen.loci = NULL,
+                        n.subs = n.subs,
+                        n.snps.assoc = 0,
+                        assoc.prob = 100,
+                        tree = tree,
+                        phen.loci = NULL,
                         heatmap = FALSE,
-                        reconstruct = FALSE, dist.dna.model = dist.dna.model,
+                        reconstruct = FALSE,
+                        dist.dna.model = dist.dna.model,
+                        row.names = row.names(snps),
                         seed = NULL)
 
     genomes[[i]] <- out[[i]][[1]]
@@ -379,7 +384,8 @@ treeWAS <- function(snps, phen, n.subs = NULL,
       phen <- replace(phen, which(phen==2), 1)
     }
   }
-
+  ## ensure ind names not lost
+  names(phen) <- names(phen.ori)
 
   ##############################################################################################
   ## Reconstruct ancestral SNPs & phen by parsimony/ACE (for tests simultaneous & subsequent) ##
@@ -417,24 +423,22 @@ treeWAS <- function(snps, phen, n.subs = NULL,
     ## By PARSIMONY: ##
     if(snps.reconstruction == "parsimony"){
       ## Reconstruct REAL SNPs: ##
-      snps.REC <- reconstruct(var = snps, tree = tree, type = "parsimony")
+      snps.REC <- asr(var = snps, tree = tree, type = "parsimony")
       snps.rec <- snps.REC$var.rec
-      # snps.subs.edges <- snps.REC$subs.edges ## deprecated
 
       ## Reconstruct SIMULATED SNPs: ##
-      snps.sim.REC <- reconstruct(var = snps.sim, tree = tree, type = "parsimony")
+      snps.sim.REC <- asr(var = snps.sim, tree = tree, type = "parsimony")
       snps.sim.rec <- snps.sim.REC$var.rec
-      # snps.sim.subs.edges <- snps.sim.REC$subs.edges ## deprecated
     }
 
     ## By ACE: ##
     if(snps.reconstruction == "ace"){
       ## Reconstruct REAL SNPs: ##
-      snps.REC <- reconstruct(var = snps, tree = tree, type = "ace")
+      snps.REC <- asr(var = snps, tree = tree, type = "ace")
       snps.rec <- snps.REC$var.rec
 
       ## Reconstruct SIMULATED SNPs: ##
-      snps.sim.REC <- reconstruct(var = snps.sim, tree = tree, type = "ace")
+      snps.sim.REC <- asr(var = snps.sim, tree = tree, type = "ace")
       snps.sim.rec <- snps.sim.REC$var.rec
     }
 
@@ -444,14 +448,13 @@ treeWAS <- function(snps, phen, n.subs = NULL,
 
     ## By PARSIMONY: ##
     if(phen.reconstruction == "parsimony"){
-      phen.REC <- reconstruct(var = phen, tree = tree, type = "parsimony")
+      phen.REC <- asr(var = phen, tree = tree, type = "parsimony")
       phen.rec <- phen.REC$var.rec
-      # phen.subs.edges <- phen.REC$subs.edges ## deprecated
     }
 
     ## By ACE: ##
     if(phen.reconstruction == "ace"){
-      phen.REC <- reconstruct(var = phen, tree = tree, type = "ace")
+      phen.REC <- asr(var = phen, tree = tree, type = "ace")
       phen.rec <- phen.REC$var.rec
     }
 
@@ -479,23 +482,55 @@ treeWAS <- function(snps, phen, n.subs = NULL,
                                  p.value = p.value,
                                  p.value.correct = p.value.correct,
                                  p.value.by = p.value.by,
-                                 snps.reconstruction = snps.REC,
-                                 snps.sim.reconstruction = snps.sim.REC,
-                                 phen.reconstruction = phen.REC)
+                                 snps.reconstruction = snps.rec,
+                                 snps.sim.reconstruction = snps.sim.rec,
+                                 phen.reconstruction = phen.rec)
   }
+
+  ## DOUBLE CHECKING ##
+  #   str(sig.list[[i]])
+  #   sig.list[[i]]$sig.snps
+  #   sig.list[[i]]$sig.corrs
+  #   ## plot
+  #   hist(sig.list[[i]]$corr.sim)
+  #   hist(sig.list[[i]]$corr.dat)
+
+  ## BUG CHECKING ##
+  ## get.sig.snps
+  #     snps <-  snps
+  #     snps.sim <- snps.sim
+  #     phen <- phen
+  #     tree <- tree
+  #     test <- "simultaneous"
+  #     p.value <- p.value
+  #     p.value.correct <- p.value.correct
+  #     p.value.by <- p.value.by
+  #     snps.reconstruction <- snps.rec
+  #     snps.sim.reconstruction <- snps.sim.rec
+  #     phen.reconstruction <- phen.rec
+
+
+  #################
+  ## GET RESULTS ##
+  #################
+
+  RES <- list()
+
+  ## get results for each test run:
+  for(i in 1:length(sig.list)){
 
   #############################################
   ## isolate elements of get.sig.snps output ##
   #############################################
 
-  corr.dat <- sig.list$corr.dat
-  corr.sim <- sig.list$corr.sim
-  sig.snps.names <- sig.list$sig.snps.names
-  sig.snps <- sig.list$sig.snps
-  sig.corrs <- sig.list$sig.corrs
-  p.vals <- sig.list$p.vals
-  min.p <- sig.list$min.p
-  sig.thresh <- sig.list$sig.thresh
+  corr.dat <- sig.list[[i]]$corr.dat
+  corr.sim <- sig.list[[i]]$corr.sim
+  sig.snps.names <- sig.list[[i]]$sig.snps.names
+  sig.snps <- sig.list[[i]]$sig.snps
+  sig.corrs <- sig.list[[i]]$sig.corrs
+  p.vals <- sig.list[[i]]$p.vals
+  min.p <- sig.list[[i]]$min.p
+  sig.thresh <- sig.list[[i]]$sig.thresh
 
   ########################################
 
@@ -505,7 +540,7 @@ treeWAS <- function(snps, phen, n.subs = NULL,
   ##################################
 
   plot.sig.snps(corr.dat, corr.sim, sig.corrs, sig.snps,
-                sig.thresh=sig.thresh, test="fisher",
+                sig.thresh=sig.thresh, test=TEST[[i]],
                 plot.null.dist = plot.null.dist,
                 plot.dist = plot.dist)
 
@@ -586,6 +621,12 @@ treeWAS <- function(snps, phen, n.subs = NULL,
                       "sig.thresh",
                       "sig.snps",
                       "min.p.value")
+
+  RES[[i]] <- results
+  } # end for loop
+
+  names(RES) <- test
+  results <- RES
 
   return(results)
 

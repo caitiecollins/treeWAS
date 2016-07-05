@@ -27,7 +27,6 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
-#' @import ape
 
 ########################################################################
 
@@ -40,6 +39,23 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
 
   ## Get tree edges:
   edges <- tree$edge
+
+  #########################
+  ## Get UNIQUE snps.rec ##
+  #########################
+  temp <- get.unique.matrix(snps.rec, MARGIN=2)
+  snps.rec.unique <- temp$unique.data
+  index <- temp$index
+
+  if(ncol(snps.rec.unique) == ncol(snps.rec)){
+    all.unique <- TRUE
+  }else{
+    all.unique <- FALSE
+  }
+
+  ## work w only unique snps:
+  snps.rec.ori <- snps.rec
+  snps.rec <- snps.rec.unique
 
   ###############################
   ## GET DIFFS ACROSS BRANCHES ##
@@ -67,7 +83,24 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
     ## In light of this, might it be better to be consistent and also NOT divide the other test scores..?
   }
   score <- as.vector(unlist(score))
-  names(score) <- colnames(snps)
+  names(score) <- colnames(snps.rec)
+
+  ################################################
+  ## get values for duplicate snps.rec columns: ##
+  ################################################
+
+  ## get reconstruction for all original sites
+  if(all.unique == TRUE){
+    score.complete <- score
+  }else{
+    score.complete <- rep(NA, length=ncol(snps.rec.ori))
+    for(i in 1:length(score)){
+      score.complete[which(index == i)] <- score[i]
+    }
+    names(score.complete) <- colnames(snps.rec.ori)
+  }
+
+  score <- score.complete
 
   return(score)
 

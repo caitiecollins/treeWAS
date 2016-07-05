@@ -13,20 +13,6 @@ plot.sig.snps(corr.dat, corr.sim, sig.corrs, sig.snps, sig.thresh, test,
 \description{
 Longer proper discription of function...
 }
-\examples{
-
-## load data
-data(dist)
-str(dist)
-
-## basic use of fn
-
-fn(arg1, arg2)
-
-#' ## more elaborate use of fn
-fn(arg1, arg2)
-
-}
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
