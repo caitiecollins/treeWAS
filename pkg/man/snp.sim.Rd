@@ -16,16 +16,7 @@ snp.sim(n.snps = 10000, n.subs = 1, snp.root = NULL, n.snps.assoc = 10,
 Longer proper discription of function...
 }
 \examples{
-
-## load data
-data(dist)
-str(dist)
-
-## basic use of fn
-fn(arg1, arg2)
-
-#' ## more elaborate use of fn
-fn(arg1, arg2)
+## Example ##
 
 }
 \author{

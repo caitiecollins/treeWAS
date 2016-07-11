@@ -120,14 +120,33 @@
 #  haploid=TRUE, biallelic=TRUE, seed=NULL,
 #  plot=TRUE, heatmap=FALSE, plot2="UPGMA")
 
+## NEW ARGS: ##
+# n.ind <- 100
+# n.snps <- 10000
+# n.subs <- 1
+# n.snps.assoc <- 10
+# assoc.prob <- 100
+# n.phen.subs <- 15
+# phen <- NULL
+# plot <- TRUE
+# heatmap <- FALSE
+# reconstruct <- FALSE
+# dist.dna.model <- "JC69"
+# seed <- 1
+
 
 coalescent.sim <- function(n.ind=100,
-                           n.snps=10000, n.subs=1,
-                           n.snps.assoc=0, assoc.prob=100,
-                           n.phen.subs=15, phen=NULL,
+                           n.snps=10000,
+                           n.subs=1,
+                           n.snps.assoc=0,
+                           assoc.prob=100,
+                           n.phen.subs=15,
+                           phen=NULL,
                            plot=TRUE,
-                           heatmap=FALSE, reconstruct=FALSE,
+                           heatmap=FALSE,
+                           reconstruct=FALSE,
                            dist.dna.model="JC69",
+                           row.names=NULL,
                            seed=1){
   ## load packages:
   require(adegenet)
@@ -181,13 +200,27 @@ coalescent.sim <- function(n.ind=100,
   ###################
   ## Simulate SNPs ##
   ###################
-  snps.list <- snp.sim(n.snps=n.snps, n.subs=n.subs,
-                       n.snps.assoc=n.snps.assoc, assoc.prob=assoc.prob,
+
+  ## TO DO: #######################################
+  ## CHECK SNP SIMULATION FOR COMPUTATIONAL SPEED! #########################################################################################
+  #################################################
+  ## 10 --> 53 --> 12.5
+  ## Are the remaining extra 2.5 seconds still just a result of the while loop??
+  ## Or have I slowed anything down in the post-processing steps as well??????????????????
+  # system.time(
+  snps.list <- snp.sim(n.snps=n.snps,
+                       n.subs=n.subs,
+                       n.snps.assoc=n.snps.assoc,
+                       assoc.prob=assoc.prob,
                        tree=tree,
                        phen.loci=phen.loci,
-                       heatmap=heatmap, reconstruct=reconstruct,
+                       heatmap=heatmap,
+                       reconstruct=reconstruct,
                        dist.dna.model=dist.dna.model,
+                       row.names = NULL,
                        seed=seed)
+  # )
+
   snps <- snps.list$snps
   snps.assoc <- snps.list$snps.assoc
 
