@@ -145,6 +145,8 @@ snp.sim <- function(n.snps = 10000,
       ## to occur at what proportion of sites (note that
       ## we may not be simulating the same number of sites)
 
+      dist <- n.subs
+
       ## get dist.prop, a distribution containing the counts
       ## of the number of SNPs to be simulated that will have
       ## i many substitutions
@@ -241,9 +243,7 @@ snp.sim <- function(n.snps = 10000,
   ## get the node names for all individuals (terminal and internal)
   all.inds <- sort(unique(as.vector(unlist(tree$edge))))
   ## we start w all inds having same genotype as root:
-  for(i in all.inds){
-    genomes[[i]] <- gen.root
-  }
+  genomes[all.inds] <- gen.root
 
   ## store replacement nts in list new.nts:
   new.nts <- list()

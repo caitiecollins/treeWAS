@@ -93,10 +93,7 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   if(all.unique == TRUE){
     score.complete <- score
   }else{
-    score.complete <- rep(NA, length=ncol(snps.rec.ori))
-    for(i in 1:length(score)){
-      score.complete[which(index == i)] <- score[i]
-    }
+    score.complete <- score[index]
     names(score.complete) <- colnames(snps.rec.ori)
   }
 

@@ -22,12 +22,16 @@
 #' @param tree A phylo object containing a phylogenetic tree in which the number of tips is equal to the
 #' length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.
 #' @param test A character string or vector containing one or more of the following available tests of association:
-#' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the first three tests are run.
+#' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
+#' (note that within treeWAS, the first three tests are run in a loop by default).
 #' See details for more information on what these tests do and when they may be appropriate.
+#' @param n.tests An integer between 1 and 5 specifying the number of tests you are running on all loci,
+#' to be used in appropriately correcting for multiple testing.
+#' (i.e., the number of times you will be running the \code{get.sig.snps} function).
 #' @param p.value A single number specifying the p.value below which correlations are deemed to be 'significant'.
 #' @param p.value.correct Specify if/how to correct for multiple testing:
 #' either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
-#' the Bonferroni and False Discovery Rate corrections). By default, 'fdr' is selected
+#' the Bonferroni and False Discovery Rate corrections). By default, 'bonf' is selected
 #' @param p.value.by Specify how to determine the location of the p.value threshold:
 #' either 'count' or 'density' (indicating, respectively, that the p.value threshold should
 #' be determined by exact count or with the use of a density function).
@@ -49,15 +53,35 @@
 #'
 #' @export
 
+
+##########
+## FDR: ##
+##########
+
+## NOTES: ##
+## FDR works by managing the number of FALSE discoveries, RELATIVE to the number of TOTAL discoveries.
+## Maintains Q = FALSE discoveries / TOTAL discoveries.
+## Eg. For Q = 0.05, both 5/100 and 50/1000 meet the criterion.
+## Hence, FDR is described as being both adaptive and scalable.
+
+## QUESTION! ##
+## HOW SHOULD WE HANDLE MULTIPLE TESTING CORRECTION WITH FDR WHEN RUNNING MULITPLE TESTS OF ASSOC??????
+## Eg. Bonf --> multiply divisor by 3
+## BUT--if we just run FDR p-value correction by multiplying the "n.tests" by n.tests,
+## would the result not be that we just increase the number of false positives accepted in each test?!
+## Could we pool the test results somehow??
+## Or is it OK to ignore the performance of multiple separate assoc tests when using FDR??
+
 ########################################################################
 
 get.sig.snps <- function(snps,
                          snps.sim,
                          phen,
                          tree,
-                         test = c("terminal", "simultaneous", "subsequent"),
+                         test = "terminal",
+                         n.tests = 1,
                          p.value = 0.001,
-                         p.value.correct = "fdr",
+                         p.value.correct = "bonf",
                          p.value.by = "count",
                          snps.reconstruction = snps.REC,
                          snps.sim.reconstruction = snps.sim.REC,
@@ -191,23 +215,18 @@ get.sig.snps <- function(snps,
 
   ## Expand corr.dat (if not all snps columns unique):
   if(all.unique == FALSE){
-    corr.dat.complete <- rep(NA, ncol(snps.ori))
-    for(i in 1:ncol(snps.unique)){
-      corr.dat.complete[which(snps.index == i)] <- corr.dat[i]
-    }
+    corr.dat.complete <- corr.dat[snps.index]
     names(corr.dat.complete) <- colnames(snps.ori)
     corr.dat <- corr.dat.complete
   }
 
   ## Expand corr.sim (if not all snps.sim columns unique):
   if(all.unique.sim == FALSE){
-    corr.sim.complete <- rep(NA, ncol(snps.sim.ori))
-    for(i in 1:ncol(snps.sim.unique)){
-      corr.sim.complete[which(snps.sim.index == i)] <- corr.sim[i]
-    }
+    corr.sim.complete <- corr.sim[snps.sim.index]
     names(corr.sim.complete) <- colnames(snps.sim.ori)
     corr.sim <- corr.sim.complete
   }
+
 
 
 
@@ -222,7 +241,8 @@ get.sig.snps <- function(snps,
     ##########
     ## bonf ##
     ##########
-    p.value <- p.value/length(corr.dat)
+
+    p.value <- p.value/(length(corr.dat)*n.tests)
 
     ################
     ## p.value.by ##
@@ -237,10 +257,17 @@ get.sig.snps <- function(snps,
     ## fdr ##
     #########
 
-    p.vals <- sapply(c(1:length(corr.sim)),
-                     function(e)
-                       length(which(corr.sim > corr.sim[e]))
-                     /length(corr.sim))
+
+    # system.time( # 0.15 :)!
+    p.vals <- .get.p.vals(corr.sim)
+      # )
+
+    #     # system.time( # 144 (for 100,000 sites)
+    #     p.vals <- sapply(c(1:length(corr.sim)),
+    #                      function(e)
+    #                        length(which(corr.sim > corr.sim[e]))
+    #                      /length(corr.sim))
+    #     # )
     p.vals <- sort(p.vals, decreasing=TRUE)
     p.fdr <- p.adjust(p.vals, method="fdr", n=length(p.vals))
     p.thresh <- quantile(p.fdr, probs=1-p.value)
@@ -302,9 +329,10 @@ get.sig.snps <- function(snps,
   }
 
 
+
   ## 0 p.vals
   min.p <- paste("p-values listed as 0 are <",
-                 1/length(corr.sim), sep=" ")
+                 1/(length(corr.sim)*n.tests), sep=" ") ## CHECK---IS THIS RIGHT? SHOULD WE BE MULTIPLYING THE DIVISOR BY N.TESTS ??????????
 
   ## get list of those correlation values
   sig.corrs <- corr.dat[sig.snps]
@@ -449,3 +477,37 @@ assoc.test <- function(snps,
 
   return(corr.dat)
 } # end assoc.test
+
+
+
+
+
+#################
+## .get.p.vals ##
+#################
+## NOTE: only used for FDR threshold calculation!
+## get a p-value associated with every value of corr.sim
+
+.get.p.vals <- function(corr.sim){
+  ## faster with table:
+  cs.tab <- table(corr.sim)
+  cs.fac <- factor(corr.sim)
+
+  p.vals.unique <- sapply(c(1:(length(cs.tab)-1)),
+                          function(e)
+                            sum(cs.tab[(e+1):length(cs.tab)])
+                          /sum(cs.tab))
+  ## need to add trailing 0 for max corr.sim:
+  p.vals.unique <- c(p.vals.unique, 0)
+
+  ## get the unique index that
+  ## each original corr.sim should map to:
+  map.to <- (as.integer(cs.fac) - 1)
+  map.to <- map.to[!is.na(map.to)]
+  if(length(map.to)) map.to <- map.to + 1
+
+  ## get p.vals for all corr.sim:
+  p.vals <- p.vals.unique[map.to]
+
+  return(p.vals)
+} # end .get.p.vals

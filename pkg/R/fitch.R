@@ -66,10 +66,7 @@ get.fitch.n.mts <- function(snps, tree){
   # table(fitch.unique)
 
   ## get score for all original sites
-  fitch.complete <- rep(NA, ncol(snps))
-  for(i in 1:length(fitch.unique)){
-    fitch.complete[which(index == i)] <- fitch.unique[i]
-  }
+  fitch.complete <- fitch.unique[index]
   return(fitch.complete)
 } # end get.fitch.n.mts
 

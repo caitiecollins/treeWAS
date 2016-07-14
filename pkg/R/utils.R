@@ -9,9 +9,9 @@
 ## here and within all other fns s.t. no documentation required
 ## (unless we want to release these for public use?)
 
-#####################
-## get.unique.snps ##
-#####################
+#######################
+## get.unique.matrix ##
+#######################
 
 ########################################################################
 

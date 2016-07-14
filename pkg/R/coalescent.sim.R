@@ -132,6 +132,8 @@
 # heatmap <- FALSE
 # reconstruct <- FALSE
 # dist.dna.model <- "JC69"
+# grp.min <- 0.25
+# row.names <- NULL
 # seed <- 1
 
 
@@ -146,6 +148,7 @@ coalescent.sim <- function(n.ind=100,
                            heatmap=FALSE,
                            reconstruct=FALSE,
                            dist.dna.model="JC69",
+                           grp.min = NULL,
                            row.names=NULL,
                            seed=1){
   ## load packages:
@@ -169,7 +172,7 @@ coalescent.sim <- function(n.ind=100,
   ########################
   if(is.null(phen)){
     ## get list of phenotype simulation output
-    phen.list <- phen.sim(tree, n.subs = n.phen.subs)
+    phen.list <- phen.sim(tree, n.subs = n.phen.subs, grp.min = grp.min, seed = seed)
 
     ## get phenotype for terminal nodes only
     phen <- phen.list$phen
@@ -207,7 +210,12 @@ coalescent.sim <- function(n.ind=100,
   ## 10 --> 53 --> 12.5
   ## Are the remaining extra 2.5 seconds still just a result of the while loop??
   ## Or have I slowed anything down in the post-processing steps as well??????????????????
-  # system.time(
+
+  #   n.snps <- 10000 # 13.3
+  #   n.snps <- 100000 # 153.8
+  #   n.snps <- 1000000 # >> 1941.7 (stopped trying..)
+  #
+  #   system.time(
   snps.list <- snp.sim(n.snps=n.snps,
                        n.subs=n.subs,
                        n.snps.assoc=n.snps.assoc,

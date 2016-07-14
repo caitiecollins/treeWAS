@@ -58,8 +58,13 @@
 
 ########################################################################
 
-## EXAMPLE (data/parameters):
+################################
+## EXAMPLE (data/parameters): ##
+################################
 
+##############
+## DATA #1: ##
+##############
 # data("snps.ace")
 # data("phen.ace")
 # data("tree.ace")
@@ -67,7 +72,35 @@
 # snps <- snps.ori <- snps.ace
 # phen <- phen.ori <- phen.ace
 # tree <- tree.ori <- tree.ace
+
+
+##############
+## DATA #2: ##
+##############
+# foo <- coalescent.sim(n.ind = 100,
+#                       n.snps = 10000,
+#                       n.subs = 1,
+#                       n.snps.assoc = 10,
+#                       assoc.prob = 95,
+#                       n.phen.subs = 15,
+#                       phen = NULL,
+#                       plot = TRUE,
+#                       heatmap = FALSE,
+#                       reconstruct = FALSE,
+#                       dist.dna.model = "JC69",
+#                       row.names = NULL,
+#                       grp.min = 0.25,
+#                       seed = 4)
 #
+# snps <- foo$snps
+# snps.assoc.loci <- snps.assoc <- foo$snps.assoc
+# phen <- foo$phen
+# tree <- foo$tree
+
+#################
+## PARAMETERS: ##
+#################
+
 # n.subs <- NULL
 # dist.dna.model <- "JC69"
 # plot.tree <- FALSE
@@ -75,23 +108,29 @@
 # p.value <- 0.001
 # p.value.correct <- "fdr"
 # p.value.by <- "count"
-# sim.n.snps <- ncol(snps)
+# sim.n.snps <- ncol(snps)*10
 # n.reps <- 1
 # plot.null.dist <- TRUE
 # plot.dist <- FALSE
 # snps.reconstruction <- "parsimony"
 # phen.reconstruction <- "parsimony"
 
-treeWAS <- function(snps, phen, n.subs = NULL,
+treeWAS <- function(snps,
+                    phen,
+                    n.subs = NULL,
                     tree = c("UPGMA", "nj", "ml"),
-                    dist.dna.model = "JC69", plot.tree = FALSE,
+                    dist.dna.model = "JC69",
+                    plot.tree = FALSE,
                     test = c("terminal", "simultaneous", "subsequent"),
                     p.value = 0.001,
                     p.value.correct = c("bonf", "fdr", FALSE), ## DO WE WANT TO ALLOW USERS TO RUN MANY DIFFERENT MULTIPLE TESTING CORRECTION METHODS FOR EACH TEST?????????
                     p.value.by = c("count", "density"),
-                    sim.n.snps = ncol(snps), n.reps = 1,
-                    plot.null.dist = TRUE, plot.dist = FALSE,
-                    snps.reconstruction = "parsimony", phen.reconstruction = "parsimony"){
+                    sim.n.snps = ncol(snps),
+                    n.reps = 1,
+                    plot.null.dist = TRUE,
+                    plot.dist = FALSE,
+                    snps.reconstruction = "parsimony",
+                    phen.reconstruction = "parsimony"){
 
   ###################
   ## LOAD PACKAGES ##
@@ -479,6 +518,7 @@ treeWAS <- function(snps, phen, n.subs = NULL,
                                  phen = phen,
                                  tree = tree,
                                  test = TEST[[i]],
+                                 n.tests = length(TEST),
                                  p.value = p.value,
                                  p.value.correct = p.value.correct,
                                  p.value.by = p.value.by,

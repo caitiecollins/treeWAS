@@ -213,10 +213,7 @@ get.ancestral.pars <- function(var, tree){
     if(ncol(snps.ori) == ncol(snps.rec)){
       snps.rec.complete <- snps.rec
     }else{
-      snps.rec.complete <- matrix(NA, nrow=nrow(snps.rec), ncol=ncol(snps.ori))
-      for(i in 1:ncol(snps.rec)){
-        snps.rec.complete[, which(index == i)] <- snps.rec[, i]
-      }
+      snps.rec.complete <- snps.rec[, index]
       rownames(snps.rec.complete) <- rownames(snps.rec)
       colnames(snps.rec.complete) <- colnames(snps.ori)
     }
@@ -226,17 +223,20 @@ get.ancestral.pars <- function(var, tree){
     if(ncol(snps.ori) == ncol(snps.rec)){
       snps.subs.edges.complete <- snps.subs.edges
     }else{
-      snps.subs.edges.complete <- vector("list", ncol(snps.ori))
-      for(i in 1:length(snps.subs.edges)){
-        loc <- which(index == i)
-        if(length(loc) == 1){
-          snps.subs.edges.complete[[loc]] <- snps.subs.edges[[i]]
-        }else{
-          for(j in 1:length(loc)){
-            snps.subs.edges.complete[[loc[j]]] <- snps.subs.edges[[i]]
-          }
-        }
-      }
+      #       snps.subs.edges.complete <- vector("list", ncol(snps.ori))
+      #       for(i in 1:length(snps.subs.edges)){
+      #         loc <- which(index == i)
+      #         if(length(loc) == 1){
+      #           snps.subs.edges.complete[[loc]] <- snps.subs.edges[[i]]
+      #         }else{
+      #           for(j in 1:length(loc)){
+      #             snps.subs.edges.complete[[loc[j]]] <- snps.subs.edges[[i]]
+      #           }
+      #         }
+      #       }
+
+      ## EQUIVALENT (pretty sure...)
+      snps.subs.edges.complete <- snps.subs.edges[index]
     }
 
 
