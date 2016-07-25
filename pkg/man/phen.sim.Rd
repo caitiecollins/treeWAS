@@ -4,12 +4,22 @@
 \alias{phen.sim}
 \title{Short one-phrase description.}
 \usage{
-phen.sim(tree, n.subs = 15)
+phen.sim(tree, n.subs = 15, grp.min = 0.2, seed = NULL)
 }
 \arguments{
 \item{tree}{An phylo object.}
 
 \item{n.subs}{An integer controlling the phenotypic substition rate (see details).}
+
+\item{grp.min}{An optional numeric value < 0.5 specifying the minimum accepted proportion of terminal nodes
+to be in the minor phenotypic group. It may be useful to specify a \code{grp.min} of,
+for example, 0.2 (the default) to prevent excessive imbalance in the phenotypic group sizes. However,
+it is important to note that (at least for the time being) \code{grp.min} values closer to
+0.5 are likely to cause the computational time of \code{phen.sim} to increase substantially,
+as the function will run until acceptable group sizes are randomly generated.}
+
+\item{seed}{An optional integer used to set the seed and control the pseudo-random process used in
+\code{phen.sim}, enabling the repeatable regeneration of identical output.}
 }
 \description{
 The parameter n.subs controls the simulation of the phenotype by specifying

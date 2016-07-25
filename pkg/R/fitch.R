@@ -45,7 +45,7 @@
 get.fitch.n.mts <- function(snps, tree){
 
   ## load packages
-  require(phangorn)
+  # require(phangorn)
 
   ## checks
   if(!is.matrix(snps)) stop("snps must be of class matrix.")

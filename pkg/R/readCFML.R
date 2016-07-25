@@ -36,8 +36,8 @@
 
 read.CFML <- function(prefix, plot=TRUE) {
 
-  require(ape)
-  require(adegenet)
+  # require(ape)
+  # require(adegenet)
 
   tree<-read.tree(sprintf('%s.labelled_tree.newick',prefix))
   seqs<-read.dna(sprintf('%s.ML_sequence.fasta',prefix),format='fasta')
@@ -169,8 +169,8 @@ read.CFML <- function(prefix, plot=TRUE) {
 #This function reads the output of CFML and outputs the distribution of substitutions per site
 readCFML <- function(prefix, plot=TRUE) {
 
-  require(ape)
-  require(adegenet)
+  # require(ape)
+  # require(adegenet)
 
   tree<-read.tree(sprintf('%s.labelled_tree.newick',prefix))
   seqs<-read.dna(sprintf('%s.ML_sequence.fasta',prefix),format='fasta')

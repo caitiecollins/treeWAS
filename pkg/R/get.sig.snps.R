@@ -75,7 +75,11 @@
 ########################################################################
 
 get.sig.snps <- function(snps,
+                         snps.unique = NULL,
+                         snps.index = NULL,
                          snps.sim,
+                         snps.sim.unique = NULL,
+                         snps.sim.index = NULL,
                          phen,
                          tree,
                          test = "terminal",
@@ -83,9 +87,9 @@ get.sig.snps <- function(snps,
                          p.value = 0.001,
                          p.value.correct = "bonf",
                          p.value.by = "count",
-                         snps.reconstruction = snps.REC,
-                         snps.sim.reconstruction = snps.sim.REC,
-                         phen.reconstruction = phen.REC){
+                         snps.reconstruction,
+                         snps.sim.reconstruction,
+                         phen.reconstruction){
 
   #################
   ## HANDLE SNPS ##
@@ -95,21 +99,63 @@ get.sig.snps <- function(snps,
   ## snps ##
   ##########
 
-  ## Check snps column names
-  if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+  if(is.null(snps.unique)){
+    ## Check snps column names
+    if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
 
-  ## Get UNIQUE snps + index
-  snps.ori <- snps
-  temp <- get.unique.matrix(snps, MARGIN=2)
-  snps.unique <- temp$unique.data
-  snps.index <- temp$index
-  snps <- snps.unique
+    ## Get UNIQUE snps + index
+    snps.ori <- snps
+    temp <- get.unique.matrix(snps, MARGIN=2)
+    snps.unique <- temp$unique.data
+    snps.index <- temp$index
+    snps <- snps.unique
 
-  ## record whether all snps are unique or not for later:
-  if(ncol(snps.unique) == ncol(snps.ori)){
-    all.unique <- TRUE
+    ## record whether all snps are unique or not for later:
+    if(ncol(snps.unique) == ncol(snps.ori)){
+      all.unique <- TRUE
+    }else{
+      all.unique <- FALSE
+    }
   }else{
-    all.unique <- FALSE
+    ## If snps.unique provided as well as snps:
+
+    ## CHECK: is index provided as well??
+    if(is.null(snps.index)){
+      warning("if snps.unique is provided,
+              snps.index must also be provided to indicate
+              original mapping locations for all unique sites.
+              Ignoring unique snps provided; working with snps only.")
+
+      ## repeat above steps (as if no snps.unique was provided):
+      ## Check snps column names
+      if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+
+      ## Get UNIQUE snps + index
+      snps.ori <- snps
+      temp <- get.unique.matrix(snps, MARGIN=2)
+      snps.unique <- temp$unique.data
+      snps.index <- temp$index
+      snps <- snps.unique
+
+      ## record whether all snps are unique or not for later:
+      if(ncol(snps.unique) == ncol(snps.ori)){
+        all.unique <- TRUE
+      }else{
+        all.unique <- FALSE
+      }
+
+    }else{
+
+      snps.ori <- snps
+      snps <- snps.unique
+
+      ## record whether all snps are unique or not for later:
+      if(ncol(snps.unique) == ncol(snps.ori)){
+        all.unique <- TRUE
+      }else{
+        all.unique <- FALSE
+      }
+    }
   }
 
   ##############
@@ -130,27 +176,55 @@ get.sig.snps <- function(snps,
   }
 
   ## Get UNIQUE snps.sim + index
-  snps.sim.ori <- snps.sim
-  temp <- get.unique.matrix(snps.sim, MARGIN=2)
-  snps.sim.unique <- temp$unique.data
-  snps.sim.index <- temp$index
-  snps.sim <- snps.sim.unique
+  if(is.null(snps.sim.unique)){
+    snps.sim.ori <- snps.sim
+    temp <- get.unique.matrix(snps.sim, MARGIN=2)
+    snps.sim.unique <- temp$unique.data
+    snps.sim.index <- temp$index
+    snps.sim <- snps.sim.unique
 
-  ## record whether all snps are unique or not for later:
-  if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
-    all.unique.sim <- TRUE
+    ## record whether all snps are unique or not for later:
+    if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+      all.unique.sim <- TRUE
+    }else{
+      all.unique.sim <- FALSE
+    }
   }else{
-    all.unique.sim <- FALSE
-  }
-  #################################
-  ## NOTE--change above to below if moving UNIQUE check to OUTSIDE get.sig.snps fn (& add index arguments):
-  #   ## record whether all snps.sim are unique or not for later:
-  #   if(is.null(snps.sim.index)){
-  #     all.unique.sim <- TRUE
-  #   }else{
-  #     all.unique.sim <- FALSE
-  #   }
+    ## If snps.sim.unique provided as well as snps:
 
+    ## CHECK: is index provided as well??
+    if(is.null(snps.sim.index)){
+      warning("if snps.sim.unique is provided,
+              snps.sim.index must also be provided to indicate
+              original mapping locations for all unique sites.
+              Ignoring unique snps.sim provided; working with snps.sim only.")
+
+      ## repeat above steps (as if no snps.unique was provided):
+      snps.sim.ori <- snps.sim
+      temp <- get.unique.matrix(snps.sim, MARGIN=2)
+      snps.sim.unique <- temp$unique.data
+      snps.sim.index <- temp$index
+      snps.sim <- snps.sim.unique
+
+      ## record whether all snps are unique or not for later:
+      if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+        all.unique.sim <- TRUE
+      }else{
+        all.unique.sim <- FALSE
+      }
+    }else{
+
+      snps.sim.ori <- snps.sim
+      snps.sim <- snps.sim.unique
+
+      ## record whether all snps are unique or not for later:
+      if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+        all.unique.sim <- TRUE
+      }else{
+        all.unique.sim <- FALSE
+      }
+    }
+  }
 
   #################
   ## HANDLE PHEN ##
@@ -227,12 +301,18 @@ get.sig.snps <- function(snps,
     corr.sim <- corr.sim.complete
   }
 
+  ## quick look at corr.sim & corr.dat
+  # hist(corr.sim, xlim=c(0,1))
+  # hist(corr.dat, xlim=c(0,1))
+
 
 
 
   ############################
   ## HANDLE P.VALUE OPTIONS ##
   ############################
+
+  p.value.ori <- p.value
 
   #####################
   ## p.value.correct ##
@@ -242,7 +322,7 @@ get.sig.snps <- function(snps,
     ## bonf ##
     ##########
 
-    p.value <- p.value/(length(corr.dat)*n.tests)
+    p.value <- p.value.ori/(length(corr.dat)*n.tests)
 
     ################
     ## p.value.by ##
@@ -256,22 +336,10 @@ get.sig.snps <- function(snps,
     #########
     ## fdr ##
     #########
-
-
-    # system.time( # 0.15 :)!
     p.vals <- .get.p.vals(corr.sim)
-      # )
-
-    #     # system.time( # 144 (for 100,000 sites)
-    #     p.vals <- sapply(c(1:length(corr.sim)),
-    #                      function(e)
-    #                        length(which(corr.sim > corr.sim[e]))
-    #                      /length(corr.sim))
-    #     # )
     p.vals <- sort(p.vals, decreasing=TRUE)
-    p.fdr <- p.adjust(p.vals, method="fdr", n=length(p.vals))
+    p.fdr <- p.adjust(p.vals, method="fdr", n=length(p.vals)*n.tests)
     p.thresh <- quantile(p.fdr, probs=1-p.value)
-    thresh <- quantile(corr.sim, probs=p.thresh)
 
     ################
     ## p.value.by ##
@@ -282,6 +350,11 @@ get.sig.snps <- function(snps,
     #     colnames(snps)[which(pval.fdr < p.thresh)]
 
     #     ## COMPARING THRESHOLDS ATTAINED BY DIFFERENT METHODS ##
+    #
+    ## quick look at corr.sim & corr.dat
+    # hist(corr.sim, xlim=c(0,1))
+    # hist(corr.dat, xlim=c(0,1))
+    #
     #
     #     ## get threshold by counts
     #     thresh.uncorr <- quantile(corr.sim, probs=1-p.value)
@@ -315,24 +388,24 @@ get.sig.snps <- function(snps,
   if(test=="fisher"){
     ## Identify (real) SNPs w correlations > thresh:
     sig.snps <- which(corr.dat < thresh)
-    p.vals <- sapply(c(1:length(sig.snps)),
-                     function(e)
-                       length(which(corr.sim < corr.dat[sig.snps[e]]))
-                     /length(corr.sim))
+    p.vals <- .get.p.vals(corr.sim = corr.sim,
+                         corr.dat = corr.dat,
+                         fisher.test = TRUE)
+    sig.p.vals <- p.vals[sig.snps]
   }else{
     ## Identify (real) SNPs w correlations > thresh:
     sig.snps <- which(corr.dat > thresh)
-    p.vals <- sapply(c(1:length(sig.snps)),
-                     function(e)
-                       length(which(corr.sim > corr.dat[sig.snps[e]]))
-                     /length(corr.sim))
+    p.vals <- .get.p.vals(corr.sim = corr.sim,
+                         corr.dat = corr.dat,
+                         fisher.test = FALSE)
+    sig.p.vals <- p.vals[sig.snps]
   }
 
 
 
   ## 0 p.vals
   min.p <- paste("p-values listed as 0 are <",
-                 1/(length(corr.sim)*n.tests), sep=" ") ## CHECK---IS THIS RIGHT? SHOULD WE BE MULTIPLYING THE DIVISOR BY N.TESTS ??????????
+                 1/length(corr.sim), sep=" ") ## CHECK---IS THIS RIGHT? SHOULD WE BE MULTIPLYING THE DIVISOR BY N.TESTS ??????????
 
   ## get list of those correlation values
   sig.corrs <- corr.dat[sig.snps]
@@ -342,14 +415,14 @@ get.sig.snps <- function(snps,
 
   ## re-order list of sig.snps and sig.corrs by value of sig.corr
   if(test=="fisher"){
-    NWO <- order(sig.corrs, decreasing=TRUE)
-  }else{
     NWO <- order(sig.corrs, decreasing=FALSE)
+  }else{
+    NWO <- order(sig.corrs, decreasing=TRUE)
   }
   sig.snps <- sig.snps[NWO]
   sig.corrs <- sig.corrs[NWO]
-  p.vals <- p.vals[NWO]
-
+  sig.p.vals <- sig.p.vals[NWO]
+  sig.snps.names <- sig.snps.names[NWO]
   gc()
 
   #################
@@ -358,20 +431,22 @@ get.sig.snps <- function(snps,
 
   out <- list(corr.dat,
               corr.sim,
+              p.vals,
               thresh,
               sig.snps.names,
               sig.snps,
               sig.corrs,
-              p.vals,
+              sig.p.vals,
               min.p)
 
   names(out) <- c("corr.dat",
                   "corr.sim",
+                  "p.vals",
                   "sig.thresh",
                   "sig.snps.names",
                   "sig.snps",
                   "sig.corrs",
-                  "p.vals",
+                  "sig.p.vals",
                   "min.p")
 
   return(out)
@@ -488,26 +563,87 @@ assoc.test <- function(snps,
 ## NOTE: only used for FDR threshold calculation!
 ## get a p-value associated with every value of corr.sim
 
-.get.p.vals <- function(corr.sim){
-  ## faster with table:
-  cs.tab <- table(corr.sim)
-  cs.fac <- factor(corr.sim)
+.get.p.vals <- function(corr.sim, corr.dat=NULL, fisher.test=FALSE){
 
-  p.vals.unique <- sapply(c(1:(length(cs.tab)-1)),
-                          function(e)
-                            sum(cs.tab[(e+1):length(cs.tab)])
-                          /sum(cs.tab))
-  ## need to add trailing 0 for max corr.sim:
-  p.vals.unique <- c(p.vals.unique, 0)
+  p.vals <- NULL
 
-  ## get the unique index that
-  ## each original corr.sim should map to:
-  map.to <- (as.integer(cs.fac) - 1)
-  map.to <- map.to[!is.na(map.to)]
-  if(length(map.to)) map.to <- map.to + 1
+  ###################
+  ## CORR.SIM ONLY ##
+  ###################
+  if(is.null(corr.dat)){
+    ## faster with table:
+    cs.tab <- table(corr.sim)
+    cs.fac <- factor(corr.sim)
 
-  ## get p.vals for all corr.sim:
-  p.vals <- p.vals.unique[map.to]
+    p.vals.unique <- sapply(c(1:(length(cs.tab)-1)),
+                            function(e)
+                              sum(cs.tab[(e+1):length(cs.tab)])
+                            /sum(cs.tab))
+    ## need to add trailing 0 for max corr.sim:
+    p.vals.unique <- c(p.vals.unique, 0)
+
+    ## get the unique index that
+    ## each original corr.sim should map to:
+    map.to <- (as.integer(cs.fac) - 1)
+    map.to <- map.to[!is.na(map.to)]
+    if(length(map.to)) map.to <- map.to + 1
+
+    ## get p.vals for all corr.sim:
+    p.vals <- p.vals.unique[map.to]
+  }else{
+
+    ###########################
+    ## CORR.DAT vs. CORR.SIM ##
+    ###########################
+    ## get table for corr.sim:
+    cs.tab <- table(corr.sim)
+
+    ## get table for corr.dat:
+    cd.tab <- table(corr.dat)
+    cd.fac <- factor(corr.dat)
+
+    ## get all possible p.vals | corr.sim:
+    p.vals.unique <- sapply(c(1:(length(cs.tab)-1)),
+                            function(e)
+                              sum(cs.tab[(e+1):length(cs.tab)])
+                            /sum(cs.tab))
+    ## need to add trailing 0 for max corr.sim:
+    p.vals.unique <- c(p.vals.unique, 0)
+
+    ## get real p.vals using corr.dat for break points:
+    p.vals.dat <- list()
+
+    if(fisher.test == FALSE){
+      for(i in 1:length(cd.tab)){
+        tab.above <- which(as.numeric(names(cs.tab)) > as.numeric(names(cd.tab[i])))
+        if(!.is.integer0(tab.above)){
+          p.vals.dat[[i]] <- sum(cs.tab[tab.above])/sum(cs.tab)
+        }else{
+          p.vals.dat[[i]] <- 0
+        }
+      }
+    }else{
+      ## fisher.test == TRUE --> Reverse sign (> --> <) ##
+      for(i in 1:length(cd.tab)){
+        tab.below <- which(as.numeric(names(cs.tab)) < as.numeric(names(cd.tab[i])))
+        if(!.is.integer0(tab.below)){
+          p.vals.dat[[i]] <- sum(cs.tab[tab.below])/sum(cs.tab)
+        }else{
+          p.vals.dat[[i]] <- 0
+        }
+      }
+    }
+    p.vals.dat <- as.vector(unlist(p.vals.dat))
+
+    ## get the unique index that
+    ## each original corr.dat should map to:
+    map.to <- (as.integer(cd.fac) - 1)
+    map.to <- map.to[!is.na(map.to)]
+    if(length(map.to)) map.to <- map.to + 1
+
+    ## get p.vals for all corr.dat:
+    p.vals <- p.vals.dat[map.to]
+  }
 
   return(p.vals)
 } # end .get.p.vals

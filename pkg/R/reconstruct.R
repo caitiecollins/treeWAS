@@ -34,8 +34,8 @@
 
 get.ancestral.pars <- function(var, tree){
 
-  require(ape)
-  require(phangorn)
+  # require(ape)
+  # require(phangorn)
 
   edges <- tree$edge
 
@@ -403,7 +403,7 @@ asr <- function(var,
                 type = c("parsimony", "ace"),
                 method = "discrete"){
 
-  require(ape)
+  # require(ape)
 
   ## get tree edges
   edges <- tree$edge

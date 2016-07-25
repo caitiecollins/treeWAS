@@ -1,4 +1,201 @@
 
+####################
+## manhattan.plot ##
+####################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param arg Description.
+#'
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+#'
+#' @import adegenet
+
+########################################################################
+
+## EG:
+# manhattan.plot(p.vals = corr.dat,
+#                col = "deepseasun", # c("red", "royalblue"),
+#                transp = 0.5,
+#                sig.thresh = c(0.68,0.71,0.75,0.80,0.81),
+#                jitter.amount = 0.00001,
+#                min.p = NULL,
+#                log10=FALSE,
+#                thresh.col="wasp",
+#                ylab = "Terminal Correlation Score")
+
+manhattan.plot <- function(p.vals,
+                           col = "wasp",
+                           transp = 0.75,
+                           sig.thresh = 0.05,
+                           thresh.col="seasun",
+                           snps.assoc = NULL,
+                           snps.assoc.col = "red",
+                           jitter.amount = 0.00001,
+                           min.p = NULL,
+                           log10=TRUE,
+                           ylab=NULL){
+
+  # require(adegenet) # transp, col.pal
+
+  pval <- p.vals
+
+  ## replace any "0" p.vals with min.p
+  if(any(pval == 0)){
+    toReplace <- which(pval == 0)
+    if(is.null(min.p)) min.p <- 1/length(pval)
+    pval[toReplace] <- min.p
+  }
+
+  ## PLOTTING METHOD--MANHATTAN PLOT
+
+  # with Bonferroni:
+  if(log10 == TRUE){
+    log.pval <- -log10(pval)
+  }else{
+    log.pval <- pval
+  }
+  set.seed(1)
+  if(jitter.amount > 0) log.pval <- jitter(log.pval, amount=jitter.amount)
+
+  ## get colour scheme
+  ## from colour palette?
+  col.pals <- c("bluepal", "redpal", "greenpal", "greypal",
+                "flame", "azur",
+                "seasun", "lightseasun", "deepseasun",
+                "spectral", "wasp", "funky")
+  if(col %in% col.pals){
+    myCol <- eval(parse(text=paste(col, "(", ceiling(length(pval)/1000), ")")))
+    myCol <- as.vector(unlist(sapply(c(1:length(myCol)),
+                                     function(e)
+                                       rep(myCol[e], 1000))))
+    myCol <- myCol[c(1:length(pval))]
+  }else{
+    ## from vector of colours?
+    myCol <- as.vector(unlist(sapply(c(1:length(col)),
+                                     function(e)
+                                       rep(col[e], 1000))))
+    myCol <- sort(myCol)
+    myCol <- rep(myCol, ceiling(length(pval)/(1000*(length(col)))))
+    myCol <- myCol[1:length(pval)]
+  }
+  ## add transparency?
+  if(!is.null(transp)){
+    if(transp < 0 | transp > 1){
+      transp <- 0.5
+      warning("transp must be between 0 and 1;
+              using default value 0.5.")
+    }
+    transp <- 1-transp
+    myCol <- transp(myCol, alpha = transp)
+  }
+
+
+
+  ##p- Manhattan- Bonferroni
+  if(log10 == TRUE){
+    if(is.null(ylab)){
+      ylab <- "Uncorrected -log10(p-value)"
+    }
+    plot(log.pval,
+         col = myCol,
+         pch = 19,
+         cex = 1,
+         main="Manhattan plot",
+         xlab="SNP loci",
+         ylab=ylab,
+         cex.main=1)
+
+  }else{
+    if(is.null(ylab)){
+      ylab <- "Uncorrected p-value"
+    }
+    plot(log.pval,
+         col = myCol,
+         pch = 19,
+         cex = 1,
+         main="Manhattan plot",
+         xlab="SNP loci",
+         ylab=ylab,
+         cex.main=1)
+  }
+
+  ## overlay/highlight snps.assoc?
+  if(!is.null(snps.assoc)){
+    ## modify colour
+    if(is.null(snps.assoc.col)) snps.assoc.col <- "red"
+    myCol[snps.assoc] <- snps.assoc.col
+    ## overlay points:
+    points(x=snps.assoc,
+           y=log.pval[snps.assoc],
+           col = myCol[snps.assoc],
+           pch = 19,
+           cex = 1)
+  }
+
+  ## get significance threshold
+  if(thresh.col %in% col.pals){
+    thresh.col <- eval(parse(text=paste(thresh.col, "(", length(sig.thresh), ")")))
+  }
+
+  for(i in 1:length(sig.thresh)){
+    if(log10 == TRUE){
+      thresh <- -log10(sig.thresh[i])
+    }else{
+      thresh <- sig.thresh[i]
+    }
+    ## move sig thresh below nearest points
+    thresh <- thresh-0.05
+    ## draw threshold line on plot:
+    abline(h=thresh, col = thresh.col[i], lwd = 2)
+  } # end for loop plotting thresh lines
+
+} # end manhattan.plot
+
+
+
+##########################
+## qqman Manhattan Plot ##
+##########################
+# require(qqman)
+#
+# # manhattan(gwasResults,
+# #           main = "Manhattan Plot",
+# #           ylim = c(0, 10),
+# #           cex = 0.6,
+# #           cex.axis = 0.9,
+# #           col = c("blue4", "orange3"),
+# #           suggestiveline = F,
+# #           genomewideline = F,
+# #           chrlabs = c(1:20, "P", "Q"))
+#
+# BP <- as.numeric(dimnames(snps.ori)[[2]])
+# if(is.null(BP)) BP <- c(1:ncol(snps.ori))
+# CHR <- sort(rep(1:20, ncol(snps.ori)/20))
+# P <- p.vals
+# df <- data.frame(BP, CHR, P)
+#
+# manhattan(df,
+#           main = "Manhattan Plot",
+#           ylim = c(0, 10),
+#           cex = 0.6,
+#           cex.axis = 0.9,
+#           col = c("blue4", "orange3"),
+#           suggestiveline = F,
+#           genomewideline = F,
+#           chrlabs = c(1:20, "P", "Q"))
+
+
 ###################
 ## plot.sig.snps ##
 ###################

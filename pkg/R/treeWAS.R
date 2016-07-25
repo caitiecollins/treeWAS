@@ -52,7 +52,8 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import adegenet ape phangorn ade4 Hmisc
+#' @import adegenet ape phangorn
+#' @importFrom Hmisc all.is.numeric
 #'
 #' @export
 
@@ -92,10 +93,10 @@
 #                       grp.min = 0.25,
 #                       seed = 4)
 #
-# snps <- foo$snps
+# snps <- snps.ori <- foo$snps
 # snps.assoc.loci <- snps.assoc <- foo$snps.assoc
-# phen <- foo$phen
-# tree <- foo$tree
+# phen <- phen.ori <- foo$phen
+# tree <- tree.ori <- foo$tree
 
 #################
 ## PARAMETERS: ##
@@ -135,11 +136,11 @@ treeWAS <- function(snps,
   ###################
   ## LOAD PACKAGES ##
   ###################
-  require(adegenet)
-  require(phangorn)
-  require(ape)
-  require(ade4) #?
-  require(Hmisc) # all.is.numeric
+  # require(adegenet)
+  # require(phangorn)
+  # require(ape)
+  # # require(ade4) #?
+  # require(Hmisc) # all.is.numeric
 
   #####################################################################
   ## 0) HANDLE INPUT DATA #############################################
@@ -499,6 +500,31 @@ treeWAS <- function(snps,
 
   } # end reconstruction for tests 2 & 3
 
+
+  ###########################
+  ## GET UNIQUE SNPS(.SIM) ##
+  ###########################
+
+  ## TO DO: ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
+  ## NOTE--WOULD BE GOOD TO ADD SIMILAR SOLN FOR RECONSTRUCT ABOVE AS W GET.SIG.SNPS BELOW (ie.
+  ## ALLOW FOR INPUT OF UNIQUE VAR AND INDEX AS ARGUMENTS).
+  ## ONCE DONE--MOVE UNIQUE CODE BELOW TO ABOVE THE RECONSTRUCTION CODE SEGMENT...
+
+  ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
+
+  ## Get UNIQUE snps + index
+  snps.ori <- snps
+  temp <- get.unique.matrix(snps, MARGIN=2)
+  snps.unique <- temp$unique.data
+  snps.index <- temp$index
+
+  ## Get UNIQUE snps.sim + index
+  snps.sim.ori <- snps.sim
+  temp <- get.unique.matrix(snps.sim, MARGIN=2)
+  snps.sim.unique <- temp$unique.data
+  snps.sim.index <- temp$index
+
+
   #######################
   ## identify sig.snps ##
   #######################
@@ -514,7 +540,11 @@ treeWAS <- function(snps,
   ## Run get.sig.snps fn once for each association test:
   for(i in 1:length(TEST)){
     sig.list[[i]] <- get.sig.snps(snps = snps,
-                                 snps.sim = snps.sim,
+                                  snps.unique = snps.unique,
+                                  snps.index = snps.index,
+                                  snps.sim = snps.sim,
+                                  snps.sim.unique = snps.sim.unique,
+                                  snps.sim.index = snps.sim.index,
                                  phen = phen,
                                  tree = tree,
                                  test = TEST[[i]],
@@ -526,6 +556,10 @@ treeWAS <- function(snps,
                                  snps.sim.reconstruction = snps.sim.rec,
                                  phen.reconstruction = phen.rec)
   }
+
+  # sig <- list()
+  # for(i in 1:length(sig.list[[1]])) sig[[i]] <- sig.list[[1]][[i]]$sig.snps
+
 
   ## DOUBLE CHECKING ##
   #   str(sig.list[[i]])
@@ -565,10 +599,11 @@ treeWAS <- function(snps,
 
   corr.dat <- sig.list[[i]]$corr.dat
   corr.sim <- sig.list[[i]]$corr.sim
+  p.vals <- sig.list[[i]]$p.vals
   sig.snps.names <- sig.list[[i]]$sig.snps.names
   sig.snps <- sig.list[[i]]$sig.snps
   sig.corrs <- sig.list[[i]]$sig.corrs
-  p.vals <- sig.list[[i]]$p.vals
+  sig.p.vals <- sig.list[[i]]$sig.p.vals
   min.p <- sig.list[[i]]$min.p
   sig.thresh <- sig.list[[i]]$sig.thresh
 
@@ -625,7 +660,7 @@ treeWAS <- function(snps,
 
     }
     df <- data.frame(sig.snps,
-                     p.vals,
+                     sig.p.vals,
                      sig.corrs,
                      S1P1, S0P0, S1P0, S0P1)
     names(df) <- c("SNP.locus",
@@ -652,12 +687,14 @@ treeWAS <- function(snps,
   results <- list()
   results[[1]] <- corr.dat
   results[[2]] <- corr.sim
-  results[[3]] <- sig.thresh
-  results[[4]] <- df
-  results[[5]] <- min.p
+  results[[3]] <- p.vals
+  results[[4]] <- sig.thresh
+  results[[5]] <- df
+  results[[6]] <- min.p
 
   names(results) <- c("corr.dat",
                       "corr.sim",
+                      "p.vals",
                       "sig.thresh",
                       "sig.snps",
                       "min.p.value")

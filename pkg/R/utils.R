@@ -52,14 +52,29 @@
 
 ########################################################################
 ## get unique SNPs column patterns: ##
-get.unique.matrix <- function(data, MARGIN=2){
+get.unique.matrix <- function(data, MARGIN=2, silent=TRUE){
 
   ## Identify unique SNP row/column patterns:
   tab.out <- table.matrix(data, MARGIN=MARGIN)
   unique.data <- as.matrix(tab.out$unique.data)
   index <- tab.out$index
-  if(MARGIN == 1) row.names(unique.data) <- c(1:nrow(unique.data))
-  if(MARGIN == 2) colnames(unique.data) <- c(1:ncol(unique.data))
+
+  if(MARGIN == 1){
+    row.names(unique.data) <- c(1:nrow(unique.data))
+    if(length(unique(index)) == nrow(data)){
+      if(silent == FALSE){
+      warning("Data inputted was already unique along the selected MARGIN.")
+      }
+    }
+  }
+  if(MARGIN == 2){
+    colnames(unique.data) <- c(1:ncol(unique.data))
+    if(length(unique(index)) == ncol(data)){
+      if(silent == FALSE){
+      warning("Data inputted was already unique along the selected MARGIN.")
+      }
+    }
+  }
 
   ## Get output:
   out <- list(unique.data=unique.data,
@@ -104,14 +119,15 @@ get.unique.snps <- get.unique.matrix
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import ape Hmisc
+#' @import ape
+#' @importFrom Hmisc all.is.numeric
 
 ########################################################################
 
 get.tip.order <- function(tree){
 
-  require(ape)
-  require(Hmisc)
+  # require(ape)
+  # require(Hmisc)
 
   tree2 <- read.tree(text=write.tree(tree))
   if(all.is.numeric(tree2$tip.label)){

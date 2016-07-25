@@ -52,8 +52,8 @@
 
 plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
 
-  require(phangorn)
-  require(adegenet)
+  # require(phangorn)
+  # require(adegenet)
 
   #############################################################################
   ######################## PLOT phylo with PHEN ###############################

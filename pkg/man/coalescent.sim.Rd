@@ -7,7 +7,7 @@
 coalescent.sim(n.ind = 100, n.snps = 10000, n.subs = 1,
   n.snps.assoc = 0, assoc.prob = 100, n.phen.subs = 15, phen = NULL,
   plot = TRUE, heatmap = FALSE, reconstruct = FALSE,
-  dist.dna.model = "JC69", row.names = NULL, seed = 1)
+  dist.dna.model = "JC69", grp.min = NULL, row.names = NULL, seed = 1)
 }
 \arguments{
 \item{n.ind}{An integer specifying the number of individual genomes to simulate

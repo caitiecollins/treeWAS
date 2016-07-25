@@ -55,8 +55,8 @@ tree.reconstruct <- function(dna,
   ###################
   ## LOAD PACKAGES ##
   ###################
-  require(ape)
-  require(phangorn)
+  # require(ape)
+  # require(phangorn)
 
   ############
   ## CHECKS ##

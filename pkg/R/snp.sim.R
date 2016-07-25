@@ -45,9 +45,9 @@ snp.sim <- function(n.snps = 10000,
                     row.names = NULL,
                     seed=1){
 
-  require(adegenet)
-  require(ape)
-  require(phangorn)
+  # require(adegenet)
+  # require(ape)
+  # require(phangorn)
 
   ##################################
   ## GET MUTATIONS' branch & loci ##
@@ -238,13 +238,14 @@ snp.sim <- function(n.snps = 10000,
                                                     function(e) f %in% e)])
 
 
-  # we will store the output in a list called genomes:
-  genomes <- list()
   ## get the node names for all individuals (terminal and internal)
   all.inds <- sort(unique(as.vector(unlist(tree$edge))))
+  # we will store the output in a list called genomes:
+  genomes <- list()
   ## we start w all inds having same genotype as root:
-  genomes[all.inds] <- gen.root
-
+  for(i in all.inds){
+    genomes[[all.inds[i]]] <- gen.root
+  }
   ## store replacement nts in list new.nts:
   new.nts <- list()
   ## distinguish btw list of loci and unique list
@@ -486,6 +487,13 @@ snp.sim <- function(n.snps = 10000,
       ## for each associated SNP,
       ## we undo some associations | assoc.prob for that snp.assoc
       for(i in 1:n.snps.assoc){
+
+        ## re-pseudo-randomise seed:
+        if(!is.null(seed)){
+          seed.i <- seed*i*10
+          set.seed(seed.i)
+        }
+
         prob <- assoc.prob[i]
         ## only if the association is imperfect
         if(prob != 100){

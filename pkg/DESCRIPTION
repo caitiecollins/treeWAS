@@ -6,9 +6,7 @@ Description: Perform GWAS using phylogenetic trees to correct for population str
 License: What license is it under?
 LazyData: true
 RoxygenNote: 5.0.1
-Imports: adegenet,
+Depends: adegenet,
     ape,
     phangorn,
-    ade4,
-    diversitree,
     Hmisc
