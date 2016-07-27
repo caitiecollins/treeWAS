@@ -524,6 +524,23 @@ treeWAS <- function(snps,
   snps.sim.unique <- temp$unique.data
   snps.sim.index <- temp$index
 
+  ## Get UNIQUE snps.reconstruction
+  temp <- get.unique.matrix(snps.rec, MARGIN=2)
+  snps.rec <- temp$unique.data
+  snps.rec.index <- temp$index
+  if(!identical(snps.rec.index, snps.index)){
+    warning("Careful-- snps and snps.rec should have the same index when reduced
+              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+  }
+
+  ## Get UNIQUE snps.sim.reconstruction
+  temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
+  snps.sim.rec <- temp$unique.data
+  snps.sim.rec.index <- temp$index
+  if(!identical(snps.sim.rec.index, snps.sim.index)){
+    warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
+              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+  }
 
   #######################
   ## identify sig.snps ##

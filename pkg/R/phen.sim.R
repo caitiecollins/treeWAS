@@ -142,7 +142,10 @@ phen.sim <- function(tree,
       ## get phen of TERMINAL nodes (leaves)
       n.ind <- tree$Nnode+1
       phen.leaves <- as.factor(as.vector(unlist(phen.nodes[c(1:n.ind)])))
-      names(phen.leaves) <- paste("ind", c(1:length(phen.leaves)), sep=".")
+      names(phen.leaves) <- c(1:length(phen.leaves))
+      # names(phen.leaves) <- paste("ind",
+      #                             c(1:length(phen.leaves)),
+      #                             sep=".")
 
 
       ## CHECK THAT MIN GRP.SIZE >= THRESHOLD ##
@@ -186,15 +189,17 @@ phen.sim <- function(tree,
   ## convert phen.nodes to factor
   phen.nodes <- as.factor(as.vector(unlist(phen.nodes)))
   if(!is.null(names(phen.leaves))){
-    names(phen.leaves) <- paste("ind",
-                                c(1:length(phen.leaves)),
-                                sep=".")
+    names(phen.leaves) <- c(1:length(phen.leaves))
+    # names(phen.leaves) <- paste("ind",
+    #                             c(1:length(phen.leaves)),
+    #                             sep=".")
   }
   if(!is.null(names(phen.nodes))){
-    names(phen.nodes) <- c(names(phen.leaves),
-                           paste("node",
-                                 c((length(phen.leaves)+1):length(phen.nodes)),
-                                 sep="."))
+    names(phen.nodes) <- c(1:length(phen.nodes))
+    # names(phen.nodes) <- c(names(phen.leaves),
+    #                        paste("node",
+    #                              c((length(phen.leaves)+1):length(phen.nodes)),
+    #                              sep="."))
   }
   ## make output list
   phen.list <- list(phen.leaves, phen.nodes, phen.branch, phen.loci)

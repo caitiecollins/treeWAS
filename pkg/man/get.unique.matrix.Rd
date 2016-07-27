@@ -4,7 +4,7 @@
 \alias{get.unique.matrix}
 \title{Get unique rows/columns of a matrix with an index vector.}
 \usage{
-get.unique.matrix(data, MARGIN = 2)
+get.unique.matrix(data, MARGIN = 2, silent = TRUE)
 }
 \arguments{
 \item{data}{A matrix or data.frame, potentially containing

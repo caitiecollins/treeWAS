@@ -529,6 +529,24 @@ treeWAS <- function(snps,
   snps.sim.unique <- temp$unique.data
   snps.sim.index <- temp$index
 
+  ## Get UNIQUE snps.reconstruction
+  temp <- get.unique.matrix(snps.rec, MARGIN=2)
+  snps.rec <- temp$unique.data
+  snps.rec.index <- temp$index
+  if(!identical(snps.rec.index, snps.index)){
+    warning("Careful-- snps and snps.rec should have the same index when reduced
+              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+  }
+
+  ## Get UNIQUE snps.sim.reconstruction
+  temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
+  snps.sim.rec <- temp$unique.data
+  snps.sim.rec.index <- temp$index
+  if(!identical(snps.sim.rec.index, snps.sim.index)){
+    warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
+              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+  }
+
 
   #######################
   ## identify sig.snps ##
@@ -574,6 +592,7 @@ treeWAS <- function(snps,
   # hist(sig.list[[i]][[1]]$corr.sim)
   # hist(sig.list[[i]][[1]]$corr.dat)
 
+  # sig.list[[2]][[1]]$corr.dat[snps.assoc]
   # sig.list[[3]][[1]]$corr.dat[snps.assoc]
 
   ## BUG CHECKING ##
@@ -595,7 +614,7 @@ treeWAS <- function(snps,
   ## GET RESULTS ##
   #################
 
-  RES <- thresholds <- DAT <- list()
+  RES <- thresholds <- VALS <- DAT <- list()
 
   ## get results for each test run:
   for(j in 1:length(sig.list)){
@@ -603,17 +622,17 @@ treeWAS <- function(snps,
     RES[[j]] <- list()
 
     ## get corr.dat, corr.sim, p.vals x2:
-    DAT[[j]] <- list()
-    DAT[[j]][[1]] <- sig.list[[j]][[1]]$corr.dat
-    DAT[[j]][[2]] <- sig.list[[j]][[1]]$corr.sim
+    VALS[[j]] <- list()
+    VALS[[j]][[1]] <- sig.list[[j]][[1]]$corr.dat
+    VALS[[j]][[2]] <- sig.list[[j]][[1]]$corr.sim
 
-    DAT[[j]][[3]] <- list()
-    DAT[[j]][[3]][[1]] <- sig.list[[j]][[1]]$p.vals
-    DAT[[j]][[3]][[2]] <- sig.list[[j]][[2]]$p.vals
-    names(DAT[[j]][[3]]) <- c("10.x.n.snps", "1.x.n.snps")
+    VALS[[j]][[3]] <- list()
+    VALS[[j]][[3]][[1]] <- sig.list[[j]][[1]]$p.vals
+    VALS[[j]][[3]][[2]] <- sig.list[[j]][[2]]$p.vals
+    names(VALS[[j]][[3]]) <- c("10.x.n.snps", "1.x.n.snps")
 
 
-    names(DAT[[j]]) <- c("corr.dat",
+    names(VALS[[j]]) <- c("corr.dat",
                          "corr.sim",
                          "p.vals")
 
@@ -781,10 +800,17 @@ treeWAS <- function(snps,
   } # end for loop (j)
 
   ## assign test names to main list components:
-  names(RES) <- names(DAT) <- test
+  names(RES) <- names(VALS) <- test
+
+  ## get data:
+  DAT <- list(snps.sim = snps.sim,
+              snps.rec = snps.rec,
+              snps.sim.rec = snps.sim.rec,
+              phen.rec = phen.rec)
 
   ## get output:
   results <- list(dat=DAT,
+                  vals=VALS,
                   res=RES)
 
   return(results)

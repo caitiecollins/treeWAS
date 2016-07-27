@@ -494,17 +494,19 @@ asr <- function(var,
     }
 
     ## get sub locations on branches for all original sites
-    if(all.unique == TRUE){
-      subs.edges <- snps.subs.edges
-    }else{
-      subs.edges <- vector("list", ncol(snps.ori))
-      for(i in 1:length(snps.subs.edges)){
-        loc <- which(index == i)
-        if(length(loc) == 1){
-          subs.edges[[loc]] <- snps.subs.edges[[i]]
-        }else{
-          for(j in 1:length(loc)){
-            subs.edges[[loc[j]]] <- snps.subs.edges[[i]]
+    if(type == "parsimony"){
+      if(all.unique == TRUE){
+        subs.edges <- snps.subs.edges
+      }else{
+        subs.edges <- vector("list", ncol(snps.ori))
+        for(i in 1:length(snps.subs.edges)){
+          loc <- which(index == i)
+          if(length(loc) == 1){
+            subs.edges[[loc]] <- snps.subs.edges[[i]]
+          }else{
+            for(j in 1:length(loc)){
+              subs.edges[[loc[j]]] <- snps.subs.edges[[i]]
+            }
           }
         }
       }

@@ -271,6 +271,32 @@ get.sig.snps <- function(snps,
     #####################################
     ## (run w/ RECONSTRUCTIONS) ##
 
+    ############################
+    ## HANDLE RECONSTRUCTIONS ##
+    ############################
+
+    ## NOTE: If snps(.sim) are UNIQUE but snps(.sim).reconstruction are NOT, test will give INCORRECT OUTPUT!!!
+
+    if(all.unique == FALSE){
+      temp <- get.unique.matrix(snps.reconstruction, MARGIN=2)
+      snps.reconstruction <- temp$unique.data
+      snps.reconstruction.index <- temp$index
+      if(!identical(snps.reconstruction.index, snps.index)){
+        warning("Careful-- snps and snps.reconstruction should have the same index when reduced
+                to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+      }
+    }
+
+    if(all.unique.sim == FALSE){
+      temp <- get.unique.matrix(snps.sim.reconstruction, MARGIN=2)
+      snps.sim.reconstruction <- temp$unique.data
+      snps.sim.reconstruction.index <- temp$index
+      if(!identical(snps.sim.reconstruction.index, snps.sim.index)){
+        warning("Careful-- snps.sim and snps.sim.reconstruction should have the same index when reduced
+                to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+      }
+    }
+
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
