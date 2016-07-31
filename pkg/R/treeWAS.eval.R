@@ -133,7 +133,8 @@ treeWAS <- function(snps,
                     plot.null.dist = TRUE,
                     plot.dist = FALSE,
                     snps.reconstruction = "parsimony",
-                    phen.reconstruction = "parsimony"){
+                    phen.reconstruction = "parsimony",
+                    filename.plot = NULL){
 
   ###################
   ## LOAD PACKAGES ##
@@ -505,6 +506,9 @@ treeWAS <- function(snps,
 
   } # end reconstruction for tests 2 & 3
 
+  # save(snps.rec, file= "/home/caitiecollins/treeWAS/misc/snps.rec.Rdata")
+  # save(snps.sim.rec, file= "/home/caitiecollins/treeWAS/misc/snps.sim.rec.Rdata")
+  # save(phen.rec, file= "/home/caitiecollins/treeWAS/misc/phen.rec.Rdata")
 
   ###########################
   ## GET UNIQUE SNPS(.SIM) ##
@@ -518,18 +522,19 @@ treeWAS <- function(snps,
   ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
 
   ## Get UNIQUE snps + index
-  snps.ori <- snps
+  snps.complete <- snps
   temp <- get.unique.matrix(snps, MARGIN=2)
   snps.unique <- temp$unique.data
   snps.index <- temp$index
 
   ## Get UNIQUE snps.sim + index
-  snps.sim.ori <- snps.sim
+  snps.sim.complete <- snps.sim
   temp <- get.unique.matrix(snps.sim, MARGIN=2)
   snps.sim.unique <- temp$unique.data
   snps.sim.index <- temp$index
 
   ## Get UNIQUE snps.reconstruction
+  snps.rec.complete <- snps.rec
   temp <- get.unique.matrix(snps.rec, MARGIN=2)
   snps.rec <- temp$unique.data
   snps.rec.index <- temp$index
@@ -539,6 +544,7 @@ treeWAS <- function(snps,
   }
 
   ## Get UNIQUE snps.sim.reconstruction
+  snps.sim.rec.complete <- snps.sim.rec
   temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
   snps.sim.rec <- temp$unique.data
   snps.sim.rec.index <- temp$index
@@ -687,6 +693,15 @@ treeWAS <- function(snps,
                      min.p = NULL,
                      log10=FALSE,
                      ylab=paste(TEST[[j]], "score", sep=" "))
+
+      ## save plot:
+      if(!is.null(filename.plot)){
+        if(length(filename.plot) == length(sig.list)){
+          if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
+          dev.copy(pdf, file=filename.plot[[j]], width=7, height=11) # , pointsize=12
+          dev.off()
+        }
+      }
     }
 
   for(i in 1:length(sig.list[[j]])){

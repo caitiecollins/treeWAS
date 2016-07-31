@@ -371,6 +371,20 @@ simTest <- function(
     sim.n.snps.ori <- sim.n.snps
     if(is.null(sim.n.snps)) sim.n.snps <- ncol(snps)*10
 
+    #######################
+    ## save treeWAS plot ##
+    #######################
+    ## NB: plot.png will not be viewable until fn has finished running...
+    filename.plot[[i]] <- list()
+    for(t in 1:length(treeWAS.test)){
+      filename.plot[[i]][[t]] <- paste("./set",
+                                  set.number,
+                                  "_", number,
+                                  "_plot_",
+                                  treeWAS.test[t],
+                                  ".pdf", sep="")
+    }
+
     #################
     ## RUN treeWAS ##
     #################
@@ -393,25 +407,18 @@ simTest <- function(
                   plot.null.dist = FALSE,
                   plot.dist = FALSE,
                   snps.reconstruction = "parsimony",
-                  phen.reconstruction = "parsimony")
+                  phen.reconstruction = "parsimony",
+                  filename.plot=filename.plot[[i]])
     )
 
-    #######################
-    ## save treeWAS plot ##
-    #######################
-    ## NB: plot.png will not be viewable until fn has finished running...
-    filename.plot[[i]] <- paste("./set",
-                                set.number,
-                                "_", number,
-                                "_plot",
-                                ".pdf", sep="")
-    dev.copy(pdf, file=filename.plot[[i]], width=7, height=11) # , pointsize=12
-    dev.off()
+
+    # dev.copy(pdf, file=filename.plot[[i]], width=7, height=11) # , pointsize=12
+    # dev.off()
 
     ##################################
     ## isolate df of Sig SNPs found ##
     ##################################
-    res <- out$dat$sig.snps
+    res <- out$res
 
 
     ##############
@@ -502,333 +509,333 @@ simTest <- function(
     ################################################ *** PLINK  *** ###########################################################
     ###########################################################################################################################
 
-
-    ###################
-    ## RUNNING PLINK ##
-    ###################
-
-    ## Set working directory to run plink program
-    setwd("/media/caitiecollins/88CC9BCECC9BB4C2/Program Files/plink-1.07-dos")
-    plink.wd <- getwd()
-    #setwd(plink.wd)
-
-    #################
-    ## Handle DATA ##
-    #################
-
-    ## STORE ORIGINAL DATA FOR LATER ##
-    snps.ori <- snps
-    phen.ori <- phen
-
-    #     #######################
-    #     ## from.file = FALSE ##
-    #     #######################
-    #     if(from.file == FALSE){
-
-    ## If data was created during THIS round of simTest...
-
-    ###########################
-    ## CONVERT AND SAVE DATA ##
-    ###########################
-
-    ## set working directory for saving
-    dat.wd <- paste(working.dir, "/set", set.number, "/", sep="")
-    setwd(dat.wd)
-
-    ##################################
-    ## convert snps --> ped format: ##
-    ##################################
-
-    ## PED FORMAT: ##
-    ## 6 "MANDATORY" COLUMNS first:
-    ## FamilyID, IndividualID, PaternalID, MaternalID, Sex, Phenotype
-    #### ... EXCLUDE OTHER "mandatory" columns w PLINK commands
-    #### --> (IndividualID, Phenotype)
-    ## 7-to-p: GENOTYPE COLUMNS
-    ## NO HEADER ROW (belongs in .MAP file)
-
-    ## SNPs can NOT be 0 --> convert from 0/1 to 1/2:
-    snps <- snps+1
-    row.names(snps) <- paste("ind", row.names(snps), sep=".")
-    ## save row and column names for elsewhere:
-    individualID <- row.names(snps)
-    loci.names <- colnames(snps)
-
-    ## convert to matrix:
-    snps <- matrix(snps, byrow=FALSE, ncol=ncol(snps))
-    ## Replace every other column with a copy of the column before it:
-    ## NOTE--THIS MAY CHANGE (ie. IF WORKING INSTEAD WITH DATA AS MT DNA....)
-    #snps[,seq(2, ncol(snps), 2)] <- snps[,seq(1, ncol(snps), 2)]
-    ## DUPLICATE columns:
-    snps.ori <- snps
-    snps.new <- matrix(NA, nrow=nrow(snps.ori), ncol=2*ncol(snps.ori))
-    snps.new[, seq(1, 2*ncol(snps.ori), 2)] <- snps.ori
-    snps.new[, seq(2, 2*ncol(snps.ori), 2)] <- snps.ori
-    snps <- snps.new
-
-    ## recode phen: S/A as 0, R/B as 1:
-    phen <- as.character(phen)
-    # set1 was coded S/R originally
-    phen <- replace(phen, which(phen=="S"), 1)
-    phen <- replace(phen, which(phen=="R"), 2)
-    # most should be coded A/B
-    phen <- replace(phen, which(phen=="A"), 1)
-    phen <- replace(phen, which(phen=="B"), 2)
-
-    ## bind individualID, phen, snps
-    dat <- cbind(individualID, phen, snps)
-    colnames(dat) <- NULL
-
-    ped <- dat
-
-    ## get filename
-    uniqueID <- paste("set", set.number, "_", number, sep="")
-    filename <- paste("./", uniqueID, "_ped.Rdata", sep="")
-
-    ## save dat.ped as Rdata
-    save(ped, file=filename)
-    #ped <- get(load("C:/Cait 2012/Work/Xavier/Sims/set3/set3_1_ped.Rdata"))
-
-    ## save as text!
-    #ped <- dat
-    filename <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".txt", sep="")
-    write.table(ped, file=filename, quote=FALSE, row.names=FALSE, col.names=FALSE)
-
-    ## Do NOT save as .PED
-    ## convert from text to PED!!
-
-    ## UHOH -- STOPPED HERE -- SHELL COMMAND DOESNT SEEM TO BE WORKING FROM LINUX!!!!!!!!!!!!!!!!!!
-    ## SYSTEM COMMAND NOT READING FILE NAMES CORRECTLY....????????????????///
-
-    #     filename.ori <- paste("\\media\\caitiecollins\\88CC9BCECC9BB4C2\\PLINK\\", uniqueID, ".txt", sep="")
-    #     filename.new <- paste("\\media\\caitiecollins\\88CC9BCECC9BB4C2\\PLINK\\", uniqueID, ".ped", sep="")
-
-    filename.ori <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".txt", sep="")
-    filename.new <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".ped", sep="")
-
-    # /media/caitiecollins/88CC9BCECC9BB4C2/PLINK
-    command <- paste("mv", filename.ori, filename.new, sep=" ")
-    # shell(command)
-    system(command)
-
-
-    ####################################
-    ## convert snp meta-data --> .map ##
-    ####################################
-
-    ## MAP format: ##
-    ## EACH LINE of a .map file describes a SINGLE marker.
-    ## Contains 4 "MANDATORY" COLUMNS:
-    ## Chromosome, rs#/SNP identifier, (Genetic distance), Base-pair position.
-
-
-    ## loci.names:
-    ## SHOULD BE ONE NAME PER SITE (ie. PER TWO LOCI): ie. L001, NOT L001.1, L001.2 !!!!
-    ## remove last TWO characters (ie. decimal and trailing digit):
-    #       loci.names <- substr(loci.names, 1, nchar(loci.names)-2)
-    #       ## keep only every other:
-    #       loci.names <- loci.names[seq(1, length(loci.names), 2)]
-    ## OR: # loci.names <- unique(loci.names)
-
-    ## make dummy variables for irrelevant fields:
-    chromosome <- rep(26, length(loci.names)) # 26 = human mitochondrial (haploid)
-    gen.dist <- rep(0, length(loci.names))
-    ## get base-pair posi (ie. loci name - L):
-    bp <- loci.names
-    bp <- as.numeric(gsub("L", "", bp))
-    dat <- data.frame(chromosome, loci.names, gen.dist, bp)
-
-    ## as matrix, no header:
-    dat <- as.matrix(dat, byrow=FALSE, ncol=ncol(dat))
-    colnames(dat) <- NULL
-
-    map <- dat
-
-    ## get filename
-    uniqueID <- paste("set", set.number, "_", number, sep="")
-    filename <- paste("./", uniqueID, "_map.Rdata", sep="")
-
-    ## save dat.map as Rdata
-    save(map, file=filename)
-    #map <- get(load("C:/Cait 2012/Work/Xavier/Sims/set3/set3_1_map.Rdata"))
-
-    ## save as text!
-    filename <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".txt", sep="")
-    write.table(map, file=filename, quote=FALSE, row.names=FALSE, col.names=FALSE)
-
-    ## Do NOT save as .MAP
-    ## convert from text to MAP!!
-
-    #     filename.ori <- paste("C:\\PLINK\\", uniqueID, ".txt", sep="")
-    #     filename.new <- paste("C:\\PLINK\\", uniqueID, ".map", sep="")
-
-    filename.ori <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".txt", sep="")
-    filename.new <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".map", sep="")
-    command <- paste("mv", filename.ori, filename.new, sep=" ")
-    # shell(command)
-    system(command)
-
-    ###### ###### ###### ######
-
-    #     }else{ # end from.file = FALSE
     #
-    #       ######################
-    #       ## from.file = TRUE ##
-    #       ######################
+    #     ###################
+    #     ## RUNNING PLINK ##
+    #     ###################
     #
-    #     } # end from.file = TRUE
-
-
-    ########## #################### ########## #################### #################### ########## ####################
-
-
-    #####################
-    ## GWAS with PLINK ##
-    #####################
-
-    ## set wd for PLINK program
-    setwd(plink.wd)
-
-    ## get filename
-    # filename <- paste("C:\\PLINK\\", uniqueID, sep="")
-    filename <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, sep="")
-
-
-    ## inspect file?
-    command <- paste("plink --file ", filename, " --no-fid --no-parents --no-sex --allow-no-sex", sep="")
-    #shell(command)
-
-    ## make a binary PED file ##
-    ## (provide the full path, not just the file name)
-    command <- paste("plink --file ", filename, " --make-bed --no-fid --no-parents --no-sex --allow-no-sex --out ", filename, sep="")
-    # shell(command)
-    system(command)
-    ## SYSTEM(COMMAND) FAILS HERE WITH THE FOLLOWING ERROR #################################################    ####    ####    ####    ####    ####    ####
-
-    # sh: 1: plink: not found
-
-    ## PROBABLY NEED TO FIND SOLN AND APPLY IT TO ALL PLINK-RELATED CODE, STARTING WELL ABOVE HERE....................................................................
-    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####
-    ## use --bfile to work with the BINARY file
-    # (same as --file, but loads the binary one and prints summary stats)
-    command <- paste("plink --bfile ", filename, " --no-fid --no-parents --no-sex --allow-no-sex", sep="")
-    #shell(command)
-
-    #######################
-    ## basic association ##
-    #######################
-    ##--> 1df chi-square test
-
-    ## check freq of SNPs...?
-    command <- paste("plink --file ", filename, " --no-fid --no-parents --no-sex --allow-no-sex --freq --out ", filename, sep="")
-    shell(command)
-    ## yay!
-    filename <- paste("C:/PLINK/", uniqueID, ".frq", sep="")
-    freq <- read.table(filename, header=TRUE)
-    #head(freq)
-
-    ## perform a basic association analysis on the disease trait for all single SNPs
-    filename <- paste("C:\\PLINK\\", uniqueID, sep="")
-    command <- paste("plink --bfile ",  filename, " --assoc --counts --allow-no-sex --out ", filename, sep="")
-    shell(command)
-
-    ## to view the file you created, just read it in with R:
-    filename <- paste("C:/PLINK/", uniqueID, ".assoc", sep="")
-    plink.res <- read.table(filename, header=TRUE)
-    #head(plink.res)
-
-
-    ## get p.vals
-    pval.plink.assoc <- plink.res$P
-
-    ## get sig ##
-
-    ## p.thresh:
-    p.thresh <- p.value # 0.05 # 0.01 # 0.001 # ??
-
-
-    ## Uncorrected ##
-    plink.assoc.snps.uncorr <- snps.names[which(pval.plink.assoc < p.thresh)]
-
-    ## Bonferonni ##
-    p.vals.bonf <- p.adjust(pval.plink.assoc, "bonferroni")
-    p.bonf <- which(p.vals.bonf < p.thresh)
-    plink.assoc.snps.bonf <- snps.names[p.bonf]
-
-    ## FDR ##
-    p.vals.fdr <- p.adjust(pval.plink.assoc, "fdr")
-    p.fdr <- which(p.vals.fdr < p.thresh)
-    plink.assoc.snps.fdr <- snps.names[p.fdr]
-
-    ## CONVERT 0-LENGTH RESULTS TO NULL
-    if(length(plink.assoc.snps.uncorr) == 0) plink.assoc.snps.uncorr <- NULL
-    if(length(plink.assoc.snps.bonf) == 0) plink.assoc.snps.bonf <- NULL
-    if(length(plink.assoc.snps.fdr) == 0) plink.assoc.snps.fdr <- NULL
-
-    ## STORE PLINK TEST RESULTS ##
-    plink.assoc.results <- list(pval.plink.assoc, plink.assoc.snps.uncorr, plink.assoc.snps.bonf, plink.assoc.snps.fdr)
-    names(plink.assoc.results) <- c("pval.plink.assoc", "plink.assoc.snps.uncorr", "plink.assoc.snps.bonf", "plink.assoc.snps.fdr")
-
-    ############################################
-
-    ########################################################
-    ## association w control for genomic inflation factor ##
-    ########################################################
-    ##--> 1df chi-square test
-
-    ## perform a basic association analysis on the disease trait for all single SNPs
-    filename <- paste("C:\\PLINK\\", uniqueID, sep="")
-    command <- paste("plink --bfile ",  filename, " --assoc --adjust --gc --counts --allow-no-sex --out ", filename, sep="")
-    shell(command)
-
-    ## to view the file you created, just read it in with R:
-    filename <- paste("C:/PLINK/", uniqueID, ".assoc.adjusted", sep="")
-    plink.res <- read.table(filename, header=TRUE)
-    #head(plink.res)
-    ## NOT SURE WHY, BUT THE "UNADJ" p-values and the "GC" p-values are the same
-    ## in this table (even though the "UNADJ" p-values are not actually the same
-    ## as those in the plink.res from the basic association test above,
-    ## AND, in this case, lambdaGC was 5.12 and the mean chi-squared was 4.63!!!!!)
-
-
-    ## get p.vals
-    pval.plink.assoc.gc <- plink.res$P
-
-    ## get sig ##
-
-    ## p.thresh:
-    p.thresh <- p.value # 0.05 # 0.01 # 0.001 # ??
-
-
-    ## Uncorrected ##
-    plink.assoc.gc.snps.uncorr <- snps.names[which(pval.plink.assoc.gc < p.thresh)]
-
-    ## Bonferonni ##
-    p.vals.bonf <- p.adjust(pval.plink.assoc.gc, "bonferroni")
-    p.bonf <- which(p.vals.bonf < p.thresh)
-    plink.assoc.gc.snps.bonf <- snps.names[p.bonf]
-
-    ## FDR ##
-    p.vals.fdr <- p.adjust(pval.plink.assoc.gc, "fdr")
-    p.fdr <- which(p.vals.fdr < p.thresh)
-    plink.assoc.gc.snps.fdr <- snps.names[p.fdr]
-
-    ## CONVERT 0-LENGTH RESULTS TO NULL
-    if(length(plink.assoc.snps.uncorr) == 0) plink.assoc.gc.snps.uncorr <- NULL
-    if(length(plink.assoc.snps.bonf) == 0) plink.assoc.gc.snps.bonf <- NULL
-    if(length(plink.assoc.snps.fdr) == 0) plink.assoc.gc.snps.fdr <- NULL
-
-
-    ## STORE PLINK TEST RESULTS ##
-    plink.assoc.gc.results <- list(pval.plink.assoc.gc, plink.assoc.gc.snps.uncorr, plink.assoc.gc.snps.bonf, plink.assoc.gc.snps.fdr)
-    names(plink.assoc.gc.results) <- c("pval.plink.assoc.gc", "plink.assoc.gc.snps.uncorr", "plink.assoc.gc.snps.bonf", "plink.assoc.gc.snps.fdr")
-
-
-    ############################################
-
-    ## STORE COMBINED PLINK RESULTS ##
-    plink.results <- list(plink.assoc.results,
-                          plink.assoc.gc.results)
+    #     ## Set working directory to run plink program
+    #     setwd("/media/caitiecollins/88CC9BCECC9BB4C2/Program Files/plink-1.07-dos")
+    #     plink.wd <- getwd()
+    #     #setwd(plink.wd)
+    #
+    #     #################
+    #     ## Handle DATA ##
+    #     #################
+    #
+    #     ## STORE ORIGINAL DATA FOR LATER ##
+    #     snps.ori <- snps
+    #     phen.ori <- phen
+    #
+    #     #     #######################
+    #     #     ## from.file = FALSE ##
+    #     #     #######################
+    #     #     if(from.file == FALSE){
+    #
+    #     ## If data was created during THIS round of simTest...
+    #
+    #     ###########################
+    #     ## CONVERT AND SAVE DATA ##
+    #     ###########################
+    #
+    #     ## set working directory for saving
+    #     dat.wd <- paste(working.dir, "/set", set.number, "/", sep="")
+    #     setwd(dat.wd)
+    #
+    #     ##################################
+    #     ## convert snps --> ped format: ##
+    #     ##################################
+    #
+    #     ## PED FORMAT: ##
+    #     ## 6 "MANDATORY" COLUMNS first:
+    #     ## FamilyID, IndividualID, PaternalID, MaternalID, Sex, Phenotype
+    #     #### ... EXCLUDE OTHER "mandatory" columns w PLINK commands
+    #     #### --> (IndividualID, Phenotype)
+    #     ## 7-to-p: GENOTYPE COLUMNS
+    #     ## NO HEADER ROW (belongs in .MAP file)
+    #
+    #     ## SNPs can NOT be 0 --> convert from 0/1 to 1/2:
+    #     snps <- snps+1
+    #     row.names(snps) <- paste("ind", row.names(snps), sep=".")
+    #     ## save row and column names for elsewhere:
+    #     individualID <- row.names(snps)
+    #     loci.names <- colnames(snps)
+    #
+    #     ## convert to matrix:
+    #     snps <- matrix(snps, byrow=FALSE, ncol=ncol(snps))
+    #     ## Replace every other column with a copy of the column before it:
+    #     ## NOTE--THIS MAY CHANGE (ie. IF WORKING INSTEAD WITH DATA AS MT DNA....)
+    #     #snps[,seq(2, ncol(snps), 2)] <- snps[,seq(1, ncol(snps), 2)]
+    #     ## DUPLICATE columns:
+    #     snps.ori <- snps
+    #     snps.new <- matrix(NA, nrow=nrow(snps.ori), ncol=2*ncol(snps.ori))
+    #     snps.new[, seq(1, 2*ncol(snps.ori), 2)] <- snps.ori
+    #     snps.new[, seq(2, 2*ncol(snps.ori), 2)] <- snps.ori
+    #     snps <- snps.new
+    #
+    #     ## recode phen: S/A as 0, R/B as 1:
+    #     phen <- as.character(phen)
+    #     # set1 was coded S/R originally
+    #     phen <- replace(phen, which(phen=="S"), 1)
+    #     phen <- replace(phen, which(phen=="R"), 2)
+    #     # most should be coded A/B
+    #     phen <- replace(phen, which(phen=="A"), 1)
+    #     phen <- replace(phen, which(phen=="B"), 2)
+    #
+    #     ## bind individualID, phen, snps
+    #     dat <- cbind(individualID, phen, snps)
+    #     colnames(dat) <- NULL
+    #
+    #     ped <- dat
+    #
+    #     ## get filename
+    #     uniqueID <- paste("set", set.number, "_", number, sep="")
+    #     filename <- paste("./", uniqueID, "_ped.Rdata", sep="")
+    #
+    #     ## save dat.ped as Rdata
+    #     save(ped, file=filename)
+    #     #ped <- get(load("C:/Cait 2012/Work/Xavier/Sims/set3/set3_1_ped.Rdata"))
+    #
+    #     ## save as text!
+    #     #ped <- dat
+    #     filename <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".txt", sep="")
+    #     write.table(ped, file=filename, quote=FALSE, row.names=FALSE, col.names=FALSE)
+    #
+    #     ## Do NOT save as .PED
+    #     ## convert from text to PED!!
+    #
+    #     ## UHOH -- STOPPED HERE -- SHELL COMMAND DOESNT SEEM TO BE WORKING FROM LINUX!!!!!!!!!!!!!!!!!!
+    #     ## SYSTEM COMMAND NOT READING FILE NAMES CORRECTLY....????????????????///
+    #
+    #     #     filename.ori <- paste("\\media\\caitiecollins\\88CC9BCECC9BB4C2\\PLINK\\", uniqueID, ".txt", sep="")
+    #     #     filename.new <- paste("\\media\\caitiecollins\\88CC9BCECC9BB4C2\\PLINK\\", uniqueID, ".ped", sep="")
+    #
+    #     filename.ori <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".txt", sep="")
+    #     filename.new <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".ped", sep="")
+    #
+    #     # /media/caitiecollins/88CC9BCECC9BB4C2/PLINK
+    #     command <- paste("mv", filename.ori, filename.new, sep=" ")
+    #     # shell(command)
+    #     system(command)
+    #
+    #
+    #     ####################################
+    #     ## convert snp meta-data --> .map ##
+    #     ####################################
+    #
+    #     ## MAP format: ##
+    #     ## EACH LINE of a .map file describes a SINGLE marker.
+    #     ## Contains 4 "MANDATORY" COLUMNS:
+    #     ## Chromosome, rs#/SNP identifier, (Genetic distance), Base-pair position.
+    #
+    #
+    #     ## loci.names:
+    #     ## SHOULD BE ONE NAME PER SITE (ie. PER TWO LOCI): ie. L001, NOT L001.1, L001.2 !!!!
+    #     ## remove last TWO characters (ie. decimal and trailing digit):
+    #     #       loci.names <- substr(loci.names, 1, nchar(loci.names)-2)
+    #     #       ## keep only every other:
+    #     #       loci.names <- loci.names[seq(1, length(loci.names), 2)]
+    #     ## OR: # loci.names <- unique(loci.names)
+    #
+    #     ## make dummy variables for irrelevant fields:
+    #     chromosome <- rep(26, length(loci.names)) # 26 = human mitochondrial (haploid)
+    #     gen.dist <- rep(0, length(loci.names))
+    #     ## get base-pair posi (ie. loci name - L):
+    #     bp <- loci.names
+    #     bp <- as.numeric(gsub("L", "", bp))
+    #     dat <- data.frame(chromosome, loci.names, gen.dist, bp)
+    #
+    #     ## as matrix, no header:
+    #     dat <- as.matrix(dat, byrow=FALSE, ncol=ncol(dat))
+    #     colnames(dat) <- NULL
+    #
+    #     map <- dat
+    #
+    #     ## get filename
+    #     uniqueID <- paste("set", set.number, "_", number, sep="")
+    #     filename <- paste("./", uniqueID, "_map.Rdata", sep="")
+    #
+    #     ## save dat.map as Rdata
+    #     save(map, file=filename)
+    #     #map <- get(load("C:/Cait 2012/Work/Xavier/Sims/set3/set3_1_map.Rdata"))
+    #
+    #     ## save as text!
+    #     filename <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".txt", sep="")
+    #     write.table(map, file=filename, quote=FALSE, row.names=FALSE, col.names=FALSE)
+    #
+    #     ## Do NOT save as .MAP
+    #     ## convert from text to MAP!!
+    #
+    #     #     filename.ori <- paste("C:\\PLINK\\", uniqueID, ".txt", sep="")
+    #     #     filename.new <- paste("C:\\PLINK\\", uniqueID, ".map", sep="")
+    #
+    #     filename.ori <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".txt", sep="")
+    #     filename.new <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, ".map", sep="")
+    #     command <- paste("mv", filename.ori, filename.new, sep=" ")
+    #     # shell(command)
+    #     system(command)
+    #
+    #     ###### ###### ###### ######
+    #
+    #     #     }else{ # end from.file = FALSE
+    #     #
+    #     #       ######################
+    #     #       ## from.file = TRUE ##
+    #     #       ######################
+    #     #
+    #     #     } # end from.file = TRUE
+    #
+    #
+    #     ########## #################### ########## #################### #################### ########## ####################
+    #
+    #
+    #     #####################
+    #     ## GWAS with PLINK ##
+    #     #####################
+    #
+    #     ## set wd for PLINK program
+    #     setwd(plink.wd)
+    #
+    #     ## get filename
+    #     # filename <- paste("C:\\PLINK\\", uniqueID, sep="")
+    #     filename <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/PLINK/", uniqueID, sep="")
+    #
+    #
+    #     ## inspect file?
+    #     command <- paste("plink --file ", filename, " --no-fid --no-parents --no-sex --allow-no-sex", sep="")
+    #     #shell(command)
+    #
+    #     ## make a binary PED file ##
+    #     ## (provide the full path, not just the file name)
+    #     command <- paste("plink --file ", filename, " --make-bed --no-fid --no-parents --no-sex --allow-no-sex --out ", filename, sep="")
+    #     # shell(command)
+    #     system(command)
+    #     ## SYSTEM(COMMAND) FAILS HERE WITH THE FOLLOWING ERROR #################################################    ####    ####    ####    ####    ####    ####
+    #
+    #     # sh: 1: plink: not found
+    #
+    #     ## PROBABLY NEED TO FIND SOLN AND APPLY IT TO ALL PLINK-RELATED CODE, STARTING WELL ABOVE HERE....................................................................
+    #     ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####
+    #     ## use --bfile to work with the BINARY file
+    #     # (same as --file, but loads the binary one and prints summary stats)
+    #     command <- paste("plink --bfile ", filename, " --no-fid --no-parents --no-sex --allow-no-sex", sep="")
+    #     #shell(command)
+    #
+    #     #######################
+    #     ## basic association ##
+    #     #######################
+    #     ##--> 1df chi-square test
+    #
+    #     ## check freq of SNPs...?
+    #     command <- paste("plink --file ", filename, " --no-fid --no-parents --no-sex --allow-no-sex --freq --out ", filename, sep="")
+    #     shell(command)
+    #     ## yay!
+    #     filename <- paste("C:/PLINK/", uniqueID, ".frq", sep="")
+    #     freq <- read.table(filename, header=TRUE)
+    #     #head(freq)
+    #
+    #     ## perform a basic association analysis on the disease trait for all single SNPs
+    #     filename <- paste("C:\\PLINK\\", uniqueID, sep="")
+    #     command <- paste("plink --bfile ",  filename, " --assoc --counts --allow-no-sex --out ", filename, sep="")
+    #     shell(command)
+    #
+    #     ## to view the file you created, just read it in with R:
+    #     filename <- paste("C:/PLINK/", uniqueID, ".assoc", sep="")
+    #     plink.res <- read.table(filename, header=TRUE)
+    #     #head(plink.res)
+    #
+    #
+    #     ## get p.vals
+    #     pval.plink.assoc <- plink.res$P
+    #
+    #     ## get sig ##
+    #
+    #     ## p.thresh:
+    #     p.thresh <- p.value # 0.05 # 0.01 # 0.001 # ??
+    #
+    #
+    #     ## Uncorrected ##
+    #     plink.assoc.snps.uncorr <- snps.names[which(pval.plink.assoc < p.thresh)]
+    #
+    #     ## Bonferonni ##
+    #     p.vals.bonf <- p.adjust(pval.plink.assoc, "bonferroni")
+    #     p.bonf <- which(p.vals.bonf < p.thresh)
+    #     plink.assoc.snps.bonf <- snps.names[p.bonf]
+    #
+    #     ## FDR ##
+    #     p.vals.fdr <- p.adjust(pval.plink.assoc, "fdr")
+    #     p.fdr <- which(p.vals.fdr < p.thresh)
+    #     plink.assoc.snps.fdr <- snps.names[p.fdr]
+    #
+    #     ## CONVERT 0-LENGTH RESULTS TO NULL
+    #     if(length(plink.assoc.snps.uncorr) == 0) plink.assoc.snps.uncorr <- NULL
+    #     if(length(plink.assoc.snps.bonf) == 0) plink.assoc.snps.bonf <- NULL
+    #     if(length(plink.assoc.snps.fdr) == 0) plink.assoc.snps.fdr <- NULL
+    #
+    #     ## STORE PLINK TEST RESULTS ##
+    #     plink.assoc.results <- list(pval.plink.assoc, plink.assoc.snps.uncorr, plink.assoc.snps.bonf, plink.assoc.snps.fdr)
+    #     names(plink.assoc.results) <- c("pval.plink.assoc", "plink.assoc.snps.uncorr", "plink.assoc.snps.bonf", "plink.assoc.snps.fdr")
+    #
+    #     ############################################
+    #
+    #     ########################################################
+    #     ## association w control for genomic inflation factor ##
+    #     ########################################################
+    #     ##--> 1df chi-square test
+    #
+    #     ## perform a basic association analysis on the disease trait for all single SNPs
+    #     filename <- paste("C:\\PLINK\\", uniqueID, sep="")
+    #     command <- paste("plink --bfile ",  filename, " --assoc --adjust --gc --counts --allow-no-sex --out ", filename, sep="")
+    #     shell(command)
+    #
+    #     ## to view the file you created, just read it in with R:
+    #     filename <- paste("C:/PLINK/", uniqueID, ".assoc.adjusted", sep="")
+    #     plink.res <- read.table(filename, header=TRUE)
+    #     #head(plink.res)
+    #     ## NOT SURE WHY, BUT THE "UNADJ" p-values and the "GC" p-values are the same
+    #     ## in this table (even though the "UNADJ" p-values are not actually the same
+    #     ## as those in the plink.res from the basic association test above,
+    #     ## AND, in this case, lambdaGC was 5.12 and the mean chi-squared was 4.63!!!!!)
+    #
+    #
+    #     ## get p.vals
+    #     pval.plink.assoc.gc <- plink.res$P
+    #
+    #     ## get sig ##
+    #
+    #     ## p.thresh:
+    #     p.thresh <- p.value # 0.05 # 0.01 # 0.001 # ??
+    #
+    #
+    #     ## Uncorrected ##
+    #     plink.assoc.gc.snps.uncorr <- snps.names[which(pval.plink.assoc.gc < p.thresh)]
+    #
+    #     ## Bonferonni ##
+    #     p.vals.bonf <- p.adjust(pval.plink.assoc.gc, "bonferroni")
+    #     p.bonf <- which(p.vals.bonf < p.thresh)
+    #     plink.assoc.gc.snps.bonf <- snps.names[p.bonf]
+    #
+    #     ## FDR ##
+    #     p.vals.fdr <- p.adjust(pval.plink.assoc.gc, "fdr")
+    #     p.fdr <- which(p.vals.fdr < p.thresh)
+    #     plink.assoc.gc.snps.fdr <- snps.names[p.fdr]
+    #
+    #     ## CONVERT 0-LENGTH RESULTS TO NULL
+    #     if(length(plink.assoc.snps.uncorr) == 0) plink.assoc.gc.snps.uncorr <- NULL
+    #     if(length(plink.assoc.snps.bonf) == 0) plink.assoc.gc.snps.bonf <- NULL
+    #     if(length(plink.assoc.snps.fdr) == 0) plink.assoc.gc.snps.fdr <- NULL
+    #
+    #
+    #     ## STORE PLINK TEST RESULTS ##
+    #     plink.assoc.gc.results <- list(pval.plink.assoc.gc, plink.assoc.gc.snps.uncorr, plink.assoc.gc.snps.bonf, plink.assoc.gc.snps.fdr)
+    #     names(plink.assoc.gc.results) <- c("pval.plink.assoc.gc", "plink.assoc.gc.snps.uncorr", "plink.assoc.gc.snps.bonf", "plink.assoc.gc.snps.fdr")
+    #
+    #
+    #     ############################################
+    #
+    #     ## STORE COMBINED PLINK RESULTS ##
+    #     plink.results <- list(plink.assoc.results,
+    #                           plink.assoc.gc.results)
 
     ###########################################################################################################################
     ############################################# *** PERFORMANCE *** #########################################################
@@ -855,27 +862,65 @@ simTest <- function(
     ##############################
     ## FOR LOOP FOR ALL 3 TESTS ##
     ##############################
-    for(j in 2:8){
+    for(j in 2:99){
 
-      if(j==2) test <- "treeWAS"
-      if(j==3) test <- "fisher.bonf"
-      if(j==4) test <- "fisher.fdr"
-      if(j==5) test <- "plink.assoc.bonf"
-      if(j==6) test <- "plink.assoc.fdr"
-      if(j==7) test <- "plink.assoc.gc.bonf"
-      if(j==8) test <- "plink.assoc.gc.fdr"
 
-      #############
-      ## treeWAS ##
-      #############
-      if(test == "treeWAS"){
-        ## get test.positive
-        if(class(res)=="data.frame"){
-          test.positive <- as.character(res$SNP.locus)
-        }else{
-          test.positive <- NULL
-        }
-      } # end test = treeWAS
+      if(j==2) test <- "fisher.bonf"
+      if(j==3) test <- "fisher.fdr"
+
+      # if(j==5) test <- "plink.assoc.bonf"
+      # if(j==6) test <- "plink.assoc.fdr"
+      # if(j==7) test <- "plink.assoc.gc.bonf"
+      # if(j==8) test <- "plink.assoc.gc.fdr"
+
+      if(j %in% 4:99) test <- "treeWAS"
+
+      ## get test run:
+      if(j %in% 4:35)  t <- "terminal"
+      if(j %in% 36:67) t <- "simultaneous"
+      if(j %in% 68:99) t <- "subsequent"
+
+      # ###########
+      # ## PLINK ## ########### ########### ########### ########### ########### ###########
+      # ###########
+      #
+      # ## Basic association ##
+      #
+      # ######################
+      # ## plink.assoc.bonf ##
+      # ######################
+      # if(test == "plink.assoc.bonf"){
+      #   test.positive <- plink.assoc.snps.bonf
+      # } # end test = plink.assoc.bonf
+      #
+      # #####################
+      # ## plink.assoc.fdr ##
+      # #####################
+      # if(test == "plink.assoc.fdr"){
+      #   test.positive <- plink.assoc.snps.fdr
+      # } # end test = plink.assoc.fdr
+      #
+      #
+      # ## Corrected w Genomic Control ##
+      #
+      # #########################
+      # ## plink.assoc.gc.bonf ##
+      # #########################
+      # if(test == "plink.assoc.bonf"){
+      #   test.positive <- plink.assoc.gc.snps.bonf
+      # } # end test = plink.assoc.bonf
+      #
+      # ########################
+      # ## plink.assoc.gc.fdr ##
+      # ########################
+      # if(test == "plink.assoc.fdr"){
+      #   test.positive <- plink.assoc.gc.snps.fdr
+      # } # end test = plink.assoc.fdr
+      #
+      # ########### ########### ########### ########### ########### ########### ###########
+
+
+
       #################
       ## fisher.bonf ##
       #################
@@ -890,44 +935,36 @@ simTest <- function(
         test.positive <- fisher.snps.fdr
       } # end test = fisher.fdr
 
-      ###########
-      ## PLINK ## ########### ########### ########### ########### ########### ###########
-      ###########
-
-      ## Basic association ##
-
-      ######################
-      ## plink.assoc.bonf ##
-      ######################
-      if(test == "plink.assoc.bonf"){
-        test.positive <- plink.assoc.snps.bonf
-      } # end test = plink.assoc.bonf
-
-      #####################
-      ## plink.assoc.fdr ##
-      #####################
-      if(test == "plink.assoc.fdr"){
-        test.positive <- plink.assoc.snps.fdr
-      } # end test = plink.assoc.fdr
-
-
-      ## Corrected w Genomic Control ##
-
-      #########################
-      ## plink.assoc.gc.bonf ##
-      #########################
-      if(test == "plink.assoc.bonf"){
-        test.positive <- plink.assoc.gc.snps.bonf
-      } # end test = plink.assoc.bonf
-
-      ########################
-      ## plink.assoc.gc.fdr ##
-      ########################
-      if(test == "plink.assoc.fdr"){
-        test.positive <- plink.assoc.gc.snps.fdr
-      } # end test = plink.assoc.fdr
 
       ########### ########### ########### ########### ########### ########### ###########
+
+      #############
+      ## treeWAS ##
+      #############
+      if(test == "treeWAS"){
+
+        if(j %in% 4:35)  N <- 3
+        if(j %in% 36:67) N <- 35
+        if(j %in% 68:99) N <- 67
+
+        ## get test.positive
+        if(class(res[[t]][[(j-N)]]$sig.snps)=="data.frame"){
+          # test.positive <- as.character(res$SNP.locus)
+          test.positive <- as.character(res[[t]][[(j-N)]]$sig.snps$SNP.locus)
+        }else{
+          test.positive <- NULL
+        }
+      } # end test = treeWAS
+
+      ########### ########### ########### ########### ########### ########### ###########
+
+
+
+      if(is.null(names(snps.assoc))) names(snps.assoc) <- as.character(snps.assoc)
+      if(is.null(snps.names)){
+        if(is.null(colnames(snps))) colnames(snps) <- as.character(1:ncol(snps))
+        snps.names <- colnames(snps)
+      }
 
       #########################
       ## common calculations ##
@@ -945,29 +982,31 @@ simTest <- function(
       ## get n.test.negative
       n.test.negative <- length(test.negative) ## == n.tests - n.test.positive
 
+      n.tests <- ncol(snps)
+
       ########################
       ## GET TP, TN, FP, FN ##
       ########################
       ## get true positives
       ## for Set 3 there is 1 associated SNP, so 1 true positives...
-      if(set.number < 3){
-        snps.associated <- NULL
-      }else{
-        #         snps.associated <- paste(sapply(c(1:length(snps.assoc)),
-        #                                         function(e)
-        #                                           rep(names(snps.assoc)[e], 2)), c(1, 2), sep=".")
+      # if(set.number < 3){
+      #   snps.associated <- NULL
+      # }else{
+      #   #         snps.associated <- paste(sapply(c(1:length(snps.assoc)),
+      #   #                                         function(e)
+      #   #                                           rep(names(snps.assoc)[e], 2)), c(1, 2), sep=".")
         snps.associated <- names(snps.assoc)
-      }
+      # }
       true.positive <- test.positive[which(test.positive %in% snps.associated)]
       TP <- length(true.positive)
 
       ## get true negatives
       ## for Set 3 all but ONE SNPs are NOT (intentionally) associated with the phenotype
-      if(set.number < 3){
-        snps.not <- snps.names
-      }else{
+      # if(set.number < 3){
+      #   snps.not <- snps.names
+      # }else{
         snps.not <- snps.names[-which(snps.names %in% snps.associated)]
-      }
+      # }
       true.negative <- test.negative[which(test.negative %in% snps.not)]
       TN <- length(true.negative)
 
@@ -1052,11 +1091,24 @@ simTest <- function(
 
     } # end for loop
 
+    ## get names for treeWAS tests:
+    treeWAS.names <- list()
+
+    for(i in 1:length(res)){
+      if(i == 1) t <- "terminal"
+      if(i == 2) t <- "simultaneous"
+      if(i == 3) t <- "subsequent"
+
+      treeWAS.names[[i]] <- paste("treeWAS", t, names(res[[t]]), sep=".")
+    }
+
+    treeWAS.names <- as.vector(unlist(treeWAS.names))
+
     names(performance) <- c("snps.assoc",
-                            "treeWAS",
                             "fisher.bonf", "fisher.fdr",
-                            "plink.assoc.bonf", "plink.assoc.fdr",
-                            "plink.assoc.gc.bonf", "plink.assoc.gc.fdr")
+                            # "plink.assoc.bonf", "plink.assoc.fdr",
+                            # "plink.assoc.gc.bonf", "plink.assoc.gc.fdr"
+                            treeWAS.names)
 
     ################################    ################################    ################################
 
@@ -1095,8 +1147,8 @@ simTest <- function(
     filename.fisher.results[[i]] <- paste("./", uniqueID, "_fisher.results", ".Rdata", sep="")
     save(fisher.results, file=filename.fisher.results[[i]])
     ## save plink.assoc.results
-    filename.plink.results[[i]] <- paste("./", uniqueID, "_plink.results", ".Rdata", sep="")
-    save(plink.results, file=filename.plink.results[[i]])
+    # filename.plink.results[[i]] <- paste("./", uniqueID, "_plink.results", ".Rdata", sep="")
+    # save(plink.results, file=filename.plink.results[[i]])
     ## save performance
     filename.args[[i]] <- paste("./", uniqueID, "_args", ".Rdata", sep="")
     save(args, file=filename.args[[i]])
@@ -1120,8 +1172,8 @@ simTest <- function(
     names(RES)[[i]] <- uniqueID
     FISHER.RESULTS[[i]] <- fisher.results
     names(FISHER.RESULTS)[[i]] <- uniqueID
-    PLINK.RESULTS[[i]] <- plink.results
-    names(PLINK.RESULTS)[[i]] <- uniqueID
+    # PLINK.RESULTS[[i]] <- plink.results
+    # names(PLINK.RESULTS)[[i]] <- uniqueID
     ARGS[[i]] <- args
     names(ARGS)[[i]] <- uniqueID
     PERFORMANCE[[i]] <- performance
@@ -1135,8 +1187,8 @@ simTest <- function(
   ## RETURN DATA & OUTPUT ##
   ##########################
 
-  toReturn <- list(SNPS, PHEN, TREE, OUT, RES, FISHER.RESULTS, PLINK.ASSOC.RESULTS, ARGS, PERFORMANCE)
-  names(toReturn) <- c("snps", "phen", "tree", "out", "res", "fisher.results", "plink.assoc.results", "arguments", "performance")
+  toReturn <- list(SNPS, PHEN, TREE, OUT, RES, FISHER.RESULTS, ARGS, PERFORMANCE) #  PLINK.ASSOC.RESULTS
+  names(toReturn) <- c("snps", "phen", "tree", "out", "res", "fisher.results", "arguments", "performance") # "plink.assoc.results"
 
   return(toReturn)
 
