@@ -132,6 +132,7 @@ treeWAS <- function(snps,
                     plot.manhattan = TRUE,
                     plot.null.dist = TRUE,
                     plot.dist = FALSE,
+                    snps.assoc = NULL, # for (manhattan) plot
                     snps.reconstruction = "parsimony",
                     phen.reconstruction = "parsimony",
                     filename.plot = NULL){
@@ -826,6 +827,7 @@ treeWAS <- function(snps,
   ## get output:
   results <- list(dat=DAT,
                   vals=VALS,
+                  thresh=thresholds,
                   res=RES)
 
   return(results)

@@ -172,6 +172,7 @@ get.ancestral.pars <- function(var, tree){
                                snp[edges[e,1]]
                              ==
                                snp[edges[e,2]])
+      names(subs.logical) <- 1:nrow(edges)
       ## get indices of all edges containing a substitution
       subs.total <- which(subs.logical == FALSE)
       ## get df of states of ancestor and descendants nodes on these edges
@@ -317,6 +318,7 @@ get.ancestral.pars <- function(var, tree){
                                   phen.rec[edges[e,1]]
                                 ==
                                   phen.rec[edges[e,2]])
+    names(phen.subs.logical) <- 1:nrow(edges)
     ## get indices of all edges containing a substitution
     phen.subs.total <- which(phen.subs.logical == FALSE)
     ## get df of states of ancestor and descendants nodes on these edges

@@ -383,11 +383,19 @@ get.sig.snps <- function(snps,
     }
 
     ## generate list of names containing call info to assign to out at end:
+    if(p.value != 0.0001){
     nom[[i]] <- paste("pval", p.value,
                       p.value.correct,
                       p.value.by,
                       length(corr.sim)/length(corr.dat), "x.n.snps",
                       sep=".")
+    }else{
+      nom[[i]] <- paste("pval", "0.0001",
+                        p.value.correct,
+                        p.value.by,
+                        length(corr.sim)/length(corr.dat), "x.n.snps",
+                        sep=".")
+    }
 
     #####################
     ## p.value.correct ##

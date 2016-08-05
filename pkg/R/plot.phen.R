@@ -79,7 +79,7 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
     edgeCol <- rep("black", nrow(tree$edge))
     for(i in 1:nrow(tree$edge)){
       edgeCol[i] <- nodeCol[tree$edge[i,2]]
-      if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "green"
+      if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
     }
     edgeLabCol <- edgeCol
 
@@ -100,8 +100,8 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
         plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
         title("Coalescent tree w/ phenotypic changes")
         axisPhylo()
-        #edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
-        #           cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
+        # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+                  # cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col=leafCol, frame="none")
         ## make sure this isn't backward...:
         #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))

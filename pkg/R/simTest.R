@@ -7,9 +7,44 @@
 #############
 ## simTest ##
 #############
+#
+# out <- simTest(
+#
+#   ## simTest args:
+#   set.number = 1,
+#   n.reps = 1,
+#   set.seed.as = "file.number",
+#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#   ## data from file args:
+#   from.file = FALSE,
+#   file.n =NULL,
+#
+#   ## coalescent.sim args:
+#   n.ind = 100,
+#   n.snps = 10000, # gen.size
+#   # sim.by = "locus",
+#   n.subs = 1, # theta (*2)
+#   n.phen.subs = 15, # theta_p = NULL
+#   n.snps.assoc = 10, # = 0
+#   # assoc.option = "all",
+#   assoc.prob = 95,
+#   grp.min = 0.25,
+#
+#   ## treeWAS args:
+#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#   p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   #   p.value.by = c("count", "density"),
+#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#   snps.reconstruction = "parsimony",
+#   phen.reconstruction = "parsimony"
+#
+# )
 
 
-# old simTest args:
+## old simTest args:
 # set.number = 1,
 # n.reps = 1, set.seed.as = "file.number",
 # p.value = 0.0001, n.phen.subs=15,
@@ -66,8 +101,8 @@ simTest <- function(
   n.ind = 100,
   n.snps = 10000, # gen.size
   # sim.by = "locus",
-  n.subs = 1, #theta (*2)
-  n.phen.subs = 15, #theta_p = NULL
+  n.subs = 1, # theta (*2)
+  n.phen.subs = 15, # theta_p = NULL
   n.snps.assoc = 10, # = 0
   # assoc.option = "all",
   assoc.prob = 90,
@@ -109,11 +144,11 @@ simTest <- function(
   ## make lists in which to store all ###########
   ## data and output from each of n.reps runs: ##
   ###############################################
-  SNPS <- PHEN <- TREE <- OUT <- RES <-
+  SNPS <- PHEN <- PHEN.PLOT.COL <-  TREE <- OUT <- RES <-
     FISHER.RESULTS <- PLINK.RESULTS <-
     ARGS <- PERFORMANCE <- list()
   ## and make lists for saving filenames
-  filename.snps <- filename.phen <- filename.tree <-
+  filename.snps <- filename.phen <- filename.phen.plot.col <- filename.tree <-
     filename.out <- filename.res <- filename.fisher.results <-
     filename.plink.results <-
     filename.args <- filename.performance <-
@@ -338,9 +373,12 @@ simTest <- function(
       snps <- snps.ori <- foo$snps
       if(!is.null(n.snps.assoc)) if(n.snps.assoc > 0){
         snps.assoc <- snps.assoc.ori <- snps.assoc.loci <- foo$snps.assoc
+      }else{
+        snps.assoc <- NULL
       }
       phen <- phen.ori <- foo$phen
       tree <- tree.ori <- foo$tree
+      phen.plot.col <- foo$phen.plot.col
 
       ## snps names:
       snps.names <- colnames(snps)
@@ -406,6 +444,7 @@ simTest <- function(
                   plot.manhattan = TRUE,
                   plot.null.dist = FALSE,
                   plot.dist = FALSE,
+                  snps.assoc = snps.assoc,
                   snps.reconstruction = "parsimony",
                   phen.reconstruction = "parsimony",
                   filename.plot=filename.plot[[i]])
@@ -418,6 +457,7 @@ simTest <- function(
     ##################################
     ## isolate df of Sig SNPs found ##
     ##################################
+    res.complete <- out
     res <- out$res
 
 
@@ -1094,12 +1134,12 @@ simTest <- function(
     ## get names for treeWAS tests:
     treeWAS.names <- list()
 
-    for(i in 1:length(res)){
+    for(r in 1:length(res)){
       if(i == 1) t <- "terminal"
       if(i == 2) t <- "simultaneous"
       if(i == 3) t <- "subsequent"
 
-      treeWAS.names[[i]] <- paste("treeWAS", t, names(res[[t]]), sep=".")
+      treeWAS.names[[r]] <- paste("treeWAS", t, names(res[[t]]), sep=".")
     }
 
     treeWAS.names <- as.vector(unlist(treeWAS.names))
@@ -1134,6 +1174,9 @@ simTest <- function(
     ## save phen
     filename.phen[[i]] <- paste("./", uniqueID, "_phen", ".Rdata", sep="")
     save(phen, file=filename.phen[[i]])
+    ## save phen.plot.col
+    filename.phen.plot.col[[i]] <- paste("./", uniqueID, "_phen", ".Rdata", sep="")
+    save(phen.plot.col, file=filename.phen.plot.col[[i]])
     ## save tree
     filename.tree[[i]] <- paste("./", uniqueID, "_tree", ".Rdata", sep="")
     save(tree, file=filename.tree[[i]])
@@ -1141,6 +1184,7 @@ simTest <- function(
     filename.out[[i]] <- paste("./", uniqueID, "_out", ".Rdata", sep="")
     save(out, file=filename.out[[i]])
     ## save res
+    res <- res.complete # includes data from reconstructions, values from treeWAS tests
     filename.res[[i]] <- paste("./", uniqueID, "_res", ".Rdata", sep="")
     save(res, file=filename.res[[i]])
     ## save fisher.results
@@ -1164,6 +1208,8 @@ simTest <- function(
     names(SNPS)[[i]] <- uniqueID
     PHEN[[i]] <- phen
     names(PHEN)[[i]] <- uniqueID
+    PHEN.PLOT.COL[[i]] <- phen.plot.col
+    names(PHEN.PLOT.COL[[i]]) <- uniqueID
     TREE[[i]] <- tree
     names(TREE)[[i]] <- uniqueID
     OUT[[i]] <- out
@@ -1187,8 +1233,8 @@ simTest <- function(
   ## RETURN DATA & OUTPUT ##
   ##########################
 
-  toReturn <- list(SNPS, PHEN, TREE, OUT, RES, FISHER.RESULTS, ARGS, PERFORMANCE) #  PLINK.ASSOC.RESULTS
-  names(toReturn) <- c("snps", "phen", "tree", "out", "res", "fisher.results", "arguments", "performance") # "plink.assoc.results"
+  toReturn <- list(SNPS, PHEN, PHEN.PLOT.COL, TREE, OUT, RES, FISHER.RESULTS, ARGS, PERFORMANCE) #  PLINK.ASSOC.RESULTS
+  names(toReturn) <- c("snps", "phen", "phen.plot.col", "tree", "out", "res", "fisher.results", "arguments", "performance") # "plink.assoc.results"
 
   return(toReturn)
 

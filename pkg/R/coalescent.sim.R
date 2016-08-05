@@ -195,9 +195,17 @@ coalescent.sim <- function(n.ind=100,
   ## Plot Tree showing Phenotype ##
   #################################
   if(plot==TRUE){
+    if(class(try(plot.phen(tree = tree,
+                     phen.nodes = phen.nodes,
+                     plot = plot))) =="try-error"){
+      plot(tree)
+      warning("Oops-- something went wrong when trying to plot
+              phenotypic changes on tree.")
+    }else{
     phen.plot.col <- plot.phen(tree = tree,
                               phen.nodes = phen.nodes,
                               plot = plot)
+    }
   }
 
   ###################
