@@ -9,8 +9,9 @@ treeWAS(snps, phen, n.subs = NULL, tree = c("UPGMA", "nj", "ml"),
   "simultaneous", "subsequent"), p.value = 0.001,
   p.value.correct = c("bonf", "fdr", FALSE), p.value.by = c("count",
   "density"), sim.n.snps = ncol(snps), n.reps = 1, plot.manhattan = TRUE,
-  plot.null.dist = TRUE, plot.dist = FALSE,
-  snps.reconstruction = "parsimony", phen.reconstruction = "parsimony")
+  plot.null.dist = TRUE, plot.dist = FALSE, snps.assoc = NULL,
+  snps.reconstruction = "parsimony", phen.reconstruction = "parsimony",
+  filename.plot = NULL)
 }
 \arguments{
 \item{test}{A character string or vector containing one or more of the following available tests of association:

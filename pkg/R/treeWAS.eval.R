@@ -651,59 +651,147 @@ treeWAS <- function(snps,
     names(THRESH) <- names(sig.list[[j]])
     thresholds[[j]] <- THRESH
 
-    ## legend (temporary?)
-    ## Not necessarily needed--usually only a couple UNIQUE thresholds...
-    #     par(mfrow=c(1,2))
-    #     par(oma = c(5,4,0,0) + 0.1)
-    #     par(mar = c(0,0,1,1) + 0.1)
-    #     ## column 1:
-    #     midpoints1 <- barplot(rep(10, length(THRESH)/2),
-    #                         col = seasun(length(THRESH))[1:(length(THRESH)/2)],
-    #                         horiz=TRUE)
-    #     ##overlay names:
-    #     text(3, midpoints1, labels=names(THRESH)[1:(length(THRESH)/2)], cex=0.75, adj=0.3)
-    #
-    #     ## column 2:
-    #     midpoints2 <- barplot(rep(10, length(THRESH)/2),
-    #                           col = seasun(length(THRESH))[((length(THRESH)/2)+1):length(THRESH)],
-    #                           horiz=TRUE)
-    #     ##overlay names:
-    #     text(3, midpoints2, labels=names(THRESH)[((length(THRESH)/2)+1):length(THRESH)], cex=0.75, adj=0.3)
-    #
-    #     ## return to original par settings:
-    #     par(mfrow=c(1,1))
-    #
-    #     ## add title
-    #     title("Legend: Significance Thresholds")
-    #
-    #     par(oma=c(0,0,0,0))
-    #     par(mar=c(5,4,4,2)+0.1)
 
     ##########################
     ## NEW: MANHATTAN PLOT! ##
     ##########################
     if(plot.manhattan == TRUE){
+
+      ## save next plot:
+      if(!is.null(filename.plot)){
+        if(length(filename.plot) == length(sig.list)){
+          if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
+
+          ## save whatever plots before dev.off:
+          pdf(file=filename.plot[[j]][1], width=7, height=11)
+        }
+      }
+
+
       manhattan.plot(p.vals = sig.list[[j]][[1]]$corr.dat,
                      col = "wasp",
                      transp = 0.75,
-                     sig.thresh = as.vector(unlist(THRESH)),
+                     sig.thresh = THRESH,
                      thresh.col="seasun",
-                     snps.assoc=snps.assoc,
+                     snps.assoc = snps.assoc,
                      snps.assoc.col = "red",
                      jitter.amount = 0.00001,
                      min.p = NULL,
                      log10=FALSE,
                      ylab=paste(TEST[[j]], "score", sep=" "))
 
-      ## save plot:
-      if(!is.null(filename.plot)){
-        if(length(filename.plot) == length(sig.list)){
-          if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
-          dev.copy(pdf, file=filename.plot[[j]], width=7, height=11) # , pointsize=12
-          dev.off()
+      ## End saving:
+      ## CHECK-- Do we need if statements??
+      dev.off() ## Not sure what happens if you run this without having used pdf or dev.copy previously..
+
+
+      ####
+      ## NOTE-- if you want to see the plot, you need to plot it again (dev.copy not working consistently!)
+      manhattan.plot(p.vals = sig.list[[j]][[1]]$corr.dat,
+                     col = "wasp",
+                     transp = 0.75,
+                     sig.thresh = THRESH,
+                     thresh.col="seasun",
+                     snps.assoc = snps.assoc,
+                     snps.assoc.col = "red",
+                     jitter.amount = 0.00001,
+                     min.p = NULL,
+                     log10=FALSE,
+                     ylab=paste(TEST[[j]], "score", sep=" "))
+
+      # ## save plot:
+      # if(!is.null(filename.plot)){
+      #   if(length(filename.plot) == length(sig.list)){
+      #     if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
+      #     dev.copy(pdf, file=filename.plot[[j]][1], width=7, height=11) # , pointsize=12
+      #     dev.off()
+      #   }
+      # } # end save pdf
+
+    } # end plot.manhattan
+
+
+    ########################################################
+    ## Plot the null distribution w thresholds & findings ##
+    ########################################################
+
+    ## NOTE: For simplicity & clarity, only plotting truly significant SNPs,
+    ## instead of plotting all findings from all tests/thresholds.
+
+
+    ## save next plot:
+    if(!is.null(filename.plot)){
+      if(length(filename.plot) == length(sig.list)){
+        if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
+
+        if(length(filename.plot[[j]]) > 1){
+          pdf(file=filename.plot[[j]][2], width=7, height=11) # , pointsize=12
+        }else{
+          pdf(file=filename.plot[[j]][1], width=7, height=11) # , pointsize=12
         }
       }
     }
+
+    ## Generate one histogram per test:
+    plot.sig.snps(corr.dat = sig.list[[j]][[1]]$corr.dat,
+                  corr.sim = sig.list[[j]][[1]]$corr.sim,
+                  corr.sim.subset = sig.list[[j]][[1]]$corr.sim[1:10000],
+                  sig.corrs = corr.dat[snps.assoc],
+                  sig.snps = snps.assoc,
+                  sig.thresh = unique(round(as.vector(unlist(THRESH)), 2)),
+                  test = TEST[[j]],
+                  sig.snps.col = "blue",
+                  hist.col = rgb(0,0,1,0.5), # rgb(0,0,1,0.5) # blue ## OR ## rgb(0.1,0.1,0.1,0.5) # darkgrey
+                  hist.subset.col = rgb(1,0,0,0.5), # rgb(1,0,0,0.5) # red ## OR ## rgb(0.8,0.8,0.8,0.5) # lightgrey
+                  thresh.col = "red",
+                  snps.assoc = snps.assoc,
+                  snps.assoc.col = "black",
+                  bg = "lightgrey",
+                  grid = TRUE,
+                  plot.null.dist = TRUE,
+                  plot.dist = FALSE)
+
+    ## End saving:
+    dev.off()
+
+
+
+
+    #####
+    ## Again-- to see this plot as simTest runs, need to plot again bc dev.copy failing/corrupting at random...
+    plot.sig.snps(corr.dat = sig.list[[j]][[1]]$corr.dat,
+                  corr.sim = sig.list[[j]][[1]]$corr.sim,
+                  corr.sim.subset = sig.list[[j]][[1]]$corr.sim[1:10000],
+                  sig.corrs = corr.dat[snps.assoc],
+                  sig.snps = snps.assoc,
+                  sig.thresh = unique(round(as.vector(unlist(THRESH)), 2)),
+                  test = TEST[[j]],
+                  sig.snps.col = "blue",
+                  hist.col = rgb(0,0,1,0.5), # rgb(0,0,1,0.5) # blue ## OR ## rgb(0.1,0.1,0.1,0.5) # darkgrey
+                  hist.subset.col = rgb(1,0,0,0.5), # rgb(1,0,0,0.5) # red ## OR ## rgb(0.8,0.8,0.8,0.5) # lightgrey
+                  thresh.col = "red",
+                  snps.assoc = snps.assoc,
+                  snps.assoc.col = "black",
+                  bg = "lightgrey",
+                  grid = TRUE,
+                  plot.null.dist = TRUE,
+                  plot.dist = FALSE)
+
+    # ## save plot:
+    # if(!is.null(filename.plot)){
+    #   if(length(filename.plot) == length(sig.list)){
+    #     if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
+    #     if(length(filename.plot[[j]]) > 1){
+    #       dev.copy(pdf, file=filename.plot[[j]][2], width=7, height=11) # , pointsize=12
+    #     }else{
+    #       dev.copy(pdf, file=filename.plot[[j]][1], width=7, height=11) # , pointsize=12
+    #     }
+    #     dev.off()
+    #   }
+    # } # edn save pdf
+
+
+    ## legend for thresholds? ##
 
   for(i in 1:length(sig.list[[j]])){
 
@@ -728,11 +816,10 @@ treeWAS <- function(snps,
     ## 4) (A) Plot the distribution ##
     ##################################
 
-    plot.sig.snps(corr.dat, corr.sim, sig.corrs, sig.snps,
-                  sig.thresh=sig.thresh, test=TEST[[j]],
-                  plot.null.dist = plot.null.dist,
-                  plot.dist = plot.dist)
-
+    # plot.sig.snps(corr.dat, corr.sim, sig.corrs, sig.snps,
+    #               sig.thresh=sig.thresh, test=TEST[[j]],
+    #               plot.null.dist = plot.null.dist,
+    #               plot.dist = plot.dist)
 
 
     ########################################
@@ -819,9 +906,9 @@ treeWAS <- function(snps,
   names(RES) <- names(VALS) <- test
 
   ## get data:
-  DAT <- list(snps.sim = snps.sim,
-              snps.rec = snps.rec,
-              snps.sim.rec = snps.sim.rec,
+  DAT <- list(snps.sim = snps.sim.complete,
+              snps.rec = snps.rec.complete,
+              snps.sim.rec = snps.sim.rec.complete,
               phen.rec = phen.rec)
 
   ## get output:
@@ -833,6 +920,39 @@ treeWAS <- function(snps,
   return(results)
 
 } # end treeWAS
+
+
+
+
+##############################################################################################
+## legend (temporary?)
+## Not necessarily needed--usually only a couple UNIQUE thresholds...
+#     par(mfrow=c(1,2))
+#     par(oma = c(5,4,0,0) + 0.1)
+#     par(mar = c(0,0,1,1) + 0.1)
+#     ## column 1:
+#     midpoints1 <- barplot(rep(10, length(THRESH)/2),
+#                         col = seasun(length(THRESH))[1:(length(THRESH)/2)],
+#                         horiz=TRUE)
+#     ##overlay names:
+#     text(3, midpoints1, labels=names(THRESH)[1:(length(THRESH)/2)], cex=0.75, adj=0.3)
+#
+#     ## column 2:
+#     midpoints2 <- barplot(rep(10, length(THRESH)/2),
+#                           col = seasun(length(THRESH))[((length(THRESH)/2)+1):length(THRESH)],
+#                           horiz=TRUE)
+#     ##overlay names:
+#     text(3, midpoints2, labels=names(THRESH)[((length(THRESH)/2)+1):length(THRESH)], cex=0.75, adj=0.3)
+#
+#     ## return to original par settings:
+#     par(mfrow=c(1,1))
+#
+#     ## add title
+#     title("Legend: Significance Thresholds")
+#
+#     par(oma=c(0,0,0,0))
+#     par(mar=c(5,4,4,2)+0.1)
+##############################################################################################
 
 
 

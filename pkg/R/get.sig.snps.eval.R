@@ -310,19 +310,30 @@ get.sig.snps <- function(snps,
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
-    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    ## NEW TEMPORARY CODE to save pagel-like score3 alternatives & raw data:
+    if(test == "subsequent"){
+      corr.dat.list <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    }else{
+      corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    }
 
 
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
-    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    ## NEW TEMPORARY CODE to save pagel-like score3 alternatives & raw data:
+    if(test == "subsequent"){
+      corr.sim.list <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    }else{
+      corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    }
   }
 
   ###################################
   ## HANDLE DUPLICATE SNPS COLUMNS ##
   ###################################
 
+  if(test != "subsequent"){
   ## Expand corr.dat (if not all snps columns unique):
   if(all.unique == FALSE){
     corr.dat.complete <- corr.dat[snps.index]
@@ -336,6 +347,62 @@ get.sig.snps <- function(snps,
     names(corr.sim.complete) <- colnames(snps.sim.ori)
     corr.sim <- corr.sim.complete
   }
+  }else{
+
+
+    ## NEW TEMPORARY CODE TO SAVE SUBSEQUENT SCORE ALTERNATIVES/RAW DATA:
+    cd.list <- list()
+    for(n in 1:length(corr.dat.list[[2]])){
+      corr.dat <- corr.dat.list[[2]][[n]]
+      ## Expand corr.dat (if not all snps columns unique):
+      if(all.unique == FALSE){
+        corr.dat.complete <- corr.dat[snps.index]
+        names(corr.dat.complete) <- colnames(snps.ori)
+        corr.dat <- corr.dat.complete
+      }
+      cd.list[[n]] <- corr.dat
+    }
+
+    cs.list <- list()
+    for(n in 1:length(corr.sim.list[[2]])){
+      corr.sim <- corr.sim.list[[2]][[n]]
+      ## Expand corr.sim (if not all snps.sim columns unique):
+      if(all.unique.sim == FALSE){
+        corr.sim.complete <- corr.sim[snps.sim.index]
+        names(corr.sim.complete) <- colnames(snps.sim.ori)
+        corr.sim <- corr.sim.complete
+      }
+      cs.list[[n]] <- corr.sim
+    }
+
+
+    SCORE3 <-list(corr.dat = cd.list,
+                  corr.sim = cs.list)
+
+    ## save (w random number for now --> use time stamp to differentiate... )
+    # save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", "set1_31", "Rdata", sep="."))
+    save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", sample(c(1000:10000), 1), "Rdata", sep="."))
+
+
+    ## Then run regularly as before to continue:
+
+    ## Expand corr.dat (if not all snps columns unique):
+    corr.dat <- corr.dat.list[[1]]
+    if(all.unique == FALSE){
+      corr.dat.complete <- corr.dat[snps.index]
+      names(corr.dat.complete) <- colnames(snps.ori)
+      corr.dat <- corr.dat.complete
+    }
+
+    ## Expand corr.sim (if not all snps.sim columns unique):
+    corr.sim <- corr.sim.list[[1]]
+    if(all.unique.sim == FALSE){
+      corr.sim.complete <- corr.sim[snps.sim.index]
+      names(corr.sim.complete) <- colnames(snps.sim.ori)
+      corr.sim <- corr.sim.complete
+    }
+
+  } # end subsequent test (temp)..
 
   ## quick look at corr.sim & corr.dat
   # hist(corr.sim, xlim=c(0,1))
@@ -606,7 +673,9 @@ assoc.test <- function(snps,
 
 
   ## USE ABSOLUTE VALUE
-  corr.dat <- abs(corr.dat)
+  if(test != "subsequent"){
+    corr.dat <- abs(corr.dat)
+  }
 
   return(corr.dat)
 } # end assoc.test

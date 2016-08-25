@@ -63,7 +63,7 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
   n.ind <- tree$Nnode+1
 
   ## check if phen provided is for all nodes or only terminal nodes:
-  if(length(phen.nodes == (n.ind + tree$Nnode))){
+  if(length(phen.nodes) == (n.ind + tree$Nnode)){
 
     ## get COLOR for NODES
     nodeCol <- as.vector(phen.nodes)
@@ -102,7 +102,7 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
         axisPhylo()
         # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
                   # cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
-        tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col=leafCol, frame="none")
+        tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col=leafCol, frame="none") # adj=c(1.5,0) # if direction="leftwards"
         ## make sure this isn't backward...:
         #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
         ## should be numbered s.t. the root node is n.term+1
@@ -166,4 +166,53 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
 
 } # end plot.phen
 
+
+
+
+###############################
+## plotting reconstructions: ##
+###############################
+
+## PLUS -- enable plotting of boxes of extra variables along tips..
+
+## get rec (from simTest):
+
+# tree <- out$tree[[1]]
+#
+# rec <- out$res[[1]]$dat$snps.rec
+#
+# snps.assoc <- out$performance[[1]]$snps.assoc
+#
+# var.rec <- rec[,snps.assoc[6]]
+# var.rec <- round(var.rec)
+#
+# var.rec <- replace(var.rec, which(var.rec == 0), "A")
+# var.rec <- replace(var.rec, which(var.rec == 1), "B")
+#
+# plot.phen(tree, phen.nodes = var.rec)
+#
+# ## compare to phen:
+# phen.rec <- as.character(out$res[[1]]$dat$phen.rec)
+# phen.rec <- replace(phen.rec, which(phen.rec == 0), "A")
+# phen.rec <- replace(phen.rec, which(phen.rec == 1), "B")
+#
+# plot.phen(tree, phen.nodes=phen.rec)
+#
+# ## side-by-side?
+# par(mfrow=c(1,2))
+# ## phen:
+# plot.phen(tree, phen.nodes=phen.rec)
+# title("set1_30: phen.rec (left) vs.", line=-0.5)
+# ## snp:
+# plot.phen(tree, phen.nodes = var.rec, direction="leftwards") # tip adj=c(1.5,0)
+# title("snps.rec[,snps.assoc[6]] (right)", line=-0.5)
+
+
+
+
+
+
+
+
+#
 

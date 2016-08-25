@@ -43,6 +43,7 @@ snp.sim <- function(n.snps = 10000,
                     reconstruct = FALSE,
                     dist.dna.model = "JC69",
                     row.names = NULL,
+                    set=NULL,
                     seed=1){
 
   # require(adegenet)
@@ -273,7 +274,7 @@ snp.sim <- function(n.snps = 10000,
       ## within their given branch length:
       if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
         ## identify which loci are repeaters
-        repeats <-table(snps.loci.ori[[i]])[which(table(snps.loci.ori[[i]])!=1)]
+        repeats <- table(snps.loci.ori[[i]])[which(table(snps.loci.ori[[i]])!=1)]
         ## how many times they repeat
         n.reps <- repeats - 1
         ## the positions of these loci in the vector of snps loci
@@ -547,7 +548,11 @@ snp.sim <- function(n.snps = 10000,
   ## CONVERT SNPS ##
   ##################
 
-  ## Convert from nts in genomes to binary SNPs:
+  ## Convert from nts in genomes (for all nodes) to binary SNPs (for terminal nodes only):
+
+  ## Keep only rows containing terminal individuals?:
+  ## (NOTE -- Consider moving this to AFTER snps.assoc assoc.prob section!)
+  # genomes <- genomes[1:n.ind, ]
 
   ## working with snps in matrix form
   snps <- genomes
@@ -570,6 +575,7 @@ snp.sim <- function(n.snps = 10000,
   ## assign snps row and column names:
   colnames(snps) <- 1:ncol(snps)
   rownames(snps) <- 1:nrow(snps)
+
 
   if(!is.null(snps.assoc)){
 
@@ -631,11 +637,86 @@ snp.sim <- function(n.snps = 10000,
   ## generate column names:
   colnames(snps) <- 1:ncol(snps)
 
+
+  #################################################
+  ## SIM SET 2 (complementary clade-wise assoc): ##
+  #################################################
+  sets <- NULL
+  if(!is.null(snps.assoc)){
+    if(!is.null(set)){
+      if(set == 2){
+
+        ## get 2 sets of clades:
+        ## Get tree as hclust tree:
+        tree.hc <- as.hclust.phylo(tree)
+
+        ## Want to divide tree into 2 sets of clades btw 1/3:2/3 and 1/2:1/2
+        clades <- tab <- grp.options <- sets.complete <- list()
+
+        min.size <- ceiling((tree$Nnode+1)*(1/3))
+        max.size <- floor((tree$Nnode+1)*(2/3))
+        grp1 <- tree$Nnode+1
+
+        i <- 2
+        counter <- 0
+        #######################################
+        ## WHILE LOOP to get size of clades: ##
+        #######################################
+        while(grp1 < min.size | grp1 > max.size){
+          clades[[i]] <- cutree(tree.hc, k=i)
+          tab[[i]] <- table(clades[[i]])
+          grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+          ## make grp1 first clade in grp.options:
+          group1 <- grp.opts[1]
+          ## remove first clade from options:
+          grp.opts <- grp.opts[-1]
+          ## and record n.grps:
+          n.grp <- 1
+          ## try to identify a (set of) clade(s) that's big enough (but not too big):
+          while(group1 < min.size){
+            group1 <- sum(group1, grp.opts[1])
+            grp.opts <- grp.opts[-1]
+            n.grp <- n.grp+1
+          }
+          sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
+          sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
+          grp1 <- sum(grp.options[[i]][1:n.grp])
+          k <- i
+          i <- i+1
+          counter <- counter+1
+        } # end while loop
+        ###########
+
+        sets <- sets.complete[[length(sets.complete)]]
+
+        set1 <- names(sets)[which(sets == 1)]
+        set2 <- names(sets)[which(sets == 2)]
+        ###########
+
+        ########################
+        ## MODIFY SNPS.ASSOC: ##
+        ########################
+        snps.assoc.set1 <- 1:round(length(snps.assoc)/2)
+        snps.assoc.set2 <- (round(length(snps.assoc)/2)+1):length(snps.assoc)
+
+        ## replace set1 snps with 0 at all inds in clade.set1:
+        for(e in 1:length(snps.assoc.set1)){
+          snps[which(rownames(snps) %in% set1), snps.assoc[snps.assoc.set1[e]]] <- 0
+        }
+        ## replace set2 snps with 0 at all inds in clade.set2:
+        for(e in 1:length(snps.assoc.set2)){
+          snps[which(rownames(snps) %in% set2), snps.assoc[snps.assoc.set2[e]]] <- 0
+        }
+      }
+    }
+  } # end sim set 2
+
+
   ##################
   ## get RESULTS: ##
   ##################
-  out <- list(snps, snps.assoc, tree.reconstructed)
-  names(out) <- c("snps", "snps.assoc", "tree.reconstructed")
+  out <- list(snps, snps.assoc, tree.reconstructed, sets)
+  names(out) <- c("snps", "snps.assoc", "tree.reconstructed", "sets")
 
   return(out)
 

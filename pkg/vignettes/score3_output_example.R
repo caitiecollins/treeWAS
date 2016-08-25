@@ -324,3 +324,111 @@ plot((res$Pa-res$Pd)*(res$Sa-res$Sd), res$score,
 # clus <- kmeans(dat, centers=3)
 #
 # with(iris, pairs(dat, col=c(1:3)[clus$cluster]))
+
+
+
+
+
+
+
+#########
+
+## TESTING SCORE 3 ALTERNATIVES:
+
+## Original SCORE 3:
+
+## Should have MAX score:
+get.score3(Pa=1, Sa=1, Pd=0, Sd=0, l=1) # 0.33
+
+get.score3(Pa=0, Sa=0, Pd=1, Sd=1, l=1) # 0.33
+
+get.score3(Pa=1, Sa=0, Pd=0, Sd=1, l=1) # -0.33
+
+## Should have <= Max score..
+get.score3(Pa=1, Sa=1, Pd=1, Sd=1, l=1) # 1
+
+get.score3(Pa=0, Sa=0, Pd=0, Sd=0, l=1) # 1
+
+get.score3(Pa=1, Sa=0, Pd=1, Sd=0, l=1) # -1
+
+## Should have ZERO score:
+get.score3(Pa=0.5, Sa=0.5, Pd=0.5, Sd=0.5, l=1) # 0
+
+get.score3(Pa=0.5, Sa=0, Pd=0.5, Sd=1, l=1) # 0
+
+get.score3(Pa=0, Sa=1, Pd=1, Sd=1, l=1) # 0 ## Doesn't this make it a NON-subsequent score???!
+
+######
+
+## SCORE 1 - like score 3:
+
+## ie:
+# score3 <- (l/2)*(
+#   Pa*Sa + (1 - Pa)*(1 - Sa) -
+#   Pa*(1 - Sa) - (1 - Pa)*Sa +
+#   Pd*Sd + (1 - Pd)*(1 - Sd) -
+#   Pd*(1 - Sd) - (1 - Pd)*Sd)
+
+## Should have MAX score:
+get.score3(Pa=1, Sa=1, Pd=0, Sd=0, l=1) # 1
+
+get.score3(Pa=0, Sa=0, Pd=1, Sd=1, l=1) # 1
+
+get.score3(Pa=1, Sa=0, Pd=0, Sd=1, l=1) # -1
+
+## Should have <= Max score..
+get.score3(Pa=1, Sa=1, Pd=1, Sd=1, l=1) # 1
+
+get.score3(Pa=0, Sa=0, Pd=0, Sd=0, l=1) # 1
+
+get.score3(Pa=1, Sa=0, Pd=1, Sd=0, l=1) # -1
+
+## Should have ZERO score:
+get.score3(Pa=0.5, Sa=0.5, Pd=0.5, Sd=0.5, l=1) # 0
+
+get.score3(Pa=0.5, Sa=0, Pd=0.5, Sd=1, l=1) # 0
+
+get.score3(Pa=1, Sa=1, Pd=0, Sd=1, l=1) # 0 (Same state at top (+1), but opposite states at bottom (-1))
+
+## in between scores:
+get.score3(Pa=1, Sa=1, Pd=0.25, Sd=0.25, l=1) # 0.625
+
+get.score3(Pa=1, Sa=0.25, Pd=0.25, Sd=1, l=1) # -0.5
+
+get.score3(Pa=0.75, Sa=0.25, Pd=0.25, Sd=0.75, l=1) # -0.25
+
+get.score3(Pa=0.25, Sa=0.25, Pd=0.75, Sd=0.75, l=1) # 0.25
+
+
+## SCORE 1 - like score 3 (recentred around 0):
+get.score3(Pa=1, Sa=1, Pd=-1, Sd=-1, l=1) # 5
+
+get.score3(Pa=1, Sa=-1, Pd=-1, Sd=1, l=1) # -3
+
+get.score3(Pa=1, Sa=1, Pd=1, Sd=-1, l=1) # -1
+
+##
+
+
+## Phylo Independent Contrasts?
+# pic.X <- pic(x, tree)
+# pic.Y <- pic(y, tree)
+# pic.out <- cor.test(pic.X, pic.Y)
+## --> try cor.test fn for paired samples (ie. Pa, Sa and Pd, Sd (ie P and S for all nodes)):
+
+COR <- list()
+PIC <- PIC.X <- list()
+PIC.Y <- pic(phen, tree)
+for(i in 1:ncol(snps.rec)){
+  # COR[[i]] <- cor.test(x = snps.rec[,i], y = phen.rec,
+  #                      alternative = "two.sided") # same as reg cor + test..
+
+  PIC.X[[i]] <- pic(snps[,i], tree)
+  PIC[[i]] <- cor.test(PIC.X[[i]], PIC.Y,
+                       alternative = "two.sided")
+
+
+}
+
+PIC.p <- sapply(c(1:length(PIC)), function(e) PIC[[e]]$p.value)
+PIC.cor <- sapply(c(1:length(PIC)), function(e) PIC[[e]]$estimate)

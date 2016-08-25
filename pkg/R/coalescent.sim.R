@@ -120,12 +120,12 @@
 #  haploid=TRUE, biallelic=TRUE, seed=NULL,
 #  plot=TRUE, heatmap=FALSE, plot2="UPGMA")
 
-## NEW ARGS: ##
+# ## NEW ARGS: ##
 # n.ind <- 100
 # n.snps <- 10000
 # n.subs <- 1
 # n.snps.assoc <- 10
-# assoc.prob <- 90
+# assoc.prob <- 100 # 90
 # n.phen.subs <- 15
 # phen <- NULL
 # plot <- TRUE
@@ -134,7 +134,26 @@
 # dist.dna.model <- "JC69"
 # grp.min <- 0.25
 # row.names <- NULL
-# seed <- 4
+# set <- 2 # NULL #
+# seed <- 1
+
+
+## EG:
+# c.sim <- coalescent.sim(n.ind=100,
+#                         n.snps=10000,
+#                         n.subs=1,
+#                         n.snps.assoc=10,
+#                         assoc.prob=100,
+#                         n.phen.subs=15,
+#                         phen=NULL,
+#                         plot=TRUE,
+#                         heatmap=FALSE,
+#                         reconstruct=FALSE,
+#                         dist.dna.model="JC69",
+#                         grp.min = 0.25,
+#                         row.names=NULL,
+#                         set=2,
+#                         seed=1)
 
 
 coalescent.sim <- function(n.ind=100,
@@ -150,6 +169,7 @@ coalescent.sim <- function(n.ind=100,
                            dist.dna.model="JC69",
                            grp.min = NULL,
                            row.names=NULL,
+                           set=NULL,
                            seed=1){
   ## load packages:
   # require(adegenet)
@@ -191,22 +211,7 @@ coalescent.sim <- function(n.ind=100,
     phen.loci <- NULL
   }
 
-  #################################
-  ## Plot Tree showing Phenotype ##
-  #################################
-  if(plot==TRUE){
-    if(class(try(plot.phen(tree = tree,
-                     phen.nodes = phen.nodes,
-                     plot = plot))) =="try-error"){
-      plot(tree)
-      warning("Oops-- something went wrong when trying to plot
-              phenotypic changes on tree.")
-    }else{
-    phen.plot.col <- plot.phen(tree = tree,
-                              phen.nodes = phen.nodes,
-                              plot = plot)
-    }
-  }
+
 
   ###################
   ## Simulate SNPs ##
@@ -234,11 +239,43 @@ coalescent.sim <- function(n.ind=100,
                        reconstruct=reconstruct,
                        dist.dna.model=dist.dna.model,
                        row.names = NULL,
+                       set=set,
                        seed=seed)
   # )
 
   snps <- snps.list$snps
   snps.assoc <- snps.list$snps.assoc
+  sets <- snps.list$sets
+
+  #################################
+  ## Plot Tree showing Phenotype ##
+  #################################
+  if(plot==TRUE){
+    if(class(try(plot.phen(tree = tree,
+                           phen.nodes = phen.nodes,
+                           plot = plot))) =="try-error"){
+      plot(tree)
+      warning("Oops-- something went wrong when trying to plot
+              phenotypic changes on tree.")
+    }else{
+      phen.plot.col <- plot.phen(tree = tree,
+                                 phen.nodes = phen.nodes,
+                                 plot = plot)
+    }
+
+    ## plot set2 clade sets along tips:
+    if(!is.null(sets)){
+      ## Get CLADES:
+      set1 <- names(sets)[which(sets == 1)]
+      set2 <- names(sets)[which(sets == 2)]
+      cladeCol <- rep(NA, length(tree$tip.label))
+      cladeCol <- replace(cladeCol, which(tree$tip.label %in% set1), "black")
+      cladeCol <- replace(cladeCol, which(tree$tip.label %in% set2), "grey")
+      ## PLOT CLADES along tips:
+      tiplabels(text=NULL, cex=0.6, adj=c(0.55, 0.5), col=cladeCol, pch=15) # adj=c(0.65, 0.75) ## NOT SURE WHY/WHEN ADJ WORKS/w WHAT VALUES?????
+
+    }
+  }
 
   ################
   ## Get Output ##

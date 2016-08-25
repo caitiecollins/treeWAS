@@ -1,6 +1,26 @@
 
 
 
+############################################################################################################################################
+## NOTE ##
+##########
+
+
+## --> SEE "example.output_readCFML.R" for QUESTIONS TO ASK XAVIER (!!!) & lots more examples + troubleshooting of read.CFML etc.
+#      ###############################     #######################
+
+
+
+
+
+
+
+
+############################################################################################################################################
+
+
+
+
 ###############
 ## read.CFML ##
 ###############
@@ -34,43 +54,77 @@
 ## the set of sequences containing no duplicate column patterns (seqs),
 ## the index of all the original sequences in the set of unique sequence columns (mapping).
 
-read.CFML <- function(prefix, plot=TRUE) {
+read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 
   # require(ape)
   # require(adegenet)
 
-  tree<-read.tree(sprintf('%s.labelled_tree.newick',prefix))
-  seqs<-read.dna(sprintf('%s.ML_sequence.fasta',prefix),format='fasta')
-  mapping<-scan(sprintf('%s.position_cross_reference.txt',prefix),sep=',',quiet=T)
-  l<-length(seqs[1,])
+  if(is.null(tree)){
+    tree <- read.tree(sprintf('%s.labelled_tree.newick', prefix))
+  }else{
+    ## if tree is filename, read in:
+    if(class(tree) == "character"){
+      tree <- read.tree(tree)
+    }
+  }
+  seqs <- read.dna(sprintf('%s.ML_sequence.fasta', prefix), format='fasta')
+  mapping <- scan(sprintf('%s.position_cross_reference.txt', prefix), sep=',', quiet=T)
+  l <- length(seqs[1,])
 
   ## check tree (violations cause problems, eg. in phen.sim)
   if(!is.binary.tree(tree)) tree <- multi2di(tree)
-  if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder")
+  # if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder")
 
-  #Modify the edge matrix so that it uses the same indices as the fasta file
-  labs<-labels(seqs)
-  edges<-tree$edge
-  treelabs<-c(tree$tip.label,tree$node.label)
-  for (i in 1:nrow(edges)) for (j in 1:ncol(edges)) edges[i,j]=which(labs==treelabs[edges[i,j]])
+  ## Modify the edge matrix so that it uses the same indices as the fasta file
+  labs <- labels(seqs)
+  edges <- tree$edge
+  ## node.label causing problems (?!) ###
+  ## Not sure if order wrong, but think below is wrong bc., while tree$tip.lab is in order corresponding
+  ## correctly to edge mat, internal node labs are not
+  ## (Hyp-- edge mat expects internal nodes to be labelled in order, ie. 111 --> NODE_111 ??? ---> (NO--PROBABLY NOT!!!!!)).
+  treelabs <- c(tree$tip.label, tree$node.label)
+  # treelabs <- tree$tip.label
+  # treelabs.ori <- treelabs
+  # edges.ori <- edges
+
+  ## If treelabs not of length labs (eg tree$node.label is NULL), fill in remainder w labs from seqs:
+  if(length(treelabs) < length(labs))  treelabs <- c(treelabs, labs[c((length(treelabs)+1):length(labs))])
+  if(length(treelabs) > length(labs)) stop("The number of individuals (terminal and internal nodes) labelled in the tree
+                                           exceeds the number of individuals (rows) labelled in the sequences.")
+  ## Double check that treelabs and labs match up (order does NOT matter yet):
+  if(!all(labs %in% treelabs)){
+    stop("Sequence labels do not match tree labels.")
+  }
+  ## Realign order of labs and treelabs within edge mat:
+  for (i in 1:nrow(edges)) for (j in 1:ncol(edges)) edges[i,j] <- which(labs==treelabs[edges[i,j]])
 
   #Count substitutions for each site
-  subs=rep(0,l)#Number of substitutitions for patterns
-  num=rep(0,l)#Number of times a given pattern is used
-  for (i in 1:l) {
-    if (length(unique(seqs[,i]))==2) num[i]=sum(mapping==i) #Only count biallelic sites
-    for (b in 1:nrow(edges)) if (seqs[edges[b,1],i]!=seqs[edges[b,2],i]) subs[i]=subs[i]+1
-  }
+  subs <- rep(0,l) # Number of substitutitions for patterns
+  num <- rep(0,l) # Number of times a given pattern is used
 
-  #Build distribution
-  dist=rep(0,max(subs))
-  for (i in 1:max(subs)) dist[i]=sum(num[which(subs==i)])
+  ## SLOW STEP!!!
+  system.time(
+  for (i in 1:l) {
+    if (length(unique(seqs[,i]))==2){
+      num[i] <- sum(mapping==i) # Only count biallelic sites
+      for (b in 1:nrow(edges)) if (seqs[edges[b,1],i]!=seqs[edges[b,2],i]) subs[i] <- subs[i]+1
+    } ## NOTE--if we're only counting biallelic sites for num, should do so fo subs as well...
+  } # end for loop
+  ) # end system.time
+
+  ## Build distribution
+  dist <- rep(0, max(subs)) # there should be no trailing zeros!
+  ## trailing zeros still happening!
+  ## bc.
+  for (i in 1:max(subs)) dist[i] <- sum(num[which(subs==i)])
+  ## assign names:
+  names(dist) <- c(1:length(dist))
 
   ## Plot distribution
   if(plot==TRUE){
     barplot(dist,
             main="Number of substitutions per site",
-            names.arg=c(1:length(dist)),
+            names.arg=names(dist),
             ylab="Frequency",
             col=transp("royalblue", alpha=0.5))
   }
@@ -88,14 +142,15 @@ read.CFML <- function(prefix, plot=TRUE) {
 
 
 
+#
 
+##
 
+####
 
+########
 
-
-
-
-
+#################################################################################################################################
 
 
 
@@ -133,40 +188,15 @@ read.CFML <- function(prefix, plot=TRUE) {
 
 ########################################################################
 
-######################################
-# dist_0 <- readCFML(prefix="~/ClonalFrameML/src/CFML.R.0")
-# str(dist_0) #
-# barplot(dist_0, main="Number of substitutions per site \n R = 0",
-#         names.arg=c(1:length(dist_0)), ylab="Frequency",  col=transp("royalblue", alpha=0.5))
-# save(dist_0, file="~/ClonalFrameML/src/CFML_R_0_dist.Rdata")
-######################################
-# setwd("/media/caitiecollins/Seagate Backup Plus Drive/SimBac")
-# dist_0.1 <- readCFML(prefix="./CFML_R_0.1")
-# str(dist_0.1)
-# save(dist_0.1, file="./CFML_R_0.1_dist.Rdata")
-# barplot(dist_0.1, main="Number of substitutions per site \n R = 0.1",
-#         names.arg=c(1:length(dist_0.1)), ylab="Frequency", col=transp("royalblue", alpha=0.5))
-######################################
-# data(dist)
-# barplot(dist, main="Number of substitutions per site",
-#         names.arg=c(1:length(dist)), ylab="Frequency", col=transp("royalblue", alpha=0.5))
-# title(substitute(paste("(", italic("S. aureus"), " empirical dataset)", sep="")), line=0.5)
-######################################
-# set.seed(1)
-# dist <- rpois(n=1000000, lambda=1)
-# for(i in 1:length(dist)){
-#   while(dist[i]==0){
-#     dist[i] <- rpois(n=1, lambda=1)
-#   }
-# }
-# dist <- table(dist) # NB: always check to make sure you have no missing n.subs in 1:max(dist)
-# barplot(dist, main="Number of substitutions per site",
-#         names.arg=c(1:length(dist)), ylab="Frequency", col=transp("royalblue", alpha=0.5))
-# title(substitute(paste("(Poisson distribution, ", italic("lambda"), " = 1)", sep="")), line=0.5)
-######################################
+##############
+## readCFML ##
+##############
 
+## ORIGINAL readCFML FN-- RETURNS DIST ONLY w barplot.
+## NOTE-- Use read.CFML (with a DOT) to get the LIST output!!
 
-#This function reads the output of CFML and outputs the distribution of substitutions per site
+## This function reads the output of CFML and outputs the distribution of substitutions per site
+
 readCFML <- function(prefix, plot=TRUE) {
 
   # require(ape)
@@ -177,25 +207,25 @@ readCFML <- function(prefix, plot=TRUE) {
   mapping<-scan(sprintf('%s.position_cross_reference.txt',prefix),sep=',',quiet=T)
   l<-length(seqs[1,])
 
-  ## check tree (violations cause problems, eg. in phen.sim)
+  ## Check tree (violations cause problems, eg. in phen.sim)
   if(!is.binary.tree(tree)) tree <- multi2di(tree)
   if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder")
 
-  #Modify the edge matrix so that it uses the same indices as the fasta file
+  ## Modify the edge matrix so that it uses the same indices as the fasta file
   labs<-labels(seqs)
   edges<-tree$edge
   treelabs<-c(tree$tip.label,tree$node.label)
   for (i in 1:nrow(edges)) for (j in 1:ncol(edges)) edges[i,j]=which(labs==treelabs[edges[i,j]])
 
-  #Count substitutions for each site
-  subs=rep(0,l)#Number of substitutitions for patterns
-  num=rep(0,l)#Number of times a given pattern is used
+  ## Count substitutions for each site
+  subs=rep(0,l) # Number of substitutitions for patterns
+  num=rep(0,l) # Number of times a given pattern is used
   for (i in 1:l) {
     if (length(unique(seqs[,i]))==2) num[i]=sum(mapping==i) #Only count biallelic sites
     for (b in 1:nrow(edges)) if (seqs[edges[b,1],i]!=seqs[edges[b,2],i]) subs[i]=subs[i]+1
   }
 
-  #Build distribution
+  ## Build distribution
   dist=rep(0,max(subs))
   for (i in 1:max(subs)) dist[i]=sum(num[which(subs==i)])
 
