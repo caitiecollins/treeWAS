@@ -7,7 +7,7 @@
 snp.sim(n.snps = 10000, n.subs = 1, snp.root = NULL, n.snps.assoc = 10,
   assoc.prob = 100, tree = coalescent.tree.sim(100), phen.loci = NULL,
   heatmap = FALSE, reconstruct = FALSE, dist.dna.model = "JC69",
-  row.names = NULL, seed = 1)
+  row.names = NULL, set = NULL, seed = 1)
 }
 \arguments{
 \item{snps}{description.}

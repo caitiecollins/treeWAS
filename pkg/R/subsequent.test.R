@@ -1,31 +1,10 @@
 
+####################################################
+## subsequent.test ## ORIGINAL (w integral score) ##
+####################################################
+
+## SEE BELOW FOR NEW/CURRENT VERSION(s) !!!!!!!!!!!!!!
 #####################
-## subsequent.test ##
-#####################
-
-########################################################################
-
-###################
-## DOCUMENTATION ##
-###################
-
-#' Short one-phrase description.
-#'
-#' Longer proper discription of function...
-#'
-#' @param snps.reconstruction A matrix containing the terminal and reconstructed
-#' ancestral states of SNPs for all nodes in the tree.
-#' @param phen.reconstruction A vector containing the terminal and reconstructed
-#' ancestral states of the phenotype for all nodes in the tree.
-#' @param tree A phylo object containing the tree representing the ancestral relationships
-#' between the individuals for which snps and phen are known.
-#'
-#'
-#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
-
-
-########################################################################
 
 # subsequent.test <- function(snps.reconstruction,
 #                             phen.reconstruction,
@@ -285,6 +264,34 @@ get.score3.1 <- function(Pi, Si){
 ## NEW (temporary/replacement) FUNCTION for subsequent test more like PAGEL test ##
 ###################################################################################
 
+#####################
+## subsequent.test ##
+#####################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param snps.reconstruction A matrix containing the terminal and reconstructed
+#' ancestral states of SNPs for all nodes in the tree.
+#' @param phen.reconstruction A vector containing the terminal and reconstructed
+#' ancestral states of the phenotype for all nodes in the tree.
+#' @param tree A phylo object containing the tree representing the ancestral relationships
+#' between the individuals for which snps and phen are known.
+#'
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+
+########################################################################
+
 subsequent.test <- function(snps.reconstruction,
                             phen.reconstruction,
                             tree){
@@ -317,6 +324,7 @@ subsequent.test <- function(snps.reconstruction,
 ###############################
 
 score <- SCORE3.1 <- SCORE3.2 <- SCORE3.3 <- SCORE3.4 <- SCORE3.5 <- SCORE3.raw <- SCORE3.p <- SCORE3.n <- SCORE3.RAW <- list()
+Q.ew <- Q.uw <- list()
 
 ## HANDLE PHEN.REC:
 ## get rid of any 0.5 values (make NA):
@@ -446,13 +454,8 @@ for(i in 1:ncol(snps.rec)){
   ## negative complex score:
   score3.n.w.ew <- sum(sim.n.ew*3, maint.n.ew*2, subsq.n.ew*1) # 4.37
 
-  # ##############
-  # ## get rate matrix:
-  # s3 <- SCORE3$corr.dat[[6]]
-  #
-  # for(s in 1:length(snps.assoc)){
-  # score3 <- s3[[snps.assoc[s]]]
-  #
+  ##############
+
   # Q.noms <- paste(c(0,0,1,1), c(0,1,0,1), sep="|")
   # ## (SNPphen.anc|SNPphen.dec)
   # m <- c("00|00", "00|01", "00|10", "00|11",
@@ -463,28 +466,53 @@ for(i in 1:ncol(snps.rec)){
   # ## divided by the sum of edge lengths for which we have a score at this SNP
   # ## (ie. the edges for which neither the ancestor nor the descendant has
   # ## an unknown reconstructed SNP/phen (ie. value of 0.5))
-  # m.ew <- sapply(c(1:length(m)),
-  #                function(e)
-  #                  sum(tree$edge.length[which(score3 == m[e])])) / sum(tree$edge.length[!is.na(score3)])
-  # mat.ew <- matrix(m.ew, ncol=4, nrow=4, byrow=TRUE)
+  # m.corr <- c(2, 0.75, 0.75, 1, 3, 0.5, 0.25,  3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2)
+  # mat.corr <- matrix(m.corr, ncol=4, nrow=4, byrow=TRUE)
+  # ## sum to 1:
+  # mat.corr <- mat.corr/sum(mat.corr)
   # ## (SNP|phen) -- anc in rows, dec in cols:
-  # rownames(mat.ew) <- colnames(mat.ew) <- c("0|0", "0|1", "1|0", "1|1")
+  # rownames(mat.corr) <- colnames(mat.corr) <- c("0|0", "0|1", "1|0", "1|1")
+  # Q <- mat.corr
+
+  ##############
+  ## get rate matrix:
+  # s3 <- SCORE3$corr.dat[[6]]
+  #
+  # for(s in 1:length(snps.assoc)){
+  # score3 <- s3[[snps.assoc[s]]]
+
+  Q.noms <- paste(c(0,0,1,1), c(0,1,0,1), sep="|")
+  ## (SNPphen.anc|SNPphen.dec)
+  m <- c("00|00", "00|01", "00|10", "00|11",
+         "01|00", "01|01", "01|10", "01|11",
+         "10|00", "10|01", "10|10", "10|11",
+         "11|00", "11|01", "11|10", "11|11")
+  ## Get the sum of the edge lengths over which that type of association happens,
+  ## divided by the sum of edge lengths for which we have a score at this SNP
+  ## (ie. the edges for which neither the ancestor nor the descendant has
+  ## an unknown reconstructed SNP/phen (ie. value of 0.5))
+  m.ew <- sapply(c(1:length(m)),
+                 function(e)
+                   sum(tree$edge.length[which(score3 == m[e])])) / sum(tree$edge.length[!is.na(score3)])
+  mat.ew <- matrix(m.ew, ncol=4, nrow=4, byrow=TRUE)
+  ## (SNP|phen) -- anc in rows, dec in cols:
+  rownames(mat.ew) <- colnames(mat.ew) <- c("0|0", "0|1", "1|0", "1|1")
   # print(mat.ew)
-  #
-  # ## OR ##
-  # ## Get unweighed "probs"??
-  # m.uw <- sapply(c(1:length(m)),
-  #                function(e)
-  #                  length(which(score3 == m[e]))) / length(score3[!is.na(score3)])
-  # mat.uw <- matrix(m.uw, ncol=4, nrow=4, byrow=TRUE)
-  #
-  # ## (SNP|phen) -- anc in rows, dec in cols:
-  # rownames(mat.uw) <- colnames(mat.uw) <- c("0|0", "0|1", "1|0", "1|1")
+
+  ## OR ##
+  ## Get unweighed "probs"??
+  m.uw <- sapply(c(1:length(m)),
+                 function(e)
+                   length(which(score3 == m[e]))) / length(score3[!is.na(score3)])
+  mat.uw <- matrix(m.uw, ncol=4, nrow=4, byrow=TRUE)
+
+  ## (SNP|phen) -- anc in rows, dec in cols:
+  rownames(mat.uw) <- colnames(mat.uw) <- c("0|0", "0|1", "1|0", "1|1")
   # print(mat.uw)
-  #
-  # # sum(mat[,c(1,4)])
-  # # sum(mat[,c(2,3)])
-  #
+
+  # sum(mat[,c(1,4)])
+  # sum(mat[,c(2,3)])
+
   # print(sum(mat.ew[,c(1,4)]))
   # print(sum(mat.ew[,c(2,3)]))
   #
@@ -492,8 +520,37 @@ for(i in 1:ncol(snps.rec)){
   # print(sum(mat.uw[,c(2,3)]))
   # }
 
-  # sum.mat <- Reduce("+", list(mat, mat, mat)) # add matrices togeter by cell.
+  Q.ew[[i]] <- mat.ew
+  Q.uw[[i]] <- mat.uw
 
+  # load("/home/caitiecollins/treeWAS/misc/SCORE3.set1_31.Rdata")
+  # snps.assoc <- out$performance[[1]]$snps.assoc
+  # tree <- out$tree[[1]]
+  # snps.rec <- out$res$set1_31$dat$snps.rec
+  # phen.rec <- out$res$set1_31$dat$phen.rec
+
+  ##
+  # var.rec <- snps.rec[,snps.assoc[1]]
+  # var.rec <- round(var.rec)
+  # var.rec <- replace(var.rec, which(var.rec == 0), "A")
+  # var.rec <- replace(var.rec, which(var.rec == 1), "B")
+  # if(any(!var.rec %in% c("A", "B"))) var.rec <- replace(var.rec, which(!var.rec %in% c("A", "B")), NA)
+  # plot.phen(tree, phen.nodes=var.rec)
+  # title("SNP 304", line=-1)
+
+
+  # Q.ew <- SCORE3$corr.dat[[9]]
+  # Q.uw <- SCORE3$corr.dat[[10]]
+  #
+  # Q.ew[[snps.assoc[1]]]
+  # Q.uw[[snps.assoc[1]]]
+  #
+  # var <- snps.rec[,snps.assoc[1]][-which(!snps.rec[,snps.assoc[1]] %in% c(0,1))]
+  # table(var)/length(var)
+  # sum(Q.uw[[snps.assoc[1]]][, c(1,2)])
+  # sum(Q.uw[[snps.assoc[1]]][, c(3,4)])
+
+  ## sum.mat <- Reduce("+", list(mat, mat, mat)) # add matrices togeter by cell.
   ############
 
   ## KEEP ONLY THE HIGHER OF THE TWO SCORES!  ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
@@ -557,7 +614,8 @@ for(i in 1:ncol(snps.rec)){
 
 
   SCORE3 <- list(SCORE3.1=SCORE3.1, SCORE3.2=SCORE3.2, SCORE3.3=SCORE3.3, SCORE3.4=SCORE3.4, SCORE3.5=SCORE3.5,
-                 SCORE3.raw=SCORE3.raw, SCORE3.p=SCORE3.p, SCORE3.n=SCORE3.n)
+                 SCORE3.raw=SCORE3.raw, SCORE3.p=SCORE3.p, SCORE3.n=SCORE3.n,
+                 Q.ew=Q.ew, Q.uw=Q.uw)
 
   score <- score.complete
 

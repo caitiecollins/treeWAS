@@ -4,7 +4,7 @@
 \alias{read.CFML}
 \title{Short one-phrase description.}
 \usage{
-read.CFML(prefix, plot = TRUE)
+read.CFML(prefix, tree = NULL, plot = TRUE)
 }
 \arguments{
 \item{prefix}{A character string containing the prefix of all file names to be read in.}

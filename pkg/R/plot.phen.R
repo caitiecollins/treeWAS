@@ -50,7 +50,7 @@
 ########################################################################
 
 
-plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
+plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, ...){
 
   # require(phangorn)
   # require(adegenet)
@@ -58,6 +58,9 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
   #############################################################################
   ######################## PLOT phylo with PHEN ###############################
   #############################################################################
+
+  ## SIDE-BY-SIDE PLOTS??
+  if(!is.null(phen.nodes) & !is.null(snp.nodes)) par(mfrow=c(1,2))
 
   ## get number of terminal nodes
   n.ind <- tree$Nnode+1
@@ -67,8 +70,11 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
 
     ## get COLOR for NODES
     nodeCol <- as.vector(phen.nodes)
-    nodeCol <- replace(nodeCol, which(nodeCol == "B"), "red")
-    nodeCol <- replace(nodeCol, which(nodeCol == "A"), "blue")
+    nodeCol <- as.character(nodeCol)
+    # nodeCol <- replace(nodeCol, which(nodeCol == "B"), "red")
+    # nodeCol <- replace(nodeCol, which(nodeCol == "A"), "blue")
+    nodeCol <- replace(nodeCol, which(nodeCol %in% c("B", "1")), "red")
+    nodeCol <- replace(nodeCol, which(nodeCol %in% c("A", "0")), "blue")
     nodeCol <- as.vector(unlist(nodeCol))
     ## get COLOR for LEAVES ONLY
     leafCol <- nodeCol[1:n.ind]
@@ -113,6 +119,70 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
         ## from root to the top-most internal node to be connected (ie. the highest in the plot)
       }
     } # end plot = TRUE
+
+    if(!is.null(snp.nodes)){
+
+      phen.nodes <- snp.nodes # for convenience
+
+      ## check if phen provided is for all nodes or only terminal nodes:
+      if(length(phen.nodes) == (n.ind + tree$Nnode)){
+
+        ## get COLOR for NODES
+        nodeCol <- as.vector(phen.nodes)
+        nodeCol <- as.character(nodeCol)
+        # nodeCol <- replace(nodeCol, which(nodeCol == "B"), "red")
+        # nodeCol <- replace(nodeCol, which(nodeCol == "A"), "blue")
+        nodeCol <- replace(nodeCol, which(nodeCol %in% c("B", "1")), "red")
+        nodeCol <- replace(nodeCol, which(nodeCol %in% c("A", "0")), "blue")
+        nodeCol <- as.vector(unlist(nodeCol))
+        ## get COLOR for LEAVES ONLY
+        leafCol <- nodeCol[1:n.ind]
+        ## get COLOR of INTERNAL nodes ONLY
+        internalNodeCol <- nodeCol[(n.ind+1):length(nodeCol)]
+
+        ## get COLOR for EDGES
+        edgeCol <- rep("black", nrow(tree$edge))
+        for(i in 1:nrow(tree$edge)){
+          edgeCol[i] <- nodeCol[tree$edge[i,2]]
+          if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
+        }
+        edgeLabCol <- edgeCol
+
+
+        ###############
+        ## plot TREE ##
+        ###############
+        if(plot==TRUE){
+          if(n.ind <= 20){
+            plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
+            title("Coalescent tree w/ phenotypic changes")
+            axisPhylo()
+            edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+                       cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
+            tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
+            nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+          }else{
+            plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
+            title("Coalescent tree w/ phenotypic changes")
+            axisPhylo()
+            # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+            # cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
+            tiplabels(text=tree$tip.label, cex=0.6, adj=c(1.5, 0), col=leafCol, frame="none") # adj=c(1.5,0) # if direction="leftwards"
+            ## make sure this isn't backward...:
+            #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+            ## should be numbered s.t. the root node is n.term+1
+            ## RECALL: terminal nodes are numbered 1:n.ind from bottom to top of plot of tree;
+            ## edges are numbered 1:nrow(edges) by following the lowest trace on the plot
+            ## (starting from the root down to the lowermost tips);
+            ## thus, internal nodes are numbered (n.ind+1):(n.ind+(n.ind-1)),
+            ## from root to the top-most internal node to be connected (ie. the highest in the plot)
+          }
+        } # end plot = TRUE
+      } # end check for length snp.nodes
+    } # end snp.nodes
+
+    ## return plot par settings to 1 plot per window..
+    if(!is.null(phen.nodes) & !is.null(snp.nodes)) par(mfrow=c(1,1))
 
   }else{ # end phen for all nodes
 
@@ -173,10 +243,10 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
 ## plotting reconstructions: ##
 ###############################
 
-## PLUS -- enable plotting of boxes of extra variables along tips..
-
-## get rec (from simTest):
-
+# ## PLUS -- enable plotting of boxes of extra variables along tips..
+#
+# ## get rec (from simTest):
+#
 # tree <- out$tree[[1]]
 #
 # rec <- out$res[[1]]$dat$snps.rec
@@ -202,10 +272,10 @@ plot.phen <- function(tree, phen.nodes, plot=TRUE, ...){
 # par(mfrow=c(1,2))
 # ## phen:
 # plot.phen(tree, phen.nodes=phen.rec)
-# title("set1_30: phen.rec (left) vs.", line=-0.5)
+# title("set1_31: phen.rec (left) vs.", line=-0.5)
 # ## snp:
 # plot.phen(tree, phen.nodes = var.rec, direction="leftwards") # tip adj=c(1.5,0)
-# title("snps.rec[,snps.assoc[6]] (right)", line=-0.5)
+# title("snps.rec 304 (right)", line=-0.5)
 
 
 

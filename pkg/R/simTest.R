@@ -14,7 +14,7 @@
 # out <- simTest(
 #
 #   ## simTest args:
-#   set.number = 2,
+#   set.number = 1, # 2,
 #   n.reps = 1,
 #   set.seed.as = "file.number",
 #   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
@@ -31,7 +31,7 @@
 #   n.phen.subs = 15, # theta_p = NULL
 #   n.snps.assoc = 10, # = 0
 #   # assoc.option = "all",
-#   assoc.prob = 100, # 90,
+#   assoc.prob = 90, # 100, #
 #   grp.min = 0.25,
 #
 #   ## treeWAS args:

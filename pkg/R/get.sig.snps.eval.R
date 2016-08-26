@@ -380,8 +380,8 @@ get.sig.snps <- function(snps,
                   corr.sim = cs.list)
 
     ## save (w random number for now --> use time stamp to differentiate... )
-    # save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", "set1_31", "Rdata", sep="."))
-    save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", sample(c(1000:10000), 1), "Rdata", sep="."))
+    save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", "set1_31", "Rdata", sep="."))
+    # save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", sample(c(1000:10000), 1), "Rdata", sep="."))
 
 
     ## Then run regularly as before to continue:

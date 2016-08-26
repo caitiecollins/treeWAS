@@ -81,7 +81,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
   ## node.label causing problems (?!) ###
   ## Not sure if order wrong, but think below is wrong bc., while tree$tip.lab is in order corresponding
   ## correctly to edge mat, internal node labs are not
-  ## (Hyp-- edge mat expects internal nodes to be labelled in order, ie. 111 --> NODE_111 ??? ---> (NO--PROBABLY NOT!!!!!)).
+  ## (Hyp-- edge mat expects internal nodes to be labelled in order, ie. 111 --> NODE_111 ??? ---> (BUT MAYBE NOT???!!!!!)).
   treelabs <- c(tree$tip.label, tree$node.label)
   # treelabs <- tree$tip.label
   # treelabs.ori <- treelabs

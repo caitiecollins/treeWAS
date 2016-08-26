@@ -512,6 +512,9 @@ selectBiallelicSNP <- function(x, DNA=TRUE){
       if(x=="T") out <- "A"
       if(x=="C") out <- "G"
       if(x=="G") out <- "C"
+
+      if(x == "0") out <- "1"
+      if(x == "1") out <- "0"
     } # end DNA
 
     ## for RNA encoding:
@@ -525,6 +528,9 @@ selectBiallelicSNP <- function(x, DNA=TRUE){
       if(x=="U") out <- "A"
       if(x=="C") out <- "G"
       if(x=="G") out <- "C"
+
+      if(x == "0") out <- "1"
+      if(x == "1") out <- "0"
     } # end RNA
   } # end !is.null(x)
 
@@ -548,6 +554,9 @@ selectBiallelicSNP <- function(x, DNA=TRUE){
   ## R/S coding
   if(x == "R") out <- "S"
   if(x == "S") out <- "R"
+  ## 0/1 coding:
+  if(x == "0") out <- "1"
+  if(x == "1") out <- "0"
   return(out)
 } # end .switch.phen
 
