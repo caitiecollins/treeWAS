@@ -135,6 +135,7 @@ treeWAS <- function(snps,
                     snps.assoc = NULL, # for (manhattan) plot
                     snps.reconstruction = "parsimony",
                     phen.reconstruction = "parsimony",
+                    coaltree = TRUE,
                     filename.plot = NULL){
 
   ###################
@@ -238,12 +239,22 @@ treeWAS <- function(snps,
       ## if we can convert to numeric, do so:
       tree$tip.label <- as.numeric(tree$tip.label)
     }else{
-      ## else, replace with numeric indices:
-      # tree$tip.label <- c(1:length(tree$tip.label))
-      warning("Site-wise parsimony scores (phangorn's
-              fitch parsimony function) may not be calculated correctly
-              when tip.labels are not numeric.
-              Please change tree$tip.label to numeric values.")
+
+      ## if we can remove "NODE_" to get numeric, do so:
+      prefix <- keepFirstN(tree$tip.label, 1)
+      if(all(tolower(prefix) == "t")){
+        temp <- removeFirstN(tree$tip.label, 1)
+        if(all.is.numeric(temp)){
+          tree$tip.label <- as.numeric(temp)
+        }else{
+          ## else, replace with numeric indices:
+          # tree$tip.label <- c(1:length(tree$tip.label))
+          warning("Site-wise parsimony scores (phangorn's
+                  fitch parsimony function) may not be calculated correctly
+                  when tip.labels are not numeric.
+                  Please change tree$tip.label to numeric values.")
+        }
+      }
     }
 
     ## NODE labels ##
@@ -343,6 +354,7 @@ treeWAS <- function(snps,
                         reconstruct = FALSE,
                         dist.dna.model = dist.dna.model,
                         row.names = row.names(snps),
+                        coaltree = coaltree,
                         seed = NULL)
 
     genomes[[i]] <- out[[i]][[1]]
@@ -358,6 +370,7 @@ treeWAS <- function(snps,
 
   } # end for loop
 
+  print("treeWAS snps sim done.")
 
 
   ################################################################
@@ -554,6 +567,7 @@ treeWAS <- function(snps,
               to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
   }
 
+  print("reconstructions done")
 
   #######################
   ## identify sig.snps ##
@@ -565,11 +579,13 @@ treeWAS <- function(snps,
 
   sig.list <- list()
 
+  # test <- c("terminal", "simultaneous", "subsequent")
   TEST <- as.list(test)
 
   ## Run get.sig.snps fn once for each association test:
   system.time( # 100 - 164 (why such a difference?)
   for(i in 1:length(TEST)){
+    if(TEST[[i]] != "subsequent"){
     sig.list[[i]] <- get.sig.snps(snps = snps,
                                   snps.unique = snps.unique,
                                   snps.index = snps.index,
@@ -586,10 +602,32 @@ treeWAS <- function(snps,
                                   snps.reconstruction = snps.rec,
                                   snps.sim.reconstruction = snps.sim.rec,
                                   phen.reconstruction = phen.rec)
+    }else{
+      sig.list3 <- get.sig.snps(snps = snps,
+                                    snps.unique = snps.unique,
+                                    snps.index = snps.index,
+                                    snps.sim = snps.sim,
+                                    snps.sim.unique = snps.sim.unique,
+                                    snps.sim.index = snps.sim.index,
+                                    phen = phen,
+                                    tree = tree,
+                                    test = TEST[[i]],
+                                    n.tests = length(TEST),
+                                    p.value = p.value,
+                                    p.value.correct = p.value.correct,
+                                    p.value.by = p.value.by,
+                                    snps.reconstruction = snps.rec,
+                                    snps.sim.reconstruction = snps.sim.rec,
+                                    phen.reconstruction = phen.rec)
+      sig.list[[i]] <- sig.list3[[1]]
+      SCORE3 <- sig.list3$SCORE3
+    }
   }
   )
   names(sig.list) <- test
   # str(sig.list)
+
+  print("get sig snps done.")
 
   ## DOUBLE CHECKING ##
   #   str(sig.list[[i]])
@@ -915,7 +953,8 @@ treeWAS <- function(snps,
   results <- list(dat=DAT,
                   vals=VALS,
                   thresh=thresholds,
-                  res=RES)
+                  res=RES,
+                  SCORE3=SCORE3)
 
   return(results)
 

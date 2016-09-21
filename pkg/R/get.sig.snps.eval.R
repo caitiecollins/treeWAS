@@ -352,7 +352,7 @@ get.sig.snps <- function(snps,
 
     ## NEW TEMPORARY CODE TO SAVE SUBSEQUENT SCORE ALTERNATIVES/RAW DATA:
     cd.list <- list()
-    for(n in 1:length(corr.dat.list[[2]])){
+    for(n in 1:length(corr.dat.list[[2]])){ # 1:8
       corr.dat <- corr.dat.list[[2]][[n]]
       ## Expand corr.dat (if not all snps columns unique):
       if(all.unique == FALSE){
@@ -362,6 +362,7 @@ get.sig.snps <- function(snps,
       }
       cd.list[[n]] <- corr.dat
     }
+    names(cd.list) <- names(corr.dat.list)
 
     cs.list <- list()
     for(n in 1:length(corr.sim.list[[2]])){
@@ -374,13 +375,13 @@ get.sig.snps <- function(snps,
       }
       cs.list[[n]] <- corr.sim
     }
-
+    names(cs.list) <- names(corr.sim.list)
 
     SCORE3 <-list(corr.dat = cd.list,
                   corr.sim = cs.list)
 
     ## save (w random number for now --> use time stamp to differentiate... )
-    save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", "set1_31", "Rdata", sep="."))
+    # save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", "set1_31", "Rdata", sep="."))
     # save(SCORE3, file=paste("~/treeWAS/misc/SCORE3", sample(c(1000:10000), 1), "Rdata", sep="."))
 
 
@@ -573,6 +574,11 @@ get.sig.snps <- function(snps,
 
   ## assign names to out containing call info:
   names(out) <- nom
+
+  if(test == "subsequent"){
+  out <- list("res" = out,
+              "SCORE3" = SCORE3)
+  }
 
   return(out)
 

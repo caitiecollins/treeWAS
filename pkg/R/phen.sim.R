@@ -52,6 +52,7 @@
 phen.sim <- function(tree,
                      n.subs = 15,
                      grp.min = 0.2,
+                     coaltree = TRUE,
                      seed = NULL){
 
   if(!is.null(seed)) set.seed(seed)
@@ -127,6 +128,11 @@ phen.sim <- function(tree,
       all.inds <- sort(unique(as.vector(unlist(tree$edge))))
 
       x <- rev(c(1:nrow(tree$edge)))
+
+      if(coaltree == FALSE){
+        ## use normal/reverse (top:bottom) edge mat:
+        x <- 1:nrow(tree$edge)
+      }
 
       ## get phen of nodes
       for(i in 1:length(x)){

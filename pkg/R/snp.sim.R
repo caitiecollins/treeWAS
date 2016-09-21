@@ -43,6 +43,7 @@ snp.sim <- function(n.snps = 10000,
                     reconstruct = FALSE,
                     dist.dna.model = "JC69",
                     row.names = NULL,
+                    coaltree = TRUE,
                     set=NULL,
                     seed=1){
 
@@ -55,6 +56,7 @@ snp.sim <- function(n.snps = 10000,
   ##################################
   n.ind <- tree$Nnode+1
   gen.size <- n.snps
+  edges <- tree$edge
 
   if(!is.null(seed)) set.seed(seed)
 
@@ -257,6 +259,10 @@ snp.sim <- function(n.snps = 10000,
   ## (ie. ind.length(tree$tip.label)+1 ) is our root individual:
   x <- rev(c(1:nrow(tree$edge)))
 
+  if(coaltree == FALSE){
+    ## use normal/reverse (top:bottom) edge mat:
+    x <- 1:nrow(tree$edge)
+  }
 
   #############################
   ## For Loop to get new nts ##
@@ -646,10 +652,6 @@ snp.sim <- function(n.snps = 10000,
     if(!is.null(set)){
       if(set == 2){
 
-        ## get 2 sets of clades:
-        ## Get tree as hclust tree:
-        tree.hc <- as.hclust.phylo(tree)
-
         ## Want to divide tree into 2 sets of clades btw 1/3:2/3 and 1/2:1/2
         clades <- tab <- grp.options <- sets.complete <- list()
 
@@ -657,37 +659,101 @@ snp.sim <- function(n.snps = 10000,
         max.size <- floor((tree$Nnode+1)*(2/3))
         grp1 <- tree$Nnode+1
 
-        i <- 2
-        counter <- 0
-        #######################################
-        ## WHILE LOOP to get size of clades: ##
-        #######################################
-        while(grp1 < min.size | grp1 > max.size){
-          clades[[i]] <- cutree(tree.hc, k=i)
-          tab[[i]] <- table(clades[[i]])
-          grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
-          ## make grp1 first clade in grp.options:
-          group1 <- grp.opts[1]
-          ## remove first clade from options:
-          grp.opts <- grp.opts[-1]
-          ## and record n.grps:
-          n.grp <- 1
-          ## try to identify a (set of) clade(s) that's big enough (but not too big):
-          while(group1 < min.size){
-            group1 <- sum(group1, grp.opts[1])
-            grp.opts <- grp.opts[-1]
-            n.grp <- n.grp+1
-          }
-          sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
-          sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
-          grp1 <- sum(grp.options[[i]][1:n.grp])
-          k <- i
-          i <- i+1
-          counter <- counter+1
-        } # end while loop
-        ###########
+        ## get 2 sets of clades:
 
-        sets <- sets.complete[[length(sets.complete)]]
+        ##############
+        ## coaltree ##
+        ##############
+
+        if(coaltree == TRUE){
+          ## Get tree as hclust tree:
+          tree.hc <- as.hclust.phylo(tree)
+
+          i <- 2
+          counter <- 0
+          #######################################
+          ## WHILE LOOP to get size of clades: ##
+          #######################################
+          while(grp1 < min.size | grp1 > max.size){
+            clades[[i]] <- cutree(tree.hc, k=i)
+            tab[[i]] <- table(clades[[i]])
+            # grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+            grp.opts <- grp.options[[i]] <- sapply(c(1:(i)), function(e) sum(tab[[i]][1:e]))
+            ## make grp1 first clade in grp.options:
+            group1 <- grp.opts[1]
+            ## remove first clade from options:
+            grp.opts <- grp.opts[-1]
+            ## and record n.grps:
+            n.grp <- 1
+            ## try to identify a (set of) clade(s) that's big enough (but not too big):
+            while(group1 < min.size){
+              group1 <- sum(group1, grp.opts[1])
+              grp.opts <- grp.opts[-1]
+              n.grp <- n.grp+1
+            }
+            sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
+            sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
+            grp1 <- sum(grp.options[[i]][1:n.grp])
+            k <- i
+            i <- i+1
+            counter <- counter+1
+          } # end while loop
+          ###########
+
+          sets <- sets.complete[[length(sets.complete)]]
+
+          ###########
+
+        }else{
+          ###########
+          ## rtree ##
+          ###########
+          dec <- grp <- sets.temp <- sets.complete <- list()
+
+          inds <- c(1:(tree$Nnode+1))
+          new.root <- tree$edge[1,1] # initial root
+
+          counter <- 0
+          #######################################
+          ## WHILE LOOP to get size of clades: ##
+          #######################################
+          while(grp1 < min.size | grp1 > max.size){
+
+            ## get all descendants of root node:
+            all.dec <- .getDescendants(tree, node=new.root)
+
+            ## get all descendants in first 2 major clades:
+            dec[[1]] <- .getDescendants(tree, node=all.dec[1])
+            dec[[2]] <- .getDescendants(tree, node=all.dec[2])
+
+            ## get terminal inds only:
+            sets.temp[[1]] <- dec[[1]][which(dec[[1]] %in% inds)]
+            sets.temp[[2]] <- dec[[2]][which(dec[[2]] %in% inds)]
+
+            grp[[1]] <- length(sets.temp[[1]])
+            grp[[2]] <- length(sets.temp[[2]])
+
+            max.grp <- which.max(c(grp[[1]], grp[[2]]))
+            new.root <- all.dec[max.grp]
+
+            set1 <- sets.temp[[max.grp]]
+
+            sets <- rep(2, length(inds))
+            sets <- replace(sets, set1, 1)
+            # names(sets) <- rownames(snps)
+            names(sets) <- removeFirstN(tree$tip.label, 1) ## assuming all rtrees preface their tip.labs w "t"...
+
+            counter <- counter+1
+
+            grp1 <- grp[[max.grp]]
+
+          } # end while loop
+
+        } # end rtree
+
+        ###########################
+        ## BOTH coaltree & rtree ##
+        ###########################
 
         set1 <- names(sets)[which(sets == 1)]
         set2 <- names(sets)[which(sets == 2)]
@@ -701,7 +767,11 @@ snp.sim <- function(n.snps = 10000,
 
         ## replace set1 snps with 0 at all inds in clade.set1:
         for(e in 1:length(snps.assoc.set1)){
-          snps[which(rownames(snps) %in% set1), snps.assoc[snps.assoc.set1[e]]] <- 0
+          if(coaltree == TRUE){
+            snps[which(rownames(snps) %in% set1), snps.assoc[snps.assoc.set1[e]]] <- 0
+          }else{
+            snps[which(rownames(snps) %in% set1), snps.assoc[snps.assoc.set1[e]]] <- 0
+          }
         }
         ## replace set2 snps with 0 at all inds in clade.set2:
         for(e in 1:length(snps.assoc.set2)){

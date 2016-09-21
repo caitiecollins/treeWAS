@@ -49,8 +49,23 @@
 
 ########################################################################
 
+###############################
+## SIMPLE PLOT FOR CHECKING: ##
+###############################
 
-plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, ...){
+# plot(tree, show.tip=FALSE, edge.width=2)
+# tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col="black", frame="none")
+# edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+#            cex=0.66, font=2, frame="none", col="blue", adj=c(1,1))
+# ## coaltree??
+# # nodelabels(text=rev(unique(tree$edge[,1])), cex=0.6, bg=transp("yellow", 0.7), col="black", frame="circle") # frame="none", col="red"
+# ## rtree??
+# nodelabels(text=unique(tree$edge[,1]), cex=0.6, bg=transp("yellow", 0.7), col="black", frame="circle") # frame="none", col="red"
+# axisPhylo()
+
+
+
+plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, main.title = TRUE, ...){
 
   # require(phangorn)
   # require(adegenet)
@@ -89,26 +104,46 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, ...){
     }
     edgeLabCol <- edgeCol
 
-
     ###############
     ## plot TREE ##
     ###############
     if(plot==TRUE){
       if(n.ind <= 20){
         plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
-        title("Coalescent tree w/ phenotypic changes")
+        ## Add title?
+        if(main.title == TRUE){
+          title("Coalescent tree w/ phenotypic changes")
+        }else{
+          if(!is.null(main.title)) title(main.title)
+        }
         axisPhylo()
         edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
                    cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
         nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+
       }else{
-        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
-        title("Coalescent tree w/ phenotypic changes")
+
+        if(RTL == FALSE){
+          plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
+        }else{
+          plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction = "leftwards", ...) # edgeCol
+        }
+        ## Add title?
+        if(main.title == TRUE){
+          title("Coalescent tree w/ phenotypic changes")
+        }else{
+          if(!is.null(main.title)) title(main.title)
+        }
         axisPhylo()
         # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
                   # cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
-        tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col=leafCol, frame="none") # adj=c(1.5,0) # if direction="leftwards"
+        if(RTL == FALSE){
+          tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col=leafCol, frame="none")
+        }else{
+          ## if direction="leftwards"
+          tiplabels(text=tree$tip.label, cex=0.6, adj=c(1.5,0), col=leafCol, frame="none")
+        }
         ## make sure this isn't backward...:
         #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
         ## should be numbered s.t. the root node is n.term+1
@@ -155,19 +190,33 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, ...){
         if(plot==TRUE){
           if(n.ind <= 20){
             plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
-            title("Coalescent tree w/ phenotypic changes")
+            ## Add title?
+            if(main.title == TRUE){
+              title("Coalescent tree w/ phenotypic changes")
+            }else{
+              if(!is.null(main.title)) title(main.title)
+            }
             axisPhylo()
             edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
                        cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
             tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
             nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+
           }else{
+
             plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
-            title("Coalescent tree w/ phenotypic changes")
+            ## Add title?
+            if(main.title == TRUE){
+              title("Coalescent tree w/ phenotypic changes")
+            }else{
+              if(!is.null(main.title)) title(main.title)
+            }
             axisPhylo()
             # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
             # cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
+
             tiplabels(text=tree$tip.label, cex=0.6, adj=c(1.5, 0), col=leafCol, frame="none") # adj=c(1.5,0) # if direction="leftwards"
+
             ## make sure this isn't backward...:
             #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
             ## should be numbered s.t. the root node is n.term+1
@@ -238,6 +287,13 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, ...){
 
 
 
+# i <- 7
+# plot.phen(tree, phen.nodes=phen.nodes, snp.nodes=snps.assoc.nodes[,i])
+# length(which(phen.nodes[1:100] == snps.assoc.nodes[,i][1:100]))
+
+# i <- 6
+# plot.phen(tree, phen.nodes=phen.rec, snp.nodes=snps.rec[,snps.assoc[i]])
+# length(which(phen.rec[1:100] == snps.rec[,snps.assoc[i]][1:100]))
 
 ###############################
 ## plotting reconstructions: ##

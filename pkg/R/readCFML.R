@@ -73,7 +73,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 
   ## check tree (violations cause problems, eg. in phen.sim)
   if(!is.binary.tree(tree)) tree <- multi2di(tree)
-  # if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder")
+  # if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder") ## not sure this makes any difference..
 
   ## Modify the edge matrix so that it uses the same indices as the fasta file
   labs <- labels(seqs)

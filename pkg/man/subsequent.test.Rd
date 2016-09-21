@@ -2,7 +2,9 @@
 % Please edit documentation in R/subsequent.test.R
 \name{subsequent.test}
 \alias{subsequent.test}
-\title{Short one-phrase description.}
+\title{################
+## get.score3 ##
+################}
 \usage{
 subsequent.test(snps.reconstruction, phen.reconstruction, tree)
 }
@@ -17,6 +19,40 @@ ancestral states of the phenotype for all nodes in the tree.}
 between the individuals for which snps and phen are known.}
 }
 \description{
+########################################################################
+}
+\details{
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param Pa A numeric value containing either the state,
+#' or the probability of the state, of the phenotype at a given \emph{ancestral} node.
+#' @param Pd A numeric value containing either the state,
+#' or the probability of the state, of the phenotype at a given \emph{descendant} node.
+#' @param Sa A numeric value containing either the state,
+#' or the probability of the state, of SNPi at a given \emph{ancestral} node.
+#' @param Sd A numeric value containing either the state,
+#' or the probability of the state, of SNPi at a given \emph{descendant} node.
+#' @param l A numeric value specifying the length of the branch in the phylogenetic tree
+#' that joins the ancestral and descendant node.
+#'
+#' @author Caitlin Collins \email{caitiecollins@gmail.com}
+#' @export
+#' @examples
+#'
+#' ## basic use of fn
+#' tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
+#'
+
+########################################################################
+
+Short one-phrase description.
+
 Longer proper discription of function...
 }
 \author{

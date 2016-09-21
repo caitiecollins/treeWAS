@@ -5,7 +5,7 @@
 
 ## SEE BELOW FOR NEW/CURRENT VERSION(s) !!!!!!!!!!!!!!
 #####################
-
+#
 # subsequent.test <- function(snps.reconstruction,
 #                             phen.reconstruction,
 #                             tree){
@@ -119,83 +119,83 @@
 
 
 
-
-################
-## get.score3 ##
-################
-
-########################################################################
-
-###################
-## DOCUMENTATION ##
-###################
-
-#' Short one-phrase description.
 #'
-#' Longer proper discription of function...
+#' ################
+#' ## get.score3 ##
+#' ################
 #'
-#' @param Pa A numeric value containing either the state,
-#' or the probability of the state, of the phenotype at a given \emph{ancestral} node.
-#' @param Pd A numeric value containing either the state,
-#' or the probability of the state, of the phenotype at a given \emph{descendant} node.
-#' @param Sa A numeric value containing either the state,
-#' or the probability of the state, of SNPi at a given \emph{ancestral} node.
-#' @param Sd A numeric value containing either the state,
-#' or the probability of the state, of SNPi at a given \emph{descendant} node.
-#' @param l A numeric value specifying the length of the branch in the phylogenetic tree
-#' that joins the ancestral and descendant node.
+#' ########################################################################
 #'
-#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
-#' @examples
+#' ###################
+#' ## DOCUMENTATION ##
+#' ###################
 #'
-#' ## basic use of fn
-#' tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
+#' #' Short one-phrase description.
+#' #'
+#' #' Longer proper discription of function...
+#' #'
+#' #' @param Pa A numeric value containing either the state,
+#' #' or the probability of the state, of the phenotype at a given \emph{ancestral} node.
+#' #' @param Pd A numeric value containing either the state,
+#' #' or the probability of the state, of the phenotype at a given \emph{descendant} node.
+#' #' @param Sa A numeric value containing either the state,
+#' #' or the probability of the state, of SNPi at a given \emph{ancestral} node.
+#' #' @param Sd A numeric value containing either the state,
+#' #' or the probability of the state, of SNPi at a given \emph{descendant} node.
+#' #' @param l A numeric value specifying the length of the branch in the phylogenetic tree
+#' #' that joins the ancestral and descendant node.
+#' #'
+#' #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' #' @export
+#' #' @examples
+#' #'
+#' #' ## basic use of fn
+#' #' tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
+#' #'
 #'
-
-########################################################################
-
-get.score3 <- function(Pa, Pd, Sa, Sd, l){
-
-  score3 <- NULL
-
-  ## CHECKS:
-  if(length(Pa) > 1) stop("Pa must be of length one
-                                    (i.e., (the probability of)
-                          the phenotypic state of ONE ancestral node.")
-  if(length(Pd) > 1) stop("Pd must be of length one
-                                    (i.e., (the probability of)
-                          the phenotypic state of ONE descendant node.")
-  if(length(Sa) > 1) stop("Sa must be of length one
-                                    (i.e., (the probability of)
-                          the SNPi state of ONE ancestral node.")
-  if(length(Sd) > 1) stop("Sd must be of length one
-                                    (i.e., (the probability of)
-                          the SNPi state of ONE descendant node.")
-
-  ## Original integral-based score:
-  # score3 <- l*(((4/3)*Pa*Sa) +
-  #                ((2/3)*Pa*Sd) +
-  #                ((2/3)*Pd*Sa) +
-  #                ((4/3)*Pd*Sd) -
-  #                Pa -
-  #                Pd -
-  #                Sa -
-  #                Sd +
-  #                1)
-
-
-  ## Simple score1-like score (across edges):
-  score3 <- (l/2)*(
-    Pa*Sa + (1 - Pa)*(1 - Sa) -
-      Pa*(1 - Sa) - (1 - Pa)*Sa +
-      Pd*Sd + (1 - Pd)*(1 - Sd) -
-      Pd*(1 - Sd) - (1 - Pd)*Sd)
-
-
-  return(score3)
-
-} # end get.score3
+#' ########################################################################
+#'
+# get.score3 <- function(Pa, Pd, Sa, Sd, l){
+#
+#   score3 <- NULL
+#
+#   ## CHECKS:
+#   if(length(Pa) > 1) stop("Pa must be of length one
+#                                     (i.e., (the probability of)
+#                           the phenotypic state of ONE ancestral node.")
+#   if(length(Pd) > 1) stop("Pd must be of length one
+#                                     (i.e., (the probability of)
+#                           the phenotypic state of ONE descendant node.")
+#   if(length(Sa) > 1) stop("Sa must be of length one
+#                                     (i.e., (the probability of)
+#                           the SNPi state of ONE ancestral node.")
+#   if(length(Sd) > 1) stop("Sd must be of length one
+#                                     (i.e., (the probability of)
+#                           the SNPi state of ONE descendant node.")
+#
+#   ## Original integral-based score:
+#   score3 <- l*(((4/3)*Pa*Sa) +
+#                  ((2/3)*Pa*Sd) +
+#                  ((2/3)*Pd*Sa) +
+#                  ((4/3)*Pd*Sd) -
+#                  Pa -
+#                  Pd -
+#                  Sa -
+#                  Sd +
+#                  1)
+#
+#
+#   ## Simple score1-like score (across edges):
+# #   score3 <- (l/2)*(
+# #     Pa*Sa + (1 - Pa)*(1 - Sa) -
+# #       Pa*(1 - Sa) - (1 - Pa)*Sa +
+# #       Pd*Sd + (1 - Pd)*(1 - Sd) -
+# #       Pd*(1 - Sd) - (1 - Pd)*Sd)
+#
+#
+#   return(score3)
+#
+# } # end get.score3
 
 
 
@@ -203,28 +203,28 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l){
 ## get.score3.1 ##
 ##################
 ## TEMPORARY FN-- TESTING SCORE3 = SCORE1 FOR ALL NODES:
-get.score3.1 <- function(Pi, Si){
-
-  score3 <- NULL
-
-  ## CHECKS:
-  if(length(Pi) > 1) stop("Pi must be of length one
-                                    (i.e., (the probability of)
-                          the phenotypic state of ONE ancestral node.")
-
-  if(length(Si) > 1) stop("Si must be of length one
-                                    (i.e., (the probability of)
-                          the SNPi state of ONE ancestral node.")
-
-
-  ## Simple score1-like score (for all/individual nodes):
-  score3 <- Pi*Si + (1 - Pi)*(1 - Si) -
-      Pi*(1 - Si) - (1 - Pi)*Si
-
-
-  return(score3)
-
-} # end get.score3.1
+# get.score3.1 <- function(Pi, Si){
+#
+#   score3 <- NULL
+#
+#   ## CHECKS:
+#   if(length(Pi) > 1) stop("Pi must be of length one
+#                                     (i.e., (the probability of)
+#                           the phenotypic state of ONE ancestral node.")
+#
+#   if(length(Si) > 1) stop("Si must be of length one
+#                                     (i.e., (the probability of)
+#                           the SNPi state of ONE ancestral node.")
+#
+#
+#   ## Simple score1-like score (for all/individual nodes):
+#   score3 <- Pi*Si + (1 - Pi)*(1 - Si) -
+#       Pi*(1 - Si) - (1 - Pi)*Si
+#
+#
+#   return(score3)
+#
+# } # end get.score3.1
 
 
 
@@ -324,6 +324,7 @@ subsequent.test <- function(snps.reconstruction,
 ###############################
 
 score <- SCORE3.1 <- SCORE3.2 <- SCORE3.3 <- SCORE3.4 <- SCORE3.5 <- SCORE3.raw <- SCORE3.p <- SCORE3.n <- SCORE3.RAW <- list()
+SCORE3.integral.sum <- SCORE3.integral.max <- SCORE3.1.edges.sum <- SCORE3.1.edges.max <- list()
 Q.ew <- Q.uw <- list()
 
 ## HANDLE PHEN.REC:
@@ -339,6 +340,7 @@ phen.rec <- as.numeric(as.factor(phen.rec)) - 1
 for(i in 1:ncol(snps.rec)){
 
   score3 <- list()
+  score3.integral <- score3.1.edges <- list()
 
   #####################
   ## get ~ Q matrix: ##
@@ -354,25 +356,64 @@ for(i in 1:ncol(snps.rec)){
   edges <- tree$edge
   for(e in 1:nrow(edges)){
 
-    pa <- phen.rec[edges[e,1]]
-    pd <- phen.rec[edges[e,2]]
-    sa <- snp.rec[edges[e,1]]
-    sd <- snp.rec[edges[e,2]]
-    bl <- tree$edge.length[e]
+    Pa <- phen.rec[edges[e,1]]
+    Pd <- phen.rec[edges[e,2]]
+    Sa <- snp.rec[edges[e,1]]
+    Sd <- snp.rec[edges[e,2]]
+    l <- tree$edge.length[e]
 
-    if(!any(is.na(sa), is.na(sd), is.na(pa), is.na(pd))){
-      score3[[e]] <- paste(sa, pa, "|", sd, pd, sep="")
+    if(!any(is.na(Sa), is.na(Sd), is.na(Pa), is.na(Pd))){
+      score3[[e]] <- paste(Sa, Pa, "|", Sd, Pd, sep="")
     }else{
       score3[[e]] <- NA
     }
 
     # score3[[e]] <- get.score3(Pa = pa, Pd = pd, Sa = sa, Sd = sd, l = bl)
 
+    ## Original integral-based score:
+    score3.integral[[e]] <- l*(((4/3)*Pa*Sa) +
+                              ((2/3)*Pa*Sd) +
+                              ((2/3)*Pd*Sa) +
+                              ((4/3)*Pd*Sd) -
+                              Pa -
+                              Pd -
+                              Sa -
+                              Sd +
+                              1)
+
+
+    ## Simple score1-like score (across edges):
+    score3.1.edges[[e]] <- (l/2)*(
+                            Pa*Sa + (1 - Pa)*(1 - Sa) -
+                              Pa*(1 - Sa) - (1 - Pa)*Sa +
+                              Pd*Sd + (1 - Pd)*(1 - Sd) -
+                              Pd*(1 - Sd) - (1 - Pd)*Sd)
+
   } # end (e) for loop
 
   ## Combine all edges into one FACTOR for this snps.rec column:
   score3 <- as.vector(unlist(score3))
   names(score3) <- c(1:length(score3))
+
+  ## Combine alternative scores into one per snp: #############################
+
+  ## integral-based score
+  score3.integral <- as.vector(unlist(score3.integral))
+  ## save BOTH the sum and the max-only score:
+  ## sum:
+  SCORE3.integral.sum[[i]] <- abs(sum(score3.integral))
+  ## max -- positive-/negative-only scores?
+  SCORE3.integral.max[[i]] <- max(abs(sum(score3.integral[score3.integral > 0])), abs(sum(score3.integral[score3.integral < 0])))
+
+  ## score1-like cross-edges score:
+  score3.1.edges <- as.vector(unlist(score3.1.edges))
+  ## save BOTH the sum and the max-only score:
+  ## sum:
+  SCORE3.1.edges.sum[[i]] <- abs(sum(score3.1.edges))
+  ## max -- positive-/negative-only scores?
+  SCORE3.1.edges.max[[i]] <- max(abs(sum(score3.1.edges[score3.1.edges > 0])), abs(sum(score3.1.edges[score3.1.edges < 0])))
+
+  ###########################################################################
 
   ## Use relative freq of each factor level as prob (or incorporate edge length to get ~ rate)...
   # table(score3)
@@ -560,7 +601,8 @@ for(i in 1:ncol(snps.rec)){
   SCORE3.5[[i]] <- abs(score3.p.w.ew - score3.n.w.ew)
 
   ## for now, using weighted complex as subsequent score:
-  score[[i]] <- SCORE3.4[[i]]
+  ## trying w unweighted simple score (makes more sense, given sim is using probs without factoring in branch lengths..)
+  score[[i]] <- SCORE3.1[[i]]
   } # end (i) for loop
   ################################################################################################
 
@@ -610,17 +652,34 @@ for(i in 1:ncol(snps.rec)){
 
     SCORE3.5 <- SCORE3.5[index]
     names(SCORE3.5) <- colnames(snps.rec.ori)
+
+    ## alternative scores:
+    ## score 1-like cross-edges
+    SCORE3.1.edges.sum <- SCORE3.1.edges.sum[index]
+    names(SCORE3.1.edges.sum) <- colnames(snps.rec.ori)
+
+    SCORE3.1.edges.max <- SCORE3.1.edges.max[index]
+    names(SCORE3.1.edges.max) <- colnames(snps.rec.ori)
+
+    ## integral-based score:
+    SCORE3.integral.sum <- SCORE3.integral.sum[index]
+    names(SCORE3.integral.sum) <- colnames(snps.rec.ori)
+
+    SCORE3.integral.max <- SCORE3.integral.max[index]
+    names(SCORE3.integral.max) <- colnames(snps.rec.ori)
   }
 
 
-  SCORE3 <- list(SCORE3.1=SCORE3.1, SCORE3.2=SCORE3.2, SCORE3.3=SCORE3.3, SCORE3.4=SCORE3.4, SCORE3.5=SCORE3.5,
-                 SCORE3.raw=SCORE3.raw, SCORE3.p=SCORE3.p, SCORE3.n=SCORE3.n,
-                 Q.ew=Q.ew, Q.uw=Q.uw)
+  SCORE3 <- list("SCORE3.1"=SCORE3.1, "SCORE3.2"=SCORE3.2, "SCORE3.3"=SCORE3.3, "SCORE3.4"=SCORE3.4, "SCORE3.5"=SCORE3.5,
+                 "SCORE3.raw"=SCORE3.raw, "SCORE3.p"=SCORE3.p, "SCORE3.n"=SCORE3.n,
+                 "SCORE3.integral.sum"=SCORE3.integral.sum, "SCORE3.integral.max"=SCORE3.integral.max,
+                 "SCORE3.1.edges.sum"=SCORE3.1.edges.sum, "SCORE3.1.edges.max"=SCORE3.1.edges.max,
+                 "Q.ew"=Q.ew, "Q.uw"=Q.uw)
 
   score <- score.complete
 
-  SCORE <- list(score = score,
-                SCORE3 = SCORE3)
+  SCORE <- list("score" = score,
+                "SCORE3" = SCORE3)
 
   # return(score)
   return(SCORE)

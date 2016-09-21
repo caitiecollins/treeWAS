@@ -86,7 +86,7 @@ get.ancestral.pars <- function(var, tree){
     }
     if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
     ## get levels (ie. 0, 1)
-    snps.levels <- unique(as.vector(snps))
+    snps.levels <- sort(unique(as.vector(snps)))
     ## returns only unique patterns...
     snps.phyDat <- as.phyDat(as.matrix(snps),
                              type="USER", levels=snps.levels)
@@ -290,7 +290,7 @@ get.ancestral.pars <- function(var, tree){
     }
 
     ## get levels (ie. 0, 1)
-    phen.levels <- unique(phen)
+    phen.levels <- sort(unique(phen))
     phen.phyDat <- as.phyDat(as.matrix(phen),
                              type="USER", levels=phen.levels)
     ## pace == ancestral.pars

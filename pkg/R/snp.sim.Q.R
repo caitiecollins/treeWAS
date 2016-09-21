@@ -1,0 +1,1573 @@
+
+
+#############
+## snp.sim ##
+#############
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Short one-phrase description.
+#'
+#' Longer proper discription of function...
+#'
+#' @param snps description.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+#'
+#' @examples
+#' ## Example ##
+#'
+#' @import adegenet ape phangorn
+
+########################################################################
+
+## ARGUMENTS: ##
+
+## n.subs <- either an integer or a vector containing a distribution of n.subs-per-site
+## phen.loci <- a vector containing the indices of the edges on which phen subs occurred
+
+# snps <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_snps.Rdata"))
+# phen <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_phen.Rdata"))
+# perf <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_performance.Rdata"))
+# snps.assoc <- perf$snps.assoc
+#
+# res <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_res.Rdata"))
+# tree <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_tree.Rdata"))
+# tree <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_Q.corr_unweighted/set3_9_tree.Rdata"))
+# tree <- get(load("/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims/set3/08.2016/set3_9_tree.Rdata"))
+
+# phen.rec <- res$dat$phen.rec
+# snps.rec <- res$dat$snps.rec
+#
+# plot.phen(tree, phen.nodes=phen.rec, snp.nodes=snps.rec[,i])
+#
+# ## NOTE-- snps.rec has inverted snps numbering (ie. 0,1 --> 2,1)
+# ## AND kept plink version w added columns:
+# snps <- snps[, seq.int(1, ncol(snps), 2)]
+# rownames(snps) <- c(1:nrow(snps))
+# colnames(snps) <- c(1:ncol(snps))
+# str(snps)
+
+###########################################
+## trying to get RATES out of Q probs... ##
+###########################################
+# SCORE3 <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_score3.Rdata"))
+#
+# Q.ew <- SCORE3$corr.dat[[13]]
+# Q.uw <- SCORE3$corr.dat[[14]]
+#
+# score3 <- SCORE3$corr.dat[[6]]
+#
+# i <- snps.assoc[3]
+#
+# #######################
+# ## UN-edge-weighted: ##
+# #######################
+#
+# Qi <- Q.uw[[i]]
+#
+# ## get NUMBERS of subs:
+# Qi.subs <- Qi*length(score3[[i]][!is.na(score3[[i]])])
+# # NOTICE much heavier diagonal :)
+#
+# ## re-weight by ROW?:
+# temp <- t(sapply(c(1:nrow(Qi.subs)),
+#                function(e)
+#                  Qi.subs[e,]/sum(Qi.subs[e,])))
+# colnames(temp) <- rownames(temp) <- colnames(Qi.subs)
+# temp.uw <- temp
+# temp.uw
+#
+# ## all rows should sum to 1:
+# sum(temp.uw[1,])
+#
+#
+# ####################
+# ## EDGE-weighted: ##
+# ####################
+# # i <- snps.assoc[1]
+#
+# Qi <- Q.ew[[i]]
+#
+# ## get sum of edge lengths with these subs:
+# Qi.ew <- Qi*sum(tree$edge.length[!is.na(score3[[i]])])
+# # NOTICE much heavier diagonal :)
+#
+# sum(tree$edge.length)
+# sum(tree$edge.length[!is.na(score3[[i]])])
+# sum(Qi.ew)
+#
+# ## re-weight by ROW?:
+# temp <- t(sapply(c(1:nrow(Qi.ew)),
+#                  function(e)
+#                    Qi.ew[e,]/sum(Qi.ew[e,])))
+# colnames(temp) <- rownames(temp) <- colnames(Qi.ew)
+# temp.ew <- temp
+# temp.ew
+#
+# ## all rows should sum to 1:
+# sum(temp.ew[1,])
+#
+# #############
+# ## Q.corr: ##
+# #############
+#
+# ## Q.corr (original): ##
+# Q.corr <- matrix(c(2, 0.75, 0.75, 1, 3, 0.5, 0.25,  3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# ## re-weight by ROW?:
+# temp <- t(sapply(c(1:nrow(Q.corr)),
+#                  function(e)
+#                    Q.corr[e,]/sum(Q.corr[e,])))
+# colnames(temp) <- rownames(temp) <- colnames(Q.corr)
+# temp.corr <- temp
+# temp.corr
+#
+# ## NEW Q.corr ( --> reduced n.subs??)
+# Q <- matrix(c(0.6, 0.1, 0.1, 0.2, 0.4, 0.15, 0.05,  0.4, 0.4, 0.05, 0.15, 0.4, 0.2, 0.1, 0.1, 0.6),
+#             nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# Q
+# Q.new1 <- Q.new
+#
+# ## 2nd NEW Q.corr ( --> reduced n.subs??)
+# Q <- matrix(c(0.7, 0.05, 0.05, 0.2, 0.45, 0.1, 0.0,  0.45, 0.45, 0.0, 0.1, 0.45, 0.2, 0.05, 0.05, 0.7),
+#             nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# Q
+# Q.new2 <- Q.new <- Q
+#
+############################
+
+############
+## Q.inst ##
+############
+## IGNORE !!
+# Q.inst <- matrix(c(0, 0.5, 0.5, 0, 2, 0, 0,  2, 2, 0, 0, 2, 0, 0.5, 0.5, 0),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# Q.inst
+# Q <- Q.inst
+#################################
+
+##########################
+## Q.new3 (w/ matexpo!) ##
+##########################
+## if Q contains RATES --> P contains probs
+# Q.new3 <- matrix(c(0, 0.5, 0.5, 1,
+#                    2, 0, 0.25,  2,
+#                    2, 0.25, 0, 2,
+#                    1, 0.5, 0.5, 0),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# Q.mat <- matrix(c(-1*s, 0.5*s, 0.5*s, 0,
+#                   2*s, -4*s, 0, 2*s,
+#                   2*s, 0, -4*s, 2*s,
+#                   0, 0.5*s, 0.5*s, -1*s),
+#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# af <- 4
+# s <- 0.5
+# Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
+#                   1*af*s, NA, 0, 1*af*s,
+#                   1*af*s, 0, NA, 1*af*s,
+#                   0, 1*s, 1*s, NA),
+#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# ## GET PROBABILITY MATRIX:
+# diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
+# Q <- Q.mat
+# Q.new3 <- Q.mat
+# Q.mat
+#
+# ## get conditional probs for each edge w matexpo! ##
+# ## (run within code...)
+# x <- rev(1:nrow(tree$edge))
+# Qt <- list()
+# for(e in x){
+#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
+# }
+# e <- x[1]
+# P <- Qt[[e]]
+# rownames(P) <- rownames(Q)
+# colnames(P) <- colnames(Q)
+# P
+
+## CHECK -- Does expm (pkg "Matrix") give same results as matexpo?? ## (YES)
+
+##########################
+## Q.new4 (w/ matexpo!) ##
+##########################
+## if Q contains RATES --> P contains probs
+
+## ?? -- (WHY) DOES THE BL:TR DIAGONAL NEED TO BE ALL ZEROS???? ################################    ####        ####        ####    ??????????       ####
+# s <- 1
+# Q.new4 <- matrix(c(-2*s, 0.5*s, 0.5*s, 1*s,
+#                    2*s, -4.25*s, 0.25*s,  2*s,
+#                    2*s, 0.25*s, -4.25*s, 2*s,
+#                    1*s, 0.5*s, 0.5*s, -2*s),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+
+# s <- 1
+# Q.new4 <- matrix(c(-1*s, 0.5*s, 0.5*s, 0,
+#                    2*s, -4*s, 0, 2*s,
+#                    2*s, 0, -4*s, 2*s,
+#                    0, 0.5*s, 0.5*s, -1*s),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# Q.new4
+# Q <- Q.new4
+#
+# ## GET PROBABILITY MATRIX:
+# ## get conditional probs for each edge w matexpo! ##
+# ## (run within code...)
+# x <- rev(1:nrow(tree$edge))
+# Qt <- list()
+# for(e in x){
+#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
+# }
+# e <- x[2]
+# P <- Qt[[e]]
+# rownames(P) <- rownames(Q)
+# colnames(P) <- colnames(Q)
+# P
+
+
+
+
+####################
+
+#########################
+## Q.xav (w/ matexpo!) ##
+#########################
+## if Q contains RATES --> P contains probs
+
+# ## s = substitution rate
+# s <- 1
+# ## NOT SURE IF ROW/COLNAMES ARE RIGHT FOR THIS ONE:
+# Q.xav <- matrix(c(-2*s, 1*s, 1*s, 0,
+#                    2*s, -4*s, 0,  2*s,
+#                    2*s, 0, -4*s, 2*s,
+#                    0, 1*s, 1*s, -2*s),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# Q <- Q.xav
+# Q.xav
+#
+# #########
+#
+# ##  NOT SURE HOW TO INTERPRET/PREDICT THE RELATIVE EFFECTS OF ASSOC.FACTOR AND N.SUBS
+# ## (ie AF, S) ON ASSOC STRENGTH AND N.SUBS PER TREE (AND HOW SUB PROBS VARY W BRANCH LENGTH)
+# ## ALSO -- (WHY) DO THE DIAGONALS NEED TO BE NEG AND 0?
+# ## (CONSIDERING WE WANT TO SIM SOME SIMULTANEOUS SUBS..)
+# ## (SEEMS LIKE THE 0-DIAGONAL HAS NO IMPACT WHETHER IT'S 0S OR OTHER VALUES?)
+#
+# af <- 6 # association factor
+# s <- 20 # n.subs
+#
+# # Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
+# #                   1*af*s, NA, 0, 1*af*s,
+# #                   1*af*s, 0, NA, 1*af*s,
+# #                   0, 1*s, 1*s, NA),
+# #                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
+#                   1*af*s, NA, 0, 1*af*s,
+#                   1*af*s, 0, NA, 1*af*s,
+#                   0, 1*s, 1*s, NA),
+#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
+#
+# Q <- Q.mat
+# Q
+#
+#
+# ## GET PROBABILITY MATRIX:
+#
+# ## get conditional probs for each edge w matexpo! ##
+# ## (run within code...)
+# x <- rev(1:nrow(tree$edge))
+# Qt <- list()
+# for(e in x){
+#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
+# }
+# e <- x[112]
+# P <- Qt[[e]]
+# rownames(P) <- rownames(Q)
+# colnames(P) <- colnames(Q)
+# P
+
+
+#####################
+
+# ######################################################
+# ## WANT -- 15 subs/tree (thus 183 no-sub branches): ##
+# ######################################################
+# # probs.e <- round((tree$edge.length/sum(tree$edge.length)),3)
+# probs.e <- (tree$edge.length/sum(tree$edge.length))
+#
+# ## IDEA -- multiply all 3 non-stay-the-same cells of Q by above (or make it s.t. these cells are x% of the row sum)
+# ## EG -- if you would expect 1.4/15 subs to occur on edge 1
+#
+# ## --> Need to find Pr(at least one sub occurs on branch e)
+# ## bc we are/were working with sampling WITHOUT replacement w probs proportional to edge.length
+#
+# ## Pr(no sub on branch 198) =
+# (1-probs.e[198])^15 # 0.022
+# ## Therefore: Pr(at least one sub on branch 198) =
+# 1 - (1-probs.e[198])^15 # 0.98
+
+## Then -- need to re-work probs from Q s.t Pr(stay the same) = 0.02 and Pr(sub) sums to 0.98
+
+
+
+# tree <- get(load("/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims/set1/set1_31_tree.Rdata"))
+
+# ## ARGS (Eg): ##
+# n.snps = 1000
+# n.subs = 1
+# snp.root = NULL
+# n.snps.assoc = 10
+# assoc.prob = 100
+# # ## dependent/corr' transition rate/prob mat:
+# # # Q = matrix(c(2, 0.75, 0.75, 1, 3, 0.5, 0.25,  3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2),
+# # #            nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# ### tree = coalescent.tree.sim(100)
+# phen.loci = NULL
+# n.phen.subs <- 15
+# heatmap = FALSE
+# reconstruct = FALSE
+# dist.dna.model = "JC69"
+# grp.min <- 0.25
+# row.names = NULL
+# set=3
+# seed=1
+
+snp.sim.Q <- function(n.snps = 10000,
+                      n.subs = 1,
+                      snp.root = NULL,
+                      n.snps.assoc = 10,
+                      assoc.prob = 100,
+                      ## dependent/corr' transition rate/prob mat:
+                      Q = matrix(c(2, 0.75, 0.75, 1, 3, 0.5, 0.25,  3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2),
+                                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2)),
+                      tree = coalescent.tree.sim(100),
+                      n.phen.subs = 15,
+                      phen.loci = NULL,
+                      heatmap = FALSE,
+                      reconstruct = FALSE,
+                      dist.dna.model = "JC69",
+                      grp.min = 0.25,
+                      coaltree = TRUE,
+                      row.names = NULL,
+                      set=3,
+                      seed=1){
+
+  # require(adegenet)
+  # require(ape)
+  # require(phangorn)
+
+  ##################################
+  ## GET MUTATIONS' branch & loci ##
+  ##################################
+  n.ind <- tree$Nnode+1
+  gen.size <- n.snps
+  edges <- tree$edge
+
+  if(!is.null(seed)) set.seed(seed)
+
+  ## Simulate genotype (& phen) for root individual: ##
+
+  ## if snp.root given:
+  if(!is.null(snp.root)){
+    if(length(snp.root) == 1){
+      ## select only root state --> different SNP sim method (???)
+      if(as.character(snp.root) == "0") gen.root <- rep("0", gen.size)
+      if(as.character(snp.root) == "1") gen.root <- rep("1", gen.size)
+    }else{
+      ## if snp.root provided for all loci:
+      if(length(snp.root) == gen.size){
+        gen.root <- as.character(snp.root)
+      }else{
+        warning("snp.root should either be of length 1 or length n.snps; ignoring.")
+      }
+    }
+  }
+
+  ## For n.subs = n or = dist approaches:
+  # gen.root <- sample(c("a", "c", "g", "t"), gen.size, replace=TRUE)
+  gen.root <- sample(c("0", "1"), gen.size, replace=TRUE)
+  phen.root <- sample(c("0", "1"), 1)
+
+  ## get the sum of all branch lengths in the tree:
+  time.total <- sum(tree$edge.length)
+
+  ## make dummy variables in which to store the resulting n.mts variables:
+  L <- lambda <- n.mts <- new.nt <- NA
+
+  snps.assoc <- NULL
+
+  ## if n.snps.assoc is neither NULL nor 0:
+  if(is.null(n.snps.assoc)) n.snps.assoc <- 0
+  if(n.snps.assoc != 0){
+
+    ## get non.assoc gen.size
+    gen.size.ori <- gen.size
+    gen.size <- gen.size-n.snps.assoc
+
+    ## assign snps.assoc to be the last n.snps.assoc snps columns
+    snps.assoc <- c((gen.size+1):(gen.size+n.snps.assoc))
+  }
+
+  ###################
+  ## Handle n.subs ##
+  ###################
+
+  ## Either an integer
+  ## --> draw n.subs from a Poisson distribution w parameter n.subs
+  ## OR a vector (containing a distribution)
+  ## --> use this distribution to define n.subs-per-site
+
+  if(length(n.subs)==1){
+
+    #####################
+    ## NO DISTRIBUTION ##
+    #####################
+
+    ## if no distribution is inputted,
+    ## use normal simulation procedure
+    ## (ie. Poisson parameter 1):
+
+    ## draw the number of mutations to occur at each site:
+    n.mts <- rpois(n=gen.size, lambda=(n.subs))
+    ## for any n.mts==0, re-sample
+    for(i in 1:length(n.mts)){
+      while(n.mts[i]==0){
+        n.mts[i] <- rpois(n=1, lambda=(n.subs))
+      }
+    }
+
+  }else{
+
+    ###############################################
+    ## DISTRIBUTION or RATES (fitPagel Q matrix) ##
+    ###############################################
+
+    ##################
+    ## DISTRIBUTION ##
+    ##################
+
+    ## if a distribution is provided by the user,
+    ## we use this to determine the number of substitutions
+    ## to occur at what proportion of sites (note that
+    ## we may not be simulating the same number of sites)
+
+    dist <- n.subs
+
+    ## get dist.prop, a distribution containing the counts
+    ## of the number of SNPs to be simulated that will have
+    ## i many substitutions
+    dist.sum <- sum(dist)
+    dist.prop <- round((dist/dist.sum)*gen.size)
+    ## check that these counts sum to gen.size,
+    ## else add the remainder to the largest n.subs count
+    ## (OR should we just add these to the n.subs=1 set ??? ###
+    ## likely to be the same thing, but could not be...)
+    if(sum(dist.prop) != gen.size){
+      m <- which.max(dist.prop)
+      #m <- 1
+      if(sum(dist.prop) < gen.size){
+        dist.prop[m] <- dist.prop[m] + (gen.size - sum(dist.prop))
+      }
+      if(sum(dist.prop) > gen.size){
+        dist.prop[m] <- dist.prop[m] - (sum(dist.prop) - gen.size)
+      }
+    }
+
+    ## get rid of useless trailing 0s
+    while(dist.prop[length(dist.prop)] == 0){
+      dist.prop <- dist.prop[c(1:(length(dist.prop)-1))]
+    }
+
+    ## make n.mts, a vector of length ncol(snps)
+    n.mts <- rep(1111, gen.size)
+    loci.available <- c(1:gen.size)
+    ## assign dist.prop[i] elements of n.mts
+    ## to be the same as the n.subs
+    ## indicated by i, the given element of dist.prop
+    for(j in 1:length(dist.prop)){
+      ## provided there are not 0 sites to have this number of substitutions...
+      if(dist.prop[j] > 0){
+        if(length(loci.available) > 1){
+          ## assign dist.prop[i] elements of n.mts to be i
+          loci.selected <- sample(loci.available, dist.prop[j], replace = FALSE)
+          loci.available <- loci.available[-which(loci.available %in% loci.selected)]
+        }else{
+          ## if there is only 1 (the last) loci available,
+          ## we select this one:
+          loci.selected <- loci.available
+        }
+        n.mts[loci.selected] <- j
+      }
+    }
+    # } # end dist
+  } # end fitPagel or dist
+
+  ############################
+  ## Assign mts to branches ##
+  ############################
+
+  if(n.snps.assoc != 0){
+    ## for snps.assoc (the last n.snps.assoc snps, for now),
+    ## add n.mts == n.phen.loci s.t these sites mutate at each
+    ## and every phen.loci (for now, to be diluted later
+    ## according to assoc.prob if !=100)
+    n.mts <- c(n.mts, rep(length(phen.loci), n.snps.assoc))
+  }
+
+  ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
+  #############################################################################
+  ## GENERATE ALL SNPs FIRST, THEN REPLACE ANY NON-POLYMORPHIC IN WHILE LOOP ##
+  #############################################################################
+
+  #############################
+  ## GET NON-ASSOCIATED SNPS ##
+  #############################
+
+  ## for each site, draw the branches to which
+  ## you will assign the mts for this site
+  ## (~ branch length):
+  snps.loci <- sapply(c(1:length(n.mts)),
+                      function(e)
+                        sample(c(1:length(tree$edge.length)),
+                               n.mts[e],
+                               replace=FALSE,
+                               prob=tree$edge.length))
+
+  ## rearrange snps.loci s.t it becomes a
+  ## list of length tree$edge.length,
+  ## each element of which contains the
+  ## locations of the mutations that will
+  ## occur on that branch
+  snps.loci <- sapply(c(1:length(tree$edge.length)),
+                      function(f)
+                        seq_along(snps.loci)[sapply(snps.loci,
+                                                    function(e) f %in% e)])
+
+
+  ## get the node names for all individuals (terminal and internal)
+  all.inds <- sort(unique(as.vector(unlist(tree$edge))))
+  # we will store the output in a list called genomes:
+  genomes <- list()
+  ## we start w all inds having same genotype as root:
+  for(i in all.inds){
+    genomes[[all.inds[i]]] <- gen.root[1:gen.size] ## EXCEPT -- REMOVING SNPS.ASSOC LOCI (LAST N.ASSOC LOCI) FOR NOW!!!
+  }
+  ## store replacement nts in list new.nts:
+  new.nts <- list()
+  ## distinguish btw list of loci and unique list
+  snps.loci.ori <- snps.loci
+  ## will need to treat repeat loci differently...
+  snps.loci.unique <- lapply(snps.loci, unique)
+  ## the last individual in the first column of tree$edge
+  ## (ie. ind.length(tree$tip.label)+1 ) is our root individual:
+  x <- rev(c(1:nrow(tree$edge)))
+
+
+  if(coaltree == FALSE){
+    ## use normal/reverse (top:bottom) edge mat:
+    x <- 1:nrow(edges)
+  }
+
+
+  #############################
+  ## For Loop to get new nts ##
+  #############################
+  for(i in x){
+    ## for all genomes other than root, we mutate the
+    ## genome of the node preceding it, according to snps.loci.
+    ## Draw new nts for each locus selected for mutation:
+    if(!.is.integer0(snps.loci.unique[[i]])){
+      new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
+        selectBiallelicSNP(c("0", "1")[which(c("0", "1")
+                                             %in% genomes[[tree$edge[i,1]]]
+                                             [snps.loci.unique[[i]][e]])]))
+      ## if any loci are selected for multiple mutations
+      ## within their given branch length:
+      if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
+        ## identify which loci are repeaters
+        repeats <- table(snps.loci.ori[[i]])[which(table(snps.loci.ori[[i]])!=1)]
+        ## how many times they repeat
+        n.reps <- repeats - 1
+        ## the positions of these loci in the vector of snps loci
+        toRepeat <- which(snps.loci.unique[[i]] %in% names(repeats))
+        ## run chain of re-sampling to end in our new nt for repeater loci:
+        foo <- list()
+        for(j in 1:length(toRepeat)){
+          foo[[j]] <- new.nts[[i]][toRepeat[j]]
+          for(k in 1:n.reps[j]){
+            if(k==1){
+              foo[[j]][k] <- selectBiallelicSNP(c("0", "1")[which(c("0", "1")
+                                                                  %in% foo[[j]][1])])
+
+            }else{
+              foo[[j]][k] <- selectBiallelicSNP(c("0", "1")[which(c("0", "1")
+                                                                  %in% foo[[j]][k-1])])
+            }
+          }
+          ## retain only the last nt selected
+          out <- sapply(c(1:length(foo)),
+                        function(e) foo[[e]][length(foo[[e]])])
+        }
+        ## for the loci with repeated mts, replace these positions
+        ## in new.nts with the corresponding elements of out, above.
+        new.nts[[i]][toRepeat] <- out
+      } # end of if statement for repeaters
+
+      ## update ancestral genotype with new.nts:
+      temp <- genomes[[tree$edge[i,1]]]
+      temp[snps.loci.unique[[i]]] <- new.nts[[i]]
+      genomes[[tree$edge[i,2]]] <- temp
+
+    }else{
+      ## if no mts occur on branch, set genotype of
+      ## downstream individual to be equal to ancestor's
+      genomes[[tree$edge[i,2]]] <- genomes[[tree$edge[i,1]]]
+    }
+  } # end of for loop selecting new nts at mutator loci
+
+  ####################################################
+  ## CHECK IF ALL LOCI ARE POLYMORPHIC (|polyThres) ##
+  ####################################################
+
+  ## temporarily assemble non-associated loci into matrix:
+  temp <- do.call("rbind", genomes)
+
+  ## Make loci list (in case you need it later (ie. if any loci not polymorphic)?)
+  loci <- list()
+  for(i in 1:ncol(temp)){
+    loci[[i]] <- temp[,i]
+  }
+
+  ## keep only rows containing terminal individuals:
+  temp <- temp[1:n.ind, ]
+
+  ## identify n.minor.allele required to meet polyThres:
+  polyThres <- 0.01
+  n.min <- n.ind*polyThres
+
+  ## make a list of any NON-polymorphic loci:
+  toRepeat <- list()
+  for(i in 1:ncol(temp)){
+    if(any(table(temp[,i]) < n.min) | length(table(temp[,i])) == 1){
+      toRepeat[[length(toRepeat)+1]] <- i
+    }
+  }
+  if(length(toRepeat) > 0){
+    toRepeat <- as.vector(unlist(toRepeat))
+  }
+
+
+  gc()
+
+  ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
+  #################################################################
+  ## REPLACE ANY NON-POLYMORPHIC LOCI & GENERATE ASSOCIATED SNPS ##
+  #################################################################
+  ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
+
+
+  #################################################
+  ## REPLACE NON-POLYMORPHIC NON-ASSOCIATED SNPS ##
+  #################################################
+
+  # toRepeat <- 1:length(n.mts)
+  # loci <- list()
+
+  ######################################
+  ## while loop STARTS here: ###########
+  ######################################
+  ## AGAIN--NEED TO DOUBLE CHECK: No problems with seed? #############
+
+  # counter <- 0
+  while(length(toRepeat) > 0){
+
+    for(i in toRepeat){
+      ## get the lth element of n.mts to work with:
+      n.mt <- n.mts[i]
+
+      ## for each site, draw the branches to which
+      ## you will assign the mts for this site
+      ## (~ branch length):
+      subs.edges <- sample(c(1:length(tree$edge.length)),
+                           n.mt,
+                           replace=FALSE,
+                           prob=tree$edge.length)
+
+      ## get nt for root at this locus:
+      root.nt <- gen.root[i]
+
+      ## get nt for each individual at this locus
+      loci[[i]] <- .get.locus01(subs.edges = subs.edges,
+                                root.nt = root.nt,
+                                tree = tree)
+
+    } # end FOR LOOP for NON-associated SNPs
+
+    ######################################
+    ##### while loop CHECK here: #########
+    ######################################
+    ## CHECK IF ALL LOCI ARE POLYMORPHIC (|polyThres)
+
+    ## temporarily assemble non-associated loci into matrix:
+    temp <- do.call("cbind", loci)
+    ## keep only rows containing terminal individuals:
+    temp <- temp[1:n.ind, ]
+
+    ## identify n.minor.allele required to meet polyThres:
+    polyThres <- 0.01
+    n.min <- n.ind*polyThres
+
+    ## make a list of any NON-polymorphic loci:
+    toRepeat <- list()
+    for(i in 1:ncol(temp)){
+      if(any(table(temp[,i]) < n.min) | length(table(temp[,i])) == 1){
+        toRepeat[[length(toRepeat)+1]] <- i
+      }
+    }
+    if(length(toRepeat) > 0){
+      toRepeat <- as.vector(unlist(toRepeat))
+    }
+
+    # counter <- counter+1
+    # print("COUNTER"); print(counter)
+
+  } # end of while loop
+  ######################################
+  ## while loop ENDS here: #############
+  ######################################
+
+  gc()
+
+  #########################
+  ## GET ASSOCIATED SNPS ##
+  #########################
+
+  ## Need to treat ASSOCIATED SNPs differently:
+  ## (non.assoc.snps do NOT need to pass the "while" check;
+  ## they just need to match phen.loci at this point.)
+
+  snps.assoc.nodes <- phen.nodes <- NULL
+
+  if(n.snps.assoc != 0){
+
+    snps.assoc.nodes <- list()
+    N.OVERLAP <- list()
+
+    Qt <- list()
+
+    ## get snps.loci for FIRST ASSSOCIATED snp WITH PHEN.loci:
+    i <- 1
+
+    edges <- tree$edge
+
+    ## Need to solve error w rtree..
+    # edges.ori <- edges
+    # edges[order(edges[,1]), ]
+
+    if(coaltree == FALSE){
+      ## use normal/reverse (top:bottom) edge mat:
+      x <- 1:nrow(edges)
+    }
+
+    root.nt <- gen.root[snps.assoc[i]]
+
+
+    ## Need to update tree$edge.length probs to mirror sampling without replacement...
+    ## BUT only remove branches from the calculation once they have had a sub on them...?
+    N.SUBS.TOTAL <- 15
+    # N.SUBS.TOTAL <- rpois(1, n.phen.subs)  ############
+
+    ################
+    ## WHILE LOOP ##
+    ################
+    toRepeat <- TRUE
+    ## WHILE LOOP STARTS HERE:
+    while(toRepeat){ ############################
+
+      snp.node <- phen.node <- as.list(rep(NA, length(unique(as.vector(edges)))))
+
+      snp.node[[edges[x[1], 1]]] <- root.nt
+      phen.node[[edges[x[1], 1]]] <- phen.root
+
+      # probs.e <- round((tree$edge.length/sum(tree$edge.length)),3)
+      # probs.e <- (tree$edge.length/sum(tree$edge.length))
+      probs.e <- NULL
+
+      N.SUBS.COUNTER <- 0
+
+      ##################
+      ## FOR (e) LOOP ##
+      ##################
+      ## go from last to first edge in edges:
+      for(e in x){
+
+        # print("E"); print(e)
+
+        probs <- NULL
+        toKeep <- toSub <- NULL
+
+        ######################################################
+        ## WANT -- 15 subs/tree (thus 183 no-sub branches): ##
+        ######################################################
+        ## IDEA -- multiply all 3 non-stay-the-same cells of Q by above (or make it s.t. these cells are x% of the row sum)
+        ## EG -- if you would expect 1.4/15 subs to occur on edge 1
+
+        ## --> Need to find Pr(at least one sub occurs on branch e)
+        ## bc we are/were working with sampling WITHOUT replacement w probs proportional to edge.length
+
+        ## Pr(no sub on branch 198) =
+        # (1-probs.e[e])^15 # 0.022
+        ## Therefore: Pr(at least one sub on branch 198) =
+
+        # Pr.sub <- 1 - ((1-probs.e[e])^N.SUBS.TOTAL) # 0.98
+        # print(paste("Edge", e, "Pr.sub", Pr.sub, sep=" "))
+
+        #         if(probs.e[e] < sum(tree$edge.length)/5000){
+        #           Pr.sub <- 0.1
+        #         }else{
+        #           Pr.sub <- NULL
+        #         }
+
+        #         if(N.SUBS.COUNTER == N.SUBS.TOTAL){
+        #           Pr.sub <- 0
+        #         }else{
+        #           Pr.sub <- NULL
+        #         }
+
+        # Pr.sub <- NULL
+
+        ## UNLESS -- N.SUBS.TOTAL has been reached...
+        ## in which case, we stay the same by force:
+        # if(N.SUBS.COUNTER == N.SUBS.TOTAL) Pr.sub <- 0
+
+        ## Then -- need to re-work probs from Q s.t Pr(stay the same) = 0.02 and Pr(sub) sums to 0.98
+
+        ## REMOVED COMMENTED-OUT ALTERNATIVE CODE (may be required if any other commented-out bits are revived...)
+        ## TO RECOVER: SEE GIT COMMIT ON ## 2016-09-02 ##
+
+        ## get conditional probs for each edge w matexpo! ##
+        ## (run within code...)
+        Qt[[e]] <- matexpo(Q*tree$edge.length[e])
+
+        P <- Qt[[e]]
+        rownames(P) <- rownames(Qt[[e]]) <- rownames(Q)
+        colnames(P) <- colnames(Qt[[e]]) <- colnames(Q)
+
+        ##############################
+        ## SNP.anc = 0 Phen.anc = 0 ##
+        ##############################
+        if(snp.node[[edges[e, 1]]] == "0" & phen.node[[edges[e, 1]]] == "0"){
+          probs <- P[1,]
+        }
+        ##############################
+        ## SNP.anc = 0 Phen.anc = 1 ##
+        ##############################
+        if(snp.node[[edges[e, 1]]] == "0" & phen.node[[edges[e, 1]]] == "1"){
+          probs <- P[2,]
+        }
+        ##############################
+        ## SNP.anc = 1 Phen.anc = 0 ##
+        ##############################
+        if(snp.node[[edges[e, 1]]] == "1" & phen.node[[edges[e, 1]]] == "0"){
+          probs <- P[3,]
+        }
+        ##############################
+        ## SNP.anc = 1 Phen.anc = 1 ##
+        ##############################
+        if(snp.node[[edges[e, 1]]] == "1" & phen.node[[edges[e, 1]]] == "1"){
+          probs <- P[4,]
+        }
+
+        SP.dec <- sample(colnames(Q), 1, prob = probs)
+
+        S.dec <- keepFirstN(SP.dec, 1)
+        P.dec <- keepLastN(SP.dec, 1)
+        names(S.dec) <- names(P.dec) <- NULL
+
+        snp.node[[edges[e, 2]]] <- S.dec
+        phen.node[[edges[e, 2]]] <- P.dec
+
+        ## Did a PHEN sub occur?
+        phen.sub <- FALSE
+        if(phen.node[[edges[e, 1]]] != phen.node[[edges[e, 2]]]) phen.sub <- TRUE
+        # SP.dec %in% colnames(Q)[toSub] ## Did EITHER a phen sub AND/OR a snps sub occur?
+
+        # print("EDGE"); print(e)
+        ## If a sub has occurred on branch e, add it to the n.subs counter
+        if(phen.sub){
+          N.SUBS.COUNTER <- N.SUBS.COUNTER+1
+          # print("TRUE")
+        }
+        # print("N.SUBS.COUNTER"); print(N.SUBS.COUNTER)
+
+        ## Update/reduce edge length probs set...
+        ## (until we reach N.SUBS.TOTAL, then stop reducing edge.length probs):
+        #         if(N.SUBS.COUNTER < N.SUBS.TOTAL){
+        #           ## if on last edge, make prob sub = 1
+        #           if(e == 1){
+        #             probs.e <- 1
+        #           }else{
+        #             ## else, reduce probs to be weights of remaining edges:
+        #             probs.e <- probs.e[1:(e-1)]/sum(probs.e[1:(e-1)])
+        #           }
+        #         }
+
+      } # end for (e) loop
+
+
+      ## STORE FIRST SNPS.ASSOC:
+      snps.assoc.nodes[[i]] <- as.vector(unlist(snp.node))
+
+      ## STORE PHEN (FOR ALL NODES):
+      phen.nodes <- as.vector(unlist(phen.node))
+      names(phen.nodes) <- c(1:length(phen.nodes))
+
+      phen <- phen.nodes[1:n.ind]
+
+      # ## TEMP -- CHECK w PLOT:
+      # plot.phen(tree, phen.nodes=phen.nodes, snp.nodes=snps.assoc.nodes[[i]])
+      # cor(as.numeric(phen.nodes[1:n.ind]), as.numeric(snps.assoc.nodes[[i]][1:n.ind]))
+      N.overlap <- length(which(phen.nodes[1:n.ind] == snps.assoc.nodes[[i]][1:n.ind]))
+      N.overlap <- max(N.overlap, (n.ind-N.overlap))
+      N.OVERLAP[[i]] <- N.overlap
+      #######################################################################
+
+
+      ## CHECK THAT MIN GRP.SIZE >= THRESHOLD ##
+      if(!is.null(grp.min)){
+        tab <- table(phen)
+        grp.thresh <- (tree$Nnode+1)*grp.min
+        if(min(tab) < grp.thresh){
+          toRepeat <- TRUE
+        }else{
+          toRepeat <- FALSE
+        }
+      }else{
+        toRepeat <- FALSE
+      }
+
+    } # end WHILE LOOP #########
+
+    print("N.SUBS.COUNTER"); print(N.SUBS.COUNTER)
+    print("N.overlap"); print(N.overlap[[i]])
+
+    ### TEMP -- CHECK:
+    # phen.node.ori <- phen.node
+    # phen.rec <- as.vector(unlist(phen.node))
+    # snp.rec <- as.vector(unlist(snps.assoc.nodes[[3]]))
+    # plot.phen(tree, phen.nodes=phen.rec, snp.nodes=snp.rec)
+    # title("set3_1 phen vs. snps.assoc3", line=0)
+    #
+    # cor(as.numeric(snp.rec[1:n.ind]), as.numeric(phen.rec[1:n.ind])) # 0.46 0.63 0.48
+    # length(which(as.numeric(snp.rec[1:n.ind]) == as.numeric(phen.rec[1:n.ind])))/n.ind # 0.74 0.81 0.75
+    ######
+
+    ## get snps.loci for the REMAINING ASSOCIATED snps (ie. 2:n.assoc, conditional on phen) ##
+    for(i in 2:n.snps.assoc){
+      ## get nt for root at this locus:
+      root.nt <- gen.root[snps.assoc[i]]
+
+      snp.node <- as.list(rep(NA, length(unique(as.vector(edges)))))
+
+      snp.node[[edges[x[1], 1]]] <- root.nt
+
+      ## go from last to first edge in edges:
+      for(e in x){
+
+        probs <- NULL
+        # if(snp.node[[edges[e, 1]]] == "0" & phen.node[[edges[e, 1]]] == "0") probs <- Q[1,]
+        # if(snp.node[[edges[e, 1]]] == "0" & phen.node[[edges[e, 1]]] == "1") probs <- Q[2,]
+        # if(snp.node[[edges[e, 1]]] == "1" & phen.node[[edges[e, 1]]] == "0") probs <- Q[3,]
+        # if(snp.node[[edges[e, 1]]] == "1" & phen.node[[edges[e, 1]]] == "1") probs <- Q[4,]
+
+        P <- Qt[[e]]
+
+        if(snp.node[[edges[e, 1]]] == "0" & phen.node[[edges[e, 1]]] == "0") probs <- P[1,]
+        if(snp.node[[edges[e, 1]]] == "0" & phen.node[[edges[e, 1]]] == "1") probs <- P[2,]
+        if(snp.node[[edges[e, 1]]] == "1" & phen.node[[edges[e, 1]]] == "0") probs <- P[3,]
+        if(snp.node[[edges[e, 1]]] == "1" & phen.node[[edges[e, 1]]] == "1") probs <- P[4,]
+
+        ## Now we KNOW, A PRIORI, the phen.node for the DESCENDANT!
+        probs.mod <- replace(probs, which(!keepLastN(colnames(Q), 1) == phen.node[[edges[e, 2]]]), 0)
+        SP.dec <- sample(colnames(Q), 1, prob = probs.mod)
+
+        S.dec <- keepFirstN(SP.dec, 1)
+        names(S.dec) <- NULL
+
+        snp.node[[edges[e, 2]]] <- S.dec
+
+      } # end for (e) loop
+
+      ## STORE SNPS.ASSOC (FOR ALL NODES):
+      snps.assoc.nodes[[i]] <- as.vector(unlist(snp.node))
+
+      ## Get proportion overlap btw phen and snps.assoc.i:
+      N.overlap <- length(which(phen.nodes[1:n.ind] == snps.assoc.nodes[[i]][1:n.ind]))
+      N.overlap <- max(N.overlap, (n.ind-N.overlap))
+      N.OVERLAP[[i]] <- N.overlap
+
+    } # end for loop
+
+    ## Bind SNPs.ASSOC into matrix:
+    snps.assoc.nodes <- do.call("cbind", snps.assoc.nodes)
+
+  } # end of snps.assoc generation
+
+
+  ###################################################
+  ## TEMP -- COMPARE PHEN & ALL SNPS.ASSOC w PLOT: ##
+  ###################################################
+  par(mfrow=c(2,6))
+  plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+  for(i in 1:5){
+    plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+              main.title=paste("snp.assoc", i, sep=" "))
+    title(N.OVERLAP[[i]], line=0, font.main=1)
+  }
+  plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+  for(i in 6:10){
+    plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+              main.title=paste("snp.assoc", i, sep=" "))
+    title(N.OVERLAP[[i]], line=0, font.main=1)
+  }
+
+
+  par(mfrow=c(1,1)) # end temp panel plot
+
+  gc()
+
+  ############
+  ## IDEAS: ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ############
+
+  ## (? -- Do we need to double check all snps.assoc are polymorphic?? --> If not, would prob have to/ want to re-run from snps.assoc[1]... )
+  ## Use Q method (w Q.uncorr (all rates equal, or maintained > change state)) to simulate remainder of (ie non-assoc) snps?? (check comp time diff first..)
+  ## Tweak Q.corr to be used for sets 1 and 2 as well??
+
+  ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+  ##############################################  ## OLD METHOD ##
+  # if(n.snps.assoc != 0){
+  #   ## get snps.loci for the ASSOCIATED snps (ie. set to phen.loci) ##
+  #   for(i in 1:n.snps.assoc){
+  #     ## recall: phen.loci contains the tree EDGES on which phen subs occur
+  #     subs.edges <- phen.loci
+  #
+  #     ## get nt for root at this locus:
+  #     root.nt <- gen.root[snps.assoc[i]]
+  #
+  #     ## get nt for each individual at this locus
+  #     ## assign to (and replace) the snps.assoc elements of loci
+  #     loci[[snps.assoc[i]]] <- .get.locus01(subs.edges = subs.edges,
+  #                                         root.nt = root.nt,
+  #                                         tree = tree)
+  #   } # end for loop
+  # } # end of snps.assoc generation
+  ############################################## ## END OLD METHOD ##
+
+
+  ###########################################
+  ## GET COMPLETE SNPS MATRIX ("genomes"): ##
+  ###########################################
+
+  ## Create genomes matrix:
+  genomes <- do.call("cbind", loci)
+
+  ## Attach snps.assoc loci to last column:
+  if(!is.null(snps.assoc.nodes)){
+    genomes <- cbind(genomes, snps.assoc.nodes)
+  }
+
+  ## keep only rows containing terminal individuals:
+  genomes <- genomes[1:n.ind, ]
+
+  ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
+
+
+  ###############################################
+  ## MODIFY SNPS.ASSOC ACCORDING TO ASSOC.PROB ##
+  ###############################################
+
+  # if(n.snps.assoc != 0){
+  #   ## if we have any imperfect associations... ##
+  #   if(any(assoc.prob != 100)){
+  #     ## check length
+  #     if(length(assoc.prob) != n.snps.assoc){
+  #       ## if only 1 prob value given...
+  #       if(length(assoc.prob) == 1){
+  #         ## ... assume uniform assoc.prob;
+  #         assoc.prob <- rep(assoc.prob, n.snps.assoc)
+  #         ## no warning needed
+  #       }else{
+  #         ## BUT if assoc.prob of random length:
+  #         ## repeat until of length n.snps.assoc
+  #         assoc.prob <- rep(assoc.prob, length.out=n.snps.assoc)
+  #         ## and print warning (only if not of length n.snps.assoc OR 1)
+  #         warning("assoc.prob not of length n.snps.assoc;
+  #                 sequence will be repeated until correct length is reached.")
+  #       }
+  #       } # end checks
+  #
+  #     ## for each associated SNP,
+  #     ## we undo some associations | assoc.prob for that snp.assoc
+  #     for(i in 1:n.snps.assoc){
+  #
+  #       ## re-pseudo-randomise seed:
+  #       if(!is.null(seed)){
+  #         seed.i <- seed*i*10
+  #         set.seed(seed.i)
+  #       }
+  #
+  #       prob <- assoc.prob[i]
+  #       ## only if the association is imperfect
+  #       if(prob != 100){
+  #         ## draw genomes to change at snps.assoc[i]
+  #         n.toChange <- round(nrow(genomes)*(1 - (prob/100)))
+  #         toChange <- sample(c(1:nrow(genomes)), n.toChange)
+  #
+  #         ## change those genomes at rows toChange, loci snps.assoc[i]
+  #         for(j in 1:length(toChange)){
+  #           genomes[toChange[j], snps.assoc[i]] <-
+  #             selectBiallelicSNP(genomes[toChange[j], snps.assoc[i]])
+  #         } # end for loop
+  #       }
+  #     } # end for loop
+  #     } # end any assoc.prob != 100
+  # } # end modification | assoc.prob
+
+
+  ##############################
+  ## PLOTS & TREECONSTRUCTION ##
+  ##############################
+  if(heatmap == TRUE || reconstruct!=FALSE){
+    if(set == 3){
+      warning("Tree reconstruction and heatmap are not available for set3-type simulations.
+              (Because they are simulated directly as binary data, as.DNAbin cannot be used
+              as it would be within other simulations.)")
+    }
+    }else{
+      if(heatmap == TRUE || reconstruct!=FALSE){
+        dna <- as.DNAbin(genomes)
+        rownames(dna) <- c(1:nrow(genomes))
+      }
+
+      #############
+      ## HEATMAP ##
+      #############
+      if(heatmap==TRUE){
+        heatmap.DNAbin(dna=dna,
+                       dist.dna.model=dist.dna.model)
+      }
+
+      ##########################################
+      ## PLOT 2: RECONSTRUCTING THE PHYLOGENY ##
+      ##########################################
+      tree.reconstructed <- NULL
+      if(reconstruct!=FALSE){
+        if(reconstruct==TRUE){
+          warning("reconstruct should be one of 'UPGMA', 'nj', 'ml'. Choosing 'UPGMA'.")
+        }
+
+        tree.reconstructed <- tree.reconstruct(dna[1:n.ind,],
+                                               method=reconstruct,
+                                               dist.dna.model=dist.dna.model,
+                                               plot=TRUE)
+      }
+    }
+
+  ##################
+  ## CONVERT SNPS ##
+  ##################
+
+  ## Convert from nts in genomes (for all nodes) to binary SNPs (for terminal nodes only):
+
+  ## Keep only rows containing terminal individuals?:
+  ## (NOTE -- Consider moving this to AFTER snps.assoc assoc.prob section!)
+  # genomes <- genomes[1:n.ind, ]
+
+  ## working with snps in matrix form
+  snps.ori <- genomes
+  snps <- matrix(as.numeric(snps.ori), nrow=nrow(snps.ori), ncol=ncol(snps.ori))
+
+  ## NO LONGER NEED THIS SECTION? ##
+  gen.size <- ncol(snps)
+
+  ## assign snps row and column names:
+  colnames(snps) <- 1:ncol(snps)
+  rownames(snps) <- 1:nrow(snps)
+
+  if(set == 3){
+    ## keep snps.assoc as matrix:
+    snps.assoc <- snps[, (ncol(snps)-n.snps.assoc+1):ncol(snps)]
+  }
+
+
+  if(!is.null(snps.assoc)){
+
+    ## NO LONGER NEED THIS CHECK FOR POLYMORPH HERE:
+    ## identify any columns of snps.bin that
+    ## do NOT meet DNAbin2genind polyThres
+    ## /are NOT SNPs
+    #     x <- snps.bin
+    #     if(is.list(x)) x <- as.matrix(x)
+    #     if(is.null(colnames(x))) colnames(x) <- 1:ncol(x)
+    #
+    #     temp <- lapply(1:ncol(x), function(i)
+    #       .getFixed(x[,i], i)) # process all loci, return a list
+    #     fixed.loci <- which(temp==TRUE) ## identify loci that are NOT SNPs
+
+    ## update snps.assoc to reflect true loci
+    gen.size.final <- ncol(snps)
+    snps.assoc.loci.ori <- c((gen.size.final-(n.snps.assoc-1)):gen.size.final)
+
+    #########################################
+    ## RANDOMIZE SNPS.ASSOC LOCI POSITIONS ##
+    #########################################
+
+    ## Re-enabled snps.assoc loci "randomization" by
+    ## just drawing indices and shuffling the columns accordingly...
+    ## draw which SNPs will be associated to the phenotype
+    snps.assoc.loci <- sort(sample(c(1:gen.size.final),
+                                   n.snps.assoc,
+                                   replace=FALSE))
+
+    snps.indices <- c(1:gen.size.final)
+    snps.ori <- snps
+
+    snps.non.assoc <- snps[,c(1:(gen.size.final-n.snps.assoc))]
+    snps.assoc <- snps[,snps.assoc.loci.ori]
+    snps.new <- matrix(99, nrow=nrow(snps), ncol=gen.size.final)
+    snps.new[,snps.indices[-snps.assoc.loci]] <- snps.non.assoc
+    snps.new[,snps.assoc.loci] <- snps.assoc
+    snps <- snps.new
+    snps.assoc <- snps.assoc.loci
+
+  } # end snps.assoc randomization
+
+  ###############################
+  ## Assign row & column names ##
+  ###############################
+
+  ## assign/generate row.names
+  if(!is.null(row.names)){
+    if(length(row.names) == nrow(snps)){
+      rownames(snps) <- row.names
+    }else{
+      if(is.null(rownames(snps))) rownames(snps) <- c(1:nrow(snps))
+    }
+  }else{
+    if(is.null(rownames(snps))) rownames(snps) <- c(1:nrow(snps))
+  }
+
+  ## generate column names:
+  colnames(snps) <- 1:ncol(snps)
+
+
+  #################################################
+  ## SIM SET 2 (complementary clade-wise assoc): ##
+  #################################################
+  sets <- NULL
+  if(!is.null(snps.assoc)){
+    if(!is.null(set)){
+      if(set == 2){
+
+        ## Want to divide tree into 2 sets of clades btw 1/3:2/3 and 1/2:1/2
+        clades <- tab <- grp.options <- sets.complete <- list()
+
+        min.size <- ceiling((tree$Nnode+1)*(1/3))
+        max.size <- floor((tree$Nnode+1)*(2/3))
+        grp1 <- tree$Nnode+1
+
+        ## get 2 sets of clades:
+
+        ##############
+        ## coaltree ##
+        ##############
+
+        if(coaltree == TRUE){
+          ## Get tree as hclust tree:
+          tree.hc <- as.hclust.phylo(tree)
+
+          i <- 2
+          counter <- 0
+          #######################################
+          ## WHILE LOOP to get size of clades: ##
+          #######################################
+          while(grp1 < min.size | grp1 > max.size){
+            clades[[i]] <- cutree(tree.hc, k=i)
+            tab[[i]] <- table(clades[[i]])
+            # grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+            grp.opts <- grp.options[[i]] <- sapply(c(1:(i)), function(e) sum(tab[[i]][1:e]))
+            ## make grp1 first clade in grp.options:
+            group1 <- grp.opts[1]
+            ## remove first clade from options:
+            grp.opts <- grp.opts[-1]
+            ## and record n.grps:
+            n.grp <- 1
+            ## try to identify a (set of) clade(s) that's big enough (but not too big):
+            while(group1 < min.size){
+              group1 <- sum(group1, grp.opts[1])
+              grp.opts <- grp.opts[-1]
+              n.grp <- n.grp+1
+            }
+            sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
+            sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
+            grp1 <- sum(grp.options[[i]][1:n.grp])
+            k <- i
+            i <- i+1
+            counter <- counter+1
+          } # end while loop
+          ###########
+
+          sets <- sets.complete[[length(sets.complete)]]
+
+          ###########
+
+        }else{
+          ###########
+          ## rtree ##
+          ###########
+          dec <- grp <- sets.temp <- sets.complete <- list()
+
+          inds <- c(1:(tree$Nnode+1))
+          new.root <- tree$edge[1,1] # initial root
+
+          counter <- 0
+          #######################################
+          ## WHILE LOOP to get size of clades: ##
+          #######################################
+          while(grp1 < min.size | grp1 > max.size){
+
+            ## get all descendants of root node:
+            all.dec <- .getDescendants(tree, node=new.root)
+
+            ## get all descendants in first 2 major clades:
+            dec[[1]] <- .getDescendants(tree, node=all.dec[1])
+            dec[[2]] <- .getDescendants(tree, node=all.dec[2])
+
+            ## get terminal inds only:
+            sets.temp[[1]] <- dec[[1]][which(dec[[1]] %in% inds)]
+            sets.temp[[2]] <- dec[[2]][which(dec[[2]] %in% inds)]
+
+            grp[[1]] <- length(sets.temp[[1]])
+            grp[[2]] <- length(sets.temp[[2]])
+
+            max.grp <- which.max(c(grp[[1]], grp[[2]]))
+            new.root <- all.dec[max.grp]
+
+            set1 <- sets.temp[[max.grp]]
+
+            sets <- rep(2, length(inds))
+            sets <- replace(sets, set1, 1)
+            names(sets) <- rownames(snps)
+
+            counter <- counter+1
+
+            grp1 <- grp[[max.grp]]
+
+          } # end while loop
+
+        } # end rtree
+
+        ###########################
+        ## BOTH coaltree & rtree ##
+        ###########################
+
+        set1 <- names(sets)[which(sets == 1)]
+        set2 <- names(sets)[which(sets == 2)]
+        ###########
+
+        ########################
+        ## MODIFY SNPS.ASSOC: ##
+        ########################
+        snps.assoc.set1 <- 1:round(length(snps.assoc)/2)
+        snps.assoc.set2 <- (round(length(snps.assoc)/2)+1):length(snps.assoc)
+
+        ## replace set1 snps with 0 at all inds in clade.set1:
+        for(e in 1:length(snps.assoc.set1)){
+          snps[which(rownames(snps) %in% set1), snps.assoc[snps.assoc.set1[e]]] <- 0
+        }
+        ## replace set2 snps with 0 at all inds in clade.set2:
+        for(e in 1:length(snps.assoc.set2)){
+          snps[which(rownames(snps) %in% set2), snps.assoc[snps.assoc.set2[e]]] <- 0
+        }
+      }
+    }
+  } # end sim set 2
+
+
+  ##################
+  ## get RESULTS: ##
+  ##################
+  out <- list(snps, snps.assoc, tree.reconstructed, sets, phen, phen.nodes)
+  names(out) <- c("snps", "snps.assoc", "tree.reconstructed", "sets", "phen", "phen.nodes")
+
+  return(out)
+
+  } # end snp.sim.Q
+
+
+
+
+#####################
+## .getDescendants ##
+#####################
+## get clades --> numbers of descendants in successive major clades:
+## phytools (?) fn from Revell blog:
+## http://blog.phytools.org/2012/01/function-to-get-descendant-node-numbers.html
+.getDescendants<-function(tree,node,curr=NULL){
+
+  if(is.null(curr)) curr <- vector()
+
+  daughters <- tree$edge[which(tree$edge[,1]==node),2]
+  curr <- c(curr,daughters)
+
+  w <- which(daughters>=length(tree$tip))
+  if(length(w) > 0) for(i in 1:length(w))
+    curr <- .getDescendants(tree, daughters[w[i]], curr)
+
+  return(curr)
+} # end .getDescendants
+
+
+
+
+
+
+##################
+## .get.locus01 ##
+##################
+
+# ########################################################################
+#
+# ###################
+# ## DOCUMENTATION ##
+# ###################
+#
+# #' Short one-phrase description.
+# #'
+# #' Longer proper discription of function...
+# #'
+# #' @param snps description.
+# #'
+# #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+# #' @export
+# #'
+# #' @examples
+# #' ## Example ##
+#
+# ########################################################################
+
+.get.locus01 <- function(subs.edges, root.nt, tree){
+
+  ## convert subs.edges into appropriate format:
+  snps.loci <- list()
+  snps.loci[[1]] <- subs.edges
+
+  ## rearrange snps.loci s.t it becomes a
+  ## list of length tree$edge.length,
+  ## each element of which contains the
+  ## locations of the mutations that will
+  ## occur on that branch
+  snps.loci <- sapply(c(1:length(tree$edge.length)),
+                      function(f)
+                        seq_along(snps.loci)[sapply(snps.loci,
+                                                    function(e) f %in% e)])
+
+
+  # we will store the output in a list called locus:
+  locus <- list()
+  ## get the node names for all individuals (terminal and internal)
+  all.inds <- sort(unique(as.vector(unlist(tree$edge))))
+  ## we start w all inds having same genotype as root:
+  for(j in all.inds){
+    locus[[j]] <- root.nt
+  }
+
+  ## store replacement nts in list new.nts:
+  new.nts <- list()
+  ## distinguish btw list of loci and unique list
+  snps.loci.ori <- snps.loci
+  ## will need to treat repeat loci differently...
+  snps.loci.unique <- lapply(snps.loci, unique)
+  ## the last individual in the first column of tree$edge
+  ## (ie. ind.length(tree$tip.label)+1 ) is our root individual:
+  x <- rev(c(1:nrow(tree$edge)))
+
+
+  #############################
+  ## For Loop to get new nts ##
+  #############################
+  for(i in x){
+    ## for all locus other than root, we mutate the
+    ## genome of the node preceding it, according to snps.loci.
+    ## Draw new nts for each locus selected for mutation:
+    if(!.is.integer0(snps.loci.unique[[i]])){
+      new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
+        selectBiallelicSNP(c("0", "1")[which(c("0", "1")
+                                             %in% locus[[tree$edge[i,1]]]
+                                             [snps.loci.unique[[i]][e]])]))
+      ## if any loci are selected for multiple mutations
+      ## within their given branch length:
+      if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
+        ## identify which loci are repeaters
+        repeats <-table(snps.loci.ori[[i]])[which(table(snps.loci.ori[[i]])!=1)]
+        ## how many times they repeat
+        n.reps <- repeats - 1
+        ## the positions of these loci in the vector of snps loci
+        toRepeat <- which(snps.loci.unique[[i]] %in% names(repeats))
+        ## run chain of re-sampling to end in our new nt for repeater loci:
+        foo <- list()
+        for(j in 1:length(toRepeat)){
+          foo[[j]] <- new.nts[[i]][toRepeat[j]]
+          for(k in 1:n.reps[j]){
+            if(k==1){
+              foo[[j]][k] <- selectBiallelicSNP(c("0", "1")[which(c("0", "1")
+                                                                  %in% foo[[j]][1])])
+
+            }else{
+              foo[[j]][k] <- selectBiallelicSNP(c("0", "1")[which(c("0", "1")
+                                                                  %in% foo[[j]][k-1])])
+            }
+          }
+          ## retain only the last nt selected
+          out <- sapply(c(1:length(foo)),
+                        function(e) foo[[e]][length(foo[[e]])])
+        }
+        ## for the loci with repeated mts, replace these positions
+        ## in new.nts with the corresponding elements of out, above.
+        new.nts[[i]][toRepeat] <- out
+      } # end of if statement for repeaters
+
+      ## update ancestral genotype with new.nts:
+      temp <- locus[[tree$edge[i,1]]]
+      temp[snps.loci.unique[[i]]] <- new.nts[[i]]
+      locus[[tree$edge[i,2]]] <- temp
+
+    }else{
+      ## if no mts occur on branch, set genotype of
+      ## downstream individual to be equal to ancestor's
+      locus[[tree$edge[i,2]]] <- locus[[tree$edge[i,1]]]
+    }
+  } # end of for loop selecting new nts at mutator loci
+
+  ## turn locus into a vector for easier post-handling
+  locus <- as.vector(unlist(locus))
+
+  return(locus)
+
+} # end .get.locus01
