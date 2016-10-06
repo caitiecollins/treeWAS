@@ -11,82 +11,82 @@
 
 # old simTest args:
 # set.number = 1,
-# n.reps = 1, set.seed.as = "file.number", 
+# n.reps = 1, set.seed.as = "file.number",
 # p.value = 0.0001, theta_p=15,
 # n.snp.assoc=NULL, assoc.prob = 90
 
 
 simTest <- function(
-  
+
   ## simTest args:
   set.number = 1,
-  n.reps = 1, 
+  n.reps = 1,
   set.seed.as = "file.number",
   working.dir = "C:/Cait 2016/Work/Xavier/Sims/set", ## NEW ARG ## 15_01_2016
-  
+
   ## data from file args:
   from.file = FALSE,
   file.n = NULL,
-  
+
   ## coalescent.sim args:
   n.ind = 100,
   gen.size = 10000,
   sim.by = "locus",
   theta = 1*2,
-  theta_p = NULL, 
+  theta_p = NULL,
   n.snp.assoc = 0,
-  assoc.option = "all", 
+  assoc.option = "all",
   assoc.prob = 90,
-  
+
   ## treeWAS args:
   p.value = 0.0001,
-  mt.correct = FALSE, 
+  mt.correct = FALSE,
   p.value.option = "count",
   sim.gen.size = NULL,
   treeWAS.test = "score"
-  
+
   ){
-  
+
   ####################
   ## load packages: ##
   ####################
   require(adegenet)
   require(phangorn)
   require(adephylo)
-  require(ape) 
+  require(ape)
   require(ade4) #?
-  
+
   #################################################
   ## set working directory & source required fns ##
   #################################################
   setwd("C:/Users/Caitlin")
   source("./adegenet/R/sequences.R") ## need for DNAbin2genind fn
-  
+
   setwd("C:/Users/Caitlin/treeWAS")
   source("./misc/coalescent.sim.R")
   source("./pkg/R/tree.sim.R")
   source("./pkg/R/treeWAS.R")
-  
-  
+
+
   ###############################################
   ## make lists in which to store all ###########
   ## data and output from each of n.reps runs: ##
   ###############################################
   SNPS <- PHEN <- TREE <- OUT <- RES <-
-                FISHER.RESULTS <- PLINK.RESULTS <- 
+                FISHER.RESULTS <- PLINK.RESULTS <-
                       ARGS <- PERFORMANCE <- list()
   ## and make lists for saving filenames
-  filename.snps <- filename.phen <- filename.tree <- 
-    filename.out <- filename.res <- filename.fisher.results <- 
-    filename.plink.results <- 
-    filename.args <- filename.performance <- 
-    filename.plot <- filename.tree.plot <- list() 
-  
-  
+  filename.snps <- filename.phen <- filename.tree <-
+    filename.out <- filename.res <- filename.fisher.results <-
+    filename.plink.results <-
+    filename.args <- filename.performance <-
+    filename.plot <- filename.tree.plot <- list()
+
+
   ####################################################################################################################################
   ################################### *** DEFINE ARGUMENTS | SET *** #################################################################
   ####################################################################################################################################
-  
+
   if(missing(n.reps)) n.reps <- 1
   if(missing(set.seed.as)) set.seed.as <- "file.number"
   if(missing(n.ind)) n.ind <- 100
@@ -101,11 +101,11 @@ simTest <- function(
   #if(missing(p.value.option)) p.value.option <- "density" # "count"
   if(missing(sim.gen.size)) sim.gen.size <- NULL ## NULL --> ncol(snps)
   if(missing(treeWAS.test)) treeWAS.test <- "score"
-  
-  
+
+
   ###########
   ## SET 1 ##
-  ###########  
+  ###########
   if(set.number == 1){
     ### ensure theta_p is NULL
     if(!is.null(theta_p)) theta_p <- NULL
@@ -113,9 +113,9 @@ simTest <- function(
     if(!is.null(phen)) phen <- NULL
     ## ensure no associated SNPs
     if(n.snp.assoc != 0) n.snp.assoc <- 0
-    if(!is.null(assoc.prob)) assoc.prob <- NULL       
+    if(!is.null(assoc.prob)) assoc.prob <- NULL
   } # end set 1
-  
+
   ###########
   ## SET 2 ##
   ###########
@@ -125,9 +125,9 @@ simTest <- function(
     if(!is.null(phen)) phen <- NULL
     ## ensure no associated SNPs
     if(n.snp.assoc != 0) n.snp.assoc <- 0
-    if(!is.null(assoc.prob)) assoc.prob <- NULL    
+    if(!is.null(assoc.prob)) assoc.prob <- NULL
   } # end set 2
-  
+
   ###########
   ## SET 3 ##
   ###########
@@ -137,9 +137,9 @@ simTest <- function(
     if(!is.null(phen)) phen <- NULL
     ## ensure ONE associated SNP
     if(is.null(n.snp.assoc)) n.snp.assoc <- 1
-    if(is.null(assoc.prob)) assoc.prob <- 90  
+    if(is.null(assoc.prob)) assoc.prob <- 90
   } # end set 3
-  
+
   ###########
   ## SET 4 ##
   ###########
@@ -153,80 +153,80 @@ simTest <- function(
     }else{
       ## n.snp.assoc must be AT LEAST 2 for set 4
       if(n.snp.assoc < 2) n.snp.assoc <- 2
-    }     
-    if(is.null(assoc.prob)) assoc.prob <- 90  
+    }
+    if(is.null(assoc.prob)) assoc.prob <- 90
   } # end set 4
 
-  
+
 
   args <- snps.assoc <- NULL
   sim.gen.size.ori <- sim.gen.size
-  
+
   ##############################################################################################################################
   ########################################### *** DATA FROM FILE *** ###########################################################
   ##############################################################################################################################
-  
+
   if(from.file==TRUE){
-    
+
     ###################################################
     ## READING IN DATA (OPTION for POST HOC TESTING) ##
     ###################################################
-    
+
     ## Get from file: snps, phen, tree, performance, snps.assoc
-    
-    if(is.null(file.n)) stop("Use argument file.n 
+
+    if(is.null(file.n)) stop("Use argument file.n
                              to specify which files to read in.")
-    
+
     ## get n.reps for main for loop
     n.reps <- length(file.n)
-    
+
     ## set working directory for the set specified
     wd <- paste(working.dir, set.number, sep="")
     setwd(wd)
-    
+
     ## for loop:
     for(i in 1:n.reps){
-      
+
       ## get filename prefix for this round of this set:
       filename.prefix <- paste("set", set.number, "_", file.n[i], "_", sep="")
-      
+
       ## get snps
       filename <- paste("./", filename.prefix, "snps.Rdata", sep="")
       snps <- get(load(filename))
-      
+
       ## get phen
       filename <- paste("./", filename.prefix, "phen.Rdata", sep="")
-      phen <- get(load(filename))            
-      
+      phen <- get(load(filename))
+
       ## get tree
       filename <- paste("./", filename.prefix, "tree.Rdata", sep="")
       tree <- get(load(filename))
-      
+
       ## get performance
       filename <- paste("./", filename.prefix, "performance.Rdata", sep="")
       performance <- get(load(filename))
-      
+
       ## get snps.assoc (if any)
       snps.assoc <- NULL
       if(!is.null(performance$snps.assoc)) snps.assoc <- performance$snps.assoc
-      
+
     } # end for loop
-    
-    
+
+
   } # end from.file == TRUE
-  
-  
+
+
   ##############################################################################################################################
-  
+
   ##############
   ## FOR LOOP ##
   ##############
-  
+
   for(i in 1:n.reps){
-    
+
     wd <- paste(working.dir, set.number, sep="")
     setwd(wd)
-    
+
     ## get file number:
     if(from.file==FALSE){
       ## get number for group | number of set3_snps already in file:
@@ -234,8 +234,8 @@ simTest <- function(
     }else{
       number <- file.n[i]
     }
-    
-    
+
+
     ################
     ## dummy plot ##
     ################
@@ -243,7 +243,7 @@ simTest <- function(
     round.marker <- paste("\n\n\n\n\n\n\n\n\n\n\n\nROUND", i, "\n(file number", number, ")", sep=" ")
     plot.new()
     title(round.marker, adj=0.5)
-    
+
     ###############
     ## set seed? ##
     ###############
@@ -259,37 +259,37 @@ simTest <- function(
           warning("seed is not of length n.reps; seed will not be set.")
           seed <- NULL
         }
-      } 
-    } 
+      }
+    }
     # end set.seed.as
-    
+
     ##############################################################################################################################
     ################################################ *** COALESCENT.SIM *** ######################################################
     ##############################################################################################################################
-    
+
     if(from.file==FALSE){
-    
+
     ########################
     ## get PHEN for SET 1 ##
     ########################
     if(set.number == 1){
-    ## simulate phen first, by random sampling ##    
+    ## simulate phen first, by random sampling ##
     ## enforce even split of cases and controls??
-    #phen <- sample(c(rep("A", floor(n.ind/2)), rep("B", ceiling(n.ind/2)), replace=FALSE))    
+    #phen <- sample(c(rep("A", floor(n.ind/2)), rep("B", ceiling(n.ind/2)), replace=FALSE))
     ## or just draw phen by purely random sampling...?
     phen <- sample(c("A", "B"), n.ind, replace=TRUE)
     phen <- as.factor(phen)
     }else{
       phen <- NULL
     }
-    
+
     ############################
     ## simulate data and tree ##
     ############################
-    foo <- coalescent.sim(n.ind = n.ind, 
-                          gen.size = gen.size, 
+    foo <- coalescent.sim(n.ind = n.ind,
+                          gen.size = gen.size,
                           sim.by = sim.by,
-                          theta = theta, 
+                          theta = theta,
                           theta_p = theta_p,
                           phen = phen,
                           n.snp.assoc = n.snp.assoc,
@@ -297,40 +297,41 @@ simTest <- function(
                           assoc.prob = assoc.prob,
                           haploid = TRUE,
                           biallelic = TRUE,
-                          seed = seed, 
+                          seed = seed,
                           plot = TRUE,
                           heatmap = FALSE,
                           plot2 = FALSE)
-    
+
     ####################################
     ## isolate common elements of foo ##
     ####################################
     snps <- foo[[1]]
     tree <- foo[[2]]
-    
+
     ## snps names:
+    if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps)) # NEW (04/10/2016)
     snps.names <- colnames(snps)
-    
+
     ##########################################
     ## isolate set-specific elements of foo ##
     ##########################################
-    if(is.null(phen)) phen <- foo[[3]][[2]][[5]] 
-    ## MAKE SURE PHEN IS IN CORRECT ORDER OF INDS NOT IN LEAF ORDER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
+    if(is.null(phen)) phen <- foo[[3]][[2]][[5]]
+    ## MAKE SURE PHEN IS IN CORRECT ORDER OF INDS NOT IN LEAF ORDER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if(!is.null(n.snp.assoc)) if(n.snp.assoc > 0) snps.assoc <- foo[[3]][[2]][[6]]
-  
-  
+
+
     ######################
     ## save plot as pdf ##
     ######################
-    filename.tree.plot[[i]] <- paste("./set", set.number, "_", number, "_tree_plot", ".pdf", sep="")   
+    filename.tree.plot[[i]] <- paste("./set", set.number, "_", number, "_tree_plot", ".pdf", sep="")
     dev.copy(pdf, file=filename.tree.plot[[i]], width=7, height=11) # , pointsize=1
     dev.off()
-    
-    
-    }# end from.file == FALSE
-    
 
-    
+
+    }# end from.file == FALSE
+
+
+
     ##############################################################################################################################
     ############################################### *** treeWAS *** ##############################################################
     ##############################################################################################################################
@@ -339,62 +340,62 @@ simTest <- function(
     if(is.null(sim.gen.size)) sim.gen.size <- ncol(snps)
     if(sim.by == "locus") mt.rate <- theta/2
     if(sim.by == "branch") mt.rate <- NULL
-    
+
     #################
     ## RUN treeWAS ##
     #################
     set.seed(seed)
-    
-    out <- treeWAS(x = snps, 
-                   y = phen, 
-                   tree = tree, 
-                   mt.rate = mt.rate, 
-                   p.value = p.value, 
-                   mt.correct = mt.correct, 
+
+    out <- treeWAS(x = snps,
+                   y = phen,
+                   tree = tree,
+                   mt.rate = mt.rate,
+                   p.value = p.value,
+                   mt.correct = mt.correct,
                    p.value.option = p.value.option,
-                   plot.null.dist = TRUE, 
-                   plot.dist = FALSE, 
-                   plot.Fitch = TRUE, 
-                   plot.tree = FALSE, 
-                   tree.method = NULL, 
-                   n.reps = 1, 
-                   sim.gen.size = sim.gen.size, 
-                   sim.by = sim.by, 
-                   method = "Didelot", 
-                   test = treeWAS.test, 
+                   plot.null.dist = TRUE,
+                   plot.dist = FALSE,
+                   plot.Fitch = TRUE,
+                   plot.tree = FALSE,
+                   tree.method = NULL,
+                   n.reps = 1,
+                   sim.gen.size = sim.gen.size,
+                   sim.by = sim.by,
+                   method = "Didelot",
+                   test = treeWAS.test,
                    corr.dat.fisher = NULL)
 
-    
+
     #######################
-    ## save treeWAS plot ## 
+    ## save treeWAS plot ##
     #######################
     ## NB: plot.png will not be viewable until fn has finished running...
-    filename.plot[[i]] <- paste("./set", 
-                                set.number, 
-                                "_", number, 
-                                "_plot", 
+    filename.plot[[i]] <- paste("./set",
+                                set.number,
+                                "_", number,
+                                "_plot",
                                 ".pdf", sep="")
     dev.copy(pdf, file=filename.plot[[i]], width=7, height=11) # , pointsize=12
     dev.off()
-    
+
     ##################################
     ## isolate df of Sig SNPs found ##
     ##################################
-    res <- out[[4]]    
-    
-    
+    res <- out[[4]]
+
+
     ##############
     ## get call ##
     ##############
     ## get arguments inputed to simTest for this round
     #call <- match.call()
-    
-    ## TO DO: update arguments to contain actual values used 
+
+    ## TO DO: update arguments to contain actual values used
     ## (ie. return actual value of seed instead of set.seed.as)
     ## (eg. if theta_p was NULL and got set to 25 due to set.number,
     ## report 25)
-    args <- list(set.number, 
-              seed, 
+    args <- list(set.number,
+              seed,
               n.ind,
               gen.size,
               theta,
@@ -408,7 +409,7 @@ simTest <- function(
               sim.gen.size,
               treeWAS.test
               )
-    
+
     names(args) <- c("set.number",
                      "seed",
                      "n.ind",
@@ -424,113 +425,113 @@ simTest <- function(
                      "sim.gen.size",
                      "treeWAS.test"
                      )
-    
-    
-    
-    
-    
+
+
+
+
+
     ###########################################################################################################################
     ############################################# *** FISHER TEST *** #########################################################
     ###########################################################################################################################
-    
+
     #############################
     ## RUN FISHER'S EXACT TEST ##
     #############################
-    
-    ## NOTE--we will run and save all 3 (uncorrected, Bonferroni-corrected, and FDR-corrected), 
+
+    ## NOTE--we will run and save all 3 (uncorrected, Bonferroni-corrected, and FDR-corrected),
     ######### BUT we will only calculate performance metrics for the latter two (or only FDR??)...
-    
+
     ## RUN TEST
-    pval.fisher <- sapply(c(1:ncol(snps)), 
-                          function(e) fisher.test(snps[,e], y=phen, 
-                                                  alternative="two.sided")$p.value) 
-    ## two.sided bc we want to know if 
+    pval.fisher <- sapply(c(1:ncol(snps)),
+                          function(e) fisher.test(snps[,e], y=phen,
+                                                  alternative="two.sided")$p.value)
+    ## two.sided bc we want to know if
     ## inds w the phen have EITHER more 1s or 0s
-    
+
     p.thresh <- p.value
-    
-    ## WITHOUT CORRECTION, identify sig.snps    
+
+    ## WITHOUT CORRECTION, identify sig.snps
     fisher.snps.uncorr <- colnames(snps)[which(pval.fisher < p.thresh)]
     n.fisher.snps.uncorr <- length(fisher.snps.uncorr)
-    
+
     ## w BONFERRONI CORRECTION, identify sig.snps
     pval.bonf <- p.adjust(pval.fisher, method="bonferroni", n=length(pval.fisher))
     fisher.snps.bonf <- colnames(snps)[which(pval.bonf < p.thresh)]
     n.fisher.snps.bonf <- length(fisher.snps.bonf)
-    
+
     ## w FDR CORRECTION, identify sig.snps
     pval.fdr <- p.adjust(pval.fisher, method="fdr", n=length(pval.fisher))
     fisher.snps.fdr <- colnames(snps)[which(pval.fdr < p.thresh)]
     n.fisher.snps.fdr <- length(fisher.snps.fdr)
-    
+
     ## CONVERT 0-LENGTH RESULTS TO NULL
     if(length(fisher.snps.uncorr) == 0) fisher.snps.uncorr <- NULL
     if(length(fisher.snps.bonf) == 0) fisher.snps.bonf <- NULL
     if(length(fisher.snps.fdr) == 0) fisher.snps.fdr <- NULL
-    
-    ## STORE FISHER TEST RESULTS ##    
+
+    ## STORE FISHER TEST RESULTS ##
     fisher.results <- list(pval.fisher, fisher.snps.uncorr, fisher.snps.bonf, fisher.snps.fdr)
     names(fisher.results) <- c("pval.fisher", "fisher.snps.uncorr", "fisher.snps.bonf", "fisher.snps.fdr")
-    
+
     ## end fisher tests
-    
-    
+
+
     ###########################################################################################################################
     ################################################ *** PLINK  *** ###########################################################
     ###########################################################################################################################
-    
-    
+
+
     ###################
     ## RUNNING PLINK ##
     ###################
-    
-    ## Set working directory to run plink program 
+
+    ## Set working directory to run plink program
     setwd("C:/Program Files/plink-1.07-dos")
     plink.wd <- getwd()
     #setwd(plink.wd)
-    
+
     #################
     ## Handle DATA ##
     #################
-    
-    ## STORE ORIGINAL DATA FOR LATER ##    
+
+    ## STORE ORIGINAL DATA FOR LATER ##
     snps.ori <- snps
     phen.ori <- phen
-    
+
     #     #######################
     #     ## from.file = FALSE ##
     #     #######################
     #     if(from.file == FALSE){
-      
+
       ## If data was created during THIS round of simTest...
-      
+
       ###########################
       ## CONVERT AND SAVE DATA ##
       ###########################
-      
+
       ## set working directory for saving
       dat.wd <- paste(working.dir, set.number, "/", sep="")
       setwd(dat.wd)
-      
+
       ##################################
       ## convert snps --> ped format: ##
       ##################################
-      
+
       ## PED FORMAT: ##
             ## 6 "MANDATORY" COLUMNS first:
             ## FamilyID, IndividualID, PaternalID, MaternalID, Sex, Phenotype
             #### ... EXCLUDE OTHER "mandatory" columns w PLINK commands
-            #### --> (IndividualID, Phenotype) 
+            #### --> (IndividualID, Phenotype)
             ## 7-to-p: GENOTYPE COLUMNS
             ## NO HEADER ROW (belongs in .MAP file)
-            
+
       ## SNPs can NOT be 0 --> convert from 0/1 to 1/2:
       snps <- snps+1
       row.names(snps) <- paste("ind", row.names(snps), sep=".")
       ## save row and column names for elsewhere:
       individualID <- row.names(snps)
       loci.names <- colnames(snps)
-      
+
       ## convert to matrix:
       snps <- matrix(snps, byrow=FALSE, ncol=ncol(snps))
       ## Replace every other column with a copy of the column before it:
@@ -542,61 +543,61 @@ simTest <- function(
       snps.new[, seq(1, 2*ncol(snps.ori), 2)] <- snps.ori
       snps.new[, seq(2, 2*ncol(snps.ori), 2)] <- snps.ori
       snps <- snps.new
-      
+
       ## recode phen: S/A as 0, R/B as 1:
       phen <- as.character(phen)
-      # set1 was coded S/R originally 
-      phen <- replace(phen, which(phen=="S"), 1) 
+      # set1 was coded S/R originally
+      phen <- replace(phen, which(phen=="S"), 1)
       phen <- replace(phen, which(phen=="R"), 2)
       # most should be coded A/B
       phen <- replace(phen, which(phen=="A"), 1)
       phen <- replace(phen, which(phen=="B"), 2)
-            
+
       ## bind individualID, phen, snps
       dat <- cbind(individualID, phen, snps)
       colnames(dat) <- NULL
-      
+
       ped <- dat
-      
+
       ## get filename
       uniqueID <- paste("set", set.number, "_", number, sep="")
       filename <- paste("./", uniqueID, "_ped.Rdata", sep="")
-      
+
       ## save dat.ped as Rdata
       save(ped, file=filename)
       #ped <- get(load("C:/Cait 2012/Work/Xavier/Sims/set3/set3_1_ped.Rdata"))
-      
+
       ## save as text!
       #ped <- dat
       filename <- paste("C:/PLINK/", uniqueID, ".txt", sep="")
       write.table(ped, file=filename, quote=FALSE, row.names=FALSE, col.names=FALSE)
-      
+
       ## Do NOT save as .PED
       ## convert from text to PED!!
       filename.ori <- paste("C:\\PLINK\\", uniqueID, ".txt", sep="")
       filename.new <- paste("C:\\PLINK\\", uniqueID, ".ped", sep="")
       command <- paste("mv", filename.ori, filename.new, sep=" ")
-      shell(command) 
-      
-      
+      shell(command)
+
+
       ####################################
       ## convert snp meta-data --> .map ##
       ####################################
-      
+
       ## MAP format: ##
             ## EACH LINE of a .map file describes a SINGLE marker.
             ## Contains 4 "MANDATORY" COLUMNS:
             ## Chromosome, rs#/SNP identifier, (Genetic distance), Base-pair position.
-      
-      
+
+
       ## loci.names:
-      ## SHOULD BE ONE NAME PER SITE (ie. PER TWO LOCI): ie. L001, NOT L001.1, L001.2 !!!!      
+      ## SHOULD BE ONE NAME PER SITE (ie. PER TWO LOCI): ie. L001, NOT L001.1, L001.2 !!!!
       ## remove last TWO characters (ie. decimal and trailing digit):
       #       loci.names <- substr(loci.names, 1, nchar(loci.names)-2)
       #       ## keep only every other:
       #       loci.names <- loci.names[seq(1, length(loci.names), 2)]
-      ## OR: # loci.names <- unique(loci.names)      
-      
+      ## OR: # loci.names <- unique(loci.names)
+
       ## make dummy variables for irrelevant fields:
       chromosome <- rep(26, length(loci.names)) # 26 = human mitochondrial (haploid)
       gen.dist <- rep(0, length(loci.names))
@@ -604,301 +605,301 @@ simTest <- function(
       bp <- loci.names
       bp <- as.numeric(gsub("L", "", bp))
       dat <- data.frame(chromosome, loci.names, gen.dist, bp)
-      
+
       ## as matrix, no header:
       dat <- as.matrix(dat, byrow=FALSE, ncol=ncol(dat))
       colnames(dat) <- NULL
-      
+
       map <- dat
-      
+
       ## get filename
       uniqueID <- paste("set", set.number, "_", number, sep="")
       filename <- paste("./", uniqueID, "_map.Rdata", sep="")
-      
+
       ## save dat.map as Rdata
       save(map, file=filename)
       #map <- get(load("C:/Cait 2012/Work/Xavier/Sims/set3/set3_1_map.Rdata"))
-      
+
       ## save as text!
       filename <- paste("C:/PLINK/", uniqueID, ".txt", sep="")
       write.table(map, file=filename, quote=FALSE, row.names=FALSE, col.names=FALSE)
-      
+
       ## Do NOT save as .MAP
       ## convert from text to MAP!!
       filename.ori <- paste("C:\\PLINK\\", uniqueID, ".txt", sep="")
       filename.new <- paste("C:\\PLINK\\", uniqueID, ".map", sep="")
       command <- paste("mv", filename.ori, filename.new, sep=" ")
       shell(command)
-      
-      ###### ###### ###### ######           
-            
+
+      ###### ###### ###### ######
+
       #     }else{ # end from.file = FALSE
-      #       
+      #
       #       ######################
       #       ## from.file = TRUE ##
       #       ######################
-      #       
-      #     } # end from.file = TRUE    
-    
-    
+      #
+      #     } # end from.file = TRUE
+
+
     ########## #################### ########## #################### #################### ########## ####################
-    
-    
+
+
     #####################
     ## GWAS with PLINK ##
     #####################
-    
+
     ## set wd for PLINK program
     setwd(plink.wd)
-    
-    ## get filename 
+
+    ## get filename
     filename <- paste("C:\\PLINK\\", uniqueID, sep="")
-        
+
     ## inspect file?
     command <- paste("plink --file ", filename, " --no-fid --no-parents --no-sex --allow-no-sex", sep="")
-    #shell(command)
-    
+    # shell(command)
+
     ## make a binary PED file ##
     ## (provide the full path, not just the file name)
     command <- paste("plink --file ", filename, " --make-bed --no-fid --no-parents --no-sex --allow-no-sex --out ", filename, sep="")
     shell(command)
-    
-    ## use --bfile to work with the BINARY file 
+
+    ## use --bfile to work with the BINARY file
     # (same as --file, but loads the binary one and prints summary stats)
     command <- paste("plink --bfile ", filename, " --no-fid --no-parents --no-sex --allow-no-sex", sep="")
     #shell(command)
-    
+
     #######################
     ## basic association ##
     #######################
     ##--> 1df chi-square test
-    
+
     ## check freq of SNPs...?
     command <- paste("plink --file ", filename, " --no-fid --no-parents --no-sex --allow-no-sex --freq --out ", filename, sep="")
     shell(command)
-    ## yay! 
+    ## yay!
     filename <- paste("C:/PLINK/", uniqueID, ".frq", sep="")
     freq <- read.table(filename, header=TRUE)
     #head(freq)
-    
+
     ## perform a basic association analysis on the disease trait for all single SNPs
     filename <- paste("C:\\PLINK\\", uniqueID, sep="")
     command <- paste("plink --bfile ",  filename, " --assoc --counts --allow-no-sex --out ", filename, sep="")
     shell(command)
-    
+
     ## to view the file you created, just read it in with R:
     filename <- paste("C:/PLINK/", uniqueID, ".assoc", sep="")
     plink.res <- read.table(filename, header=TRUE)
-    #head(plink.res)
-    
-    
+    # head(plink.res)
+
+
     ## get p.vals
     pval.plink.assoc <- plink.res$P
-    
+
     ## get sig ##
-    
+
     ## p.thresh:
     p.thresh <- p.value # 0.05 # 0.01 # 0.001 # ??
-    
-    
+
+
     ## Uncorrected ##
     plink.assoc.snps.uncorr <- snps.names[which(pval.plink.assoc < p.thresh)]
-    
+
     ## Bonferonni ##
     p.vals.bonf <- p.adjust(pval.plink.assoc, "bonferroni")
     p.bonf <- which(p.vals.bonf < p.thresh)
     plink.assoc.snps.bonf <- snps.names[p.bonf]
-    
+
     ## FDR ##
     p.vals.fdr <- p.adjust(pval.plink.assoc, "fdr")
     p.fdr <- which(p.vals.fdr < p.thresh)
     plink.assoc.snps.fdr <- snps.names[p.fdr]
-    
+
     ## CONVERT 0-LENGTH RESULTS TO NULL
     if(length(plink.assoc.snps.uncorr) == 0) plink.assoc.snps.uncorr <- NULL
     if(length(plink.assoc.snps.bonf) == 0) plink.assoc.snps.bonf <- NULL
     if(length(plink.assoc.snps.fdr) == 0) plink.assoc.snps.fdr <- NULL
-    
-    ## STORE PLINK TEST RESULTS ##    
+
+    ## STORE PLINK TEST RESULTS ##
     plink.assoc.results <- list(pval.plink.assoc, plink.assoc.snps.uncorr, plink.assoc.snps.bonf, plink.assoc.snps.fdr)
     names(plink.assoc.results) <- c("pval.plink.assoc", "plink.assoc.snps.uncorr", "plink.assoc.snps.bonf", "plink.assoc.snps.fdr")
-    
+
     ############################################
-    
+
     ########################################################
     ## association w control for genomic inflation factor ##
     ########################################################
     ##--> 1df chi-square test
-    
+
     ## perform a basic association analysis on the disease trait for all single SNPs
     filename <- paste("C:\\PLINK\\", uniqueID, sep="")
     command <- paste("plink --bfile ",  filename, " --assoc --adjust --gc --counts --allow-no-sex --out ", filename, sep="")
     shell(command)
-    
+
     ## to view the file you created, just read it in with R:
     filename <- paste("C:/PLINK/", uniqueID, ".assoc.adjusted", sep="")
     plink.res <- read.table(filename, header=TRUE)
-    #head(plink.res) 
+    #head(plink.res)
     ## NOT SURE WHY, BUT THE "UNADJ" p-values and the "GC" p-values are the same
     ## in this table (even though the "UNADJ" p-values are not actually the same
-    ## as those in the plink.res from the basic association test above, 
+    ## as those in the plink.res from the basic association test above,
     ## AND, in this case, lambdaGC was 5.12 and the mean chi-squared was 4.63!!!!!)
-    
-    
+
+
     ## get p.vals
     pval.plink.assoc.gc <- plink.res$P
-    
+
     ## get sig ##
-    
+
     ## p.thresh:
     p.thresh <- p.value # 0.05 # 0.01 # 0.001 # ??
-    
-    
+
+
     ## Uncorrected ##
     plink.assoc.gc.snps.uncorr <- snps.names[which(pval.plink.assoc.gc < p.thresh)]
-    
+
     ## Bonferonni ##
     p.vals.bonf <- p.adjust(pval.plink.assoc.gc, "bonferroni")
     p.bonf <- which(p.vals.bonf < p.thresh)
     plink.assoc.gc.snps.bonf <- snps.names[p.bonf]
-    
+
     ## FDR ##
     p.vals.fdr <- p.adjust(pval.plink.assoc.gc, "fdr")
     p.fdr <- which(p.vals.fdr < p.thresh)
     plink.assoc.gc.snps.fdr <- snps.names[p.fdr]
-    
+
     ## CONVERT 0-LENGTH RESULTS TO NULL
     if(length(plink.assoc.snps.uncorr) == 0) plink.assoc.gc.snps.uncorr <- NULL
     if(length(plink.assoc.snps.bonf) == 0) plink.assoc.gc.snps.bonf <- NULL
-    if(length(plink.assoc.snps.fdr) == 0) plink.assoc.gc.snps.fdr <- NULL                    
-    
-    
-    ## STORE PLINK TEST RESULTS ##    
+    if(length(plink.assoc.snps.fdr) == 0) plink.assoc.gc.snps.fdr <- NULL
+
+
+    ## STORE PLINK TEST RESULTS ##
     plink.assoc.gc.results <- list(pval.plink.assoc.gc, plink.assoc.gc.snps.uncorr, plink.assoc.gc.snps.bonf, plink.assoc.gc.snps.fdr)
     names(plink.assoc.gc.results) <- c("pval.plink.assoc.gc", "plink.assoc.gc.snps.uncorr", "plink.assoc.gc.snps.bonf", "plink.assoc.gc.snps.fdr")
-    
-    
+
+
     ############################################
-    
+
     ## STORE COMBINED PLINK RESULTS ##
-    plink.results <- list(plink.assoc.results, 
+    plink.results <- list(plink.assoc.results,
                           plink.assoc.gc.results)
-    
+
     ###########################################################################################################################
     ############################################# *** PERFORMANCE *** #########################################################
     ###########################################################################################################################
-    
+
     ##########################
     ## EVALUATE PERFORMANCE ##
     ##########################
-    
+
     performance <- list()
-    
+
     ####################
     ## common metrics ##
     ####################
     ## get n.tests
     n.tests <- dim(snps)[2]
-    
+
     ###########################################
     ## performance[[1]] contains snps.assoc: ##
     ###########################################
     performance[[1]] <- snps.assoc
-    
-    
+
+
     ##############################
     ## FOR LOOP FOR ALL 3 TESTS ##
     ##############################
     for(j in 2:8){
-      
+
       if(j==2) test <- "treeWAS"
       if(j==3) test <- "fisher.bonf"
-      if(j==4) test <- "fisher.fdr"  
+      if(j==4) test <- "fisher.fdr"
       if(j==5) test <- "plink.assoc.bonf"
       if(j==6) test <- "plink.assoc.fdr"
       if(j==7) test <- "plink.assoc.gc.bonf"
       if(j==8) test <- "plink.assoc.gc.fdr"
-      
+
       #############
       ## treeWAS ##
       #############
-      if(test == "treeWAS"){              
+      if(test == "treeWAS"){
         ## get test.positive
         if(class(res)=="data.frame"){
-          test.positive <- as.character(res$SNP.locus)   
+          test.positive <- as.character(res$SNP.locus)
         }else{
           test.positive <- NULL
-        } 
-      } # end test = treeWAS      
+        }
+      } # end test = treeWAS
       #################
       ## fisher.bonf ##
       #################
-      if(test == "fisher.bonf"){                
+      if(test == "fisher.bonf"){
         ## get test.positive
-        test.positive <- fisher.snps.bonf            
-      } # end test = fisher.bonf                
+        test.positive <- fisher.snps.bonf
+      } # end test = fisher.bonf
       ################
       ## fisher.fdr ##
       ################
       if(test == "fisher.fdr"){
         test.positive <- fisher.snps.fdr
       } # end test = fisher.fdr
-      
+
       ###########
       ## PLINK ## ########### ########### ########### ########### ########### ###########
       ###########
-      
+
       ## Basic association ##
-      
+
       ######################
       ## plink.assoc.bonf ##
       ######################
       if(test == "plink.assoc.bonf"){
         test.positive <- plink.assoc.snps.bonf
       } # end test = plink.assoc.bonf
-      
+
       #####################
       ## plink.assoc.fdr ##
       #####################
       if(test == "plink.assoc.fdr"){
         test.positive <- plink.assoc.snps.fdr
       } # end test = plink.assoc.fdr
-      
-      
+
+
       ## Corrected w Genomic Control ##
-      
+
       #########################
       ## plink.assoc.gc.bonf ##
       #########################
       if(test == "plink.assoc.bonf"){
         test.positive <- plink.assoc.gc.snps.bonf
       } # end test = plink.assoc.bonf
-      
+
       ########################
       ## plink.assoc.gc.fdr ##
       ########################
       if(test == "plink.assoc.fdr"){
         test.positive <- plink.assoc.gc.snps.fdr
       } # end test = plink.assoc.fdr
-      
-      ########### ########### ########### ########### ########### ########### ########### 
-      
+
+      ########### ########### ########### ########### ########### ########### ###########
+
       #########################
       ## common calculations ##
       #########################
       ## get test.negative
       if(length(which(snps.names %in% test.positive)) != 0){
-        test.negative <- snps.names[-which(snps.names %in% test.positive)] 
+        test.negative <- snps.names[-which(snps.names %in% test.positive)]
       }else{
         test.negative <- snps.names
       }
-      
-      
+
+
       ## get n.test.positive
       n.test.positive <- length(test.positive)
       ## get n.test.negative
-      n.test.negative <- length(test.negative) ## == n.tests - n.test.positive  
-      
+      n.test.negative <- length(test.negative) ## == n.tests - n.test.positive
+
       ########################
       ## GET TP, TN, FP, FN ##
       ########################
@@ -907,129 +908,129 @@ simTest <- function(
       if(set.number < 3){
         snps.associated <- NULL
       }else{
-        #         snps.associated <- paste(sapply(c(1:length(snps.assoc)), 
-        #                                         function(e) 
+        #         snps.associated <- paste(sapply(c(1:length(snps.assoc)),
+        #                                         function(e)
         #                                           rep(names(snps.assoc)[e], 2)), c(1, 2), sep=".")
         snps.associated <- names(snps.assoc)
       }
       true.positive <- test.positive[which(test.positive %in% snps.associated)]
       TP <- length(true.positive)
-      
+
       ## get true negatives
       ## for Set 3 all but ONE SNPs are NOT (intentionally) associated with the phenotype
       if(set.number < 3){
         snps.not <- snps.names
       }else{
         snps.not <- snps.names[-which(snps.names %in% snps.associated)]
-      }      
+      }
       true.negative <- test.negative[which(test.negative %in% snps.not)]
       TN <- length(true.negative)
-      
+
       ## get false positives
       false.positive <- test.positive[which(test.positive %in% snps.not)]
       FP <- length(false.positive)
-      
+
       ## get false negatives
       false.negative <- test.negative[which(test.negative %in% snps.associated)]
-      FN <- length(false.negative)    
-      
-      
+      FN <- length(false.negative)
+
+
       #####################################
       ## CALCULATE METRICS OF EVALUATION ##
       #####################################
-      
-      ## Do NOT need anything to find (no associated SNPs required) ######################################    
-      
+
+      ## Do NOT need anything to find (no associated SNPs required) ######################################
+
       ##############
       ## accuracy ##
       ##############
       ## ie. SUMMARY STATISTIC--Of all the CALLS/tests you made, how many of them were CORRECT
       ## ~ Pr(Correct Call | Call)
       accuracy <- ((TP + TN) / n.tests)
-      
+
       #################
       ## specificity ##
       #################
-      ## ie. Of all the truly NOT associated SNPs, how many did you manage to rule out? 
+      ## ie. Of all the truly NOT associated SNPs, how many did you manage to rule out?
       ## ~ Pr(Negative Test | SNP NOT associated)
       specificity <- (TN / (TN + FP)) ## = (1 - FPR)
-      
+
       #########
       ## FPR ##
       #########
       ## ie. How many truly NOT associated SNPs did you accidentally call significant
       ## ~ Pr(Positive Test | SNP NOT associated)
-      FPR <- (FP / (FP + TN)) ## = (1 - specificity) 
-      
-      
+      FPR <- (FP / (FP + TN)) ## = (1 - specificity)
+
+
       ## NEED something to FIND, else uninformative! (True ASSOCIATED SNPs ~ required) ###################
-      
+
       #########
       ## FNR ##
       #########
       ## ie. How many truly ASSOCIATED SNPs did you accidentally miss
       ## ~ Pr(Negative Test | SNP ASSOCIATED)
       ## --> Set 1: will be 0/0 = NaN
-      FNR <- (FN / (FN + TP))     
-      
+      FNR <- (FN / (FN + TP))
+
       #################
       ## sensitivity ##
       #################
-      ## ie. How many truly ASSOCIATED SNPs did you manage to catch 
+      ## ie. How many truly ASSOCIATED SNPs did you manage to catch
       ## ~ Pr(Positive Test | SNP ASSOCIATED)
-      ## --> Set 1: will be 0/0 = NaN 
-      sensitivity <- (TP / (TP + FN)) 
-      
+      ## --> Set 1: will be 0/0 = NaN
+      sensitivity <- (TP / (TP + FN))
+
       #########
       ## PPV ##
       #########
       ## ie. Of all the POSITIVE calls you made, how many were CORRECT/ identified truly ASSOCIATED SNPs
       ## ~ Pr(SNP ASSOCIATED | Positive Test)
       ## --> Set 1: will be 0 (UNLESS you made NO positive calls, then 0/0 = NaN)
-      PPV <- (TP / (TP + FP)) ## = (1 - FDR) 
-      
+      PPV <- (TP / (TP + FP)) ## = (1 - FDR)
+
       #########
       ## FDR ##
       #########
       ## ie. Of all the POSITIVE calls you made, how many were WRONG/ identified truly NOT associated SNPs
       ## ~ Pr(SNP NOT associated | Positive Test)
       ## --> Set 1: will be 1 (UNLESS you made NO positive calls, then 0/0 = NaN)
-      FDR <- (FP / (FP + TP)) ## = (1 - PPV) 
-      
-      
+      FDR <- (FP / (FP + TP)) ## = (1 - PPV)
+
+
       ##
-      
-      ##################################  
+
+      ##################################
       ## combine eval metrics into df ##
       ##################################
       performance[[j]] <- data.frame(accuracy, specificity, FPR, FNR, sensitivity, PPV, FDR)
-      
+
     } # end for loop
-    
-    names(performance) <- c("snps.assoc", 
-                            "treeWAS", 
-                            "fisher.bonf", "fisher.fdr", 
-                            "plink.assoc.bonf", "plink.assoc.fdr", 
+
+    names(performance) <- c("snps.assoc",
+                            "treeWAS",
+                            "fisher.bonf", "fisher.fdr",
+                            "plink.assoc.bonf", "plink.assoc.fdr",
                             "plink.assoc.gc.bonf", "plink.assoc.gc.fdr")
-    
-    ################################    ################################    ################################    
-    
-    
+
+    ################################    ################################    ################################
+
+
     ###########################################################################################################################
     ######################################### *** SAVING & RETURNING *** ######################################################
     ###########################################################################################################################
-    
-    
+
+
     ########################
     ## SAVE DATA & OUTPUT ##
     ########################
     ## set wd
     setwd(wd)
-    ## get uniqueID    
+    ## get uniqueID
     uniqueID <- paste("set", set.number, "_", number, sep="")
-    
+
     ## save snps, phen, tree, out, res, fisher.results, plink.assoc.results, performance
-    
+
     ## save snps
     filename.snps[[i]] <- paste("./", uniqueID, "_snps", ".Rdata", sep="")
     save(snps, file=filename.snps[[i]])
@@ -1053,17 +1054,17 @@ simTest <- function(
     save(plink.results, file=filename.plink.results[[i]])
     ## save performance
     filename.args[[i]] <- paste("./", uniqueID, "_args", ".Rdata", sep="")
-    save(args, file=filename.args[[i]])    
+    save(args, file=filename.args[[i]])
     ## save performance
     filename.performance[[i]] <- paste("./", uniqueID, "_performance", ".Rdata", sep="")
-    save(performance, file=filename.performance[[i]])    
-    
-    
+    save(performance, file=filename.performance[[i]])
+
+
     #########################
     ## STORE DATA & OUTPUT ##
-    #########################    
+    #########################
     SNPS[[i]] <- snps
-    names(SNPS)[[i]] <- uniqueID 
+    names(SNPS)[[i]] <- uniqueID
     PHEN[[i]] <- phen
     names(PHEN)[[i]] <- uniqueID
     TREE[[i]] <- tree
@@ -1080,18 +1081,18 @@ simTest <- function(
     names(ARGS)[[i]] <- uniqueID
     PERFORMANCE[[i]] <- performance
     names(PERFORMANCE)[[i]] <- uniqueID
-    
-    
+
+
   } # end for loop
-  
-  
+
+
   ##########################
   ## RETURN DATA & OUTPUT ##
   ##########################
-  
+
   toReturn <- list(SNPS, PHEN, TREE, OUT, RES, FISHER.RESULTS, PLINK.ASSOC.RESULTS, ARGS, PERFORMANCE)
   names(toReturn) <- c("snps", "phen", "tree", "out", "res", "fisher.results", "plink.assoc.results", "arguments", "performance")
-  
+
   return(toReturn)
-  
-} # end simTest (generic) function 
+
+} # end simTest (generic) function

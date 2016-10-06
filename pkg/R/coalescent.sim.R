@@ -134,8 +134,8 @@
 # dist.dna.model <- "JC69"
 # grp.min <- 0.25
 # row.names <- NULL
-# set <- 3 # NULL #
-# seed <- 1
+# set <- 1 # NULL #
+# seed <- 21
 
 
 ## EG:

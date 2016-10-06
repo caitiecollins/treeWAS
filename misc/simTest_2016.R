@@ -8,27 +8,6 @@
 ## simTest ##
 #############
 
-###################
-## R PROFILING?? ##
-###################
-## profiling of time (and memory??)
-## COALESCENT TREE (w n.snps.sim = 10000)
-# Rprof("E:/treeWAS_Sims/Rprof_simTest", memory.profiling=T)
-# foo <- simTest()
-# Rprof(NULL)
-# summaryRprof("E:/treeWAS_Sims/Rprof_simTest") # , memory="both"
-
-## R-TREE (w n.snps.sim = 10000)
-# Rprof("E:/treeWAS_Sims/Rprof_simTest_rtree", memory.profiling=T)
-# # foo <- simTest()
-# Rprof(NULL)
-# summaryRprof("E:/treeWAS_Sims/Rprof_simTest_rtree") # , memory="both"
-
-###################
-
-## PCA/DAPC error?
-# Error in weights * y : non-numeric argument to binary operator
-
 ## set 3 error:
 # Error in text.default(x = (max(h.null$breaks) * 3/4), y = (max(h.null$counts) *  :
 #    object 'myCol' not found
@@ -52,6 +31,7 @@
 ##  Error: cannot allocate vector of size 76.3 Mb
 
 # dist_0.05 <- get(load("E:/treeWAS_misc/SimBac/CFML_R_0.05_dist.Rdata"))
+
 # dist_0.05 <- get(load("C:/Users/Caitlin/treeWAS/misc/CFML_R_0.05_dist.Rdata"))
 # barplot(dist_0.05, names.arg=c(1:length(dist_0.05)))
 
@@ -84,10 +64,10 @@
 #
 #   ## treeWAS args:
 #   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
+#   p.value = 0.05, # REQUIRED FOR FISHER TEST
 #   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
 #   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 10000, # 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
 #   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
 #   snps.reconstruction = "parsimony",
 #   phen.reconstruction = "parsimony"
@@ -127,12 +107,12 @@
 # # assoc.option = "all"
 # assoc.prob = 90 # 100
 # grp.min = 0.25
-# s = 10
+# s = 1
 # af = 5
 # coaltree = FALSE
 #
 # ## treeWAS args:
-# p.value = 0.01
+# p.value = 0.05
 # # p.value.correct = c("bonf", "fdr", FALSE) #mt.correct = FALSE
 # # p.value.by = c("count", "density")
 # sim.n.snps = 10000 # 100000 # 10*n.snps #sim.gen.size = NULL
@@ -208,7 +188,7 @@ simTest <- function(
 
   ## treeWAS args:
   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-  p.value = 0.01, # REQUIRED FOR FISHER TEST
+  p.value = 0.05, # REQUIRED FOR FISHER TEST
   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
   #   p.value.by = c("count", "density"),
   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
@@ -243,12 +223,12 @@ simTest <- function(
   ## data and output from each of n.reps runs: ##
   ###############################################
   SNPS <- PHEN <- PHEN.PLOT.COL <-  TREE <- OUT <- RES <-
-    FISHER.RESULTS <- PLINK.RESULTS <- PCA.RESULTS <- DAPC.RESULTS <-
+    FISHER.RESULTS <- PLINK.RESULTS <-
     ARGS <- PERFORMANCE <- SCORE3 <- list()
   ## and make lists for saving filenames
   filename.snps <- filename.phen <- filename.phen.plot.col <- filename.tree <-
     filename.out <- filename.res <- filename.fisher.results <-
-    filename.plink.results <- filename.pca <- filename.dapc <-
+    filename.plink.results <-
     filename.args <- filename.performance <- filename.score3 <-
     filename.plot <- filename.tree.plot <- list()
 
@@ -1124,148 +1104,6 @@ simTest <- function(
     plink.results <- list(plink.assoc.results,
                           plink.assoc.gc.results)
 
-
-    ###########################################################################################################################
-    ################################################# ***   PCA   *** #########################################################
-    ###########################################################################################################################
-
-    #########
-    ## PCA ##
-    #########
-
-    ## STEPS: ##
-    ## (1) Run PCA
-    ## (2) Select sig. number of PCs (--> HOW??)
-    ## (3) Regress snps along sig residuals
-    ## (4) Run assoc test on adjusted snps dataset.
-
-    ## (Below: taken from Glasgow/practical/practical-GWAS_before_cuts.Rnw ~ practical-GWAS_day4.pdf)
-
-    ## get snps:
-    snps <- snps.ori
-    phen <- phen.ori
-    if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
-
-    ## run PCA:
-    ## Keep only n.PCs significant axes:
-    n.PCs <- 5
-    pca1 <- dudi.pca(snps, scale=FALSE, scannf=FALSE, nf=n.PCs)
-
-    ## Identify main pop clusters:
-    grp <- find.clusters(snps, n.pca=n.PCs, choose.n.clust=FALSE) # pca.select="percVar", perc.pca=60,
-    pop <- grp$grp # gives same result as cutree(clust, k=6)
-    n.grp <- length(levels(pop))
-
-    ########################################################
-    ## Correct for pop strat by regressing along sig PCs: ##
-    ########################################################
-
-    ## NOTE-- if any MISSING DATA contained in SNPs dataset, must REPLACE it here (eg. with the mean for that snps column).
-
-    ## get formula (get string up to n.PCs): lm(e ~ pca1$li[,1] + pca1$li[,2] + pca1$li[,3] + pca1$li[,4] + pca1$li[,5])
-    PC.string <- sapply(c(1:n.PCs), function(e) paste("pca1$li[, ", e, "]", sep=""))
-    PC.string <- paste0(PC.string, collapse=" + ")
-    var.string <- paste("e ~ ", PC.string)
-
-    ## Correct SNPs w PCA!
-    ## SLOW STEP..!
-    snps.corrected <- apply(snps, 2, function(e) residuals(do.call(lm, list(as.formula(var.string))))) # may take a minute
-
-    ## First make sure PHEN is in BINARY form (0, 1) only!
-    levs <- levels(as.factor(phen))
-    phen.ini <- phen
-    if(any(!levs %in% c(0,1))){
-      phen <- as.character(phen)
-      phen <- replace(phen, which(phen == levs[1]), 0)
-      phen <- replace(phen, which(phen == levs[2]), 1)
-      phen <- as.numeric(phen)
-      names(phen) <- names(phen.ini)
-    } # end make phen binary..
-
-    ## SLOW STEP..!
-    pval2 <- numeric(0)
-    # system.time( # 120.78
-      for(i in 1:ncol(snps.corrected)){
-        foo <- suppressWarnings(glm(phen ~ snps.corrected[,i], family="binomial"))
-        ANOVA <- anova(foo, test="Chisq")
-        pval2[i] <- ANOVA$"Pr(>Chi)"[2]
-      } # end for loop
-    # )
-
-    ## Store pvals and snps.corrected from pca-corrected ANOVA association test:
-    pval.pca <- pval2
-    snps.corrected.pca <- snps.corrected
-
-    ## Get results:
-    p.thresh <- p.value # 0.01
-    p.vals.bonf <- p.adjust(pval.pca, "bonferroni")
-    p.bonf <- which(p.vals.bonf < p.thresh)
-    pca.snps.bonf <- snps.names[p.bonf]
-
-    ## Store results:
-    pca.results <- list(snps.corrected.pca, pval.pca, pca.snps.bonf)
-    names(pca.results) <- c("snps.corrected.pca", "pval.pca", "pca.snps.bonf")
-
-    ###########################################################################################################################
-    ################################################ ***   DAPC   *** #########################################################
-    ###########################################################################################################################
-
-
-    ## Using our pop clusters as the group factor in DAPC,
-    ## we can generate a new DAPC object ...
-    ## after performing cross-validation to optimise the discrimination between these subpopulations:
-
-    ## NOTE -- If this is SLOW and always results in 5-10 PCs, we may want to skip it... ??
-    xval.pop <- xvalDapc(snps, pop)
-    # str(xval.pop)
-    # xval.pop[2:6]
-
-    ## store DAPC object:
-    dapc.pop <- xval.pop$DAPC
-
-    ###################################
-    ## Correct for pop strat w DAPC: ##
-    ###################################
-
-    ## As we did when correcting with PCA, we regress along the axes of DAPC.
-    ## When correcting with the DAPC approach, we do not need to determine
-    ## how many axes are ``significant'': we will always correct with (k - 1) axes.
-    ## NOTE that (k - 1) is not necessarily = n.PCs
-    ## ... though we may want to limit the K we work with depending on how system.time scales with K... (?)
-
-    ## get formula (get string up to n.PCs): lm(e ~ dapc.pop$ind.coord[,1] + dapc.pop$ind.coord[,2] + dapc.pop$ind.coord[,3] + dapc.pop$ind.coord[,4])
-    # DAPC.string <- sapply(c(1:n.PCs), function(e) paste("dapc.pop$ind.coord[, ", e, "]", sep=""))
-    DAPC.string <- sapply(c(1:(n.grp - 1)), function(e) paste("dapc.pop$ind.coord[, ", e, "]", sep=""))
-    DAPC.string <- paste0(DAPC.string, collapse=" + ")
-    var.string <- paste("e ~ ", DAPC.string)
-
-    ## Correct SNPs w DAPC!
-    snps.corrected <- apply(snps, 2, function(e) residuals(do.call(lm, list(as.formula(var.string))))) # may take a minute
-
-    ## Run association test on DAPC-corrected snps:
-    pval3 <- numeric(0)
-    system.time(
-      for(i in 1:ncol(snps.corrected)){
-        foo <- suppressWarnings(glm(phen ~ snps.corrected[,i], family="binomial"))
-        ANOVA <- anova(foo, test="Chisq")
-        pval3[i] <- ANOVA$"Pr(>Chi)"[2]
-      } # end for loop
-    )
-
-    ## store pvals and snps.corrected for DAPC-corrected assoc test:
-    pval.dapc <- pval3
-    snps.corrected.dapc <- snps.corrected
-
-    ## Get results:
-    p.thresh <- p.value # 0.01
-    p.vals.bonf <- p.adjust(pval.dapc, "bonferroni")
-    p.bonf <- which(p.vals.bonf < p.thresh)
-    dapc.snps.bonf <- snps.names[p.bonf]
-
-    ## Store results:
-    dapc.results <- list(snps.corrected.dapc, pval.dapc, dapc.snps.bonf)
-    names(dapc.results) <- c("snps.corrected.dapc", "pval.dapc", "dapc.snps.bonf")
-
     ###########################################################################################################################
     ############################################# *** PERFORMANCE *** #########################################################
     ###########################################################################################################################
@@ -1293,7 +1131,7 @@ simTest <- function(
     ##############################
     ## FOR LOOP FOR ALL 3 TESTS ##
     ##############################
-    for(j in 2:105){
+    for(j in 2:103){
 
 
       if(j==2) test <- "fisher.bonf"
@@ -1310,27 +1148,6 @@ simTest <- function(
       if(j==101) test <- "plink.assoc.fdr"
       if(j==102) test <- "plink.assoc.gc.bonf"
       if(j==103) test <- "plink.assoc.gc.fdr"
-
-      if(j == 104) test <- "pca"
-      if(j == 105) test <- "dapc"
-
-      ################
-      ## PCA & DAPC ## ########### ########### ########### ########### ########### ###########
-      ################
-
-      #########
-      ## PCA ##
-      #########
-      if(test == "pca"){
-        test.positive <- pca.snps.bonf
-      }
-
-      ##########
-      ## DAPC ##
-      ##########
-      if(test == "dapc"){
-        test.positive <- dapc.snps.bonf
-      }
 
       ###########
       ## PLINK ## ########### ########### ########### ########### ########### ###########
@@ -1536,16 +1353,12 @@ simTest <- function(
       FDR <- (FP / (FP + TP)) ## = (1 - PPV)
 
 
-      ##############
-      ## F1.score ##
-      ##############
-      ## Balanced accuracy-like score considering both sensitivity and PPV:
-      F1.score <- 2*((sensitivity*PPV) / (sensitivity+PPV))
+      ##
 
       ##################################
       ## combine eval metrics into df ##
       ##################################
-      performance[[j]] <- data.frame(accuracy, specificity, FPR, FNR, sensitivity, PPV, FDR, F1.score)
+      performance[[j]] <- data.frame(accuracy, specificity, FPR, FNR, sensitivity, PPV, FDR)
 
     } # end for loop
 
@@ -1566,8 +1379,7 @@ simTest <- function(
                             "fisher.bonf", "fisher.fdr",
                             treeWAS.names,
                             "plink.assoc.bonf", "plink.assoc.fdr",
-                            "plink.assoc.gc.bonf", "plink.assoc.gc.fdr",
-                            "pca", "dapc")
+                            "plink.assoc.gc.bonf", "plink.assoc.gc.fdr")
 
     ################################    ################################    ################################
 
@@ -1614,15 +1426,6 @@ simTest <- function(
     ## save plink.assoc.results
     filename.plink.results[[i]] <- paste("./", uniqueID, "_plink.results", ".Rdata", sep="")
     save(plink.results, file=filename.plink.results[[i]])
-
-    ## save pca
-    filename.pca[[i]] <- paste("./", uniqueID, "_pca", ".Rdata", sep="")
-    save(pca.results, file=filename.pca[[i]])
-    ## save dapc
-    filename.dapc[[i]] <- paste("./", uniqueID, "_dapc", ".Rdata", sep="")
-    save(dapc.results, file=filename.dapc[[i]])
-
-
     ## save performance
     filename.args[[i]] <- paste("./", uniqueID, "_args", ".Rdata", sep="")
     save(args, file=filename.args[[i]])
@@ -1654,11 +1457,6 @@ simTest <- function(
     names(FISHER.RESULTS)[[i]] <- uniqueID
     PLINK.RESULTS[[i]] <- plink.results
     names(PLINK.RESULTS)[[i]] <- uniqueID
-    PCA.RESULTS[[i]] <- pca.results
-    names(PCA.RESULTS)[[i]] <- uniqueID
-    DAPC.RESULTS[[i]] <- dapc.results
-    names(DAPC.RESULTS)[[i]] <- uniqueID
-
     ARGS[[i]] <- args
     names(ARGS)[[i]] <- uniqueID
     PERFORMANCE[[i]] <- performance

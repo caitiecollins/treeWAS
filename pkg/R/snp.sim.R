@@ -392,7 +392,8 @@ snp.sim <- function(n.snps = 10000,
     ## get nt for each individual at this locus
     loci[[i]] <- .get.locus(subs.edges = subs.edges,
                             root.nt = root.nt,
-                            tree = tree)
+                            tree = tree,
+                            coaltree = coaltree)
 
   } # end FOR LOOP for NON-associated SNPs
 
@@ -450,7 +451,8 @@ snp.sim <- function(n.snps = 10000,
       ## assign to (and replace) the snps.assoc elements of loci
       loci[[snps.assoc[i]]] <- .get.locus(subs.edges = subs.edges,
                                           root.nt = root.nt,
-                                          tree = tree)
+                                          tree = tree,
+                                          coaltree = coaltree)
     }
   } # end of snps.assoc generation
 
@@ -806,7 +808,7 @@ snp.sim <- function(n.snps = 10000,
 ################
 ## .get.locus ##
 ################
-.get.locus <- function(subs.edges, root.nt, tree){
+.get.locus <- function(subs.edges, root.nt, tree, coaltree=TRUE){
 
   ## convert subs.edges into appropriate format:
   snps.loci <- list()
@@ -842,6 +844,10 @@ snp.sim <- function(n.snps = 10000,
   ## (ie. ind.length(tree$tip.label)+1 ) is our root individual:
   x <- rev(c(1:nrow(tree$edge)))
 
+  if(coaltree == FALSE){
+    ## use normal/reverse (top:bottom) edge mat:
+    x <- 1:nrow(tree$edge)
+  }
 
   #############################
   ## For Loop to get new nts ##

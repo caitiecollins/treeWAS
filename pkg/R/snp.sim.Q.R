@@ -579,7 +579,7 @@ snp.sim.Q <- function(n.snps = 10000,
 
   if(coaltree == FALSE){
     ## use normal/reverse (top:bottom) edge mat:
-    x <- 1:nrow(edges)
+    x <- 1:nrow(tree$edge)
   }
 
 
@@ -713,7 +713,8 @@ snp.sim.Q <- function(n.snps = 10000,
       ## get nt for each individual at this locus
       loci[[i]] <- .get.locus01(subs.edges = subs.edges,
                                 root.nt = root.nt,
-                                tree = tree)
+                                tree = tree,
+                                coaltree = coaltree)
 
     } # end FOR LOOP for NON-associated SNPs
 
@@ -777,6 +778,8 @@ snp.sim.Q <- function(n.snps = 10000,
     ## Need to solve error w rtree..
     # edges.ori <- edges
     # edges[order(edges[,1]), ]
+
+    x <- rev(c(1:nrow(edges)))
 
     if(coaltree == FALSE){
       ## use normal/reverse (top:bottom) edge mat:
@@ -1074,7 +1077,9 @@ snp.sim.Q <- function(n.snps = 10000,
   #     ## assign to (and replace) the snps.assoc elements of loci
   #     loci[[snps.assoc[i]]] <- .get.locus01(subs.edges = subs.edges,
   #                                         root.nt = root.nt,
-  #                                         tree = tree)
+  #                                         tree = tree,
+  #                                         coaltree = coaltree)
+  #
   #   } # end for loop
   # } # end of snps.assoc generation
   ############################################## ## END OLD METHOD ##
@@ -1472,7 +1477,7 @@ snp.sim.Q <- function(n.snps = 10000,
 #
 # ########################################################################
 
-.get.locus01 <- function(subs.edges, root.nt, tree){
+.get.locus01 <- function(subs.edges, root.nt, tree, coaltree=TRUE){
 
   ## convert subs.edges into appropriate format:
   snps.loci <- list()
@@ -1508,6 +1513,10 @@ snp.sim.Q <- function(n.snps = 10000,
   ## (ie. ind.length(tree$tip.label)+1 ) is our root individual:
   x <- rev(c(1:nrow(tree$edge)))
 
+  if(coaltree == FALSE){
+    ## use normal/reverse (top:bottom) edge mat:
+    x <- 1:nrow(tree$edge)
+  }
 
   #############################
   ## For Loop to get new nts ##

@@ -11,7 +11,7 @@ treeWAS(snps, phen, n.subs = NULL, tree = c("UPGMA", "nj", "ml"),
   "density"), sim.n.snps = ncol(snps), n.reps = 1, plot.manhattan = TRUE,
   plot.null.dist = TRUE, plot.dist = FALSE, snps.assoc = NULL,
   snps.reconstruction = "parsimony", phen.reconstruction = "parsimony",
-  filename.plot = NULL)
+  coaltree = TRUE, filename.plot = NULL)
 }
 \arguments{
 \item{test}{A character string or vector containing one or more of the following available tests of association:

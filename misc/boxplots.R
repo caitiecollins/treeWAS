@@ -2,6 +2,13 @@
 
 ## see "testing_treeWAS.Rnw" for original boxplots, ggplot2 etc. code...
 
+## NOTE TO SELF: To install on Imperial PC,
+## must change .libPaths to include the literal path to the directory
+## otherwise represented .libPaths()[1]. Run:
+# .libPaths(c("H:/R/win-library/3.2",
+# "\\\\icnas1.cc.ic.ac.uk/cc5512/R/win-library/3.2",
+# "C:/Program Files/R/R-3.2.1/library"))
+
 #########################################
 ## fn getting order of tips as plotted ##
 #########################################
@@ -165,9 +172,9 @@ library(beeswarm)
 ## GET DATA ##    #######    #######    #######    #######    #######    #######    #######    #######    #######    #######
 ##############
 
-setwd("C:/Cait 2016/Work/Xavier/Sims/set2/")
+setwd("C:/Cait 2016/Work/Xavier/Sims/set1/")
 
-set.n <- "set2"
+set.n <- "set1"
 
 dirname <- paste("C:/Cait 2016/Work/Xavier/Sims/", set.n, sep="")
 # dirname <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims/", set.n, sep="")
@@ -177,8 +184,9 @@ foo
 ## get all performance Rdata names
 # toKeep <- grep("performance", foo) ##??
 # toKeep <- grep("phen.plot.col", foo) ##??
-toKeep <- grep("_res", foo) ##??
+# toKeep <- grep("_res", foo) ##??
 # toKeep <- grep("_args", foo) ##??
+toKeep <- grep("_score3", foo) ##??
 foo <- foo[toKeep]
 foo
 
@@ -195,20 +203,23 @@ setwd(dirname)
 system.time(
 for(i in 1:length(foo)){ # length(foo)
   print(i)
-  # dat[[i]] <- get(load(paste("./", foo[i], sep="")))
-  temp <- get(load(paste("./", foo[i], sep="")))
-  dat[[i]] <- temp$vals$terminal$corr.dat[snps.assoc[, i]]
+  dat[[i]] <- get(load(paste("./", foo[i], sep="")))
+  # temp <- get(load(paste("./", foo[i], sep="")))
+  # dat[[i]] <- temp$vals$terminal$corr.dat[snps.assoc[, i]]
   gc()
 }
 )
 
 ## REORDER dat s.t. order is numeric not character...
+# dat <- snps.assoc
 inds.new <- c(1:length(dat))
 inds.ori <- sort(as.character(inds.new))
 ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
 
 dat.ori <- dat
 dat <- dat[ord]
+
+# evalStats <- dat
 
 #####################
 ## get snps.assoc: ##
@@ -225,15 +236,18 @@ snps.assoc <- snps.assoc[ord]
 ## get score1.mean: ##
 ######################
 # dat = res
-score1.mean <- sapply(c(1:length(dat)), function(e) mean(dat[[e]]))
-score1 <- dat
+score1.mean <- sapply(c(1:length(score1)), function(e) mean(score1[[e]]))
+# score1 <- dat
+score1.mean.ori <- score1.mean
+score1.mean <- rep(rep(score1.mean, 32), 3)
 
 ## SAVE ##
-save(score1, file="./set2_1.42_ALL_terminal.score_snps.assoc.Rdata")
-save(snps.assoc, file="./set2_1.42_ALL_snps.assoc.Rdata")
+save(score1, file="./set1_1.40_ALL_terminal.score_snps.assoc.Rdata")
+save(snps.assoc, file="./set1_1.40_ALL_snps.assoc.Rdata")
 
 ## bind score1.mean to args in evalStats:
-evalStats <- cbind(evalStats[,1:10], score1.mean, evalStats[,11:18])
+evalStats <- cbind(evalStats[,1:8], score1.mean, evalStats[,9:16])
+# evalStats <- cbind(evalStats[,1:10], score1.mean, evalStats[,11:18])
 # table(round(evalStats$score1.mean, 1), evalStats$s, evalStats$af, evalStats$tree.type)
 
 ## SAVE: ##
@@ -245,16 +259,20 @@ evalStats <- cbind(evalStats[,1:10], score1.mean, evalStats[,11:18])
 ######################
 # dat = phen.plot.col
 n.phen.subs <- sapply(c(1:length(dat)), function(e) length(which(dat[[e]]$edges == "grey")))
+n.phen.subs.ori <- n.phen.subs
+
+n.phen.subs <- rep(rep(n.phen.subs, 32), 3)
 
 head(evalStats)
 
 ## bind n.phen.subs to args in evalStats:
-evalStats <- cbind(evalStats[,1:9], n.phen.subs, evalStats[,10:17])
+evalStats <- cbind(evalStats[,1:7], n.phen.subs, evalStats[,8:15])
+# evalStats <- cbind(evalStats[,1:9], n.phen.subs, evalStats[,10:17])
 # table(evalStats$n.phen.subs, evalStats$s, evalStats$tree.type)
 
 ## SAVE: ##
-# filename <- "./set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"
-# save(evalStats, file=filename)
+filename <- "./set1_1.40_ALL_treeWAS_evalStats.df.Rdata"
+save(evalStats, file=filename)
 
 # evalStats <- get(load("./set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
 
@@ -377,11 +395,11 @@ for(t in 1:length(treeWAS)){
     ## (though arguably accuracy is not a useful metric for genetic data.. )
     # df[[t]][[e]]$accuracy <- df[[t]][[e]]$accuracy*2
 
-    #     acc <- df[[t]][[e]]$accuracy
-    #     for(a in toChange){
-    #       acc[a] <- acc[a]*2
-    #     }
-    #     df[[t]][[e]]$accuracy <- acc
+    acc <- df[[t]][[e]]$accuracy
+    for(a in toChange){
+      acc[a] <- acc[a]*2
+    }
+    df[[t]][[e]]$accuracy <- acc
     ################
   }
   names(df[[t]]) <- names(treeWAS$terminal[[1]])
@@ -425,7 +443,7 @@ nrow(df[[1]][[1]])
 ## save ##    #######    #######    #######    #######    #######    #######
 ##########
 tree.type <- "ALL"
-dir.n <- "1.40"
+dir.n <- "1_42"
 # getwd()
 filename <- paste("./", set.n, "_", dir.n, "_", tree.type, "_treeWAS_evalStats.Rdata", sep="")
 save(treeWAS.df, file=filename)
@@ -506,7 +524,9 @@ n.snps.sim <- paste(temp[,6], "x", sep="") # 1x # 10x.n.snps
 
 thresh.sel <- data.frame(test, pval, pval.correct, pval.by, n.snps.sim)
 
-tree.type <- c(rep("coal", 20), rep("rtree", 20))
+# tree.type <- c(rep("coal", 3*32), rep("rtree", 17*32), rep("coal", 3*32), rep("rtree", 4*32), rep("coal", 15*32))
+tree.type <- c(rep("coal", 3), rep("rtree", 17), rep("coal", 3), rep("rtree", 4), rep("coal", 15))
+# tree.type <- c(rep("coal", 20), rep("rtree", 20))
 
 # args <- data.frame(tree.type, s, af)
 
@@ -545,17 +565,6 @@ for(t in 1:length(treeWAS.df)){
 
 } # end (t) for loop
 
-##########
-## save ##    #######    #######    #######    #######    #######    #######
-##########
-tree.type <- "ALL"
-dir.n <- "1.40"
-# getwd()
-filename <- paste("./", set.n, "_", dir.n, "_", tree.type, "_treeWAS_evalStats.df.Rdata", sep="")
-save(evalStats, file=filename)
-
-#######    #######    #######    #######    #######    #######    #######
-
 ## append treeWAS.test to treeWAS evalStats and bind:
 treeWAS.test <- c(rep("terminal", nrow(evalStats[[1]])),
                   rep("simultaneous", nrow(evalStats[[2]])),
@@ -564,6 +573,19 @@ temp <- do.call("rbind", evalStats)
 temp <- data.frame(treeWAS.test, temp)
 rownames(temp) <- NULL
 evalStats <- temp
+
+##########
+## save ##    #######    #######    #######    #######    #######    #######
+##########
+tree.type <- "ALL"
+dir.n <- "1_42"
+# getwd()
+filename <- paste("./", set.n, "_", dir.n, "_", tree.type, "_treeWAS_evalStats.df.Rdata", sep="")
+save(evalStats, file=filename)
+
+#######    #######    #######    #######    #######    #######    #######
+
+
 
 ## append args to other tests:
 fisher.bonf <- data.frame(tree.type, fisher.bonf)
@@ -578,10 +600,10 @@ plink.gc.fdr <- data.frame(tree.type, plink.gc.fdr)
 ## save ##    #######    #######    #######    #######    #######    #######
 ##########
 tree.type <- "ALL"
-dir.n <- "1.40"
+dir.n <- "1_42"
 
-filename <- paste("./", set.n, "_", dir.n, "_", tree.type, "_treeWAS_evalStats.df.all.tests.Rdata", sep="")
-save(evalStats, file=filename)
+# filename <- paste("./", set.n, "_", dir.n, "_", tree.type, "_treeWAS_evalStats.df.all.tests.Rdata", sep="")
+# save(evalStats, file=filename)
 
 filename <- paste("./", set.n, "_", dir.n, "_", tree.type, "_fisher.bonf_evalStats.df.Rdata", sep="")
 save(fisher.bonf, file=filename)
@@ -596,23 +618,546 @@ save(plink.gc.bonf, file=filename)
 filename <- paste("./", set.n, "_", dir.n, "_", tree.type, "_plink.gc.fdr_evalStats.df.Rdata", sep="")
 save(plink.gc.fdr, file=filename)
 
+
+
+
+#############################################
+## MY DATA: Beeswarm/BoxPlots ACROSS TESTS ##   #########################   #########################
+#############################################
+
+## 3 treeWAS.tests + Fisher, Plink, Plink.GC (in future: + PCA, DAPC...?)
+
+## LOAD DATA ##
+# eg:
+plink.gc.fdr <- get(load("D:/treeWAS_Sims/set3/n.subs_1/evalStats/set3_1.120_ALL_s.ALL_af.ALL_plink.gc.fdr_evalStats.df.Rdata"))
+
+# evalStats <- get(load("E:/treeWAS_Sims/set3/n.subs_1/evalStats/set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
+# evalStats <- get(load("D:/treeWAS_Sims/set1/n.subs_1/evalStats/set1_1.40_ALL_treeWAS_evalStats.df.Rdata"))
+# evalStats <- get(load("E:/treeWAS_Sims/set2/n.subs_1/evalStats/set2_1_42_ALL_treeWAS_evalStats.df.Rdata"))
+df <- evalStats
+# require(plyr)
+df$test <- mapvalues(df$test, from = levels(df$test), to = c(1:32)) # plyr
+evalStats.ori <- evalStats
+evalStats <- df
+
+
+########################################
+## (1) ACROSS ALL ROUNDS OF SIM SET 3 ##
+########################################
+
+## keep only treeWAS results (x3) for thresh == 1 (ie. "pval.0.0001.bonf.count.1.x.n.snps")
+df <- evalStats
+df <- df[df$test==1, ]
+## remove test columns:
+assoc.test.treeWAS <- df$treeWAS.test
+df <- df[, 7:ncol(df)]
+treeWAS.df <- df
+
+## OOPS -- set1 - all comparator tests' df's have overwritten tree.type -- REPLACE!
+# head(plink.gc.fdr)
+# head(evalStats)
+#
+# tree.type <- treeWAS.df$tree.type[1:(nrow(treeWAS.df)/3)]
+#
+# fisher.bonf$tree.type <- tree.type
+# fisher.fdr$tree.type <- tree.type
+# plink.bonf$tree.type <- tree.type
+# plink.fdr$tree.type <- tree.type
+# plink.gc.bonf$tree.type <- tree.type
+# plink.gc.fdr$tree.type <- tree.type
+
+
+## record assoc.test as factor in column 1:
+assoc.test.all <- c(rep("fisher.bonf", nrow(fisher.bonf)),
+                    rep("fisher.fdr", nrow(fisher.fdr)),
+                    rep("plink.bonf", nrow(plink.bonf)),
+                    rep("plink.fdr", nrow(plink.fdr)),
+                    rep("plink.gc.bonf", nrow(plink.gc.bonf)),
+                    rep("plink.gc.fdr", nrow(plink.gc.fdr)),
+                    as.character(assoc.test.treeWAS))
+
+## combine all into one df w assoc.test as factor for boxplots:
+dat <- rbind(fisher.bonf,
+             fisher.fdr,
+             plink.bonf,
+             plink.fdr,
+             plink.gc.bonf,
+             plink.gc.fdr)
+nrow(dat)
+
+## append info from treeWAS.df to other tests dfs:
+l <- nrow(treeWAS.df)/3
+# identical(treeWAS.df$s[1:l], fisher.bonf$s) # TRUE
+info <- treeWAS.df[1:l,2:3]
+# info <- treeWAS.df[1:l,4:5]
+n.phen.subs <- rep(info[,1], 6)
+score1.mean <- rep(info[,2], 6)
+info <- cbind(n.phen.subs, score1.mean)
+dat <- cbind(dat[,1], info, dat[,2:ncol(dat)])
+names(dat)[1] <- "tree.type"
+# dat <- cbind(dat[,c(1:3)], info, dat[,4:ncol(dat)])
+
+## calculate F1.score for all comparator tests:
+dat <- df
+F1.score <- 2*((dat$PPV*dat$sensitivity) / (dat$PPV+dat$sensitivity))
+# dat <- cbind(dat, F1.score)
+df$F1.score <- F1.score
+
+## append treeWAS.df to dat:
+dat <- rbind(dat,
+             treeWAS.df)
+
+## append assoc.test arg to other tests:
+## check:
+# length(assoc.test.all) # 1080
+# nrow(dat) # 1080
+dat <- data.frame("assoc.test"=assoc.test.all, dat)
+head(dat)
+
+## SAVE: ##
+evalStats <- dat
+
+# save(evalStats, file="E:/treeWAS_Sims/set2/n.subs_1/evalStats/set2_1.42_all.tests_evalStats.df.Rdata")
+evalStats <- get(load("E:/treeWAS_Sims/set2/n.subs_1/evalStats/set2_1.42_all.tests_evalStats.df.Rdata"))
+
+# save(evalStats, file="E:/treeWAS_Sims/set1/n.subs_1/evalStats/set1_1.40_all.tests_evalStats.df.Rdata")
+evalStats <- get(load("E:/treeWAS_Sims/set1/n.subs_1/evalStats/set1_1.40_all.tests_evalStats.df.Rdata"))
+
+# save(evalStats, file="E:/treeWAS_Sims/set3/n.subs_1/evalStats/set3_1.120_all.tests_evalStats.df.Rdata")
+evalStats <- get(load("E:/treeWAS_Sims/set3/n.subs_1/evalStats/set3_1.120_all.tests_evalStats.df.Rdata"))
+
+df <- evalStats
+F1.score <- 2*((df$PPV*df$sensitivity) / (df$PPV+df$sensitivity))
+identical(df$F1.score, F1.score)
+df$F1.score <- F1.score
+evalStats <- df
+
+###################
+## BEESWARM PLOT ##   #########################   #########################   #########################
+###################
+df <- evalStats
+# require(plyr)
+## replace levels w numbers?
+# df$assoc.test <- mapvalues(df$assoc.test, from = levels(df$assoc.test), to = c(1:6, 8,9,7)) # plyr
+## reorder and fix order of levels? (eg. st treeWAS tests go terminal, simultaneous, subsequent)
+# # # df$assoc.test <- ordered(df$assoc.test, levels = levels(df$assoc.test)[c(1:6, 9,7,8)]) # SAVED!
+evalStats.ori <- evalStats
+evalStats <- df
+
+
+assoc.tests <- c("fisher.bonf",
+                 "fisher.fdr",
+                 "plink.bonf",
+                 "plink.fdr",
+                 "plink.gc.bonf",
+                 "plink.gc.fdr",
+                 "terminal",
+                 "simultaneous",
+                 "subsequent")
+
+Y <- c("F1.score", "PPV", "sensitivity", "FPR")
+
+for(y in 1:length(Y)){ #
+  # for(t in 1:length(assoc.tests)){
+    df <- evalStats
+    df <- df[df$tree.type=="coal"  & df$s==10 & df$af==5, ] # & df$tree.type=="rtree"  & df$s==10 & df$af==5
+    beeswarm.plot(y=Y[y], x="assoc.test", df, y.lab=NULL,
+                  pt.size=3, x.text=TRUE)
+  # }
+}
+
+## NOTE: REDO ALL rtree SIMs in SET 1 AND SET 2 !!!!!!!!!!!!!!!!!!!!!!!!!!! #######  !!!!!!!!!   #######  !!!!!!!!!
+###########################################################################
+
+## SAVE FIGS: ##
+# set2_1_42_coal_assoc_tests_F1score
+# set2_1_42_coal_assoc_tests_PPV
+# set2_1_42_coal_assoc_tests_sensitivity
+# set2_1_42_coal_assoc_tests_FPR
+#####
+# set2_1_42_ALL_assoc_tests_F1score
+# set2_1_42_ALL_assoc_tests_PPV
+# set2_1_42_ALL_assoc_tests_sensitivity
+# set2_1_42_ALL_assoc_tests_FPR
+
+######################
+# set1_21_40_rtree_assoc_tests_F1score
+# set1_21_40_rtree_assoc_tests_PPV
+# set1_21_40_rtree_assoc_tests_sensitivity
+# set1_21_40_rtree_assoc_tests_FPR
+#####
+# set1_1_20_coal_assoc_tests_F1score
+# set1_1_20_coal_assoc_tests_PPV
+# set1_1_20_coal_assoc_tests_sensitivity
+# set1_1_20_coal_assoc_tests_FPR
+#####
+# set1_1_40_ALL_assoc_tests_F1score
+# set1_1_40_ALL_assoc_tests_PPV
+# set1_1_40_ALL_assoc_tests_sensitivity
+# set1_1_40_ALL_assoc_tests_FPR
+
+
+#################################
+# set3_31_40_coal_s_10_af_5_assoc_tests_F1score
+# set3_31_40_coal_s_10_af_5_assoc_tests_PPV
+# set3_31_40_coal_s_10_af_5_assoc_tests_sensitivity
+# set3_31_40_coal_s_10_af_5_assoc_tests_FPR
+#####
+# set3_1_120_coal_assoc_tests_F1score
+# set3_1_120_coal_assoc_tests_PPV
+# set3_1_120_coal_assoc_tests_sensitivity
+# set3_1_120_coal_assoc_tests_FPR
+#####
+# set3_1_120_ALL_assoc_tests_F1score
+# set3_1_120_ALL_assoc_tests_PPV
+# set3_1_120_ALL_assoc_tests_sensitivity
+# set3_1_120_ALL_assoc_tests_FPR
+
+#########################################################################
+## UHOH-- WHY DO ALL assoc.tests perform SO POORLY in SET 1 w rtree??! ##
+#########################################################################
+
+summary(df$score1.mean)
+
+## CHECK w eg:
+snps <- get(load("D:/treeWAS_Sims/set1/n.subs_1/set1_21_snps.Rdata"))
+phen <- get(load("D:/treeWAS_Sims/set1/n.subs_1/set1_21_phen.Rdata"))
+snps.assoc <- get(load("D:/treeWAS_Sims/set1/n.subs_1/set1_21_performance.Rdata"))$snps.assoc
+
+temp <- data.frame(phen, snps[,snps.assoc])
+temp
+
+tree <- get(load("D:/treeWAS_Sims/set1/n.subs_1/set1_21_tree.Rdata"))
+str(tree)
+
+# tree.coal <- get(load("D:/treeWAS_Sims/set1/n.subs_1/set1_20_tree.Rdata"))
+# str(tree.coal)
+
+## Shit.. Not even all snps.assoc are the same!
+## Soln-- Ah! Forgot to (un-)reverse x <- rev(c(1:nrow(tree$edge))) for coaltree==FALSE in snps.sim!!
+
+## HYP 1: snps or phen ordered by tip.lab indices??
+# labs <- tree$tip.label
+# labs <- removeFirstN(labs, 1)
+# labs <- as.numeric(labs)
+#
+#
+# temp1 <- data.frame(phen, snps[labs,snps.assoc])
+# temp1
+#####################################################################################################################
+#####################################################################################################################
+
+#############
+## SCORE 3 ##
+#############
+## EVALUATE ALTERNATIVES!
+## ONLY for set3_31:40
+## START w eg. set3_40.
+
+
+evalStats.df <- list()
+
+file.ns <- c(31:40)
+
+for(j in 1:length(file.ns)){
+
+  file.n <- file.ns[j]
+
+  SCORE3 <- get(load(paste("E:/treeWAS_Sims/set3/n.subs_1/set3_", file.n, "_score3.Rdata", sep="")))
+  SCORE3.ori <- SCORE3
+
+  snps <- get(load(paste("E:/treeWAS_Sims/set3/n.subs_1/set3_", file.n, "_snps.Rdata", sep="")))
+  phen <- get(load(paste("E:/treeWAS_Sims/set3/n.subs_1/set3_", file.n, "_phen.Rdata", sep="")))
+  snps.assoc <- get(load(paste("E:/treeWAS_Sims/set3/n.subs_1/set3_", file.n, "_performance.Rdata", sep="")))$snps.assoc
+
+  snps.ori <- snps
+  phen.ori <- phen
+  names(snps.assoc) <- as.character(snps.assoc)
+  snps.assoc.ori <- snps.assoc
+
+
+  corr.dat <- SCORE3$corr.dat
+  corr.sim <- SCORE3$corr.sim
+  corr.dat.ori <- corr.dat
+  corr.sim.ori <- corr.sim
+
+  ## thresh method = pval 0.0001, bonf, count, 1x.n.snps
+  snps.names <- colnames(snps.ori)
+
+  toKeep <- c(1:5, 9:12)
+  out <- perf <- list()
+
+  ## FOR LOOP: ##
+  for(i in 1:length(toKeep)){
+
+    index <- toKeep[i]
+    corr.dat <- corr.dat.ori[[index]]
+    corr.sim <- corr.sim.ori[[index]] # [1:length(corr.dat)]
+
+    corr.dat <- as.vector(unlist(corr.dat))
+    corr.sim <- as.vector(unlist(corr.sim))
+
+    if(length(which(!is.na(corr.dat))) > 0){
+    p.value <- 0.01
+    n.tests <- 3
+    p.value <- p.value/(length(corr.dat)*n.tests)
+    thresh <- quantile(corr.sim, probs=1-p.value, na.rm=TRUE)
+
+    ## Identify (real) SNPs w correlations > thresh:
+    sig.snps <- which(corr.dat > thresh)
+    p.vals <- .get.p.vals(corr.sim = corr.sim,
+                          corr.dat = corr.dat,
+                          fisher.test = FALSE)
+    }else{
+      sig.snps <- p.vals <- NULL
+    }
+    sig.p.vals <- p.vals[sig.snps]
+
+    ## get list of those correlation values
+    sig.corrs <- corr.dat[sig.snps]
+    ## get the list of those SNPs (ie. their locus names)
+    sig.snps.names <- dimnames(snps.ori)[[2]][sig.snps]
+
+    ## reorder by score value:
+    NWO <- order(sig.corrs, decreasing=TRUE)
+    sig.snps <- sig.snps[NWO]
+    sig.corrs <- sig.corrs[NWO]
+    sig.p.vals <- sig.p.vals[NWO]
+    sig.snps.names <- sig.snps.names[NWO]
+    gc()
+
+    ## 0 p.vals
+    ## CHECK---IS THIS RIGHT? SHOULD WE BE MULTIPLYING THE DIVISOR BY N.TESTS ?????????????
+    min.p <- paste("p-values listed as 0 are <",
+                   1/length(corr.sim), sep=" ")
+
+    #################
+    ## GET RESULTS ##
+    #################
+
+    out[[i]] <- list(corr.dat,
+                     corr.sim,
+                     p.vals,
+                     thresh,
+                     sig.snps.names,
+                     sig.snps,
+                     sig.corrs,
+                     sig.p.vals,
+                     min.p)
+
+    names(out[[i]]) <- c("corr.dat",
+                         "corr.sim",
+                         "p.vals",
+                         "sig.thresh",
+                         "sig.snps.names",
+                         "sig.snps",
+                         "sig.corrs",
+                         "sig.p.vals",
+                         "min.p")
+
+    #########################
+    ## common calculations ##
+    #########################
+    ## get test.positive
+    test.positive <- out[[i]]$sig.snps.names
+
+    ## get test.negative
+    if(length(which(snps.names %in% test.positive)) != 0){
+      test.negative <- snps.names[-which(snps.names %in% test.positive)]
+    }else{
+      test.negative <- snps.names
+    }
+
+    ## get n.test.positive
+    n.test.positive <- length(test.positive)
+    ## get n.test.negative
+    n.test.negative <- length(test.negative) ## == n.tests - n.test.positive
+
+    n.tests <- ncol(snps)
+
+    snps.associated <- snps.assoc
+
+    ## get true positives
+    true.positive <- test.positive[which(test.positive %in% snps.associated)]
+    TP <- length(true.positive)
+
+    ## get true negatives
+    snps.not <- snps.names[-which(snps.names %in% snps.associated)]
+
+    true.negative <- test.negative[which(test.negative %in% snps.not)]
+    TN <- length(true.negative)
+
+    ## get false positives
+    false.positive <- test.positive[which(test.positive %in% snps.not)]
+    FP <- length(false.positive)
+
+    ## get false negatives
+    false.negative <- test.negative[which(test.negative %in% snps.associated)]
+    FN <- length(false.negative)
+
+
+    #####################################
+    ## CALCULATE METRICS OF EVALUATION ##
+    #####################################
+    ##############
+    ## accuracy ##
+    ##############
+    ## ie. SUMMARY STATISTIC--Of all the CALLS/tests you made, how many of them were CORRECT
+    ## ~ Pr(Correct Call | Call)
+    # accuracy <- ((TP + TN) / n.tests) ### WHY IS THIS GIVING ME 0.5 (when all other metrics seem to be working....) ??!?!
+    accuracy <- ((TP + TN) / (TP + TN + FP + FN))
+    # acc <- (sensitivity*length(snps.associated) + specificity*length(snps.not))/ncol(snps)
+
+    #################
+    ## specificity ##
+    #################
+    ## ie. Of all the truly NOT associated SNPs, how many did you manage to rule out?
+    ## ~ Pr(Negative Test | SNP NOT associated)
+    specificity <- (TN / (TN + FP)) ## = (1 - FPR)
+
+    #########
+    ## FPR ##
+    #########
+    ## ie. How many truly NOT associated SNPs did you accidentally call significant
+    ## ~ Pr(Positive Test | SNP NOT associated)
+    FPR <- (FP / (FP + TN)) ## = (1 - specificity)
+
+    #########
+    ## FNR ##
+    #########
+    ## ie. How many truly ASSOCIATED SNPs did you accidentally miss
+    ## ~ Pr(Negative Test | SNP ASSOCIATED)
+    ## --> Set 1: will be 0/0 = NaN
+    FNR <- (FN / (FN + TP))
+
+    #################
+    ## sensitivity ##
+    #################
+    ## ie. How many truly ASSOCIATED SNPs did you manage to catch
+    ## ~ Pr(Positive Test | SNP ASSOCIATED)
+    ## --> Set 1: will be 0/0 = NaN
+    sensitivity <- (TP / (TP + FN))
+
+    #########
+    ## PPV ##
+    #########
+    ## ie. Of all the POSITIVE calls you made, how many were CORRECT/ identified truly ASSOCIATED SNPs
+    ## ~ Pr(SNP ASSOCIATED | Positive Test)
+    ## --> Set 1: will be 0 (UNLESS you made NO positive calls, then 0/0 = NaN)
+    PPV <- (TP / (TP + FP)) ## = (1 - FDR)
+
+    #########
+    ## FDR ##
+    #########
+    ## ie. Of all the POSITIVE calls you made, how many were WRONG/ identified truly NOT associated SNPs
+    ## ~ Pr(SNP NOT associated | Positive Test)
+    ## --> Set 1: will be 1 (UNLESS you made NO positive calls, then 0/0 = NaN)
+    FDR <- (FP / (FP + TP)) ## = (1 - PPV)
+
+    ##################################
+    ## combine eval metrics into df ##
+    ##################################
+    perf[[i]] <- data.frame(accuracy, specificity, FPR, FNR, sensitivity, PPV, FDR)
+
+  } # end for loop
+
+  evalStats <- do.call(rbind, perf)
+
+  print("J"); print(j)
+  print("evalStats"); print(evalStats)
+
+  score3.test <- factor(c(1:9))
+  evalStats <- data.frame(score3.test, evalStats)
+
+  evalStats.df[[j]] <- evalStats
+
+} # end (j) for loop
+
+
+
+
+evalStats.df.ori <- evalStats.df
+
+df <- do.call(rbind, evalStats.df)
+
+## calculate F1.score for all comparator tests:
+# df <- evalStats.df
+F1.score <- 2*((df$PPV*df$sensitivity) / (df$PPV+df$sensitivity))
+df$F1.score <- F1.score
+# df <- cbind(df, F1.score)
+evalStats.df <- df
+
+## SAVE:
+save(evalStats.df, file="E:/treeWAS_Sims/set3/n.subs_1/set3_31_40_score3.tests_evalStats.df.thresh_NEW.Rdata")
+evalStats.df <- get(load("E:/treeWAS_Sims/set3/n.subs_1/set3_31_40_score3.tests_evalStats.df.Rdata"))
+
+
+## kappa stat? ##
+
+df <- evalStats.df
+kappa <- (df$accuracy - ((10000-10)/10000))/ (1 - ((10000-10)/10000))
+head(df)
+head(round(kappa, 2), 20) # --> sensitivity
+
+##########
+## PLOT ##
+##########
+
+# boxplot(df$F1.score ~ df$score3.test) ### just showing bc ylim=c(0,0.0001)...
+# boxplot(df$PPV ~ df$score3.test)
+# boxplot(df$sensitivity ~ df$score3.test)
+# boxplot(df$FPR ~ df$score3.test) ### just showing bc ylim=c(0,0.0001)...
+
+
+Y <- c("F1.score", "PPV", "sensitivity", "FPR")
+
+for(y in 1:length(Y)){ #
+  # for(t in 1:3){
+    df <- evalStats.df
+    # df <- df[df$treeWAS.test==treeWAS.tests[t], ] # & df$tree.type=="rtree" & df$s==0.5 & df$af==5
+    beeswarm.plot(y=Y[y], x="score3.test", df, y.lab=NULL,
+                  pt.size=3, x.text=TRUE)
+  # }
+}
+
+## SAVE: ##
+# set3_31_40_coal_s_10_af_5_score3_tests_F1score
+# set3_31_40_coal_s_10_af_5_score3_tests_PPV
+# set3_31_40_coal_s_10_af_5_score3_tests_sensitivity
+# set3_31_40_coal_s_10_af_5_score3_tests_FPR
+
+
+
 ###################
 ## BEESWARM PLOT ##   #########################   #########################   #########################
 ###################
 ## uses BOTH df and beeswarm dataframes...
 
-# library(beeswarm)
-# library(plyr)
-# library(ggplot2)
+library(beeswarm)
+library(plyr)
+library(ggplot2)
 
 #############
 ## MY DATA ##
 #############
-
-evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
+evalStats <- get(load("E:/treeWAS_Sims/set1/n.subs_1/evalStats/set1_1.40_all.tests_evalStats.df.Rdata"))
+# evalStats <- get(load("E:/treeWAS_Sims/set1/n.subs_1/evalStats/set1_1.40_ALL_treeWAS_evalStats.df.all.tests.Rdata"))
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set1/set1_1.40_ALL_treeWAS_evalStats.df.all.tests.Rdata"))
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
+evalStats <- get(load("E:/treeWAS_Sims/set3/n.subs_1/evalStats/set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
 df <- evalStats
 
-df$test <- mapvalues(df$test, from = levels(df$test), to = c(1:32))
+tail(df)
+
+tests <- levels(df$assoc.test)
+foo <- df[df$assoc.test %in% tests[3:6],]
+summary(foo$FPR ~ foo$assoc.test)
+
+
+summary(foo$FPR ~ foo$assoc.test)
+
+# require(plyr)
+df$test <- mapvalues(df$test, from = levels(df$test), to = c(1:32)) # plyr
 evalStats.ori <- evalStats
 evalStats <- df
 
@@ -626,9 +1171,9 @@ Y <- c("F1.score", "PPV", "sensitivity", "FPR")
 for(y in 1:length(Y)){ #
   for(t in 1:3){
     df <- evalStats
-    df <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="rtree" & df$s==0.5 & df$af==5, ] #
-    beeswarm.plot(y=Y[y], x="test", df, #y.lab="Sensitivity",
-                  pt.size=4, x.text=TRUE)
+    df <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==1 & df$af==2, ] # & df$tree.type=="rtree" & df$s==0.5 & df$af==5
+    beeswarm.plot(y=Y[y], x="test", df, y.lab=NULL,
+                  pt.size=3, x.text=TRUE)
   }
 }
 #
@@ -638,6 +1183,59 @@ for(y in 1:length(Y)){ #
 ## TO DO: (RE)SAVE ALL PLOTS WITH (a) NO y-label and (b) REPLACE x-axis text with numbers 1:n.tests
 ## so we can make a 4- (or 2?) panel figure....
 ## (later, if needed, could put labels corresponding to numbers and colours alongside in a legend.. )
+###
+
+# set1_1_40_ALL_treeWAS_terminal_F1score
+# set1_1_40_ALL_treeWAS_simultaneous_F1score
+# set1_1_40_ALL_treeWAS_subsequent_F1score
+#
+# set1_1_40_ALL_treeWAS_terminal_PPV
+# set1_1_40_ALL_treeWAS_simultaneous_PPV
+# set1_1_40_ALL_treeWAS_subsequent_PPV
+#
+# set1_1_40_ALL_treeWAS_terminal_sensitivity
+# set1_1_40_ALL_treeWAS_simultaneous_sensitivity
+# set1_1_40_ALL_treeWAS_subsequent_sensitivity
+#
+# set1_1_40_ALL_treeWAS_terminal_FPR
+# set1_1_40_ALL_treeWAS_simultaneous_FPR
+# set1_1_40_ALL_treeWAS_subsequent_FPR
+
+########
+
+# set1_1_40_coal_treeWAS_terminal_F1score
+# set1_1_40_coal_treeWAS_simultaneous_F1score
+# set1_1_40_coal_treeWAS_subsequent_F1score
+#
+# set1_1_40_coal_treeWAS_terminal_PPV
+# set1_1_40_coal_treeWAS_simultaneous_PPV
+# set1_1_40_coal_treeWAS_subsequent_PPV
+#
+# set1_1_40_coal_treeWAS_terminal_sensitivity
+# set1_1_40_coal_treeWAS_simultaneous_sensitivity
+# set1_1_40_coal_treeWAS_subsequent_sensitivity
+#
+# set1_1_40_coal_treeWAS_terminal_FPR
+# set1_1_40_coal_treeWAS_simultaneous_FPR
+# set1_1_40_coal_treeWAS_subsequent_FPR
+###
+# set1_1_40_rtree_treeWAS_terminal_F1score
+# set1_1_40_rtree_treeWAS_simultaneous_F1score
+# set1_1_40_rtree_treeWAS_subsequent_F1score # NA
+#
+# set1_1_40_rtree_treeWAS_terminal_PPV
+# set1_1_40_rtree_treeWAS_simultaneous_PPV
+# set1_1_40_rtree_treeWAS_subsequent_PPV
+#
+# set1_1_40_rtree_treeWAS_terminal_sensitivity
+# set1_1_40_rtree_treeWAS_simultaneous_sensitivity
+# set1_1_40_rtree_treeWAS_subsequent_sensitivity
+#
+# set1_1_40_rtree_treeWAS_terminal_FPR
+# set1_1_40_rtree_treeWAS_simultaneous_FPR
+# set1_1_40_rtree_treeWAS_subsequent_FPR
+
+###############################################
 
 # set3_101_110_rtree_s_0_5_af_5_treeWAS_terminal_F1score
 # set3_101_110_rtree_s_0_5_af_5_treeWAS_simultaneous_F1score
@@ -731,8 +1329,15 @@ for(y in 1:length(Y)){ #
 
 ######
 
+##########################################################
+## BY TEST (w BEST treeWAS thresh method only x3 tests) ##
+##########################################################
+evalStats <- get(load("D:/treeWAS_Sims/set3/n.subs_1/evalStats/set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
+save(evalStats, file="E:/treeWAS_Sims/set3/n.subs_1/evalStats/set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata")
+df <- evalStats
 
-##
+df.ori <- df
+df <- df.ori
 
 
 
@@ -744,25 +1349,27 @@ beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                           pt.size=4, x.text=FALSE){
 
   require(beeswarm)
+  # library(plyr)
+  # library(ggplot2)
 
   if(is.null(y.lab)) y.lab <- y
 
   ## Y ~ X ??
   fm <- as.formula(paste(y, x, sep=" ~ "))
 
-  beeswarm <- beeswarm(fm,
-                       data = df,
-                       #method="swarm", # swarm square hex center
-                       #priority="descending", ## ONLY for SWARM method...
-                       method="center", # swarm square hex center
-                       #priority="descending", ## ONLY for SWARM method...
-                       pwcol = eval(parse(text=x)),
-                       #col = myCol, ## to set w funky colours (INSTEAD of pwcol = test)
-                       ylim = c(-0.001,1), # otherwise ggplot can't plot ZERO values --> NAs
-                       las=2,
-                       cex=0.8,
-                       corral = "omit",
-                       do.plot = FALSE) # none gutter wrap omit
+  beeswarm.ori <- beeswarm::beeswarm(fm,
+                                     data = df,
+                                     #method="swarm", # swarm square hex center
+                                     #priority="descending", ## ONLY for SWARM method...
+                                     method="center", # swarm square hex center
+                                     #priority="descending", ## ONLY for SWARM method...
+                                     pwcol = eval(parse(text=x)),
+                                     #col = myCol, ## to set w funky colours (INSTEAD of pwcol = test)
+                                     ylim = c(-0.001,1), # otherwise ggplot can't plot ZERO values --> NAs
+                                     las=2,
+                                     cex=0.8,
+                                     corral = "omit",
+                                     do.plot = FALSE) # none gutter wrap omit
   # head(beeswarm)
 
   ######################################################
@@ -770,21 +1377,22 @@ beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
   ######################################################
   outliers <- outlier.vals <- PCH <- list()
 
-  if(!all(as.character(beeswarm$col) %in% levels(df[,x]))){
-    foo <- beeswarm$col
+  if(!is.factor(df[,x])) df[,x] <- as.factor(df[,x])
+  if(!all(as.character(beeswarm.ori$col) %in% levels(df[,x]))){
+    foo <- beeswarm.ori$col
     foo <- levels(df[,x])[foo]
-    beeswarm$col <- factor(foo, levels=levels(df[,x]))
+    beeswarm.ori$col <- factor(foo, levels=levels(df[,x]))
   }else{
-    beeswarm$col <- factor(beeswarm$col)
+    beeswarm.ori$col <- factor(beeswarm.ori$col)
   }
 
-  noms <- as.character(levels(beeswarm$col))
+  noms <- as.character(levels(beeswarm.ori$col))
 
   ## FOR LOOP ##
   for(i in 1:length(noms)){
     #i <- 1
     # get vals for variable (and boxplot)
-    val <- beeswarm$y[which(beeswarm$col==noms[i])]
+    val <- beeswarm.ori$y[which(beeswarm.ori$col==noms[i])]
     #boxplot(val, ylim=c(-0.001, 1))
     if(length(val) == 0){
       PCH[[i]] <- NULL
@@ -831,13 +1439,13 @@ beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
     ## NO X-TEXT: ##
     ################
 
-    beeswarm.plot <- ggplot(beeswarm, aes(x, y)) +
+    beeswarm.plot1 <- ggplot(beeswarm.ori, aes(x, y)) +
       xlab("") +
       guides(fill=FALSE) +
       scale_x_discrete(drop=FALSE) +
       scale_y_continuous(y.lab, limits=c(0,1))  # expression("char")
 
-    beeswarm.plot2 <- beeswarm.plot +
+    beeswarm.plot2 <- beeswarm.plot1 +
       guides(fill=FALSE) +
       geom_boxplot(data=df, aes(x=eval(parse(text=x)), y=eval(parse(text=y)), fill=eval(parse(text=x))), alpha=0.25,
                    outlier.shape = 17,
@@ -850,7 +1458,7 @@ beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
           legend.position="none")
 
     beeswarm.plot3 <- beeswarm.plot2 +
-      geom_point(data=beeswarm, aes(colour = col), pch = PCH, size=pt.size, na.rm=TRUE, alpha=0.6) +
+      geom_point(data=beeswarm.ori, aes(colour = col), pch = PCH, size=pt.size, na.rm=TRUE, alpha=0.6) +
       guides(fill=FALSE) +
     theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.x=element_blank(),
           axis.text.y = element_text(size=13),
@@ -874,13 +1482,13 @@ beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
     ## WITH X-TEXT: ##
     ##################
 
-    beeswarm.plot <- ggplot(beeswarm, aes(x, y)) +
+    beeswarm.plot1 <- ggplot(beeswarm.ori, aes(x, y)) +
       xlab("") +
       guides(fill=FALSE) +
       scale_x_discrete(drop=FALSE) +
       scale_y_continuous(y.lab, limits=c(0,1)) # expression("char")
 
-    beeswarm.plot2 <- beeswarm.plot +
+    beeswarm.plot2 <- beeswarm.plot1 +
       guides(fill=FALSE) +
       geom_boxplot(data=df, aes(x=eval(parse(text=x)), y=eval(parse(text=y)), fill=eval(parse(text=x))), alpha=0.25,
                    outlier.shape = 17,
@@ -893,7 +1501,7 @@ beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
             legend.position="none")
 
     beeswarm.plot3 <- beeswarm.plot2 +
-      geom_point(data=beeswarm, aes(colour = col), pch = PCH, size=pt.size, na.rm=TRUE, alpha=0.6) +
+      geom_point(data=beeswarm.ori, aes(colour = col), pch = PCH, size=pt.size, na.rm=TRUE, alpha=0.6) +
       guides(fill=FALSE) +
       theme(axis.text.x = element_text(size=13),
             # axis.text.x = element_text(angle=65, hjust=1, vjust=0.95, size=10),
@@ -931,17 +1539,274 @@ beeswarm.plot.subsequent <- beeswarm.plot4
 
 # set3_1.120_ALL_treeWAS.subsequent_FPR
 
-##########################################################################################################
+##############################################################################################################
+##############################################################################################################
 
 
 
 
 
+######################
+## MY DATA (TABLES) ##
+######################
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set1/set1_1.40_ALL_treeWAS_evalStats.df.all.tests.Rdata"))
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
+evalStats <- get(load("E:/treeWAS_Sims/set3/n.subs_1/evalStats/set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
+df <- evalStats
+
+df.ori <- df
+df <- df.ori
+
+#################
+## n.phen.subs ##
+#################
+df <- df[df$tree.type == "coal",]
+table(df$n.phen.subs, df$s, df$af)
+
+## COAL tree:
+## s=1, af=5 --> too few subs [1:16]
+## s=10, af=5 --> too many subs [28:42]
+## TRY w s=3, af=5??
+
+## rtree:
+## s=0.5, af=5 --> works best :) [10:23, 45]
+
+
+### Want to run sims w n.subs >> poisson(1) & more like SimBac dists...
+dist <- rpois(1000, lambda=5)
+hist(dist)
+
+####################################
+## threshold-selection mechanisms ##      ###################################                        ###################################
+####################################
+
+## AIM: Identify best-performing approach.
+## CRITERIA: Given "minimal" FPR, which has the highest sensitivity?
+
+df <- df.ori # w original thresh levels
+df <- evalStats # w new numeric reordered levels (from above plot code)
+
+#########
+## FPR ##
+#########
+df.coal <- df[df$tree.type == "coal",]
+max.FPR <- max(df.coal$FPR)
+max.FPR <- round(max.FPR, 2)+0.01
+
+beeswarm.plot(y="FPR", x="test", df=df.coal,
+              x.text=TRUE)
+
+treeWAS.tests <- c("terminal", "simultaneous", "subsequent")
+Y <- c("F1.score", "PPV", "sensitivity", "FPR")
+
+for(y in 1:length(Y)){
+# y <- 3
+  for(t in 1:3){
+    df <- evalStats
+    df <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal", ] # & df$tree.type=="rtree" & df$s==0.5 & df$af==5
+    beeswarm.plot(y=Y[y], x="test", df, #y.lab="Sensitivity",
+                  pt.size=3, x.text=TRUE)
+  }
+}
+
+
+
+####
+set3_1_120_coal_treeWAS_terminal_F1score
+set3_1_120_coal_treeWAS_simultaneous_F1score
+set3_1_120_coal_treeWAS_subsequent_F1score
+
+set3_1_120_coal_treeWAS_terminal_PPV
+set3_1_120_coal_treeWAS_simultaneous_PPV
+set3_1_120_coal_treeWAS_subsequent_PPV
+
+set3_1_120_coal_treeWAS_terminal_sensitivity
+set3_1_120_coal_treeWAS_simultaneous_sensitivity
+set3_1_120_coal_treeWAS_subsequent_sensitivity
+
+set3_1_120_coal_treeWAS_terminal_FPR
+set3_1_120_coal_treeWAS_simultaneous_FPR
+set3_1_120_coal_treeWAS_subsequent_FPR
+
+#########
+
+par(mfrow=c(1,2))
+t <- 2
+df <- evalStats
+df <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal", ] # & df$tree.type=="rtree" & df$s==0.5 & df$af==5
+## FPR
+y <- 4
+beeswarm.plot(y=Y[y], x="test", df, #y.lab="Sensitivity",
+              pt.size=3, x.text=TRUE)
+## Sensitivity
+y <- 3
+beeswarm.plot(y=Y[y], x="test", df, #y.lab="Sensitivity",
+              pt.size=3, x.text=TRUE)
+
+# par(mfrow=c(1,1))
+
+###############################
+## select thresh method based on F1-score.
+## For now, by median (across each run (or across each unique parameter set), for all 3 treeWAS.tests)
+## (More rigourously--could try an ANOVA to take variance into account...??)
+DF <- list("terminal"=df[df$treeWAS.test=="terminal", ],
+           "simultaneous"=df[df$treeWAS.test=="simultaneous", ],
+           "subsequent"=df[df$treeWAS.test=="subsequent", ])
+
+# get all combos of tree.type, s, af
+l <- list(tree.type=c("coal", "rtree"),
+          s=unique(df$s),
+          af=unique(df$af))
+params <- do.call(expand.grid, l)
+
+params <- unique(df[,c("tree.type", "s", "af")])
+row.names(params) <- c(1:nrow(params))
+
+
+# F1 <- vector("list", 3)
+# names(F1) <- treeWAS.tests
+# for(t in 1:length(treeWAS.tests)){
+#   for(p in 1:nrow(params)){
+#     df <- DF[[t]]
+#     df <- df[df$tree.type==params$tree.type[p] & df$s==params$s[p] & df$af==params$af[p], ]
+#     F1[[t]][[p]] <- sapply(c(1:32), function(e) median(df$F1.score[df$test==e], na.rm=TRUE))
+#   }
+#   F1[[t]][["df"]] <- do.call(rbind, F1[[t]])
+#   F1[[t]][["mean"]] <- colMeans(F1[[t]]$df, na.rm=TRUE)
+#   colnames(F1[[t]][["df"]]) <- names(F1[[t]][["mean"]]) <- c(1:32)
+#   F1[[t]][["sorted"]] <- sort(F1[[t]]$mean, decreasing=TRUE)
+#   F1[[t]][["rank"]] <- sapply(c(1:32), function(e) which(names(F1[[t]]$sorted) == names(F1[[t]]$mean)[e]))
+# }
+
+# save(F1, file="E:/treeWAS_Sims/set3/n.subs_1/evalStats/F1score_list_by_thresh_by_treeWAS_test.Rdata")
+
+F1 <- vector("list", 3)
+names(F1) <- treeWAS.tests
+for(t in 1:length(treeWAS.tests)){
+  # df <- DF[[t]]
+  df <- evalStats
+  df <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
+  F1[[t]][["df"]] <- sapply(c(1:32), function(e) median(df$F1.score[df$test==e], na.rm=TRUE))
+
+  names(F1[[t]][["df"]]) <- c(1:32)
+  foo <- rank(F1[[t]][["df"]], ties="min")
+  F1[[t]][["rank"]] <- sapply(c(1:length(foo)), function(e) which(sort(unique(foo), decreasing=TRUE) == foo[e]))
+}
+
+
+save(F1, file="C:/Cait 2016/Work/Xavier/Sims/figs/F1score_list_coal_s_10_af_5_by_thresh_by_treeWAS_test.Rdata")
+save(F1, file="E:/treeWAS_Sims/set3/n.subs_1/evalStats/F1score_list_coal_s_10_af_5_by_thresh_by_treeWAS_test.Rdata")
+
+F1.mean <- sapply(c(1:length(F1)), function(e) F1[[e]]$mean)
+
+## GET RANK BY TEST AND TREEWAS.TEST:
+F1.rank <- sapply(c(1:length(F1)), function(e) F1[[e]]$rank)
+colnames(F1.rank) <- c("terminal", "simultaneous", "subsequent")
+rownames(F1.rank) <- c(1:nrow(F1.rank))
+
+save(F1.rank, file="C:/Cait 2016/Work/Xavier/Sims/figs/F1score_rank_coal_s_10_af_5_by_thresh_by_treeWAS_test.Rdata")
+save(F1.rank, file="E:/treeWAS_Sims/set3/n.subs_1/evalStats/F1score_rank_coal_s_10_af_5_by_thresh_by_treeWAS_test.Rdata")
+save(F1.mean, file="E:/treeWAS_Sims/set3/n.subs_1/evalStats/F1score_mean_by_thresh_by_treeWAS_test.Rdata")
+
+
+## compare means across thresh tests and treeWAS.tests:
+par(mfrow=(c(3,1)))
+barplot(F1.mean[,1])
+barplot(F1.mean[,2])
+barplot(F1.mean[,3])
+par(mfrow=(c(3,1)))
+
+###
+## get df ("dat"), for all 3 treeWAS.tests, for boxplot/beeswarm of F1:
+df <- F1[[1]]$df
+F1.score <- as.vector(unlist(df))
+test <- sort(rep(c(1:32), nrow(df)))
+dat1 <- data.frame(test, F1.score)
+
+df <- F1[[2]]$df
+F1.score <- as.vector(unlist(df))
+test <- sort(rep(c(1:32), nrow(df)))
+dat2 <- data.frame(test, F1.score)
+
+df <- F1[[3]]$df
+F1.score <- as.vector(unlist(df))
+test <- sort(rep(c(1:32), nrow(df)))
+dat3 <- data.frame(test, F1.score)
+
+## BOXPLOTS: ##
+df <- evalStats
+t <- 1
+dat1 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
+df <- evalStats
+t <- 2
+dat2 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
+df <- evalStats
+t <- 3
+dat3 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
+
+## CAREFUL-- boxplot orders levels as character!!!
+dat1$test <- ordered(dat1$test, levels=c(1:32))
+dat2$test <- ordered(dat2$test, levels=c(1:32))
+dat3$test <- ordered(dat3$test, levels=c(1:32))
+
+par(mfrow=(c(3,1)))
+with(dat1, boxplot(F1.score ~ test, col=transp(rainbow(32), 0.4)))
+title("Terminal")
+with(dat2, boxplot(F1.score ~ test, col=transp(rainbow(32), 0.4)))
+title("Simultaneous")
+with(dat3, boxplot(F1.score ~ test, col=transp(rainbow(32), 0.4)))
+title("Subsequent")
+par(mfrow=(c(1,1)))
+
+## COMBINE INTO F1 LIST:
+DAT <- list(dat1, dat2, dat3)
+F1.ori.ori <- F1
+temp <- vector("list", 3)
+names(temp) <- treeWAS.tests
+
+t<- 3
+temp[[t]] <- list("df" = DAT[[t]],
+                "dat" = F1[[t]]$df,
+                "mean" = F1[[t]]$mean,
+                "sorted" = F1[[t]]$sorted,
+                "rank" = F1[[t]]$rank)
+
+F1 <- temp
+
+## SAVE: ##
+# save(F1, file="D:/treeWAS_Sims/set3/n.subs_1/evalStats/F1_score_by_thresh_by_treeWAS_test.Rdata")
+F1 <- get(load("E:/treeWAS_Sims/set3/n.subs_1/evalStats/F1_score_by_thresh_by_treeWAS_test.Rdata"))
+## save fig as pdf:
+# set3_boxplots_F1_score_by_thresh_by_treeWAS_test
+
+## COMBINE
+df.all <- rbind(F1[[1]]$df,
+                F1[[2]]$df,
+                F1[[3]]$df)
+
+## PLOT IN ONE SET OF BOXPLOTS by thresh:
+## CAREFUL-- boxplot orders levels as character!!!
+df.all$test <- ordered(df.all$test, levels=c(1:32))
+with(df.all, boxplot(F1.score ~ test, col=transp(rainbow(32), 0.4)))
+
+par(mfrow=c(1,1))
+boxplot(df.all$F1.score~df.all$test, col=transp(rainbow(32), 0.4)) # cex.axis=0.5
+title("F1.score \n(all 3 treeWAS tests combined)")
+
+
+
+# beeswarm.plot(y="F1.score", x="test", df=dat, #y.lab="Sensitivity",
+#               pt.size=3, x.text=TRUE)
+###
 
 
 
 
-
+# temp <- do.call("rbind", F1)
+# temp
+F1
+##############################################################################################################
+##############################################################################################################
 
 
 
@@ -1632,41 +2497,22 @@ beeswarm.plot.subsequent <- beeswarm.plot4
 # ##########################################################################################################
 
 
+####################################
+## All 3 tests together now! (??) ##
+####################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###############################
-## All 3 tests together now! ##
-###############################
-
-## save as png, then...
-# install.packages("png", dep=T)
-library(png)
-
-filenames <- c("./set3_21.30_coal_s.1_af.5_treeWAS.terminal_FPR.png",
-               "./set3_21.30_coal_s.1_af.5_treeWAS.simultaneous_FPR.png",
-               "./set3_21.30_coal_s.1_af.5_treeWAS.subsequent_FPR.png")
-foo<-list()
-for(j in 1:3) foo[[j]] <- readPNG(filenames[j])
-
-layout(matrix(1:3,nr=3,byr=T))
-for (j in 1:3) plot(foo[[j]])
+# ## save as png, then...
+# # install.packages("png", dep=T)
+# library(png)
+#
+# filenames <- c("./set3_21.30_coal_s.1_af.5_treeWAS.terminal_FPR.png",
+#                "./set3_21.30_coal_s.1_af.5_treeWAS.simultaneous_FPR.png",
+#                "./set3_21.30_coal_s.1_af.5_treeWAS.subsequent_FPR.png")
+# foo<-list()
+# for(j in 1:3) foo[[j]] <- readPNG(filenames[j])
+#
+# layout(matrix(1:3,nr=3,byr=T))
+# for (j in 1:3) plot(foo[[j]])
 
 
 ################
@@ -1694,39 +2540,77 @@ for (j in 1:3) plot(foo[[j]])
 ## BY TEST (w BEST treeWAS thresh method only x3 tests) ##
 ##########################################################
 
-dat.ori <- dat
+# dat.ori <- dat
+#
+# test <- c(rep("treeWAS", length(treeWAS$accuracy)),
+#           rep("fisher.bonf", length(fisher.bonf$accuracy)),
+#           rep("fisher.fdr", length(fisher.fdr$accuracy)),
+#           rep("plink.bonf", length(plink.bonf$accuracy)),
+#           rep("plink.fdr", length(plink.bonf$accuracy)),
+#           rep("plink.gc.bonf", length(plink.bonf$accuracy)),
+#           rep("plink.gc.fdr", length(plink.bonf$accuracy))
+#           )
+#
+# # accuracy <- c(treeWAS$accuracy, fisher.bonf$accuracy, fisher.fdr$accuracy,
+# #               plink.bonf$accuracy, plink.fdr$accuracy, plink.gc.bonf$accuracy, plink.gc.fdr$accuracy)
+#
+#
+# sensitivity <- c(treeWAS$sensitivity, fisher.bonf$sensitivity, fisher.fdr$sensitivity,
+#                  plink.bonf$sensitivity, plink.fdr$sensitivity, plink.gc.bonf$sensitivity, plink.gc.fdr$sensitivity)
+#
+#
+# specificity <- c(treeWAS$specificity, fisher.bonf$specificity, fisher.fdr$specificity,
+#                  plink.bonf$specificity, plink.fdr$specificity, plink.gc.bonf$specificity, plink.gc.fdr$specificity)
+#
+# FPR <- c(treeWAS$FPR, fisher.bonf$FPR, fisher.fdr$FPR,
+#          plink.bonf$FPR, plink.fdr$FPR, plink.gc.bonf$FPR, plink.gc.fdr$FPR)
+#
+#
+# ## WITH NAs...
+# df <- data.frame(test, specificity, FPR, sensitivity)
+# #filename <- paste("./", set.n, "theta_p_50_combined_df.Rdata", sep="")
+# # filename <- paste("./", set.n, "_combined_df.Rdata", sep="")
+# # save(df, file=filename)
+#
+# length(which(df$sensitivity[which(df$test == "treeWAS")] == 0))
 
-test <- c(rep("treeWAS", length(treeWAS$accuracy)),
-          rep("fisher.bonf", length(fisher.bonf$accuracy)),
-          rep("fisher.fdr", length(fisher.fdr$accuracy)),
-          rep("plink.bonf", length(plink.bonf$accuracy)),
-          rep("plink.fdr", length(plink.bonf$accuracy)),
-          rep("plink.gc.bonf", length(plink.bonf$accuracy)),
-          rep("plink.gc.fdr", length(plink.bonf$accuracy))
-          )
 
-# accuracy <- c(treeWAS$accuracy, fisher.bonf$accuracy, fisher.fdr$accuracy,
-#               plink.bonf$accuracy, plink.fdr$accuracy, plink.gc.bonf$accuracy, plink.gc.fdr$accuracy)
+##########################################################################################################
+
+#####################################################
+
+##########################################################################################################
 
 
-sensitivity <- c(treeWAS$sensitivity, fisher.bonf$sensitivity, fisher.fdr$sensitivity,
-                 plink.bonf$sensitivity, plink.fdr$sensitivity, plink.gc.bonf$sensitivity, plink.gc.fdr$sensitivity)
 
 
-specificity <- c(treeWAS$specificity, fisher.bonf$specificity, fisher.fdr$specificity,
-                 plink.bonf$specificity, plink.fdr$specificity, plink.gc.bonf$specificity, plink.gc.fdr$specificity)
-
-FPR <- c(treeWAS$FPR, fisher.bonf$FPR, fisher.fdr$FPR,
-         plink.bonf$FPR, plink.fdr$FPR, plink.gc.bonf$FPR, plink.gc.fdr$FPR)
 
 
-## WITH NAs...
-df <- data.frame(test, specificity, FPR, sensitivity)
-#filename <- paste("./", set.n, "theta_p_50_combined_df.Rdata", sep="")
-# filename <- paste("./", set.n, "_combined_df.Rdata", sep="")
-# save(df, file=filename)
 
-length(which(df$sensitivity[which(df$test == "treeWAS")] == 0))
+
+
+
+
+
+
+
+#########################
+## below = OLD CODE!!! ##    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####
+#########################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ##########################################################################################################

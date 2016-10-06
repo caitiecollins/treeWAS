@@ -746,6 +746,7 @@ assoc.test <- function(snps,
     ## get real p.vals using corr.dat for break points:
     p.vals.dat <- list()
 
+
     if(fisher.test == FALSE){
       for(i in 1:length(cd.tab)){
         tab.above <- which(as.numeric(names(cs.tab)) > as.numeric(names(cd.tab[i])))
@@ -766,6 +767,7 @@ assoc.test <- function(snps,
         }
       }
     }
+
     p.vals.dat <- as.vector(unlist(p.vals.dat))
 
     ## get the unique index that

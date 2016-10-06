@@ -10,3 +10,5 @@ Depends: adegenet,
     ape,
     phangorn,
     Hmisc
+Imports: ggplot2,
+    beeswarm

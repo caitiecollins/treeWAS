@@ -1,20 +1,6 @@
 
 
 
-############################################################################################################################################
-## NOTE ##
-##########
-
-
-## --> SEE "example.output_readCFML.R" for QUESTIONS TO ASK XAVIER (!!!) & lots more examples + troubleshooting of read.CFML etc.
-#      ###############################     #######################
-
-
-
-
-
-
-
 
 ############################################################################################################################################
 
@@ -88,9 +74,11 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
   # edges.ori <- edges
 
   ## If treelabs not of length labs (eg tree$node.label is NULL), fill in remainder w labs from seqs:
-  if(length(treelabs) < length(labs))  treelabs <- c(treelabs, labs[c((length(treelabs)+1):length(labs))])
-  if(length(treelabs) > length(labs)) stop("The number of individuals (terminal and internal nodes) labelled in the tree
-                                           exceeds the number of individuals (rows) labelled in the sequences.")
+  # if(length(treelabs) < length(labs))  treelabs <- c(treelabs, labs[c((length(treelabs)+1):length(labs))])
+  if(length(treelabs) > length(labs) | length(treelabs) < length(labs)){
+      stop("The number of individuals (terminal and internal nodes) labelled in the tree
+            exceeds the number of individuals (rows) labelled in the sequences.")
+  }
   ## Double check that treelabs and labs match up (order does NOT matter yet):
   if(!all(labs %in% treelabs)){
     stop("Sequence labels do not match tree labels.")
