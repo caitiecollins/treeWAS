@@ -62,28 +62,13 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   ###############################
 
   ## Get SNPs diffs: ##
-  snps.diffs <- list()
-  for(i in 1:ncol(snps.rec)){
-    snps.diffs[[i]] <- get.branch.diffs(var = snps.rec[,i],
-                                        edges = edges)
-  }
+  snps.diffs <- snps.rec[edges[,1], ] - snps.rec[edges[,2], ]
 
   ## Get phen diffs: ##
-  phen.diffs <- get.branch.diffs(var = phen.rec,
-                                 edges = edges)
+  phen.diffs <- phen.rec[edges[,1]] - phen.rec[edges[,2]]
 
-  score <- list()
-  for(i in 1:length(snps.diffs)){
-    snp.diffs <- snps.diffs[[i]]
-    sp.diffs <- snp.diffs * phen.diffs
-
-    score[[i]] <- abs(sum(sp.diffs)) ##
-    ## NOTE: at least in this incarnation, the Simultaneous Test does NOT
-    ## have an obvious natural denominator, so it cannot be divided to be forced btw 0 and 1...
-    ## In light of this, might it be better to be consistent and also NOT divide the other test scores..?
-  }
-  score <- as.vector(unlist(score))
-  names(score) <- colnames(snps.rec)
+  sp.diffs <- snps.diffs * phen.diffs
+  score <- abs(colSums(sp.diffs, na.rm=TRUE))
 
   ################################################
   ## get values for duplicate snps.rec columns: ##
@@ -107,49 +92,49 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
 
 
 
-######################
-## get.branch.diffs ##
-######################
-
-########################################################################
-
-###################
-## DOCUMENTATION ##
-###################
-
-#' Short one-phrase description.
-#'
-#' Longer proper discription of function...
-#'
-#' @param var A vector containing a variable whose change across edges we want to examine.
-#' @param edges A 2-column matrix containing the upstream and downstream nodes
-#'  in columns 1 and 2 of a tree's edge matrix, as found in a phylo object's tree$edge slot.
-#'
-#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
-#'
-
-########################################################################
-
-## get diffs btw ace prob/likelihood at upstream vs. downstream node
-## for a single variable for which you have a value for all terminal and internal nodes.
-get.branch.diffs <- function(var, edges){
-  ## CHECKS: ##
-  ## var should be a vector or have 2 columns summing to 1 or 100:
-  if(!is.null(dim(var))){
-    if(ncol(var) > 2) warning("var contains more than one discrete variable;
-                              selecting first variable.")
-    var <- var[,2]
-  }
-  ## var and tree$edge should contain the same number of inds:
-  if(length(var) != (nrow(edges)+1)) stop("var contains more
-                                          individuals than tree$edge does.")
-
-  ## ~ FOR LOOP ##
-  diffs <- var[edges[,1]] - var[edges[,2]]
-
-  return(as.vector(diffs))
-} # end get.branch.diffs
+# ######################
+# ## get.branch.diffs ##
+# ######################
+# Not actually needed to get score 2!
+# ########################################################################
+#
+# ###################
+# ## DOCUMENTATION ##
+# ###################
+#
+# #' Short one-phrase description.
+# #'
+# #' Longer proper discription of function...
+# #'
+# #' @param var A vector containing a variable whose change across edges we want to examine.
+# #' @param edges A 2-column matrix containing the upstream and downstream nodes
+# #'  in columns 1 and 2 of a tree's edge matrix, as found in a phylo object's tree$edge slot.
+# #'
+# #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+# #' @export
+# #'
+#
+# ########################################################################
+#
+# ## get diffs btw ace prob/likelihood at upstream vs. downstream node
+# ## for a single variable for which you have a value for all terminal and internal nodes.
+# get.branch.diffs <- function(var, edges){
+#   ## CHECKS: ##
+#   ## var should be a vector or have 2 columns summing to 1 or 100:
+#   if(!is.null(dim(var))){
+#     if(ncol(var) > 2) warning("var contains more than one discrete variable;
+#                               selecting first variable.")
+#     var <- var[,2]
+#   }
+#   ## var and tree$edge should contain the same number of inds:
+#   if(length(var) != (nrow(edges)+1)) stop("var contains more
+#                                           individuals than tree$edge does.")
+#
+#   ## ~ FOR LOOP ##
+#   diffs <- var[edges[,1]] - var[edges[,2]]
+#
+#   return(as.vector(diffs))
+# } # end get.branch.diffs
 
 
 

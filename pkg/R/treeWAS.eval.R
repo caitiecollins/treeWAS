@@ -585,7 +585,6 @@ treeWAS <- function(snps,
   ## Run get.sig.snps fn once for each association test:
   system.time( # 100 - 164 (why such a difference?)
   for(i in 1:length(TEST)){
-    if(TEST[[i]] != "subsequent"){
     sig.list[[i]] <- get.sig.snps(snps = snps,
                                   snps.unique = snps.unique,
                                   snps.index = snps.index,
@@ -602,26 +601,6 @@ treeWAS <- function(snps,
                                   snps.reconstruction = snps.rec,
                                   snps.sim.reconstruction = snps.sim.rec,
                                   phen.reconstruction = phen.rec)
-    }else{
-      sig.list3 <- get.sig.snps(snps = snps,
-                                    snps.unique = snps.unique,
-                                    snps.index = snps.index,
-                                    snps.sim = snps.sim,
-                                    snps.sim.unique = snps.sim.unique,
-                                    snps.sim.index = snps.sim.index,
-                                    phen = phen,
-                                    tree = tree,
-                                    test = TEST[[i]],
-                                    n.tests = length(TEST),
-                                    p.value = p.value,
-                                    p.value.correct = p.value.correct,
-                                    p.value.by = p.value.by,
-                                    snps.reconstruction = snps.rec,
-                                    snps.sim.reconstruction = snps.sim.rec,
-                                    phen.reconstruction = phen.rec)
-      sig.list[[i]] <- sig.list3[[1]]
-      SCORE3 <- sig.list3$SCORE3
-    }
   }
   )
   names(sig.list) <- test
@@ -689,6 +668,8 @@ treeWAS <- function(snps,
     names(THRESH) <- names(sig.list[[j]])
     thresholds[[j]] <- THRESH
 
+    ## Only plot the threshold that our sims show is most-consistently performing the best:
+    thresh.best <- THRESH[["pval.0.01.bonf.count.10.x.n.snps"]]
 
     ##########################
     ## NEW: MANHATTAN PLOT! ##
@@ -709,8 +690,8 @@ treeWAS <- function(snps,
       manhattan.plot(p.vals = sig.list[[j]][[1]]$corr.dat,
                      col = "wasp",
                      transp = 0.75,
-                     sig.thresh = THRESH,
-                     thresh.col="seasun",
+                     sig.thresh = thresh.best,
+                     thresh.col="red",
                      snps.assoc = snps.assoc,
                      snps.assoc.col = "red",
                      jitter.amount = 0.00001,
@@ -728,8 +709,8 @@ treeWAS <- function(snps,
       manhattan.plot(p.vals = sig.list[[j]][[1]]$corr.dat,
                      col = "wasp",
                      transp = 0.75,
-                     sig.thresh = THRESH,
-                     thresh.col="seasun",
+                     sig.thresh = thresh.best,
+                     thresh.col="red",
                      snps.assoc = snps.assoc,
                      snps.assoc.col = "red",
                      jitter.amount = 0.00001,
@@ -776,7 +757,7 @@ treeWAS <- function(snps,
                   corr.sim.subset = sig.list[[j]][[1]]$corr.sim[1:10000],
                   sig.corrs = corr.dat[snps.assoc],
                   sig.snps = snps.assoc,
-                  sig.thresh = unique(round(as.vector(unlist(THRESH)), 2)),
+                  sig.thresh = thresh.best,
                   test = TEST[[j]],
                   sig.snps.col = "blue",
                   hist.col = rgb(0,0,1,0.5), # rgb(0,0,1,0.5) # blue ## OR ## rgb(0.1,0.1,0.1,0.5) # darkgrey
@@ -802,7 +783,7 @@ treeWAS <- function(snps,
                   corr.sim.subset = sig.list[[j]][[1]]$corr.sim[1:10000],
                   sig.corrs = corr.dat[snps.assoc],
                   sig.snps = snps.assoc,
-                  sig.thresh = unique(round(as.vector(unlist(THRESH)), 2)),
+                  sig.thresh = thresh.best,
                   test = TEST[[j]],
                   sig.snps.col = "blue",
                   hist.col = rgb(0,0,1,0.5), # rgb(0,0,1,0.5) # blue ## OR ## rgb(0.1,0.1,0.1,0.5) # darkgrey
@@ -953,8 +934,7 @@ treeWAS <- function(snps,
   results <- list(dat=DAT,
                   vals=VALS,
                   thresh=thresholds,
-                  res=RES,
-                  SCORE3=SCORE3)
+                  res=RES)
 
   return(results)
 

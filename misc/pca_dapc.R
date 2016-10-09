@@ -198,7 +198,7 @@ length(which(pval2 < 0.01/ncol(snps)))
 ##########
 
 ## USE SAME CLUSTERS AS ABOVE (w BIC:)
-grp <- find.clusters(snps, n.pca=n.PCs, choose.n.clust=FALSE) # pca.select="percVar", perc.pca=60,
+grp <- find.clusters(snps, n.pca=n.PCs, choose.n.clust=FALSE, max.n.clust=6) # pca.select="percVar", perc.pca=60,
 pop <- grp$grp # gives same result as cutree(clust, k=6)
 n.grp <- length(levels(pop))
 # table(pop)

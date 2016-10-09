@@ -141,7 +141,7 @@
 ## EG:
 # c.sim <- coalescent.sim(n.ind=100,
 #                         n.snps=1000,
-#                         n.subs=1,
+#                         n.subs=dist_0.05,
 #                         n.snps.assoc=10,
 #                         assoc.prob=100,
 #                         n.phen.subs=15,
@@ -152,12 +152,12 @@
 #                         dist.dna.model="JC69",
 #                         grp.min = 0.25,
 #                         row.names=NULL,
-#                         coaltree = FALSE,
-#                         s = 1,
+#                         coaltree = TRUE,
+#                         s = 10,
 #                         af = 5,
 #                         filename = NULL,
 #                         set=3,
-#                         seed=NULL)
+#                         seed=1)
 
 
 coalescent.sim <- function(n.ind=100,

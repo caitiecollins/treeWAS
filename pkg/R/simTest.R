@@ -58,8 +58,8 @@
 # out <- simTest(
 #
 #   ## simTest args:
-#   set.number = 3,
-#   n.reps = 10,
+#   set.number = 2,
+#   n.reps = 9,
 #   set.seed.as = "file.number",
 #   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
 #
@@ -72,11 +72,11 @@
 #   n.ind = 100,
 #   n.snps = 10000, # gen.size
 #   # sim.by = "locus",
-#   n.subs = dist_0.05, # 15, # theta (*2)
+#   n.subs = 1, # dist_0.05, # 15, # theta (*2)
 #   n.phen.subs = 15, # theta_p = NULL # 15
 #   n.snps.assoc = 10, # = 0
 #   # assoc.option = "all",
-#   assoc.prob = 90, # 100,
+#   assoc.prob =  100, # 90, # 100,
 #   grp.min = 0.25,
 #   s = 10,
 #   af = 5,
@@ -87,7 +87,7 @@
 #   p.value = 0.01, # REQUIRED FOR FISHER TEST
 #   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
 #   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 10000, # 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
 #   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
 #   snps.reconstruction = "parsimony",
 #   phen.reconstruction = "parsimony"
@@ -107,7 +107,7 @@
 # barplot(dist_0.05, names.arg=c(1:length(dist_0.05)))
 
 ## simTest args:
-# set.number = 1
+# set.number = 3
 # n.reps = 1
 # set.seed.as = "file.number"
 # working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims"
@@ -129,7 +129,7 @@
 # grp.min = 0.25
 # s = 10
 # af = 5
-# coaltree = FALSE
+# coaltree = TRUE
 #
 # ## treeWAS args:
 # p.value = 0.01
@@ -244,12 +244,12 @@ simTest <- function(
   ###############################################
   SNPS <- PHEN <- PHEN.PLOT.COL <-  TREE <- OUT <- RES <-
     FISHER.RESULTS <- PLINK.RESULTS <- PCA.RESULTS <- DAPC.RESULTS <-
-    ARGS <- PERFORMANCE <- SCORE3 <- list()
+    ARGS <- PERFORMANCE <- list()
   ## and make lists for saving filenames
   filename.snps <- filename.phen <- filename.phen.plot.col <- filename.tree <-
     filename.out <- filename.res <- filename.fisher.results <-
     filename.plink.results <- filename.pca <- filename.dapc <-
-    filename.args <- filename.performance <- filename.score3 <-
+    filename.args <- filename.performance <-
     filename.plot <- filename.tree.plot <- list()
 
 
@@ -597,8 +597,6 @@ simTest <- function(
                   phen.reconstruction = "parsimony",
                   filename.plot=filename.plot[[i]])
     )
-
-    score3 <- out$SCORE3
 
     print("treeWAS done")
     gc()
@@ -1141,6 +1139,8 @@ simTest <- function(
 
     ## (Below: taken from Glasgow/practical/practical-GWAS_before_cuts.Rnw ~ practical-GWAS_day4.pdf)
 
+    print("PCA started")
+
     ## get snps:
     snps <- snps.ori
     phen <- phen.ori
@@ -1152,7 +1152,7 @@ simTest <- function(
     pca1 <- dudi.pca(snps, scale=FALSE, scannf=FALSE, nf=n.PCs)
 
     ## Identify main pop clusters:
-    grp <- find.clusters(snps, n.pca=n.PCs, choose.n.clust=FALSE) # pca.select="percVar", perc.pca=60,
+    grp <- find.clusters(snps, n.pca=n.PCs, choose.n.clust=FALSE, max.n.clust=(n.PCs + 1)) # pca.select="percVar", perc.pca=60,
     pop <- grp$grp # gives same result as cutree(clust, k=6)
     n.grp <- length(levels(pop))
 
@@ -1182,6 +1182,8 @@ simTest <- function(
       names(phen) <- names(phen.ini)
     } # end make phen binary..
 
+    if(!is.numeric(phen)) phen <- as.numeric(phen)
+
     ## SLOW STEP..!
     pval2 <- numeric(0)
     # system.time( # 120.78
@@ -1206,10 +1208,13 @@ simTest <- function(
     pca.results <- list(snps.corrected.pca, pval.pca, pca.snps.bonf)
     names(pca.results) <- c("snps.corrected.pca", "pval.pca", "pca.snps.bonf")
 
+    print("PCA done")
+
     ###########################################################################################################################
     ################################################ ***   DAPC   *** #########################################################
     ###########################################################################################################################
 
+    print("DAPC started")
 
     ## Using our pop clusters as the group factor in DAPC,
     ## we can generate a new DAPC object ...
@@ -1265,6 +1270,8 @@ simTest <- function(
     ## Store results:
     dapc.results <- list(snps.corrected.dapc, pval.dapc, dapc.snps.bonf)
     names(dapc.results) <- c("snps.corrected.dapc", "pval.dapc", "dapc.snps.bonf")
+
+    print("DAPC done")
 
     ###########################################################################################################################
     ############################################# *** PERFORMANCE *** #########################################################
@@ -1630,10 +1637,6 @@ simTest <- function(
     filename.performance[[i]] <- paste("./", uniqueID, "_performance", ".Rdata", sep="")
     save(performance, file=filename.performance[[i]])
 
-    ## save score3 raw data and alternatives
-    filename.score3[[i]] <- paste("./", uniqueID, "_score3", ".Rdata", sep="")
-    save(score3, file=filename.score3[[i]])
-
 
     #########################
     ## STORE DATA & OUTPUT ##
@@ -1664,10 +1667,6 @@ simTest <- function(
     PERFORMANCE[[i]] <- performance
     names(PERFORMANCE)[[i]] <- uniqueID
 
-    SCORE3[[i]] <- score3
-    names(SCORE3)[[i]] <- uniqueID
-
-
   } # end for loop
 
 
@@ -1675,8 +1674,12 @@ simTest <- function(
   ## RETURN DATA & OUTPUT ##
   ##########################
 
-  toReturn <- list(SNPS, PHEN, PHEN.PLOT.COL, TREE, RES, FISHER.RESULTS, PLINK.RESULTS, ARGS, PERFORMANCE, score3)
-  names(toReturn) <- c("snps", "phen", "phen.plot.col", "tree", "res", "fisher.results", "plink.results", "arguments", "performance", "score3")
+  toReturn <- list(SNPS, PHEN, PHEN.PLOT.COL, TREE, RES,
+                   FISHER.RESULTS, PLINK.RESULTS, PCA.RESULTS, DAPC.RESULTS,
+                   ARGS, PERFORMANCE)
+  names(toReturn) <- c("snps", "phen", "phen.plot.col", "tree", "res",
+                       "fisher.results", "plink.results", "pca.results", "dapc.results",
+                       "arguments", "performance")
 
   return(toReturn)
 
