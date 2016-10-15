@@ -168,45 +168,46 @@ library(beeswarm)
 #   corr.sim <- corr.sim.ori[1:length(corr.dat)]
 # }
 
-########################################################################################################################################################
-########################################################################################################################################################
-########################################################################################################################################################
-
-
 ##############
 ## GET DATA ##    #######    #######    #######    #######    #######    #######    #######    #######    #######    #######
 ##############
 
-# setwd("C:/Cait 2016/Work/Xavier/Sims/set1/")
+setwd("C:/Cait 2016/Work/Xavier/Sims/set1/")
 
 set.n <- "set3"
 
 dirname <- paste("C:/Cait 2016/Work/Xavier/Sims/", set.n, sep="")
 # dirname <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims/", set.n, sep="")
 
-#################################################################################################
-
-
-######################
-## get performance: ##
-######################
-
 foo <- dir(dirname)
-
+foo
 ## get all performance Rdata names
-toKeep <- grep("performance", foo) ##??
+# toKeep <- grep("performance", foo) ##??
+# toKeep <- grep("phen.plot.col", foo) ##??
+toKeep <- grep("_res", foo) ##??
+# toKeep <- grep("_args", foo) ##??
+# toKeep <- grep("_score3", foo) ##??
 foo <- foo[toKeep]
 foo
+
+## keep only subset w same args:
+# toFind <- paste(set.n, "_", c(51:81), "_", sep="")
+# toFind <- paste(set.n, "_", c(21:30), "_", sep="")
+# toKeep <- sapply(c(1:length(toFind)), function(e) grep(toFind[e], foo)) ##??
+# foo <- foo[toKeep]
+# foo
 
 ## load performance data
 dat <- list()
 setwd(dirname)
 system.time(
-  for(i in 1:length(foo)){ # length(foo)
-    print(i)
-    dat[[i]] <- get(load(paste("./", foo[i], sep="")))
-    gc()
-  }
+for(i in 1:length(foo)){ # length(foo)
+  print(i)
+  dat[[i]] <- get(load(paste("./", foo[i], sep="")))
+  # temp <- get(load(paste("./", foo[i], sep="")))
+  # dat[[i]] <- temp$vals$terminal$corr.dat[snps.assoc[, i]]
+  gc()
+}
 )
 
 ## REORDER dat s.t. order is numeric not character...
@@ -218,223 +219,132 @@ ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == i
 dat.ori <- dat
 dat <- dat[ord]
 
-perf.ori <- perf <- dat
+perf <- dat
+RES <- res <- dat
 
-#################################################################################################
+# n.subs <- sapply(c(1:length(dat)), function(e) dat[[e]]$n.subs)
+# n.subs
+#
+# args.set3 <- dat.ori
+# n.subs.
+# score3.set3 <- score3
+
+# evalStats <- dat
+
+
+# performance <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_performance.Rdata"))
+# df <- performance[c("treeWAS.terminal.pval.0.01.bonf.count.10.x.n.snps",
+#                     "treeWAS.simultaneous.pval.0.01.bonf.count.10.x.n.snps",
+#                     "treeWAS.subsequent.pval.0.01.bonf.count.10.x.n.snps",
+#                     "plink.assoc.bonf",
+#                     #"plink.assoc.fdr",
+#                     "plink.assoc.gc.bonf",
+#                     #"plink.assoc.gc.fdr",
+#                     "pca", "dapc")]
+#
+# df <- do.call(rbind, df)
+# # rownames(df) <- c("terminal", "simultaneous", "subsequent", "plink.bonf", "plink.gc.bonf", "pca", "dapc")
+#
+# # head(df)
+# df
+
 
 #####################
 ## get snps.assoc: ##
 #####################
 # dat = performance
-snps.assoc <- sapply(c(1:length(perf)), function(e) perf[[e]][[1]])
+snps.assoc <- sapply(c(1:length(dat)), function(e) dat[[e]][[1]])
 
-snps.assoc.ori <- snps.assoc <- as.list(as.data.frame(snps.assoc))
-
-## SAVE:
-save(snps.assoc, file="./set3_1.40_ALL_snps.assoc.Rdata")
-
-#################################################################################################
-
-###############
-## get args: ##
-###############
-
-foo <- dir(dirname)
-toKeep <- grep("_args", foo) ##??
-foo <- foo[toKeep]
-foo
-
-## load args
-dat <- list()
-setwd(dirname)
-system.time(
-  for(i in 1:length(foo)){ # length(foo)
-    print(i)
-    dat[[i]] <- get(load(paste("./", foo[i], sep="")))
-    gc()
-  }
-)
-
-## REORDER dat s.t. order is numeric not character...
-# dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
-
-args.ori <- args <- dat
-
-#################################################################################################
-
-#####################
-## get n.subs arg: ##
-#####################
-
-# n.subs <- sapply(c(1:length(args)), function(e) args[[e]]$n.subs)
-# n.subs
-
-n.subs <- c(rep("dist_0.05", 20), rep("Poisson_1", 10), rep("dist_0.01", 10))
-
-#################################################################################################
-
-######################
-## get n.phen.subs: ##
-######################
-
-foo <- dir(dirname)
-
-## get all performance Rdata names
-toKeep <- grep("phen.plot.col", foo) ##??
-foo <- foo[toKeep]
-foo
-
-## load performance data
-dat <- list()
-setwd(dirname)
-system.time(
-  for(i in 1:length(foo)){ # length(foo)
-    print(i)
-    dat[[i]] <- get(load(paste("./", foo[i], sep="")))
-    gc()
-  }
-)
-
-## REORDER dat s.t. order is numeric not character...
-# dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
-
-phen.plot.col.ori <- phen.plot.col <- dat
-
-
-# dat = phen.plot.col
-n.phen.subs <- sapply(c(1:length(dat)), function(e) length(which(dat[[e]]$edges == "grey")))
-n.phen.subs.ori <- n.phen.subs
-
-
-#################################################################################################
-
-##########################
-## get res for treeWAS: ##
-##########################
-
-foo <- dir(dirname)
-
-## get all performance Rdata names
-toKeep <- grep("_res", foo) ##??
-foo <- foo[toKeep]
-foo
-
-## load performance data
-dat <- list()
-setwd(dirname)
-system.time(
-  for(i in 1:length(foo)){ # length(foo)
-    print(i)
-    dat[[i]] <- get(load(paste("./", foo[i], sep="")))
-    gc()
-  }
-)
-
-## REORDER dat s.t. order is numeric not character...
-# dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
-
-res.ori <- res <- dat
-
-save(res, file="./set3_1.40_ALL_res.Rdata")
-
-#################################################################################################
+snps.assoc <- as.list(as.data.frame(snps.assoc))
+# snps.assoc[[1]]
+snps.assoc <- snps.assoc[ord]
+# res <- dat
 
 ######################
 ## get score1.mean: ##
 ######################
-
-## dat = res
-dat <- list()
-for(i in 1:length(res)){
-  dat[[i]] <- res[[i]]$vals$terminal$corr.dat[snps.assoc[[i]]]
-}
-
-score1.ori <- score1 <- dat
-
-## get mean terminal score for snps.assoc
+# dat = res
 score1.mean <- sapply(c(1:length(score1)), function(e) mean(score1[[e]]))
+# score1 <- dat
 score1.mean.ori <- score1.mean
-
-# score1.mean <- rep(rep(score1.mean, 32), 3)
+score1.mean <- rep(rep(score1.mean, 32), 3)
 
 ## SAVE ##
-save(score1, file="./set3_1.40_ALL_terminal.score_snps.assoc.Rdata")
+save(score1, file="./set1_1.40_ALL_terminal.score_snps.assoc.Rdata")
+save(snps.assoc, file="./set1_1.40_ALL_snps.assoc.Rdata")
 
-#################################################################################################
+## bind score1.mean to args in evalStats:
+evalStats <- cbind(evalStats[,1:8], score1.mean, evalStats[,9:16])
+# evalStats <- cbind(evalStats[,1:10], score1.mean, evalStats[,11:18])
+# table(round(evalStats$score1.mean, 1), evalStats$s, evalStats$af, evalStats$tree.type)
 
-#################
-## get score3: ##
-#################
+## SAVE: ##
+# filename <- "./set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"
+# save(evalStats, file=filename)
 
-foo <- dir(dirname)
+######################
+## get n.phen.subs: ##
+######################
+# dat = phen.plot.col
+n.phen.subs <- sapply(c(1:length(dat)), function(e) length(which(dat[[e]]$edges == "grey")))
+n.phen.subs.ori <- n.phen.subs
 
-## get all performance Rdata names
-toKeep <- grep("_score3", foo) ##??
-foo <- foo[toKeep]
-foo
+n.phen.subs <- rep(rep(n.phen.subs, 32), 3)
 
-## load performance data
-dat <- list()
-setwd(dirname)
-system.time(
-  for(i in 1:length(foo)){ # length(foo)
-    print(i)
-    dat[[i]] <- get(load(paste("./", foo[i], sep="")))
-    gc()
-  }
-)
+head(evalStats)
 
-## REORDER dat s.t. order is numeric not character...
-# dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+## bind n.phen.subs to args in evalStats:
+df <- cbind(df[,1:3], n.phen.subs, df[4:ncol(df)])
+evalStats <- cbind(evalStats[,1:7], n.phen.subs, evalStats[,8:15])
+# evalStats <- cbind(evalStats[,1:9], n.phen.subs, evalStats[,10:17])
+# table(evalStats$n.phen.subs, evalStats$s, evalStats$tree.type)
 
-dat.ori <- dat
-dat <- dat[ord]
+## SAVE: ##
+filename <- "./set1_1.40_ALL_treeWAS_evalStats.df.Rdata"
+save(evalStats, file=filename)
 
-score3.ori <- score3 <- dat
+# evalStats <- get(load("./set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"))
 
-save(score3, file="./set3_1.40_ALL_SCORE3.Rdata")
+###############
+## get args: ##
+###############
+# dat = args
+args <- dat
 
 
 
-#################################################################################################################################################
-#################################################################################################################################################
-#################################################################################################################################################
 
-###########
-## NOTE: ##
-###########
+##############
+## CAREFUL: ##
+##############
 ## (1) accuracy may need to be multiplied by 2 (if ncol(snps) was doubled for PLINK!)
 ## (2) names of performance etc. may need to be changed (if you want to use them...)
 ## ### (eg. if all treeWAS == "terminal" --> 2nd 1/3 = "simultaneous", 3rd 1/3 = "subsequent")
 
-dat <- perf
+names(dat[[1]])
 
+# ## CORRECT NAMES: ##
+## treeWAS = 4:99
+(99-3)/3 # 32
+inds.terminal <- c(4:(4+31))
+inds.simultaneous <- c((max(inds.terminal)+1):((max(inds.terminal)+1)+31))
+inds.subsequent <- c((max(inds.simultaneous)+1):((max(inds.simultaneous)+1)+31))
 noms.ori <- names(dat[[1]])
-noms.ori
+noms <- noms.ori
 
+temp <- noms[inds.simultaneous]
+temp2 <- paste("treeWAS.simultaneous", removeFirstN(temp, nchar("treeWAS.terminal")), sep="")
 
-################################################
+temp <- noms[inds.subsequent]
+temp3 <- paste("treeWAS.subsequent", removeFirstN(temp, nchar("treeWAS.terminal")), sep="")
+
+noms <- replace(noms, inds.simultaneous, temp2)
+noms <- replace(noms, inds.subsequent, temp3)
+noms
+
+for(i in 1:length(dat)){
+  names(dat[[i]]) <- noms
+}
 
 treeWAS <- vector("list", length=3)
 names(treeWAS) <- c("terminal", "simultaneous", "subsequent")
@@ -485,12 +395,10 @@ for(i in 1:length(dat)){
     if(e == 105){
       dapc[[i]] <- dat[[i]][[e]]
     }
-
   } # end e for loop
-
-  names(treeWAS$terminal[[i]]) <- removeFirstN(noms.ori[4:35], nchar("treeWAS.terminal."))
-  names(treeWAS$simultaneous[[i]]) <- removeFirstN(noms.ori[36:67], nchar("treeWAS.simultaneous."))
-  names(treeWAS$subsequent[[i]]) <- removeFirstN(noms.ori[68:99], nchar("treeWAS.subsequent."))
+  names(treeWAS$terminal[[i]]) <- removeFirstN(noms[4:35], nchar("treeWAS.terminal."))
+  names(treeWAS$simultaneous[[i]]) <- removeFirstN(noms[36:67], nchar("treeWAS.simultaneous."))
+  names(treeWAS$subsequent[[i]]) <- removeFirstN(noms[68:99], nchar("treeWAS.subsequent."))
 } # end i for loop
 
 
@@ -513,498 +421,61 @@ dapc <- do.call("rbind", dapc)
 df <- list()
 for(t in 1:length(treeWAS)){
   df[[t]] <- list()
-  for(i in 1:length(treeWAS[[t]])){
-    df[[t]][[i]] <- do.call(rbind, treeWAS[[t]][[i]])
+  for(e in 1:32){
+    df[[t]][[e]] <- list()
+    for(i in 1:length(treeWAS[[t]])){
+      df[[t]][[e]][[i]] <- treeWAS[[t]][[i]][[e]]
+      # df[[t]][[i]] <- do.call("rbind", sapply(c(1:length(treeWAS[[t]])), function(e) treeWAS[[t]][[e]][[i]]))
+    }
+    df[[t]][[e]] <- do.call("rbind", df[[t]][[e]])
+    ################
+    ## TEMP -- FOR SOME DATASETS, NEED TO MULTIPLY ACCURACY BY TWO!!!!!!!!!!!!!!
+    ## (though arguably accuracy is not a useful metric for genetic data.. )
+    # df[[t]][[e]]$accuracy <- df[[t]][[e]]$accuracy*2
+
+#     acc <- df[[t]][[e]]$accuracy
+#     for(a in toChange){
+#       acc[a] <- acc[a]*2
+#     }
+#     df[[t]][[e]]$accuracy <- acc
+    ################
   }
-  df[[t]] <- do.call("rbind", df[[t]])
+  names(df[[t]]) <- names(treeWAS$terminal[[1]])
 }
 names(df) <- c("terminal", "simultaneous", "subsequent")
 
 treeWAS.df <- df
 str(treeWAS.df[[1]])
 
-##########################################################################################################
+str(df[[1]])
+length(df[[1]])
+nrow(df[[1]][[1]])
+
+## CHECK -- accuracy:
+# DF <- df[[1]][[1]]
+# acc.ori <- DF$accuracy
+# acc.new <- ((DF$sensitivity*10) + (DF$specificity*9990))/10000
+# toChange <- which(acc.ori <= 0.5)
 
 
-## Get treeWAS.df for all thresh:
 
-## check:
-identical(names(treeWAS$subsequent[[1]]), names(treeWAS$terminal[[1]])) # TRUE
-
-## get thresh.test names:
-thresh.test <- names(treeWAS$terminal[[1]])
-thresh.test <- rep(thresh.test, length(treeWAS$terminal))
-
-## get terminal df
-term <- data.frame("assoc.test"=rep("terminal", nrow(treeWAS.df$terminal)), "test"=thresh.test, treeWAS.df$terminal)
-rownames(term) <- c(1:nrow(term))
-head(term)
-
-## get simultaneous df
-sim <- data.frame("assoc.test"=rep("simultaneous", nrow(treeWAS.df$simultaneous)), "test"=thresh.test, treeWAS.df$simultaneous)
-rownames(sim) <- c(1:nrow(sim))
-head(sim)
-
-## get subsequent df
-subsq <- data.frame("assoc.test"=rep("subsequent", nrow(treeWAS.df$subsequent)), "test"=thresh.test, treeWAS.df$subsequent)
-rownames(subsq) <- c(1:nrow(subsq))
-head(subsq)
-
-
-evalStats <- rbind(term, sim, subsq)
-str(evalStats)
-
-## SAVE
-save(evalStats, file="./set3_1_40_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
-
-##########################################################################################################
-
-
-## add parameters:
-
-n.subs <- c(rep("dist_0.05", 20), rep("Poisson_1", 10), rep("dist_0.01", 10))
-tree.type <- rep("coal", 40)
-s <- rep(10, 40)
-af <- rep(5, 40)
-
-## get parameters for all thresh and test:
-var <- tree.type
-tree.type.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
-
-var <- s
-s.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
-
-var <- af
-af.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
-
-var <- n.subs
-n.subs.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
-
-var <- n.phen.subs
-n.phen.subs.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
-
-var <- score1.mean
-score1.mean.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
-
-df <- data.frame(evalStats[,c("assoc.test", "test")],
-                 "tree.type"=tree.type.thresh, "s"=s.thresh, "af"=af.thresh, "n.subs"=n.subs.thresh,
-                 "n.phen.subs"=n.phen.subs.thresh, "score1.mean"=score1.mean.thresh, evalStats[,c(3:ncol(evalStats))] )
-
-
-## SAVE
-evalStats <- df
-save(evalStats, file="./set3_1_40_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
-
-evalStats.ori <- evalStats.thresh <- evalStats
-##########################################################################################################
-
-#################################################################
-## PLOT performance stats by threshold for all 3 treeWAS tests ##
-#################################################################
-
-## (1) for all set.n combined
-## (2) for each parameter set for set.n separately
-
-
-require(plyr)
-
-df <- evalStats
-
-## map thresh test levels to numbers (NOTE: "best" = new level 18)
-df$test <- mapvalues(df$test, from = levels(df$test), to = c(1:32)) # plyr # SAVED
-evalStats.ori <- evalStats
-evalStats <- df
-
-## SAVE:
-save(evalStats, file="./set3_1_40_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
-
-######################
-## PLOT PERFORMANCE ##
-######################
-
-treeWAS.tests <- c("terminal", "simultaneous", "subsequent")
-Y <- c("F1.score", "PPV", "sensitivity", "FPR")
-
-for(y in 1:length(Y)){ #
-  for(t in 1:3){
-    df <- evalStats
-    df <- df[df$assoc.test==treeWAS.tests[t], ] # & df$n.subs=="dist_0.05" ## & df$tree.type=="rtree" & df$s==0.5 & df$af==5
-    beeswarmPlot(y=Y[y], x="test", df, y.lab=NULL,
-                  pt.size=4, x.text=TRUE)
-  }
-}
-
-##########################################################################################################
-
-#######################
-## SAVE PLOTS AS PDF ##
-#######################
-set3_1_40_BY_THRESH_terminal_F1score
-set3_1_40_BY_THRESH_simultaneous_F1score
-set3_1_40_BY_THRESH_subsequent_F1score
-
-set3_1_40_BY_THRESH_terminal_PPV
-set3_1_40_BY_THRESH_simultaneous_PPV
-set3_1_40_BY_THRESH_subsequent_PPV
-
-set3_1_40_BY_THRESH_terminal_sensitivity
-set3_1_40_BY_THRESH_simultaneous_sensitivity
-set3_1_40_BY_THRESH_subsequent_sensitivity
-
-set3_1_40_BY_THRESH_terminal_FPR
-set3_1_40_BY_THRESH_simultaneous_FPR
-set3_1_40_BY_THRESH_subsequent_FPR
-
-##########################################################################################################
-
-# library(plotrix)
+## CORRECT ACCURACY:
+# fisher.bonf$accuracy <- fisher.bonf$accuracy*2
+# fisher.fdr$accuracy <- fisher.fdr$accuracy*2
 #
-# ?gap.boxplot
-# ?boxplot
+# plink.bonf$accuracy <- plink.bonf$accuracy*2
+# plink.fdr$accuracy <- plink.fdr$accuracy*2
+# plink.gc.bonf$accuracy <- plink.gc.bonf$accuracy*2
+# plink.gc.fdr$accuracy <- plink.gc.fdr$accuracy*2
+
+## OR -- correct a SUBSET of accuracy...
+# fisher.bonf$accuracy[toChange] <- fisher.bonf$accuracy[toChange]*2
+# fisher.fdr$accuracy[toChange] <- fisher.fdr$accuracy[toChange]*2
 #
-# gap.boxplot(x,...,gap=list(top=c(NA,NA),bottom=c(NA,NA)),
-#             range=1.5,width=NULL,varwidth=FALSE,notch=FALSE,outline=TRUE,
-#             names,ylim=NA,plot=TRUE,border=par("fg"),col=NULL,log="",
-#             axis.labels=NULL,pars=list(boxwex=0.8,staplewex=0.5,outwex=0.5),
-#             horizontal=FALSE,add=FALSE,at=NULL,main=NULL)
-#
-# dat <- df
-# dat$FPR <- round(dat$FPR, 4)
-#
-# bp <- with(dat, gap.boxplot(FPR ~ test, gap=list(top=c(NA, NA), bottom=c(0.0000, 0.0000)), col=transp(rainbow(32), 0.4)))
-#
-# twovec<-list(vec1=c(rnorm(30),-6),vec2=c(sample(1:10,40,TRUE),20))
-# gap.boxplot(twovec,gap=list(top=c(12,18),bottom=c(-5,-3)),
-#             main="Show outliers separately")
-
-##########################################################################################################
-
-# ## BOXPLOTS: ##
-# df <- evalStats
-# t <- 1
-# dat1 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
-# df <- evalStats
-# t <- 2
-# dat2 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
-# df <- evalStats
-# t <- 3
-# dat3 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
-#
-# ## CAREFUL-- boxplot orders levels as character!!!
-# dat1$test <- ordered(dat1$test, levels=c(1:32))
-# dat2$test <- ordered(dat2$test, levels=c(1:32))
-# dat3$test <- ordered(dat3$test, levels=c(1:32))
-#
-# par(mfrow=(c(3,1)))
-# with(dat1, boxplot(F1.score ~ test, col=transp(rainbow(32), 0.4)))
-# title("Terminal")
-# with(dat2, boxplot(F1.score ~ test, col=transp(rainbow(32), 0.4)))
-# title("Simultaneous")
-# with(dat3, boxplot(F1.score ~ test, col=transp(rainbow(32), 0.4)))
-# title("Subsequent")
-# par(mfrow=(c(1,1)))
-
-##########################################################################################################
-
-###############
-## Get RANKS ##
-###############
-
-n.levs <- length(levels(df$test))
-
-## by SIM RUN:
-F1 <- vector("list", 3)
-names(F1) <- treeWAS.tests
-for(t in 1:length(treeWAS.tests)){
-  df <- evalStats
-  df.complete <- df[df$assoc.test==treeWAS.tests[t], ]
-
-  for(i in 1:(nrow(df.complete)/32)){
-    ## get rows for this sim run:
-    from <- seq(1, nrow(df.complete), 32)[i]
-    to <- from+31
-    df <- df.complete[from:to, ]
-    ## rank F1.scores
-    foo <- rank(df$F1.score, ties="min")
-    F1[[t]][[i]] <- sapply(c(1:length(foo)), function(e) which(sort(unique(foo), decreasing=TRUE) == foo[e]))
-  }
-
-  F1[[t]] <- do.call(rbind, F1[[t]])
-  colnames(F1[[t]]) <- c(1:32)
-}
-#########
-## Store ranks by sim (and treeWAS assoc.test)
-F1.ranks <- F1
-
-## SAVE:
-save(F1.ranks, file="./set3_1_40_all_F1.ranks.Rdata")
-
-################################################
-## PLOT ranks by sim (and treeWAS assoc.test) ##
-################################################
-boxplot(F1.ranks[[1]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9)
-boxplot(F1.ranks[[1]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7, ylab="Rank", add=T)
-
-boxplot(F1.ranks[[2]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9)
-boxplot(F1.ranks[[2]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7, ylab="Rank", add=T)
-
-boxplot(F1.ranks[[3]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9)
-boxplot(F1.ranks[[3]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7, ylab="Rank", add=T)
-
-## COMBINED:
-F1.ranks.mat <- do.call(rbind, F1.ranks)
-
-boxplot(F1.ranks.mat, col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9)
-boxplot(F1.ranks.mat, col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7, ylab="Rank", add=T)
-
-
-
-## SAVE: ##
-set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_terminal
-set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_simultaneous
-set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_subsequent
-## save combined:
-set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_treeWAS_assoc_tests_COMBINED
-
-#############################
-## same w BEESWARM PLOT ?? ##
-#############################
-# F1.ranks.t <- list(data.frame("test"=c(1:32), t(F1.ranks[[1]])),
-#                     data.frame("test"=c(1:32), t(F1.ranks[[2]])),
-#                     data.frame("test"=c(1:32), t(F1.ranks[[3]])))
-#
-# F1.ranks.comb <- do.call(rbind, F1.r)
-#
-# for(t in 1:3){
-#   df <- F1.ranks.t[[t]]
-#   beeswarmPlot(y=Y[y], x="test", df, y.lab=NULL,
-#                pt.size=4, x.text=TRUE)
-# }
-
-
-#########
-
-## Get rank MEANS by sim (and treeWAS assoc.test)
-F1.rank.means <- list(colMeans(F1.ranks[[1]]),
-                      colMeans(F1.ranks[[2]]),
-                      colMeans(F1.ranks[[3]]))
-
-## SAVE:
-save(F1.rank.means, file="./set3_1_40_all_F1.rank.means.Rdata")
-
-#####################################################
-## PLOT rank MEANS by sim (and treeWAS assoc.test) ##
-#####################################################
-barplot(F1.rank.means[[1]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9, x.ax=FALSE, y.ax=FALSE)
-barplot(F1.rank.means[[1]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7, ylab="Mean Rank", add=T)
-
-barplot(F1.rank.means[[2]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9, x.ax=FALSE, y.ax=FALSE)
-barplot(F1.rank.means[[2]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7, ylab="Mean Rank", add=T)
-
-barplot(F1.rank.means[[3]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9, x.ax=FALSE, y.ax=FALSE)
-barplot(F1.rank.means[[3]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7, ylab="Mean Rank", add=T)
-
-## SAVE: ##
-set3_1_40_ALL_BARPLOT_compare_thresholds_by_F1score_MEAN_RANK_terminal
-set3_1_40_ALL_BARPLOT_compare_thresholds_by_F1score_MEAN_RANK_simultaneous
-set3_1_40_ALL_BARPLOT_compare_thresholds_by_F1score_MEAN_RANK_subsequent
-
-
-###########################################################################
-
-
-levels(evalStats.ori$test)
-#################################################################################################################################################
-#################################################################################################################################################
-#################################################################################################################################################
-
-##########################################################################################################
-
-#########################################
-## get evalStats for only best thresh: ##
-#########################################
-evalStats.thresh <- evalStats
-# evalStats <- get(load("./set3_1_40_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
-
-str(evalStats)
-
-df <- evalStats
-
-df <- df[df$test=="18",]
-
-
-evalStats <- df[, c(1, 3:ncol(df))]
-
-
-assoc.test.treeWAS <- evalStats$assoc.test
-
-
-## get comarator df:
-df.other <- rbind(fisher.bonf,
-                  plink.bonf,
-                  plink.gc.bonf,
-                  pca,
-                  dapc)
-
-## get info:
-info <- evalStats[evalStats$assoc.test=="terminal", 2:7]
-df.other <- cbind(rbind(info, info, info, info, info), df.other)
-
-## combine all into one df w assoc.test as factor for boxplots:
-df.other <- cbind("assoc.test"=c(rep("fisher.bonf", nrow(fisher.bonf)),
-                           # rep("fisher.fdr", nrow(fisher.fdr)),
-                           rep("plink.bonf", nrow(plink.bonf)),
-                           # rep("plink.fdr", nrow(plink.fdr)),
-                           rep("plink.gc.bonf", nrow(plink.gc.bonf)),
-                           # rep("plink.gc.fdr", nrow(plink.gc.fdr)),
-                           rep("pca", nrow(pca)),
-                           rep("dapc", nrow(dapc))),
-                  df.other)
-
-df <- rbind(evalStats, df.other)
-
-evalStats.ori <- evalStats <- df
-
-## SAVE:
-save(evalStats, file="set3_1_40_ALL_all_tests_best_thresh_evalStats.Rdata")
-
-##########################################################################################################
-
-
-###################
-## BEESWARM PLOT ##
-###################
-
-## by comparator method/ assoc.test:
-
-df <- evalStats
-
-tot <- levels(df$assoc.test)
-names(tot) <- 1:length(tot)
-tot
-
-## get ordered levels:
-# require(plyr)
-df$assoc.test <- ordered(df$assoc.test, levels = levels(df$assoc.test)[c(5, 7, 8, 6, 4, 1, 2, 3)]) # [c(2, 3, 5, 6, 7, 8, 4, 1, 11, 9, 10)] # SAVED!
-evalStats <- df
-
-## SAVE:
-save(evalStats, file="set3_1_40_ALL_all_tests_best_thresh_evalStats.Rdata")
-
-
-evalStats.ori <- evalStats
-# assoc.tests <- levels(evalStats$assoc.test)
-
-Y <- c("F1.score", "PPV", "sensitivity", "FPR")
-
-for(y in 1:length(Y)){ #
-  df <- evalStats
-  beeswarmPlot(y=Y[y], x="assoc.test", df, y.lab=NULL,
-                pt.size=4, x.text=TRUE)
-}
-
-##########################################################################################################
-
-#######################
-## SAVE PLOTS AS PDF ##
-#######################
-set3_1_40_BY_ASSOC_TEST_F1score
-set3_1_40_BY_ASSOC_TEST_PPV
-set3_1_40_BY_ASSOC_TEST_sensitivity
-set3_1_40_BY_ASSOC_TEST_FPR
-
-##########################################################################################################
-
-
-#
-
-
-
-
-
-##########################################################################################################
-
-
-#################################################################################################################################################
-#################################################################################################################################################
-#################################################################################################################################################
-
-
-
-
-
-##########################################################################################################
-
-
-#################################################################################################################################################
-#################################################################################################################################################
-#################################################################################################################################################
-
-
-
-
-
-##########################################################################################################
-
-
-#################################################################################################################################################
-#################################################################################################################################################
-#################################################################################################################################################
-
-
-
-
-
-##########################################################################################################
-
-
-#################################################################################################################################################
-#################################################################################################################################################
-#################################################################################################################################################
-
-
-
-
-## OLD STUFF ( < 15/10/2016) #############
-
-
-
-
-# performance <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_performance.Rdata"))
-# df <- performance[c("treeWAS.terminal.pval.0.01.bonf.count.10.x.n.snps",
-#                     "treeWAS.simultaneous.pval.0.01.bonf.count.10.x.n.snps",
-#                     "treeWAS.subsequent.pval.0.01.bonf.count.10.x.n.snps",
-#                     "plink.assoc.bonf",
-#                     #"plink.assoc.fdr",
-#                     "plink.assoc.gc.bonf",
-#                     #"plink.assoc.gc.fdr",
-#                     "pca", "dapc")]
-#
-# df <- do.call(rbind, df)
-# # rownames(df) <- c("terminal", "simultaneous", "subsequent", "plink.bonf", "plink.gc.bonf", "pca", "dapc")
-#
-# # head(df)
-# df
-
-
-
-## bind score1.mean to args in evalStats:
-evalStats <- cbind(evalStats[,1:8], score1.mean, evalStats[,9:16])
-# evalStats <- cbind(evalStats[,1:10], score1.mean, evalStats[,11:18])
-# table(round(evalStats$score1.mean, 1), evalStats$s, evalStats$af, evalStats$tree.type)
-
-## SAVE: ##
-# filename <- "./set3_1.120_ALL_s.ALL_af.ALL_treeWAS_evalStats.df.Rdata"
-# save(evalStats, file=filename)
-
-
+# plink.bonf$accuracy[toChange] <- plink.bonf$accuracy[toChange]*2
+# plink.fdr$accuracy[toChange] <- plink.fdr$accuracy[toChange]*2
+# plink.gc.bonf$accuracy[toChange] <- plink.gc.bonf$accuracy[toChange]*2
+# plink.gc.fdr$accuracy[toChange] <- plink.gc.fdr$accuracy[toChange]*2
 
 ##########
 ## save ##    #######    #######    #######    #######    #######    #######

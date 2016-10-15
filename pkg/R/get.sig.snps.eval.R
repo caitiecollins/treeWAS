@@ -324,6 +324,47 @@ get.sig.snps <- function(snps,
   ## HANDLE DUPLICATE SNPS COLUMNS ##
   ###################################
 
+  if(test == "subsequent"){
+
+    corr.dat.list <- corr.dat
+    corr.sim.list <- corr.sim
+
+    corr.dat.out <- list()
+    corr.sim.out <- list()
+
+    for(i in 1:3){ # (tally) score3.1 # (integral) score.L # (integral) score.NoL
+
+      corr.dat <- corr.dat.list[[i]]
+      corr.sim <- corr.sim.list[[i]]
+
+      ## Expand corr.dat (if not all snps columns unique):
+      if(all.unique == FALSE){
+        corr.dat.complete <- corr.dat[snps.index]
+        names(corr.dat.complete) <- colnames(snps.ori)
+        corr.dat <- corr.dat.complete
+      }
+
+      ## Expand corr.sim (if not all snps.sim columns unique):
+      if(all.unique.sim == FALSE){
+        corr.sim.complete <- corr.sim[snps.sim.index]
+        names(corr.sim.complete) <- colnames(snps.sim.ori)
+        corr.sim <- corr.sim.complete
+      }
+
+      corr.dat.out[[i]] <- corr.dat
+      corr.sim.out[[i]] <- corr.sim
+    }
+    names(corr.dat.out) <- names(corr.dat.list)
+    names(corr.sim.out) <- names(corr.sim.list)
+
+    SCORE3 <-list(corr.dat = corr.dat.out,
+                  corr.sim = corr.sim.out)
+
+    corr.dat <- corr.dat.out[[3]]
+    corr.sim <- corr.sim.out[[3]]
+
+  }else{
+
   ## Expand corr.dat (if not all snps columns unique):
   if(all.unique == FALSE){
     corr.dat.complete <- corr.dat[snps.index]
@@ -336,6 +377,7 @@ get.sig.snps <- function(snps,
     corr.sim.complete <- corr.sim[snps.sim.index]
     names(corr.sim.complete) <- colnames(snps.sim.ori)
     corr.sim <- corr.sim.complete
+  }
   }
 
   ## quick look at corr.sim & corr.dat
@@ -508,6 +550,11 @@ get.sig.snps <- function(snps,
   ## assign names to out containing call info:
   names(out) <- nom
 
+  if(test == "subsequent"){
+    out <- list("res" = out,
+                "SCORE3" = SCORE3)
+  }
+
   return(out)
 
 } # end get.sig.snps
@@ -608,7 +655,7 @@ assoc.test <- function(snps,
 
 
   ## USE ABSOLUTE VALUE
-  if(test != "subsequent"){ # subsq already an abs val (but this clause may be redundant/ may not be needed?)
+  if(test != "subsequent"){
     corr.dat <- abs(corr.dat)
   }
 

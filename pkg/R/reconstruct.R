@@ -41,6 +41,7 @@ asr <- function(var,
 
   ## get tree edges
   edges <- tree$edge
+  ord <- NULL
 
   #######################
   ## MATRIX (eg. SNPs) ##
@@ -254,6 +255,7 @@ get.ancestral.pars <- function(var, tree){
   # require(ape)
   # require(phangorn)
 
+  ord <- NULL
   edges <- tree$edge
 
   #############################
@@ -361,7 +363,6 @@ get.ancestral.pars <- function(var, tree){
 
     ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
     ## First, check to ensure all row.names(snps) are matched in tree$tip.label
-    ord <- NULL
     if(all(row.names(snps) %in% tree$tip.label)){
       ord <- which(rownames(snps) == tree$tip.label)
     }else{

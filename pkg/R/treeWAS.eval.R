@@ -206,7 +206,7 @@ treeWAS <- function(snps,
     ## consistency and visualisation's sake:
     if(class(tree) != "phylo") tree <- as.phylo(tree)
     ## if the tree is not already rooted, root it:
-    if(is.rooted(tree)==FALSE) tree <- midpoint(tree)
+    if(!is.rooted(tree)) tree <- midpoint(tree)
 
 
     if(plot.tree==TRUE){
@@ -603,6 +603,10 @@ treeWAS <- function(snps,
                                   phen.reconstruction = phen.rec)
   }
   )
+
+  SCORE3 <- sig.list[[3]]$SCORE3
+  sig.list[[3]] <- sig.list[[3]]$res
+
   names(sig.list) <- test
   # str(sig.list)
 
@@ -934,7 +938,8 @@ treeWAS <- function(snps,
   results <- list(dat=DAT,
                   vals=VALS,
                   thresh=thresholds,
-                  res=RES)
+                  res=RES,
+                  SCORE3=SCORE3)
 
   return(results)
 

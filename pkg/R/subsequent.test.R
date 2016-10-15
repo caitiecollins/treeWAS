@@ -56,17 +56,39 @@ subsequent.test <- function(snps.reconstruction,
   ## GET SCORE ACROSS BRANCHES ##
   ###############################
 
-  pa <- phen.rec[edges[,1]]
-  pd <- phen.rec[edges[,2]]
-  sa <- snps.rec[edges[,1], ]
-  sd <- snps.rec[edges[,2], ]
+  Pa <- phen.rec[edges[,1]]
+  Pd <- phen.rec[edges[,2]]
+  Sa <- snps.rec[edges[,1], ]
+  Sd <- snps.rec[edges[,2], ]
   bl <- tree$edge.length
 
-  score3 <- get.score3(Pa = pa, Pd = pd, Sa = sa, Sd = sd, l = bl)
+  #################################################################     #####
+  ###############
+  ## SCORE 3.1 ##
+  ###############
+  ## SIMPLE UNWEIGHTED TALLY SCORE (1 point for each of "subsequent", "maintained", "simultaneous")
 
-  score <- abs(colSums(score3, na.rm=TRUE))
+  score3.p <- c("00|00", "11|11", "00|11", "11|00", "01|00", "10|00", "01|11", "10|11")
+  score3.n <- c("00|01", "00|10", "11|01", "11|10", "01|01", "10|10", "01|10", "10|01")
 
-  names(score) <- colnames(snps.rec)
+  score3.1 <- t(matrix(paste(Sa, Pa, "|", Sd, Pd, sep=""), nrow=ncol(snps.rec), byrow=T))
+  score3.1 <- abs(sapply(c(1:ncol(score3.1)), function(e) length(which(score3.1[,e] %in% score3.p)) - length(which(score3.1[,e] %in% score3.n))))
+
+  names(score3.1) <- colnames(snps.rec)
+
+  #################################################################     #####
+  ###############
+  ## SCORE 3.0 ##
+  ###############
+  ## ORIGINAL AND NEW INTEGRAL-BASED SCORE3 (with and without edge length):
+  score3.L <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = bl)
+  score3.NoL <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
+
+  score3.L <- abs(colSums(score3.L, na.rm=TRUE))
+  names(score3.L) <- colnames(snps.rec)
+
+  score3.NoL <- abs(colSums(score3.NoL, na.rm=TRUE))
+  names(score3.NoL) <- colnames(snps.rec)
 
   ################################################
   ## get values for duplicate snps.rec columns: ##
@@ -74,14 +96,25 @@ subsequent.test <- function(snps.reconstruction,
 
   ## get reconstruction for all original sites
   if(all.unique == TRUE){
-    score.complete <- score
+    score3.1.complete <- score3.1
+    score3.L.complete <- score3.L
+    score3.NoL.complete <- score3.NoL
   }else{
-    score.complete <- score[index]
-    names(score.complete) <- colnames(snps.rec.ori)
+    score3.1.complete <- score3.1[index]
+    names(score3.1.complete) <- colnames(snps.rec.ori)
+    score3.L.complete <- score3.L[index]
+    names(score3.L.complete) <- colnames(snps.rec.ori)
+    score3.NoL.complete <- score3.NoL[index]
+    names(score3.NoL.complete) <- colnames(snps.rec.ori)
   }
 
-  score <- score.complete
+  score3.1 <- score3.1.complete
+  score3.L <- score3.L.complete
+  score3.NoL <- score3.NoL.complete
 
+  score <- list("score3.1" = score3.1,
+                "score3.L" = score3.L,
+                "score3.NoL" = score3.NoL)
   return(score)
 
 } # end subsequent.test
@@ -132,16 +165,29 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l=NULL){
 
   score3 <- NULL
 
-  ## NEW original integral-based score (WITHOUT edge-length!)...
-  score3 <- (((4/3)*Pa*Sa) +
-               ((2/3)*Pa*Sd) +
-               ((2/3)*Pd*Sa) +
-               ((4/3)*Pd*Sd) -
-               Pa -
-               Pd -
-               Sa -
-               Sd +
-               1)
+  if(!is.null(l)){
+    ## NEW original integral-based score (WITHOUT edge-length!)...
+    score3 <- l*(((4/3)*Pa*Sa) +
+                   ((2/3)*Pa*Sd) +
+                   ((2/3)*Pd*Sa) +
+                   ((4/3)*Pd*Sd) -
+                   Pa -
+                   Pd -
+                   Sa -
+                   Sd +
+                   1)
+  }else{
+    ## NEW original integral-based score (WITHOUT edge-length!)...
+    score3 <- (((4/3)*Pa*Sa) +
+                 ((2/3)*Pa*Sd) +
+                 ((2/3)*Pd*Sa) +
+                 ((4/3)*Pd*Sd) -
+                 Pa -
+                 Pd -
+                 Sa -
+                 Sd +
+                 1)
+  }
 
   return(score3)
 

@@ -223,22 +223,25 @@ snp.sim <- function(n.snps = 10000,
   ## for each site, draw the branches to which
   ## you will assign the mts for this site
   ## (~ branch length):
+
+  ## Get vector of FALSEs of length tree$edge.length:
+  null.vect <- rep(FALSE, length(tree$edge.length))
+
   snps.loci <- sapply(c(1:length(n.mts)),
                       function(e)
+                        replace(null.vect,
                         sample(c(1:length(tree$edge.length)),
                                n.mts[e],
                                replace=FALSE,
-                               prob=tree$edge.length))
+                               prob=tree$edge.length), TRUE))
 
   ## rearrange snps.loci s.t it becomes a
   ## list of length tree$edge.length,
   ## each element of which contains the
   ## locations of the mutations that will
   ## occur on that branch
-  snps.loci <- sapply(c(1:length(tree$edge.length)),
-                      function(f)
-                        seq_along(snps.loci)[sapply(snps.loci,
-                                                    function(e) f %in% e)])
+  snps.loci <- sapply(c(1:nrow(snps.loci)),
+                       function(e) which(snps.loci[e,] == TRUE))
 
 
   ## get the node names for all individuals (terminal and internal)
@@ -325,16 +328,32 @@ snp.sim <- function(n.snps = 10000,
   ####################################################
 
   ## temporarily assemble non-associated loci into matrix:
-  temp <- do.call("rbind", genomes)
-
-  ## Make loci list (in case you need it later (ie. if any loci not polymorphic))
-  loci <- list()
-  for(i in 1:ncol(temp)){
-    loci[[i]] <- temp[,i]
-  }
+  temp.ori <- do.call("rbind", genomes)
 
   ## keep only rows containing terminal individuals:
-  temp <- temp[1:n.ind, ]
+  temp.ori <- temp.ori[1:n.ind, ]
+
+  #########################
+  ## Get UNIQUE snps.rec ##
+  #########################
+  temp <- get.unique.matrix(temp.ori, MARGIN=2)
+  temp.unique <- temp$unique.data
+  index <- temp$index
+
+  if(ncol(temp.unique) == ncol(temp.ori)){
+    all.unique <- TRUE
+  }else{
+    all.unique <- FALSE
+  }
+
+  ## work w only unique snps:
+  temp <- temp.unique
+
+  #   ## Make loci list (in case you need it later (ie. if any loci not polymorphic))
+  #   loci <- list()
+  #   for(i in 1:ncol(temp)){
+  #     loci[[i]] <- temp[,i]
+  #   }
 
   ## identify n.minor.allele required to meet polyThres:
   polyThres <- 0.01
@@ -381,19 +400,30 @@ snp.sim <- function(n.snps = 10000,
     ## for each site, draw the branches to which
     ## you will assign the mts for this site
     ## (~ branch length):
+
     subs.edges <- sample(c(1:length(tree$edge.length)),
                          n.mt,
                          replace=FALSE,
                          prob=tree$edge.length)
 
+    ## TO DO: COULD REPLACE (all instances!!!) LATER WITH:
+    ## Get vector of FALSEs of length tree$edge.length:
+    #     null.vect <- rep(FALSE, length(tree$edge.length))
+    #     subs.edges <- replace(null.vect,
+    #                           sample(c(1:length(tree$edge.length)),
+    #                                  n.mt,
+    #                                  replace=FALSE,
+    #                                  prob=tree$edge.length), TRUE)
+
+
     ## get nt for root at this locus:
     root.nt <- gen.root[i]
 
     ## get nt for each individual at this locus
-    loci[[i]] <- .get.locus(subs.edges = subs.edges,
+    temp[,i] <- .get.locus(subs.edges = subs.edges,
                             root.nt = root.nt,
                             tree = tree,
-                            coaltree = coaltree)
+                            coaltree = coaltree)[1:n.ind]
 
   } # end FOR LOOP for NON-associated SNPs
 
@@ -402,20 +432,25 @@ snp.sim <- function(n.snps = 10000,
   ######################################
   ## CHECK IF ALL LOCI ARE POLYMORPHIC (|polyThres)
 
-  ## temporarily assemble non-associated loci into matrix:
-  temp <- do.call("cbind", loci)
-  ## keep only rows containing terminal individuals:
-  temp <- temp[1:n.ind, ]
-
   ## identify n.minor.allele required to meet polyThres:
   polyThres <- 0.01
   n.min <- n.ind*polyThres
 
   ## make a list of any NON-polymorphic loci:
+  toRepeat.ori <- toRepeat
+  temp.toRepeat <- temp[, toRepeat.ori]
+
   toRepeat <- list()
-  for(i in 1:ncol(temp)){
-    if(any(table(temp[,i]) < n.min) | length(table(temp[,i])) == 1){
-      toRepeat[[length(toRepeat)+1]] <- i
+  ## if temp.toRepeat is a true matrix:
+  if(ncol(temp.toRepeat) > 0){
+    for(i in 1:ncol(temp.toRepeat)){
+      if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
+        toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
+      }
+    }
+  }else{
+    if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
+      toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
     }
   }
   if(length(toRepeat) > 0){
@@ -429,6 +464,20 @@ snp.sim <- function(n.snps = 10000,
   ######################################
   ## while loop ENDS here: #############
   ######################################
+
+
+  ## GET ALL NON-UNIQUE SNPS COLUMNS: ##
+
+  if(all.unique == TRUE){
+    temp.complete <- temp
+  }else{
+    temp.complete <- temp[, index]
+  }
+
+  colnames(temp.complete) <- colnames(temp.ori)
+  temp <- temp.complete
+
+
 
 
   #########################
@@ -449,10 +498,10 @@ snp.sim <- function(n.snps = 10000,
 
       ## get nt for each individual at this locus
       ## assign to (and replace) the snps.assoc elements of loci
-      loci[[snps.assoc[i]]] <- .get.locus(subs.edges = subs.edges,
+      temp[, snps.assoc[i]] <- .get.locus(subs.edges = subs.edges,
                                           root.nt = root.nt,
                                           tree = tree,
-                                          coaltree = coaltree)
+                                          coaltree = coaltree)[1:n.ind]
     }
   } # end of snps.assoc generation
 
@@ -462,7 +511,7 @@ snp.sim <- function(n.snps = 10000,
   ###########################################
 
   ## Create genomes matrix:
-  genomes <- do.call("cbind", loci)
+  genomes <- temp
   ## keep only rows containing terminal individuals:
   genomes <- genomes[1:n.ind, ]
 

@@ -9,6 +9,73 @@
 ## here and within all other fns s.t. no documentation required
 ## (unless we want to release these for public use?)
 
+
+
+################################################################################
+
+###############
+## ggplot.bg ##
+###############
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Mimic ggplot2 Background
+#'
+#' Get an imitation ggplot2-style background for plots made outside ggplot2
+#'
+#'
+#' @details This function must be sandwiched between two instances
+#' of the function used to generate the (foreground) plot
+#' to which you are hoping to add this background.
+#' \emph{Before} running the \code{ggplot.bg} function, you need to run your plot function
+#' so that \code{ggplot.bg} knnows how to set the axes.
+#' \emph{After} running the \code{ggplot.bg} function, you need to run your plot function
+#' again \emph{with the added argument} \code{add=TRUE}
+#' so that your plot can be overlayed on top of the background.
+#'
+#' @importFrom adegenet transp
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
+#' @export
+
+
+########################################################################
+
+## importFrom adegenet transp
+
+ggplot.bg <- function(bg=transp("lightgray", 0.5),
+                      x.ax=FALSE, y.ax=FALSE, box=TRUE,
+                      grid=TRUE, grid.col="white",
+                      grid.nx=NULL, grid.ny=NULL, grid.lwd=1, grid.lty=1){
+
+  ## get user plotting parameters:
+  lim <- par("usr")
+  rect(lim[1],  lim[3], lim[2], lim[4], col="white")
+  rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
+  # rect(lim[1],  lim[3], lim[2], lim[4], col=bg, border=NA)
+
+  ## add axes back
+  if(!is.null(x.ax)) x.ax
+  if(!is.null(y.ax)) y.ax
+
+  ## add grid:
+  if(grid == TRUE){
+    grid(nx=grid.nx, ny=grid.ny, col=grid.col, lwd=1, lty=1)
+  }
+
+  if(box == TRUE) box()   ## and the plot frame
+
+} # end ggplot.bg
+
+################################################################################
+
+
+
 #######################
 ## get.unique.matrix ##
 #######################

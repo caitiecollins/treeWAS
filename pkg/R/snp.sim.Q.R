@@ -540,22 +540,25 @@ snp.sim.Q <- function(n.snps = 10000,
   ## for each site, draw the branches to which
   ## you will assign the mts for this site
   ## (~ branch length):
+
+  ## Get vector of FALSEs of length tree$edge.length:
+  null.vect <- rep(FALSE, length(tree$edge.length))
+
   snps.loci <- sapply(c(1:length(n.mts)),
                       function(e)
-                        sample(c(1:length(tree$edge.length)),
-                               n.mts[e],
-                               replace=FALSE,
-                               prob=tree$edge.length))
+                        replace(null.vect,
+                                sample(c(1:length(tree$edge.length)),
+                                       n.mts[e],
+                                       replace=FALSE,
+                                       prob=tree$edge.length), TRUE))
 
   ## rearrange snps.loci s.t it becomes a
   ## list of length tree$edge.length,
   ## each element of which contains the
   ## locations of the mutations that will
   ## occur on that branch
-  snps.loci <- sapply(c(1:length(tree$edge.length)),
-                      function(f)
-                        seq_along(snps.loci)[sapply(snps.loci,
-                                                    function(e) f %in% e)])
+  snps.loci <- sapply(c(1:nrow(snps.loci)),
+                      function(e) which(snps.loci[e,] == TRUE))
 
 
   ## get the node names for all individuals (terminal and internal)
@@ -564,7 +567,7 @@ snp.sim.Q <- function(n.snps = 10000,
   genomes <- list()
   ## we start w all inds having same genotype as root:
   for(i in all.inds){
-    genomes[[all.inds[i]]] <- gen.root[1:gen.size] ## EXCEPT -- REMOVING SNPS.ASSOC LOCI (LAST N.ASSOC LOCI) FOR NOW!!!
+    genomes[[all.inds[i]]] <- gen.root
   }
   ## store replacement nts in list new.nts:
   new.nts <- list()
@@ -576,12 +579,10 @@ snp.sim.Q <- function(n.snps = 10000,
   ## (ie. ind.length(tree$tip.label)+1 ) is our root individual:
   x <- rev(c(1:nrow(tree$edge)))
 
-
   if(coaltree == FALSE){
     ## use normal/reverse (top:bottom) edge mat:
     x <- 1:nrow(tree$edge)
   }
-
 
   #############################
   ## For Loop to get new nts ##
@@ -644,16 +645,32 @@ snp.sim.Q <- function(n.snps = 10000,
   ####################################################
 
   ## temporarily assemble non-associated loci into matrix:
-  temp <- do.call("rbind", genomes)
-
-  ## Make loci list (in case you need it later (ie. if any loci not polymorphic)?)
-  loci <- list()
-  for(i in 1:ncol(temp)){
-    loci[[i]] <- temp[,i]
-  }
+  temp.ori <- do.call("rbind", genomes)
 
   ## keep only rows containing terminal individuals:
-  temp <- temp[1:n.ind, ]
+  temp.ori <- temp.ori[1:n.ind, ]
+
+  #########################
+  ## Get UNIQUE snps.rec ##
+  #########################
+  temp <- get.unique.matrix(temp.ori, MARGIN=2)
+  temp.unique <- temp$unique.data
+  index <- temp$index
+
+  if(ncol(temp.unique) == ncol(temp.ori)){
+    all.unique <- TRUE
+  }else{
+    all.unique <- FALSE
+  }
+
+  ## work w only unique snps:
+  temp <- temp.unique
+
+  #   ## Make loci list (in case you need it later (ie. if any loci not polymorphic))
+  #   loci <- list()
+  #   for(i in 1:ncol(temp)){
+  #     loci[[i]] <- temp[,i]
+  #   }
 
   ## identify n.minor.allele required to meet polyThres:
   polyThres <- 0.01
@@ -702,19 +719,30 @@ snp.sim.Q <- function(n.snps = 10000,
       ## for each site, draw the branches to which
       ## you will assign the mts for this site
       ## (~ branch length):
+
       subs.edges <- sample(c(1:length(tree$edge.length)),
                            n.mt,
                            replace=FALSE,
                            prob=tree$edge.length)
 
+      ## TO DO: COULD REPLACE (all instances!!!) LATER WITH:
+      ## Get vector of FALSEs of length tree$edge.length:
+      #     null.vect <- rep(FALSE, length(tree$edge.length))
+      #     subs.edges <- replace(null.vect,
+      #                           sample(c(1:length(tree$edge.length)),
+      #                                  n.mt,
+      #                                  replace=FALSE,
+      #                                  prob=tree$edge.length), TRUE)
+
+
       ## get nt for root at this locus:
       root.nt <- gen.root[i]
 
       ## get nt for each individual at this locus
-      loci[[i]] <- .get.locus01(subs.edges = subs.edges,
-                                root.nt = root.nt,
-                                tree = tree,
-                                coaltree = coaltree)
+      temp[,i] <- .get.locus01(subs.edges = subs.edges,
+                               root.nt = root.nt,
+                               tree = tree,
+                               coaltree = coaltree)[1:n.ind]
 
     } # end FOR LOOP for NON-associated SNPs
 
@@ -723,20 +751,25 @@ snp.sim.Q <- function(n.snps = 10000,
     ######################################
     ## CHECK IF ALL LOCI ARE POLYMORPHIC (|polyThres)
 
-    ## temporarily assemble non-associated loci into matrix:
-    temp <- do.call("cbind", loci)
-    ## keep only rows containing terminal individuals:
-    temp <- temp[1:n.ind, ]
-
     ## identify n.minor.allele required to meet polyThres:
     polyThres <- 0.01
     n.min <- n.ind*polyThres
 
     ## make a list of any NON-polymorphic loci:
+    toRepeat.ori <- toRepeat
+    temp.toRepeat <- temp[, toRepeat.ori]
+
     toRepeat <- list()
-    for(i in 1:ncol(temp)){
-      if(any(table(temp[,i]) < n.min) | length(table(temp[,i])) == 1){
-        toRepeat[[length(toRepeat)+1]] <- i
+    ## if temp.toRepeat is a true matrix:
+    if(ncol(temp.toRepeat) > 0){
+      for(i in 1:ncol(temp.toRepeat)){
+        if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
+          toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
+        }
+      }
+    }else{
+      if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
+        toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
       }
     }
     if(length(toRepeat) > 0){
@@ -751,7 +784,21 @@ snp.sim.Q <- function(n.snps = 10000,
   ## while loop ENDS here: #############
   ######################################
 
-  gc()
+
+  ## GET ALL NON-UNIQUE SNPS COLUMNS: ##
+
+  if(all.unique == TRUE){
+    temp.complete <- temp
+  }else{
+    temp.complete <- temp[, index]
+  }
+
+  colnames(temp.complete) <- colnames(temp.ori)
+  temp <- temp.complete
+
+
+
+
 
   #########################
   ## GET ASSOCIATED SNPS ##
@@ -1028,30 +1075,33 @@ snp.sim.Q <- function(n.snps = 10000,
     ## Bind SNPs.ASSOC into matrix:
     snps.assoc.nodes <- do.call("cbind", snps.assoc.nodes)
 
+
+    ###################################################
+    ## TEMP -- COMPARE PHEN & ALL SNPS.ASSOC w PLOT: ##
+    ###################################################
+    par(mfrow=c(2,6))
+    plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+    for(i in 1:5){
+      plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+                main.title=paste("snp.assoc", i, sep=" "))
+      title(N.OVERLAP[[i]], line=0, font.main=1)
+    }
+    plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+    for(i in 6:10){
+      plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+                main.title=paste("snp.assoc", i, sep=" "))
+      title(N.OVERLAP[[i]], line=0, font.main=1)
+    }
+
+
+    par(mfrow=c(1,1)) # end temp panel plot
+
+    gc()
+
   } # end of snps.assoc generation
 
 
-  ###################################################
-  ## TEMP -- COMPARE PHEN & ALL SNPS.ASSOC w PLOT: ##
-  ###################################################
-  par(mfrow=c(2,6))
-  plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
-  for(i in 1:5){
-    plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
-              main.title=paste("snp.assoc", i, sep=" "))
-    title(N.OVERLAP[[i]], line=0, font.main=1)
-  }
-  plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
-  for(i in 6:10){
-    plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
-              main.title=paste("snp.assoc", i, sep=" "))
-    title(N.OVERLAP[[i]], line=0, font.main=1)
-  }
 
-
-  par(mfrow=c(1,1)) # end temp panel plot
-
-  gc()
 
   ############
   ## IDEAS: ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
@@ -1090,12 +1140,13 @@ snp.sim.Q <- function(n.snps = 10000,
   ###########################################
 
   ## Create genomes matrix:
-  genomes <- do.call("cbind", loci)
+  genomes <- temp
 
   ## Attach snps.assoc loci to last column:
   if(!is.null(snps.assoc.nodes)){
-    genomes <- cbind(genomes, snps.assoc.nodes)
+    genomes <- cbind(genomes, snps.assoc.nodes[1:n.ind,])
   }
+
 
   ## keep only rows containing terminal individuals:
   genomes <- genomes[1:n.ind, ]

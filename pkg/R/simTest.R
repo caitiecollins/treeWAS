@@ -54,12 +54,25 @@
 # dist_0.05 <- get(load("E:/treeWAS_misc/SimBac/CFML_R_0.05_dist.Rdata"))
 # dist_0.05 <- get(load("C:/Users/Caitlin/treeWAS/misc/CFML_R_0.05_dist.Rdata"))
 # barplot(dist_0.05, names.arg=c(1:length(dist_0.05)))
+#
+# dist_0.01 <- get(load("C:/Users/Caitlin/treeWAS/misc/CFML_R_0.01_dist.Rdata"))
+# barplot(dist_0.01, names.arg=c(1:length(dist_0.01)))
+#
+# dist_0.1 <- get(load("C:/Users/Caitlin/treeWAS/misc/CFML_R_0.1_dist.Rdata"))
+# barplot(dist_0.1, names.arg=c(1:length(dist_0.1)))
+#
+# dist_0 <- get(load("C:/Users/Caitlin/treeWAS/misc/CFML_R_0_dist.Rdata"))
+# barplot(dist_0, names.arg=c(1:length(dist_0)))
+#
+# dist_pois <- rpois(1000, 1)
+# dist_pois <- table(dist_pois[dist_pois>0])
+# barplot(dist_pois, names.arg=c(1:length(dist_pois)))
+
 
 # out <- simTest(
-#
 #   ## simTest args:
-#   set.number = 2,
-#   n.reps = 9,
+#   set.number = 1,
+#   n.reps = 10,
 #   set.seed.as = "file.number",
 #   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
 #
@@ -72,11 +85,11 @@
 #   n.ind = 100,
 #   n.snps = 10000, # gen.size
 #   # sim.by = "locus",
-#   n.subs = 1, # dist_0.05, # 15, # theta (*2)
+#   n.subs = dist_0.05, # 15, # theta (*2)
 #   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, # = 0
+#   n.snps.assoc = 10, #
 #   # assoc.option = "all",
-#   assoc.prob =  100, # 90, # 100,
+#   assoc.prob = 90, #100, #  90, #
 #   grp.min = 0.25,
 #   s = 10,
 #   af = 5,
@@ -94,6 +107,7 @@
 # )
 
 
+
 ## old simTest args:
 # set.number = 1,
 # n.reps = 1, set.seed.as = "file.number",
@@ -104,41 +118,42 @@
 
 ## new args:
 # dist_0.05 <- get(load("E:/treeWAS_misc/SimBac/CFML_R_0.05_dist.Rdata"))
+# dist_0.05 <- get(load("C:/Users/Caitlin/treeWAS/misc/CFML_R_0.05_dist.Rdata"))
 # barplot(dist_0.05, names.arg=c(1:length(dist_0.05)))
 
 ## simTest args:
-# set.number = 3
-# n.reps = 1
-# set.seed.as = "file.number"
-# working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims"
-#
-# ## data from file args:
-# from.file = FALSE
-# file.n = NULL
-# Windows = TRUE
-#
-# ## coalescent.sim args:
-# n.ind = 100
-# n.snps = 1000 # 10000 # gen.size
-# # sim.by = "locus"
-# n.subs = dist_0.05 # 1 #theta (*2)
-# n.phen.subs = 15 #theta_p = NULL
-# n.snps.assoc = 10 # = 0
-# # assoc.option = "all"
-# assoc.prob = 90 # 100
-# grp.min = 0.25
-# s = 10
-# af = 5
-# coaltree = TRUE
-#
-# ## treeWAS args:
-# p.value = 0.01
-# # p.value.correct = c("bonf", "fdr", FALSE) #mt.correct = FALSE
-# # p.value.by = c("count", "density")
-# sim.n.snps = 10000 # 100000 # 10*n.snps #sim.gen.size = NULL
-# treeWAS.test = c("terminal", "simultaneous", "subsequent") # "score"
-# snps.reconstruction = "parsimony"
-# phen.reconstruction = "parsimony"
+set.number = 3
+n.reps = 1
+set.seed.as = "file.number"
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims"
+
+## data from file args:
+from.file = FALSE
+file.n = NULL
+Windows = TRUE
+
+## coalescent.sim args:
+n.ind = 100
+n.snps = 10000 # 10000 # gen.size
+# sim.by = "locus"
+n.subs = 1 # dist_0.05 # 1 #theta (*2)
+n.phen.subs = 15 #theta_p = NULL
+n.snps.assoc = 10 # = 0
+# assoc.option = "all"
+assoc.prob = 90 # 100
+grp.min = 0.25
+s = 10
+af = 5
+coaltree = TRUE
+
+## treeWAS args:
+p.value = 0.01
+# p.value.correct = c("bonf", "fdr", FALSE) #mt.correct = FALSE
+# p.value.by = c("count", "density")
+sim.n.snps = 100000 # 100000 # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent") # "score"
+snps.reconstruction = "parsimony"
+phen.reconstruction = "parsimony"
 
 
 
@@ -202,8 +217,8 @@ simTest <- function(
   # assoc.option = "all",
   assoc.prob = 90, # 100 (set2)
   grp.min = 0.25,
-  s = 1,
-  af = 2,
+  s = 10,
+  af = 5,
   coaltree = TRUE,
 
   ## treeWAS args:
@@ -243,13 +258,13 @@ simTest <- function(
   ## data and output from each of n.reps runs: ##
   ###############################################
   SNPS <- PHEN <- PHEN.PLOT.COL <-  TREE <- OUT <- RES <-
-    FISHER.RESULTS <- PLINK.RESULTS <- PCA.RESULTS <- DAPC.RESULTS <-
-    ARGS <- PERFORMANCE <- list()
+    FISHER.RESULTS <- PLINK.RESULTS <- PCA.RESULTS <- DAPC.RESULTS <- CMH.RESULTS <-
+    ARGS <- PERFORMANCE <- SCORE3 <- list()
   ## and make lists for saving filenames
   filename.snps <- filename.phen <- filename.phen.plot.col <- filename.tree <-
     filename.out <- filename.res <- filename.fisher.results <-
-    filename.plink.results <- filename.pca <- filename.dapc <-
-    filename.args <- filename.performance <-
+    filename.plink.results <- filename.pca <- filename.dapc <- filename.cmh <-
+    filename.args <- filename.performance <- filename.score3 <-
     filename.plot <- filename.tree.plot <- list()
 
 
@@ -466,6 +481,7 @@ simTest <- function(
       gc()
 
       filename.tree.plot[[i]] <- paste("./set", set.number, "_", number, "_tree_plot", ".pdf", sep="")
+
       filename.panel.plot <- paste("./set", set.number, "_", number, "_panel_plot", ".pdf", sep="")
 
       foo <- coalescent.sim(n.ind = n.ind,
@@ -601,6 +617,10 @@ simTest <- function(
     print("treeWAS done")
     gc()
 
+    # i <- 1 #####
+
+    #####
+
     # dev.copy(pdf, file=filename.plot[[i]], width=7, height=11) # , pointsize=12
     # dev.off()
 
@@ -610,6 +630,7 @@ simTest <- function(
     res.complete <- out
     res <- out$res
 
+    score3 <- out$SCORE3
 
     ##############
     ## get call ##
@@ -623,6 +644,16 @@ simTest <- function(
     ## report 25)
 
     args <- mget(names(formals()), sys.frame(sys.nframe()))
+
+  #     args <- list(set.number = 1, n.reps = 1, set.seed.as = "file.number",
+  #                  working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+  #                  from.file = FALSE, file.n = NULL, Windows = TRUE, n.ind = 100,
+  #                  n.snps = 10000, n.subs = 1, n.phen.subs = 15, n.snps.assoc = 10,
+  #                  assoc.prob = 90, grp.min = 0.25, s = 10, af = 5, coaltree = TRUE,
+  #                  p.value = 0.01, sim.n.snps = 1e+05, treeWAS.test = c("terminal",
+  #                                                                       "simultaneous", "subsequent"),
+  #                  snps.reconstruction = "parsimony",
+  #                  phen.reconstruction = "parsimony")
 
     # args <- list(set.number,
     #              seed,
@@ -718,8 +749,8 @@ simTest <- function(
     #################
 
     ## STORE ORIGINAL DATA FOR LATER ##
-    snps.ori <- snps
-    phen.ori <- phen
+    snps.ori <- snps.ori.ori
+    phen.ori <- phen.ori.ori
 
     #     #######################
     #     ## from.file = FALSE ##
@@ -947,12 +978,12 @@ simTest <- function(
       shell(command)
     }
     ########################################################################################################################################
-    ## SYSTEM(COMMAND) FAILS HERE WITH THE FOLLOWING ERROR #################################################    ####    ####    ####    ####    ####    ####
+    ## SYSTEM(COMMAND) FAILS HERE WITH THE FOLLOWING ERROR #################################################    ####    ####    ####    ####
 
     # sh: 1: plink: not found
 
-    ## PROBABLY NEED TO FIND SOLN AND APPLY IT TO ALL PLINK-RELATED CODE, STARTING WELL ABOVE HERE....................................................................
-    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####
+    ## PROBABLY NEED TO FIND SOLN AND APPLY IT TO ALL PLINK-RELATED CODE, STARTING WELL ABOVE HERE....................
+    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####    ####
     ########################################################################################################################################
 
     ## use --bfile to work with the BINARY file
@@ -1012,7 +1043,7 @@ simTest <- function(
       filename <- paste("C:/PLINK/", uniqueID, ".assoc", sep="")
     }
     plink.res <- read.table(filename, header=TRUE)
-    #head(plink.res)
+    # head(plink.res)
 
 
     ## get p.vals
@@ -1084,7 +1115,12 @@ simTest <- function(
 
 
     ## get p.vals
-    pval.plink.assoc.gc <- plink.res$P
+    pval.plink.assoc.gc <- plink.res$GC
+
+    ## REORDER!!! ##
+    ## NOTE: plink.gc returns results in order of SIGNIFICANCE!
+    pval.plink.assoc.gc <- pval.plink.assoc.gc[order(plink.res$SNP)]
+
 
     ## get sig ##
 
@@ -1238,7 +1274,8 @@ simTest <- function(
     ## NOTE that (k - 1) is not necessarily = n.PCs
     ## ... though we may want to limit the K we work with depending on how system.time scales with K... (?)
 
-    ## get formula (get string up to n.PCs): lm(e ~ dapc.pop$ind.coord[,1] + dapc.pop$ind.coord[,2] + dapc.pop$ind.coord[,3] + dapc.pop$ind.coord[,4])
+    ## get formula (get string up to n.PCs):
+    ## lm(e ~ dapc.pop$ind.coord[,1] + dapc.pop$ind.coord[,2] + dapc.pop$ind.coord[,3] + dapc.pop$ind.coord[,4])
     # DAPC.string <- sapply(c(1:n.PCs), function(e) paste("dapc.pop$ind.coord[, ", e, "]", sep=""))
     DAPC.string <- sapply(c(1:(n.grp - 1)), function(e) paste("dapc.pop$ind.coord[, ", e, "]", sep=""))
     DAPC.string <- paste0(DAPC.string, collapse=" + ")
@@ -1274,6 +1311,98 @@ simTest <- function(
     print("DAPC done")
 
     ###########################################################################################################################
+    ################################################ ***   CMH   *** ##########################################################
+    ###########################################################################################################################
+
+    print("CMH started")
+
+
+    snps <- snps.ori.ori
+    phen <- phen.ori.ori
+
+    ## Get colnames(snps)
+    if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+    snps.names <- colnames(snps)
+
+    ## First make sure PHEN is in BINARY form (0, 1) only!
+    levs <- levels(as.factor(phen))
+    phen.ini <- phen
+    if(any(!levs %in% c(0,1))){
+      phen <- as.character(phen)
+      phen <- replace(phen, which(phen == levs[1]), 0)
+      phen <- replace(phen, which(phen == levs[2]), 1)
+    } # end make phen binary..
+    phen <- as.numeric(phen)
+    names(phen) <- names(phen.ini)
+
+    ##############################################
+
+    snps.12 <- snps+1
+    phen.34 <- phen+3
+    mat <- t(matrix(as.numeric(paste(snps.12, ".", phen.34, sep="")), nrow=ncol(snps), byrow=T))
+
+    ## get only unique columns of pasted mat:
+    mat.u <- get.unique.matrix(mat)
+    mat.unique <- mat.u$unique.data
+    index <- mat.u$index
+
+    ## get all 2x2 combos of snps.12 and phen.34:
+    noms <- c("1.3", "1.4", "2.3", "2.4")
+
+    ## get array from table, by pop:
+    arr.l <- list()
+    for(i in 1:ncol(mat.unique)){
+      tab <- list()
+      for(e in 1:length(levels(pop))){
+        temp <- ftable(mat.unique[pop==e, i])
+        tab[[e]] <- replace(rep(0, 4), which(noms %in% attr(temp, "col.vars")[[1]]), temp)
+      } # end (e) loop
+      arr.l[[i]] <- do.call(cbind, tab)
+    } # end for (i) loop
+    arr <- do.call(rbind, arr.l)
+
+
+    arr.complete <- arr
+    ##############
+    ## FOR LOOP ##
+    ##############
+    ## TO GET P-VALUES FROM CMH TEST for EACH SNPs COLUMN:
+    p.vals <- list()
+    for(i in 1:ncol(mat.unique)){
+      ## get indices for this snp for all pops and all 4 2x2 combos:
+      from <- seq(1, nrow(arr.complete), 4)[i]
+      to <- from+3
+      arr <- arr.complete[from:to,]
+      dat <- array(arr,
+                   dim = c(2,2,ncol(arr)),
+                   dimnames = list(
+                     phen = c("0", "1"),
+                     SNP = c("0", "1"),
+                     pop = levels(pop)
+                   ))
+      ## Run CMH test on this unique snps column:
+      CMH <- mantelhaen.test(dat)
+      p.vals[[i]] <- CMH$p.value
+    } # end for loop
+    p.vals <- as.vector(unlist(p.vals))
+
+    ## get full set of p-vals for non-unique columns:
+    pval.cmh <- p.vals[index]
+
+
+    ## Get results:
+    p.thresh <- p.value # 0.01
+    p.vals.bonf <- p.adjust(pval.cmh, "bonferroni")
+    p.bonf <- which(p.vals.bonf < p.thresh)
+    cmh.snps.bonf <- snps.names[p.bonf]
+
+    ## Store results:
+    cmh.results <- list(pval.cmh, cmh.snps.bonf)
+    names(cmh.results) <- c("pval.cmh", "cmh.snps.bonf")
+
+    print("CMH done")
+
+    ###########################################################################################################################
     ############################################# *** PERFORMANCE *** #########################################################
     ###########################################################################################################################
 
@@ -1300,7 +1429,7 @@ simTest <- function(
     ##############################
     ## FOR LOOP FOR ALL 3 TESTS ##
     ##############################
-    for(j in 2:105){
+    for(j in 2:106){
 
 
       if(j==2) test <- "fisher.bonf"
@@ -1320,6 +1449,7 @@ simTest <- function(
 
       if(j == 104) test <- "pca"
       if(j == 105) test <- "dapc"
+      if(j == 106) test <- "cmh"
 
       ################
       ## PCA & DAPC ## ########### ########### ########### ########### ########### ###########
@@ -1337,6 +1467,13 @@ simTest <- function(
       ##########
       if(test == "dapc"){
         test.positive <- dapc.snps.bonf
+      }
+
+      #########
+      ## CMH ##
+      #########
+      if(test == "cmh"){
+        test.positive <- cmh.snps.bonf
       }
 
       ###########
@@ -1365,16 +1502,16 @@ simTest <- function(
       #########################
       ## plink.assoc.gc.bonf ##
       #########################
-      if(test == "plink.assoc.bonf"){
+      if(test == "plink.assoc.gc.bonf"){
         test.positive <- plink.assoc.gc.snps.bonf
-      } # end test = plink.assoc.bonf
+      } # end test = plink.assoc.gc.bonf
 
       ########################
       ## plink.assoc.gc.fdr ##
       ########################
-      if(test == "plink.assoc.fdr"){
+      if(test == "plink.assoc.gc.fdr"){
         test.positive <- plink.assoc.gc.snps.fdr
-      } # end test = plink.assoc.fdr
+      } # end test = plink.assoc.gc.fdr
 
       ########### ########### ########### ########### ########### ########### ###########
 
@@ -1574,7 +1711,7 @@ simTest <- function(
                             treeWAS.names,
                             "plink.assoc.bonf", "plink.assoc.fdr",
                             "plink.assoc.gc.bonf", "plink.assoc.gc.fdr",
-                            "pca", "dapc")
+                            "pca", "dapc", "cmh")
 
     ################################    ################################    ################################
 
@@ -1629,6 +1766,10 @@ simTest <- function(
     filename.dapc[[i]] <- paste("./", uniqueID, "_dapc", ".Rdata", sep="")
     save(dapc.results, file=filename.dapc[[i]])
 
+    ## save cmh
+    filename.cmh[[i]] <- paste("./", uniqueID, "_cmh", ".Rdata", sep="")
+    save(cmh.results, file=filename.cmh[[i]])
+
 
     ## save performance
     filename.args[[i]] <- paste("./", uniqueID, "_args", ".Rdata", sep="")
@@ -1636,6 +1777,13 @@ simTest <- function(
     ## save performance
     filename.performance[[i]] <- paste("./", uniqueID, "_performance", ".Rdata", sep="")
     save(performance, file=filename.performance[[i]])
+
+    ## save score3 raw data and alternatives
+    filename.score3[[i]] <- paste("./", uniqueID, "_score3", ".Rdata", sep="")
+    save(score3, file=filename.score3[[i]])
+
+
+
 
 
     #########################
@@ -1657,10 +1805,17 @@ simTest <- function(
     names(FISHER.RESULTS)[[i]] <- uniqueID
     PLINK.RESULTS[[i]] <- plink.results
     names(PLINK.RESULTS)[[i]] <- uniqueID
+
     PCA.RESULTS[[i]] <- pca.results
     names(PCA.RESULTS)[[i]] <- uniqueID
     DAPC.RESULTS[[i]] <- dapc.results
     names(DAPC.RESULTS)[[i]] <- uniqueID
+
+    CMH.RESULTS[[i]] <- cmh.results
+    names(CMH.RESULTS)[[i]] <- uniqueID
+
+    SCORE3[[i]] <- score3
+    names(SCORE3)[[i]] <- uniqueID
 
     ARGS[[i]] <- args
     names(ARGS)[[i]] <- uniqueID
@@ -1675,10 +1830,10 @@ simTest <- function(
   ##########################
 
   toReturn <- list(SNPS, PHEN, PHEN.PLOT.COL, TREE, RES,
-                   FISHER.RESULTS, PLINK.RESULTS, PCA.RESULTS, DAPC.RESULTS,
+                   FISHER.RESULTS, PLINK.RESULTS, PCA.RESULTS, DAPC.RESULTS, CMH.RESULTS,
                    ARGS, PERFORMANCE)
   names(toReturn) <- c("snps", "phen", "phen.plot.col", "tree", "res",
-                       "fisher.results", "plink.results", "pca.results", "dapc.results",
+                       "fisher.results", "plink.results", "pca.results", "dapc.results", "cmh.results",
                        "arguments", "performance")
 
   return(toReturn)

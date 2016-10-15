@@ -8,7 +8,7 @@ simTest(set.number = 1, n.reps = 1, set.seed.as = "file.number",
   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
   from.file = FALSE, file.n = NULL, Windows = FALSE, n.ind = 100,
   n.snps = 10000, n.subs = 1, n.phen.subs = 15, n.snps.assoc = 10,
-  assoc.prob = 90, grp.min = 0.25, s = 1, af = 2, coaltree = TRUE,
+  assoc.prob = 90, grp.min = 0.25, s = 10, af = 5, coaltree = TRUE,
   p.value = 0.01, sim.n.snps = 1e+05, treeWAS.test = c("terminal",
   "simultaneous", "subsequent"), snps.reconstruction = "parsimony",
   phen.reconstruction = "parsimony")

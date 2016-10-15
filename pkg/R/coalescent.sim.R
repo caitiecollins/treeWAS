@@ -194,7 +194,7 @@ coalescent.sim <- function(n.ind=100,
   ## Simulate Phylogenetic Tree ##
   ################################
   if(coaltree == TRUE){
-    tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
+    tree.c <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
   }else{
     set.seed(seed)
     tree <- rtree(n = n.ind)
@@ -216,8 +216,14 @@ coalescent.sim <- function(n.ind=100,
     ## QUESTION -- In practice, is "s" getting multiplied by 4 ?????
     # s <- n.phen.subs/4
 
-    if(is.null(s)) s <- 1 # n.subs
-    if(is.null(af)) af <- 2 # association factor
+    if(is.null(s)) s <- 2 # n.subs
+    if(is.null(af)){
+      if(coaltree == TRUE){
+        af <- 10 # association factor
+      }else{
+        af <- 0.1
+      }
+    }
     Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
                       1*af*s, NA, 0, 1*af*s,
                       1*af*s, 0, NA, 1*af*s,
@@ -237,6 +243,7 @@ coalescent.sim <- function(n.ind=100,
     }
 
     ## RUN SNP.SIM.Q: ##
+    system.time(
     snps.list <- snp.sim.Q(n.snps = n.snps,
                            n.subs = n.subs,
                            snp.root = NULL,
@@ -257,7 +264,7 @@ coalescent.sim <- function(n.ind=100,
                            row.names = NULL,
                            set=set,
                            seed=seed)
-
+    )
     snps <- snps.list$snps
     snps.assoc <- snps.list$snps.assoc
     sets <- NULL
@@ -268,6 +275,11 @@ coalescent.sim <- function(n.ind=100,
     dev.off()
 
   }else{
+
+    ##################
+    ## SETS 1 and 2 ##
+    ##################
+
   if(is.null(phen)){
     ## get list of phenotype simulation output
     phen.list <- phen.sim(tree, n.subs = n.phen.subs, grp.min = grp.min, coaltree = coaltree, seed = seed)
@@ -306,7 +318,7 @@ coalescent.sim <- function(n.ind=100,
   #   n.snps <- 100000 # 153.8
   #   n.snps <- 1000000 # >> 1941.7 (stopped trying..)
   #
-  #   system.time(
+    # system.time(
   snps.list <- snp.sim(n.snps=n.snps,
                        n.subs=n.subs,
                        n.snps.assoc=n.snps.assoc,

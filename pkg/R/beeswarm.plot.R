@@ -38,11 +38,11 @@
 
 ########################################################################
 
-###################
-## beeswarm.plot ##
-###################
+##################
+## beeswarmPlot ##
+##################
 
-beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
+beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                           pt.size=4, x.text=FALSE){
 
   require(beeswarm)
@@ -274,4 +274,4 @@ beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
   ## PRINT PLOT ##
   plot(beeswarm.plot4)
 
-} # end beeswarm.plot
+} # end beeswarmPlot
