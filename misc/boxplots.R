@@ -198,6 +198,7 @@ toKeep <- grep("performance", foo) ##??
 foo <- foo[toKeep]
 foo
 
+
 ## load performance data
 dat <- list()
 setwd(dirname)
@@ -211,12 +212,12 @@ system.time(
 
 ## REORDER dat s.t. order is numeric not character...
 # dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
+# inds.new <- c(1:length(dat))
+# inds.ori <- sort(as.character(inds.new))
+# ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+#
+# dat.ori <- dat
+# dat <- dat[ord]
 
 perf.ori <- perf <- dat
 
@@ -231,7 +232,82 @@ snps.assoc <- sapply(c(1:length(perf)), function(e) perf[[e]][[1]])
 snps.assoc.ori <- snps.assoc <- as.list(as.data.frame(snps.assoc))
 
 ## SAVE:
-save(snps.assoc, file="./set3_1.40_ALL_snps.assoc.Rdata")
+# save(snps.assoc, file="./set3_1.100_ALL_snps.assoc.Rdata")
+
+#################################################################################################
+
+
+##################################
+## get score1.mean[snps.assoc]: ##
+##################################
+
+foo <- dir(dirname)
+
+## get all performance Rdata names
+toKeep <- grep("_res", foo) ##??
+foo <- foo[toKeep]
+foo
+
+
+## load performance data
+dat <- list()
+setwd(dirname)
+system.time(
+  for(i in 1:length(foo)){ # length(foo)
+    print(i)
+    temp <- get(load(paste("./", foo[i], sep="")))
+    dat[[i]] <- mean(temp$vals$terminal$corr.dat[snps.assoc[[i]]])
+    gc()
+  }
+)
+
+
+## REORDER dat s.t. order is numeric not character...
+# dat <- snps.assoc
+inds.new <- c(1:length(dat))
+inds.ori <- sort(as.character(inds.new))
+ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+
+dat.ori <- dat
+dat <- dat[ord]
+
+score1.mean.ori <- score1.mean <- as.vector(unlist(dat))
+
+# save(score1.mean, file="./set3_1.100_ALL_score1.mean.Rdata")
+
+
+################################
+## REORDER perf & snps.assoc: ##
+################################
+
+dat <- perf
+
+## REORDER dat s.t. order is numeric not character...
+# dat <- snps.assoc
+inds.new <- c(1:length(dat))
+inds.ori <- sort(as.character(inds.new))
+ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+
+dat.ori <- dat
+dat <- dat[ord]
+
+perf <- dat
+
+##################
+
+dat <- snps.assoc
+
+## REORDER dat s.t. order is numeric not character...
+# dat <- snps.assoc
+inds.new <- c(1:length(dat))
+inds.ori <- sort(as.character(inds.new))
+ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+
+dat.ori <- dat
+dat <- dat[ord]
+
+snps.assoc <- dat
+
 
 #################################################################################################
 
@@ -265,17 +341,6 @@ dat.ori <- dat
 dat <- dat[ord]
 
 args.ori <- args <- dat
-
-#################################################################################################
-
-#####################
-## get n.subs arg: ##
-#####################
-
-# n.subs <- sapply(c(1:length(args)), function(e) args[[e]]$n.subs)
-# n.subs
-
-n.subs <- c(rep("dist_0.05", 20), rep("Poisson_1", 10), rep("dist_0.01", 10))
 
 #################################################################################################
 
@@ -320,100 +385,40 @@ n.phen.subs.ori <- n.phen.subs
 
 #################################################################################################
 
-##########################
-## get res for treeWAS: ##
-##########################
-
-foo <- dir(dirname)
-
-## get all performance Rdata names
-toKeep <- grep("_res", foo) ##??
-foo <- foo[toKeep]
-foo
-
-## load performance data
-dat <- list()
-setwd(dirname)
-system.time(
-  for(i in 1:length(foo)){ # length(foo)
-    print(i)
-    dat[[i]] <- get(load(paste("./", foo[i], sep="")))
-    gc()
-  }
-)
-
-## REORDER dat s.t. order is numeric not character...
-# dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
-
-res.ori <- res <- dat
-
-save(res, file="./set3_1.40_ALL_res.Rdata")
-
-#################################################################################################
-
-######################
-## get score1.mean: ##
-######################
-
-## dat = res
-dat <- list()
-for(i in 1:length(res)){
-  dat[[i]] <- res[[i]]$vals$terminal$corr.dat[snps.assoc[[i]]]
-}
-
-score1.ori <- score1 <- dat
-
-## get mean terminal score for snps.assoc
-score1.mean <- sapply(c(1:length(score1)), function(e) mean(score1[[e]]))
-score1.mean.ori <- score1.mean
-
-# score1.mean <- rep(rep(score1.mean, 32), 3)
-
-## SAVE ##
-save(score1, file="./set3_1.40_ALL_terminal.score_snps.assoc.Rdata")
-
-#################################################################################################
-
 #################
 ## get score3: ##
 #################
 
-foo <- dir(dirname)
-
-## get all performance Rdata names
-toKeep <- grep("_score3", foo) ##??
-foo <- foo[toKeep]
-foo
-
-## load performance data
-dat <- list()
-setwd(dirname)
-system.time(
-  for(i in 1:length(foo)){ # length(foo)
-    print(i)
-    dat[[i]] <- get(load(paste("./", foo[i], sep="")))
-    gc()
-  }
-)
-
-## REORDER dat s.t. order is numeric not character...
-# dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
-
-score3.ori <- score3 <- dat
-
-save(score3, file="./set3_1.40_ALL_SCORE3.Rdata")
+# foo <- dir(dirname)
+#
+# ## get all performance Rdata names
+# toKeep <- grep("_score3", foo) ##??
+# foo <- foo[toKeep]
+# foo
+#
+# ## load performance data
+# dat <- list()
+# setwd(dirname)
+# system.time(
+#   for(i in 1:length(foo)){ # length(foo)
+#     print(i)
+#     dat[[i]] <- get(load(paste("./", foo[i], sep="")))
+#     gc()
+#   }
+# )
+#
+# ## REORDER dat s.t. order is numeric not character...
+# # dat <- snps.assoc
+# inds.new <- c(1:length(dat))
+# inds.ori <- sort(as.character(inds.new))
+# ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+#
+# dat.ori <- dat
+# dat <- dat[ord]
+#
+# score3.ori <- score3 <- dat
+#
+# save(score3, file="./set3_1.40_ALL_SCORE3.Rdata")
 
 
 
@@ -442,7 +447,7 @@ treeWAS$terminal <- treeWAS$simultaneous <- treeWAS$subsequent <- list()
 
 
 fisher.bonf <- fisher.fdr <-
-  plink.bonf <- plink.fdr <- plink.gc.bonf <- plink.gc.fdr <- pca <- dapc <-  list()
+  plink.bonf <- plink.fdr <- plink.gc.bonf <- plink.gc.fdr <- pca <- dapc <-  cmh <- list()
 
 for(i in 1:length(dat)){
   treeWAS$terminal[[i]] <- treeWAS$simultaneous[[i]] <- treeWAS$subsequent[[i]] <- list()
@@ -486,6 +491,10 @@ for(i in 1:length(dat)){
       dapc[[i]] <- dat[[i]][[e]]
     }
 
+    if(e == 106){
+      cmh[[i]] <- dat[[i]][[e]]
+    }
+
   } # end e for loop
 
   names(treeWAS$terminal[[i]]) <- removeFirstN(noms.ori[4:35], nchar("treeWAS.terminal."))
@@ -507,6 +516,7 @@ plink.gc.bonf <- do.call("rbind", plink.gc.bonf)
 plink.gc.fdr <- do.call("rbind", plink.gc.fdr)
 pca <- do.call("rbind", pca)
 dapc <- do.call("rbind", dapc)
+cmh <- do.call("rbind", cmh)
 
 ## Get dfs of nrow=length(dat),
 ## for each of the 32 thresh methods and each of the 3 treeWAS tests:
@@ -555,17 +565,19 @@ evalStats <- rbind(term, sim, subsq)
 str(evalStats)
 
 ## SAVE
-save(evalStats, file="./set3_1_40_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
+save(evalStats, file="./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
+
+# evalStats <- get(load("./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
 
 ##########################################################################################################
 
 
 ## add parameters:
 
-n.subs <- c(rep("dist_0.05", 20), rep("Poisson_1", 10), rep("dist_0.01", 10))
-tree.type <- rep("coal", 40)
-s <- rep(10, 40)
-af <- rep(5, 40)
+n.subs <- c(rep("dist_0", 20), rep("dist_0.01", 20), rep("dist_0.05", 20), rep("dist_0.1", 20), rep("Poisson_1", 20))
+tree.type <- rep("coal", 100)
+s <- rep(2, 100)
+af <- rep(10, 100)
 
 ## get parameters for all thresh and test:
 var <- tree.type
@@ -584,7 +596,7 @@ var <- n.phen.subs
 n.phen.subs.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
 
 var <- score1.mean
-score1.mean.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
+score1.mean.thresh <- as.vector(unlist(rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)))
 
 df <- data.frame(evalStats[,c("assoc.test", "test")],
                  "tree.type"=tree.type.thresh, "s"=s.thresh, "af"=af.thresh, "n.subs"=n.subs.thresh,
@@ -593,7 +605,7 @@ df <- data.frame(evalStats[,c("assoc.test", "test")],
 
 ## SAVE
 evalStats <- df
-save(evalStats, file="./set3_1_40_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
+save(evalStats, file="./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
 
 evalStats.ori <- evalStats.thresh <- evalStats
 ##########################################################################################################
@@ -616,7 +628,43 @@ evalStats.ori <- evalStats
 evalStats <- df
 
 ## SAVE:
-save(evalStats, file="./set3_1_40_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
+save(evalStats, file="./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata") ## WITH NaN values in F1.score & PPV!
+
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set2/set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata"))
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata"))
+##########################################################################################################
+
+
+######################################
+## CHECK F1 SCORES -- Handle NAs... ##
+######################################
+
+## NOTE:
+# sensitivity <- (TP / (TP + FN))
+# PPV <- (TP / (TP + FP)) ## If you made NO positive calls, then --> 0/0 = NaN
+# F1.score <- 2*((sensitivity*PPV) / (sensitivity+PPV)) ## If you made NO positive calls, then --> PPV = 0/0 = NaN --> F1 = NaN...
+
+df <- evalStats
+
+## If PPV == 0 --> replace PPV & F1.score w ZERO!
+# toReplace <- which(is.nan(df$PPV))
+# length(toReplace)
+#
+# df$PPV[toReplace] <- 0
+
+## If F1 == NA --> replace F1.score w ZERO (but leave PPV alone!):
+toReplace <- which(is.na(df$F1.score))
+length(toReplace)
+df$F1.score[toReplace] <- 0
+
+evalStats <- df
+
+## SAVE:
+save(evalStats, file="./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata") ## withOUT NaN values!
+# save(evalStats, file="C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
+##########################################################################################################
+
+# evalStats <- get(load("./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
 
 ######################
 ## PLOT PERFORMANCE ##
@@ -630,30 +678,30 @@ for(y in 1:length(Y)){ #
     df <- evalStats
     df <- df[df$assoc.test==treeWAS.tests[t], ] # & df$n.subs=="dist_0.05" ## & df$tree.type=="rtree" & df$s==0.5 & df$af==5
     beeswarmPlot(y=Y[y], x="test", df, y.lab=NULL,
-                  pt.size=4, x.text=TRUE)
+                 pt.size=4, x.text=TRUE)
   }
 }
 
-##########################################################################################################
+#############################################
 
 #######################
 ## SAVE PLOTS AS PDF ##
 #######################
-set3_1_40_BY_THRESH_terminal_F1score
-set3_1_40_BY_THRESH_simultaneous_F1score
-set3_1_40_BY_THRESH_subsequent_F1score
+set3_1_100_BY_THRESH_terminal_F1score
+set3_1_100_BY_THRESH_simultaneous_F1score
+set3_1_100_BY_THRESH_subsequent_F1score
 
-set3_1_40_BY_THRESH_terminal_PPV
-set3_1_40_BY_THRESH_simultaneous_PPV
-set3_1_40_BY_THRESH_subsequent_PPV
+set3_1_100_BY_THRESH_terminal_PPV
+set3_1_100_BY_THRESH_simultaneous_PPV
+set3_1_100_BY_THRESH_subsequent_PPV
 
-set3_1_40_BY_THRESH_terminal_sensitivity
-set3_1_40_BY_THRESH_simultaneous_sensitivity
-set3_1_40_BY_THRESH_subsequent_sensitivity
+set3_1_100_BY_THRESH_terminal_sensitivity
+set3_1_100_BY_THRESH_simultaneous_sensitivity
+set3_1_100_BY_THRESH_subsequent_sensitivity
 
-set3_1_40_BY_THRESH_terminal_FPR
-set3_1_40_BY_THRESH_simultaneous_FPR
-set3_1_40_BY_THRESH_subsequent_FPR
+set3_1_100_BY_THRESH_terminal_FPR
+set3_1_100_BY_THRESH_simultaneous_FPR
+set3_1_100_BY_THRESH_subsequent_FPR
 
 ##########################################################################################################
 
@@ -680,21 +728,6 @@ set3_1_40_BY_THRESH_subsequent_FPR
 ##########################################################################################################
 
 # ## BOXPLOTS: ##
-# df <- evalStats
-# t <- 1
-# dat1 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
-# df <- evalStats
-# t <- 2
-# dat2 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
-# df <- evalStats
-# t <- 3
-# dat3 <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal" & df$s==10 & df$af==5, ]
-#
-# ## CAREFUL-- boxplot orders levels as character!!!
-# dat1$test <- ordered(dat1$test, levels=c(1:32))
-# dat2$test <- ordered(dat2$test, levels=c(1:32))
-# dat3$test <- ordered(dat3$test, levels=c(1:32))
-#
 # par(mfrow=(c(3,1)))
 # with(dat1, boxplot(F1.score ~ test, col=transp(rainbow(32), 0.4)))
 # title("Terminal")
@@ -709,6 +742,8 @@ set3_1_40_BY_THRESH_subsequent_FPR
 ###############
 ## Get RANKS ##
 ###############
+
+df <- evalStats
 
 n.levs <- length(levels(df$test))
 
@@ -737,38 +772,40 @@ for(t in 1:length(treeWAS.tests)){
 F1.ranks <- F1
 
 ## SAVE:
-save(F1.ranks, file="./set3_1_40_all_F1.ranks.Rdata")
+save(F1.ranks, file="./set3_1_100_all_F1.ranks.Rdata")
+
+# save(F1.ranks, file="C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_100_all_F1.ranks.Rdata")
 
 ################################################
 ## PLOT ranks by sim (and treeWAS assoc.test) ##
 ################################################
-boxplot(F1.ranks[[1]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7)
+boxplot(F1.ranks[[1]], col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7)
 ggplot.bg(grid.nx=32, grid.ny=9)
-boxplot(F1.ranks[[1]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7, ylab="Rank", add=T)
+boxplot(F1.ranks[[1]], col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7, ylab="Rank", add=T)
 
-boxplot(F1.ranks[[2]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7)
+boxplot(F1.ranks[[2]], col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7)
 ggplot.bg(grid.nx=32, grid.ny=9)
-boxplot(F1.ranks[[2]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7, ylab="Rank", add=T)
+boxplot(F1.ranks[[2]], col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7, ylab="Rank", add=T)
 
-boxplot(F1.ranks[[3]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7)
+boxplot(F1.ranks[[3]], col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7)
 ggplot.bg(grid.nx=32, grid.ny=9)
-boxplot(F1.ranks[[3]], col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7, ylab="Rank", add=T)
+boxplot(F1.ranks[[3]], col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7, ylab="Rank", add=T)
 
 ## COMBINED:
 F1.ranks.mat <- do.call(rbind, F1.ranks)
 
-boxplot(F1.ranks.mat, col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7)
+boxplot(F1.ranks.mat, col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7)
 ggplot.bg(grid.nx=32, grid.ny=9)
-boxplot(F1.ranks.mat, col=transp(rainbow(32), 0.5), ylim=c(10, 0), cex.axis=0.7, ylab="Rank", add=T)
+boxplot(F1.ranks.mat, col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7, ylab="Rank", add=T)
 
 
 
 ## SAVE: ##
-set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_terminal
-set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_simultaneous
-set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_subsequent
+set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_terminal
+set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_simultaneous
+set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_subsequent
 ## save combined:
-set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_treeWAS_assoc_tests_COMBINED
+set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_treeWAS_assoc_tests_COMBINED
 
 #############################
 ## same w BEESWARM PLOT ?? ##
@@ -777,7 +814,8 @@ set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_treeWAS_assoc_tests_COM
 #                     data.frame("test"=c(1:32), t(F1.ranks[[2]])),
 #                     data.frame("test"=c(1:32), t(F1.ranks[[3]])))
 #
-# F1.ranks.comb <- do.call(rbind, F1.r)
+# F1.ranks.comb <- do.call(rbind, F1.ranks.t)
+#
 #
 # for(t in 1:3){
 #   df <- F1.ranks.t[[t]]
@@ -785,42 +823,6 @@ set3_1_40_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_treeWAS_assoc_tests_COM
 #                pt.size=4, x.text=TRUE)
 # }
 
-
-#########
-
-## Get rank MEANS by sim (and treeWAS assoc.test)
-F1.rank.means <- list(colMeans(F1.ranks[[1]]),
-                      colMeans(F1.ranks[[2]]),
-                      colMeans(F1.ranks[[3]]))
-
-## SAVE:
-save(F1.rank.means, file="./set3_1_40_all_F1.rank.means.Rdata")
-
-#####################################################
-## PLOT rank MEANS by sim (and treeWAS assoc.test) ##
-#####################################################
-barplot(F1.rank.means[[1]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9, x.ax=FALSE, y.ax=FALSE)
-barplot(F1.rank.means[[1]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7, ylab="Mean Rank", add=T)
-
-barplot(F1.rank.means[[2]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9, x.ax=FALSE, y.ax=FALSE)
-barplot(F1.rank.means[[2]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7, ylab="Mean Rank", add=T)
-
-barplot(F1.rank.means[[3]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7)
-ggplot.bg(grid.nx=32, grid.ny=9, x.ax=FALSE, y.ax=FALSE)
-barplot(F1.rank.means[[3]], col=transp(rainbow(32), 0.5), ylim=c(6, 0), cex.names=0.7, ylab="Mean Rank", add=T)
-
-## SAVE: ##
-set3_1_40_ALL_BARPLOT_compare_thresholds_by_F1score_MEAN_RANK_terminal
-set3_1_40_ALL_BARPLOT_compare_thresholds_by_F1score_MEAN_RANK_simultaneous
-set3_1_40_ALL_BARPLOT_compare_thresholds_by_F1score_MEAN_RANK_subsequent
-
-
-###########################################################################
-
-
-levels(evalStats.ori$test)
 #################################################################################################################################################
 #################################################################################################################################################
 #################################################################################################################################################
@@ -831,7 +833,8 @@ levels(evalStats.ori$test)
 ## get evalStats for only best thresh: ##
 #########################################
 evalStats.thresh <- evalStats
-# evalStats <- get(load("./set3_1_40_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
+# evalStats <- get(load("./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
+
 
 str(evalStats)
 
@@ -851,21 +854,23 @@ df.other <- rbind(fisher.bonf,
                   plink.bonf,
                   plink.gc.bonf,
                   pca,
-                  dapc)
+                  dapc,
+                  cmh)
 
 ## get info:
 info <- evalStats[evalStats$assoc.test=="terminal", 2:7]
-df.other <- cbind(rbind(info, info, info, info, info), df.other)
+df.other <- cbind(rbind(info, info, info, info, info, info), df.other)
 
 ## combine all into one df w assoc.test as factor for boxplots:
-df.other <- cbind("assoc.test"=c(rep("fisher.bonf", nrow(fisher.bonf)),
-                           # rep("fisher.fdr", nrow(fisher.fdr)),
-                           rep("plink.bonf", nrow(plink.bonf)),
-                           # rep("plink.fdr", nrow(plink.fdr)),
-                           rep("plink.gc.bonf", nrow(plink.gc.bonf)),
-                           # rep("plink.gc.fdr", nrow(plink.gc.fdr)),
-                           rep("pca", nrow(pca)),
-                           rep("dapc", nrow(dapc))),
+df.other <- cbind("assoc.test"=c(rep("fisher", nrow(fisher.bonf)),
+                                 # rep("fisher.fdr", nrow(fisher.fdr)),
+                                 rep("plink", nrow(plink.bonf)),
+                                 # rep("plink.fdr", nrow(plink.fdr)),
+                                 rep("plink.gc", nrow(plink.gc.bonf)),
+                                 # rep("plink.gc.fdr", nrow(plink.gc.fdr)),
+                                 rep("pca", nrow(pca)),
+                                 rep("dapc", nrow(dapc)),
+                                 rep("cmh", nrow(cmh))),
                   df.other)
 
 df <- rbind(evalStats, df.other)
@@ -873,10 +878,48 @@ df <- rbind(evalStats, df.other)
 evalStats.ori <- evalStats <- df
 
 ## SAVE:
-save(evalStats, file="set3_1_40_ALL_all_tests_best_thresh_evalStats.Rdata")
+save(evalStats, file="set3_1_100_ALL_all_tests_best_thresh_evalStats_w_NaN.Rdata")
+
+
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set2/set3_1_100_ALL_all_tests_best_thresh_evalStats.Rdata"))
 
 ##########################################################################################################
 
+
+######################################
+## CHECK F1 SCORES -- Handle NAs... ##
+######################################
+
+## NOTE:
+# sensitivity <- (TP / (TP + FN))
+# PPV <- (TP / (TP + FP)) ## If you made NO positive calls, then --> 0/0 = NaN
+# F1.score <- 2*((sensitivity*PPV) / (sensitivity+PPV)) ## If you made NO positive calls, then --> PPV = 0/0 = NaN --> F1 = NaN...
+
+df <- evalStats
+
+
+## If F1 == NA --> replace F1.score w ZERO (but leave PPV alone!):
+toReplace <- which(is.na(df$F1.score))
+length(toReplace)
+df$F1.score[toReplace] <- 0
+
+evalStats <- df
+
+## SAVE:
+save(evalStats, file="set3_1_100_ALL_all_tests_best_thresh_evalStats.Rdata")
+
+##########################################################################################################
+
+
+df <- evalStats
+
+table(df$assoc.test)
+# df$assoc.test <- as.character(df$assoc.test)
+# df$assoc.test[301:600] <- c(rep("fisher", 100), rep("plink", 100), rep("plink.gc", 100))
+# df$assoc.test <- as.factor(df$assoc.test)
+# evalStats <- df
+
+# save(evalStats, file="C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_100_ALL_all_tests_best_thresh_evalStats.Rdata")
 
 ###################
 ## BEESWARM PLOT ##
@@ -892,12 +935,20 @@ tot
 
 ## get ordered levels:
 # require(plyr)
-df$assoc.test <- ordered(df$assoc.test, levels = levels(df$assoc.test)[c(5, 7, 8, 6, 4, 1, 2, 3)]) # [c(2, 3, 5, 6, 7, 8, 4, 1, 11, 9, 10)] # SAVED!
+df$assoc.test <- ordered(df$assoc.test, levels = levels(df$assoc.test)[c(6, 8, 9, 7, 5, 4, 1, 2, 3)]) # SAVED!
+# df$assoc.test <- ordered(df$assoc.test, levels = levels(df$assoc.test)[c(3, 5, 6, 4, 2, 1, 9, 7, 8)]) # SAVED!
 evalStats <- df
 
 ## SAVE:
-save(evalStats, file="set3_1_40_ALL_all_tests_best_thresh_evalStats.Rdata")
+save(evalStats, file="set3_1_100_ALL_all_tests_best_thresh_evalStats.Rdata")
 
+evalStats.set3 <- evalStats
+# evalStats.set2 <- evalStats
+# evalStats.set1 <- evalStats
+
+#######################
+## PLOT ALL TOGETHER ##
+#######################
 
 evalStats.ori <- evalStats
 # assoc.tests <- levels(evalStats$assoc.test)
@@ -907,18 +958,69 @@ Y <- c("F1.score", "PPV", "sensitivity", "FPR")
 for(y in 1:length(Y)){ #
   df <- evalStats
   beeswarmPlot(y=Y[y], x="assoc.test", df, y.lab=NULL,
-                pt.size=4, x.text=TRUE)
+               pt.size=4, x.text=TRUE)
 }
 
-##########################################################################################################
+###############################################
 
 #######################
 ## SAVE PLOTS AS PDF ##
 #######################
-set3_1_40_BY_ASSOC_TEST_F1score
-set3_1_40_BY_ASSOC_TEST_PPV
-set3_1_40_BY_ASSOC_TEST_sensitivity
-set3_1_40_BY_ASSOC_TEST_FPR
+
+set3_1_100_BY_ASSOC_TEST_F1score
+set3_1_100_BY_ASSOC_TEST_PPV
+set3_1_100_BY_ASSOC_TEST_sensitivity
+set3_1_100_BY_ASSOC_TEST_FPR
+
+##########################################################################################################
+
+#########################
+## PLOT BY n.subs DIST ##
+#########################
+
+N.SUBS <- c("dist_0", "dist_0.01", "dist_0.05", "dist_0.1", "Poisson_1")
+Y <- c("F1.score", "PPV", "sensitivity", "FPR")
+
+for(n in 1:length(N.SUBS)){
+  for(y in 1:length(Y)){ #
+    df <- evalStats
+    df <- df[df$n.subs == N.SUBS[n], ]
+    beeswarmPlot(y=Y[y], x="assoc.test", df, y.lab=NULL,
+                 pt.size=4, x.text=TRUE)
+  }
+}
+
+###############################################
+#######################
+## SAVE PLOTS AS PDF ##
+#######################
+
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_F1score
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_PPV
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_sensitivity
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_FPR
+
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_01_F1score
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_01_PPV
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_01_sensitivity
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_01_FPR
+
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_05_F1score
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_05_PPV
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_05_sensitivity
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_05_FPR
+
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_1_F1score
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_1_PPV
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_1_sensitivity
+set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_1_FPR
+
+set3_1_100_BY_ASSOC_TEST_n_subs_Poisson_1_F1score
+set3_1_100_BY_ASSOC_TEST_n_subs_Poisson_1_PPV
+set3_1_100_BY_ASSOC_TEST_n_subs_Poisson_1_sensitivity
+set3_1_100_BY_ASSOC_TEST_n_subs_Poisson_1_FPR
+
+
 
 ##########################################################################################################
 
@@ -1284,13 +1386,13 @@ df.ORI <- df
 
 df <- dat
 df <- cbind("assoc.test"=c(rep("fisher.bonf", 10),
-              rep("fisher.fdr", 10),
-              rep("plink.bonf", 10),
-              rep("plink.fdr", 10),
-              rep("plink.gc.bonf", 10),
-              rep("plink.gc.fdr", 10),
-              rep("pca", 10),
-              rep("dapc", 10)),
+                           rep("fisher.fdr", 10),
+                           rep("plink.bonf", 10),
+                           rep("plink.fdr", 10),
+                           rep("plink.gc.bonf", 10),
+                           rep("plink.gc.fdr", 10),
+                           rep("pca", 10),
+                           rep("dapc", 10)),
             rbind(info, info, info, info, info, info, info, info), df)
 df <- rbind(df, treeWAS.df)
 # identical(df.ORI, df) # FALSE
@@ -1385,10 +1487,10 @@ Y <- c("F1.score", "PPV", "sensitivity", "FPR")
 
 for(y in 1:length(Y)){ #
   # for(t in 1:length(assoc.tests)){
-    df <- evalStats
-    # df <- df[df$tree.type=="coal"  & df$s==10 & df$af==5, ] # & df$tree.type=="rtree"  & df$s==10 & df$af==5
-    beeswarm.plot(y=Y[y], x="assoc.test", df, y.lab=NULL,
-                  pt.size=3, x.text=TRUE)
+  df <- evalStats
+  # df <- df[df$tree.type=="coal"  & df$s==10 & df$af==5, ] # & df$tree.type=="rtree"  & df$s==10 & df$af==5
+  beeswarm.plot(y=Y[y], x="assoc.test", df, y.lab=NULL,
+                pt.size=3, x.text=TRUE)
   # }
 }
 
@@ -1524,16 +1626,16 @@ for(j in 1:length(file.ns)){
     corr.sim <- as.vector(unlist(corr.sim))
 
     if(length(which(!is.na(corr.dat))) > 0){
-    p.value <- 0.01
-    n.tests <- 3
-    p.value <- p.value/(length(corr.dat)*n.tests)
-    thresh <- quantile(corr.sim, probs=1-p.value, na.rm=TRUE)
+      p.value <- 0.01
+      n.tests <- 3
+      p.value <- p.value/(length(corr.dat)*n.tests)
+      thresh <- quantile(corr.sim, probs=1-p.value, na.rm=TRUE)
 
-    ## Identify (real) SNPs w correlations > thresh:
-    sig.snps <- which(corr.dat > thresh)
-    p.vals <- .get.p.vals(corr.sim = corr.sim,
-                          corr.dat = corr.dat,
-                          fisher.test = FALSE)
+      ## Identify (real) SNPs w correlations > thresh:
+      sig.snps <- which(corr.dat > thresh)
+      p.vals <- .get.p.vals(corr.sim = corr.sim,
+                            corr.dat = corr.dat,
+                            fisher.test = FALSE)
     }else{
       sig.snps <- p.vals <- NULL
     }
@@ -1739,10 +1841,10 @@ Y <- c("F1.score", "PPV", "sensitivity", "FPR")
 
 for(y in 1:length(Y)){ #
   # for(t in 1:3){
-    df <- evalStats.df
-    # df <- df[df$treeWAS.test==treeWAS.tests[t], ] # & df$tree.type=="rtree" & df$s==0.5 & df$af==5
-    beeswarm.plot(y=Y[y], x="score3.test", df, y.lab=NULL,
-                  pt.size=3, x.text=TRUE)
+  df <- evalStats.df
+  # df <- df[df$treeWAS.test==treeWAS.tests[t], ] # & df$tree.type=="rtree" & df$s==0.5 & df$af==5
+  beeswarm.plot(y=Y[y], x="score3.test", df, y.lab=NULL,
+                pt.size=3, x.text=TRUE)
   # }
 }
 
@@ -2076,21 +2178,21 @@ beeswarm.plot <- function(y="sensitivity", x="test", df, y.lab=NULL,
       geom_boxplot(data=df, aes(x=eval(parse(text=x)), y=eval(parse(text=y)), fill=eval(parse(text=x))), alpha=0.25,
                    outlier.shape = 17,
                    outlier.size=0) +
-    theme(axis.text.x=element_blank(),
-          axis.ticks.x=element_blank(), axis.title.x=element_blank(),
-          axis.text.y = element_text(size=13),
-          # axis.title.y=element_text(size=18),
-          axis.title.y=element_blank(),
-          legend.position="none")
+      theme(axis.text.x=element_blank(),
+            axis.ticks.x=element_blank(), axis.title.x=element_blank(),
+            axis.text.y = element_text(size=13),
+            # axis.title.y=element_text(size=18),
+            axis.title.y=element_blank(),
+            legend.position="none")
 
     beeswarm.plot3 <- beeswarm.plot2 +
       geom_point(data=beeswarm.ori, aes(colour = col), pch = PCH, size=pt.size, na.rm=TRUE, alpha=0.6) +
       guides(fill=FALSE) +
-    theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.x=element_blank(),
-          axis.text.y = element_text(size=13),
-          # axis.title.y=element_text(size=18),
-          axis.title.y=element_blank(),
-          legend.position="none")
+      theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.x=element_blank(),
+            axis.text.y = element_text(size=13),
+            # axis.title.y=element_text(size=18),
+            axis.title.y=element_blank(),
+            legend.position="none")
 
     beeswarm.plot4 <- beeswarm.plot3 +
       guides(fill=FALSE) +
@@ -2226,7 +2328,7 @@ treeWAS.tests <- c("terminal", "simultaneous", "subsequent")
 Y <- c("F1.score", "PPV", "sensitivity", "FPR")
 
 for(y in 1:length(Y)){
-# y <- 3
+  # y <- 3
   for(t in 1:3){
     df <- evalStats
     df <- df[df$treeWAS.test==treeWAS.tests[t] & df$tree.type=="coal", ] # & df$tree.type=="rtree" & df$s==0.5 & df$af==5
@@ -2392,10 +2494,10 @@ names(temp) <- treeWAS.tests
 
 t<- 3
 temp[[t]] <- list("df" = DAT[[t]],
-                "dat" = F1[[t]]$df,
-                "mean" = F1[[t]]$mean,
-                "sorted" = F1[[t]]$sorted,
-                "rank" = F1[[t]]$rank)
+                  "dat" = F1[[t]]$df,
+                  "mean" = F1[[t]]$mean,
+                  "sorted" = F1[[t]]$sorted,
+                  "rank" = F1[[t]]$rank)
 
 F1 <- temp
 
@@ -3296,7 +3398,7 @@ bp + ggtitle("FPR")+
 
 # The above adds a redundant legend. With the legend removed:
 ggplot(df, aes(x=test, y=FPR, fill=test, color=factor(test))) + geom_boxplot() + scale_y_continuous(limits=c(0,1)) +
-#   ggtitle("FPR") +
+  #   ggtitle("FPR") +
   guides(fill=FALSE)+
   theme(axis.text.x = element_text(angle=0, hjust=0, vjust=1),
         plot.title = element_text(size = 20, face = "bold", vjust =1),
@@ -3709,7 +3811,7 @@ myCol <- funky(7)
 bp <- ggplot(df, aes(x=test, y=specificity, fill=test)) + geom_boxplot()
 bp + ggtitle("Specificity")+
   theme(axis.text.x = element_text(angle=0, hjust=0, vjust=1),
-  plot.title = element_text(size = 20, face = "bold", colour = "black", vjust =1))
+        plot.title = element_text(size = 20, face = "bold", colour = "black", vjust =1))
 
 
 # The above adds a redundant legend. With the legend removed:
@@ -3753,7 +3855,7 @@ bp + ggtitle("False Positive Rate (FPR)")+
 
 # The above adds a redundant legend. With the legend removed:
 ggplot(df, aes(x=test, y=FPR, fill=test)) + geom_boxplot() +  scale_y_continuous(limits=c(0,1)) +
-#   ggtitle("False Positive Rate (FPR)") +
+  #   ggtitle("False Positive Rate (FPR)") +
   guides(fill=FALSE)+
   theme(axis.text.x = element_text(angle=0, hjust=0, vjust=1),
         plot.title = element_text(size = 20, face = "bold", colour = "black", vjust =1))
@@ -3786,7 +3888,7 @@ ggplot(df, aes(x=test, y=FPR, fill=test)) + geom_boxplot() +  scale_y_continuous
 
 # <<echo=FALSE>>=
 
-  ###############
+###############
 #### SET 2 ####
 ###############
 

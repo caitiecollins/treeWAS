@@ -194,7 +194,7 @@ coalescent.sim <- function(n.ind=100,
   ## Simulate Phylogenetic Tree ##
   ################################
   if(coaltree == TRUE){
-    tree.c <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
+    tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
   }else{
     set.seed(seed)
     tree <- rtree(n = n.ind)
@@ -231,6 +231,7 @@ coalescent.sim <- function(n.ind=100,
                     nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
 
     diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
+    # Q <- Q.mat
 
     ## Expected n.subs??
     # Exp.n.subs <- round(sum(tree$edge.length)*((s + (s*af)) / 2), 0)
@@ -276,6 +277,7 @@ coalescent.sim <- function(n.ind=100,
 
   }else{
 
+
     ##################
     ## SETS 1 and 2 ##
     ##################
@@ -300,7 +302,6 @@ coalescent.sim <- function(n.ind=100,
     phen.nodes <- phen
     phen.loci <- NULL
   }
-
 
 
   ###################

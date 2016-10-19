@@ -371,6 +371,9 @@ snp.sim <- function(n.snps = 10000,
   }
 
 
+
+
+
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
   #################################################################
   ## REPLACE ANY NON-POLYMORPHIC LOCI & GENERATE ASSOCIATED SNPS ##
@@ -440,17 +443,24 @@ snp.sim <- function(n.snps = 10000,
   toRepeat.ori <- toRepeat
   temp.toRepeat <- temp[, toRepeat.ori]
 
+
   toRepeat <- list()
   ## if temp.toRepeat is a true matrix:
-  if(ncol(temp.toRepeat) > 0){
-    for(i in 1:ncol(temp.toRepeat)){
-      if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
-        toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
-      }
-    }
-  }else{
+  if(!is.matrix(temp.toRepeat)){
     if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
       toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
+    }
+  }else{
+    if(ncol(temp.toRepeat) > 0){
+      for(i in 1:ncol(temp.toRepeat)){
+        if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
+          toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
+        }
+      }
+    }else{
+      if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
+        toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
+      }
     }
   }
   if(length(toRepeat) > 0){

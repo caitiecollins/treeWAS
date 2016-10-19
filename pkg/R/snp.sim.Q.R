@@ -761,6 +761,11 @@ snp.sim.Q <- function(n.snps = 10000,
 
     toRepeat <- list()
     ## if temp.toRepeat is a true matrix:
+    if(!is.matrix(temp.toRepeat)){
+      if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
+        toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
+      }
+    }else{
     if(ncol(temp.toRepeat) > 0){
       for(i in 1:ncol(temp.toRepeat)){
         if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
@@ -771,6 +776,7 @@ snp.sim.Q <- function(n.snps = 10000,
       if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
         toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
       }
+    }
     }
     if(length(toRepeat) > 0){
       toRepeat <- as.vector(unlist(toRepeat))
@@ -821,10 +827,6 @@ snp.sim.Q <- function(n.snps = 10000,
     i <- 1
 
     edges <- tree$edge
-
-    ## Need to solve error w rtree..
-    # edges.ori <- edges
-    # edges[order(edges[,1]), ]
 
     x <- rev(c(1:nrow(edges)))
 
@@ -1144,7 +1146,7 @@ snp.sim.Q <- function(n.snps = 10000,
 
   ## Attach snps.assoc loci to last column:
   if(!is.null(snps.assoc.nodes)){
-    genomes <- cbind(genomes, snps.assoc.nodes[1:n.ind,])
+    genomes <- cbind(genomes[,c(1:(ncol(genomes)-(n.snps.assoc)))], snps.assoc.nodes[1:n.ind,])
   }
 
 

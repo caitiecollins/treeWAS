@@ -17,6 +17,7 @@
 #' @param y A character string specifying the label of the (numeric) column
 #' in data frame \code{df} to be plotted along the y-axis.
 #'
+#' @details NOTE TO SELF--CAREFUL: y.lim is HARD-CODED as (0,1). Change this is you want to release this wrapper!
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @examples
@@ -63,7 +64,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                                      #priority="descending", ## ONLY for SWARM method...
                                      pwcol = eval(parse(text=x)),
                                      #col = myCol, ## to set w funky colours (INSTEAD of pwcol = test)
-                                     ylim = c(-0.001,1), # otherwise ggplot can't plot ZERO values --> NAs
+                                     ylim = c(-0.001,1.001), # otherwise ggplot can't plot ZERO values --> NAs
                                      las=2,
                                      cex=0.8,
                                      corral = "omit",

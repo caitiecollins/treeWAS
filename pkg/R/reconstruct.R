@@ -120,10 +120,7 @@ asr <- function(var,
     if(all.unique == TRUE){
       var.rec <- snps.rec
     }else{
-      var.rec <- matrix(NA, nrow=nrow(snps.rec), ncol=ncol(snps.ori))
-      for(i in 1:ncol(snps.rec)){
-        var.rec[, which(index == i)] <- snps.rec[, i]
-      }
+      var.rec <- snps.rec[, index]
       rownames(var.rec) <- rownames(snps.rec)
       colnames(var.rec) <- colnames(snps.ori)
     }
@@ -133,17 +130,7 @@ asr <- function(var,
       if(all.unique == TRUE){
         subs.edges <- snps.subs.edges
       }else{
-        subs.edges <- vector("list", ncol(snps.ori))
-        for(i in 1:length(snps.subs.edges)){
-          loc <- which(index == i)
-          if(length(loc) == 1){
-            subs.edges[[loc]] <- snps.subs.edges[[i]]
-          }else{
-            for(j in 1:length(loc)){
-              subs.edges[[loc[j]]] <- snps.subs.edges[[i]]
-            }
-          }
-        }
+        subs.edges <- snps.subs.edges[index]
       }
     }
 
@@ -297,6 +284,9 @@ get.ancestral.pars <- function(var, tree){
 
     ## as.phyDat requires row/col names:
     if(is.null(row.names(snps))){
+      warning("Replacing NULL row.names(snps) with tree$tip.label (or assigning 1:N to both).
+              Careful--if tree$tip.label and row.names(snps) should NOT be in the same order,
+              please STOP and assign these names in the correct order.")
       if(!is.null(tree$tip.label)){
         row.names(snps) <- tree$tip.label
       }else{
@@ -364,12 +354,14 @@ get.ancestral.pars <- function(var, tree){
     ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
     ## First, check to ensure all row.names(snps) are matched in tree$tip.label
     if(all(row.names(snps) %in% tree$tip.label)){
-      ord <- which(rownames(snps) == tree$tip.label)
+      ord <- match(tree$tip.label, rownames(snps))
     }else{
       ord <- 1:length(rownames(snps))
-      warning("rownames(snps) and tree$tip.label contain different labels;
-              we proceed by assuming snps rows and tree tips are labelled in the same order!")
+      warning("rownames(snps) and tree$tip.label contain different labels.
+              Careful-- we proceed by assuming snps rows and tree tips are labelled in the same order!")
     }
+    ## Want rec (list) to be in order of tree$tip.label
+    ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
     ord <- c(ord, c(nrow(snps)+1):length(rec))
     snps.rec <- do.call(cbind, rec[ord])
     snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), 2)])
@@ -390,14 +382,15 @@ get.ancestral.pars <- function(var, tree){
     df.anc <- snps.rec[edges[, 1], ]
     # df.dec <- snps.rec[edges[, 2], ]
 
+
     ## get indices of all edges containing a substitution
     for(i in 1:ncol(snps.rec)){
       subs.total <- which(subs.logical[, i] == FALSE)
 
       ## get indices of all edges w a positive sub (0 --> 1)
-      subs.pos <- subs.total[which(df.anc[,i]==0)]
+      subs.pos <- subs.total[which(subs.total %in% which(df.anc[,i] == 0))]
       ## get indices of all edges w a negative sub (1 --> 0)
-      subs.neg <- subs.total[which(df.anc[,i]==1)]
+      subs.neg <- subs.total[which(subs.total %in% which(df.anc[,i] == 1))]
 
       ## get output list
       subs.edges[[i]] <- rep(list(NULL), 3)
@@ -440,7 +433,6 @@ get.ancestral.pars <- function(var, tree){
     if(ncol(snps.ori) == ncol(snps.rec)){
       snps.subs.edges.complete <- snps.subs.edges
     }else{
-      ## EQUIVALENT (pretty sure...)
       snps.subs.edges.complete <- snps.subs.edges[index]
     }
 
