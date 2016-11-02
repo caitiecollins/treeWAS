@@ -112,7 +112,8 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
         ## Add title?
         if(main.title == TRUE){
-          title("Coalescent tree w/ phenotypic changes")
+          # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
+          title("Tree with phenotypic changes")
         }else{
           if(!is.null(main.title)) title(main.title)
         }
@@ -131,7 +132,8 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         }
         ## Add title?
         if(main.title == TRUE){
-          title("Coalescent tree w/ phenotypic changes")
+          # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
+          title("Tree with phenotypic changes")
         }else{
           if(!is.null(main.title)) title(main.title)
         }
@@ -192,7 +194,8 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
             plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
             ## Add title?
             if(main.title == TRUE){
-              title("Coalescent tree w/ phenotypic changes")
+              # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
+              title("Tree with phenotypic changes")
             }else{
               if(!is.null(main.title)) title(main.title)
             }
@@ -207,7 +210,8 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
             plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
             ## Add title?
             if(main.title == TRUE){
-              title("Coalescent tree w/ phenotypic changes")
+              # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
+              title("Tree with phenotypic changes")
             }else{
               if(!is.null(main.title)) title(main.title)
             }
@@ -270,7 +274,8 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
       ###############
       if(plot==TRUE){
         plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...)
-        title("Coalescent tree w/ phenotypes of leaves")
+        # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotype at leaves")
+        title("Tree with terminal phenotype")
         axisPhylo()
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
       } # end plot = TRUE

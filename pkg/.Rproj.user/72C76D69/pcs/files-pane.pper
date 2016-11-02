@@ -1,0 +1,9 @@
+{
+    "path" : "~/treeWAS/pkg",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

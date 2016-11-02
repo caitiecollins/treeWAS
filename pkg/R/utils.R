@@ -13,6 +13,52 @@
 
 ################################################################################
 
+##############
+## set.args ##
+##############
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Set a list of arguments.
+#'
+#' Function to set a list of arguments without having to remove commas.
+#' Useful for troubleshooting. For example, if attempting to run a function
+#' (particualrly one with many arguments) line by line,
+#' \code{set.args} can be used to set a list of arguments in one go, by copying a
+#' comma-separated set of arguments from an existing function call or a new call to \code{args(fn)}.
+#'
+#'
+#' @param args A named list of arguments.
+#' @param envir The environment in which these arguments will set.
+#'
+#' @details Please note that unless the \code{envir} argument is changed from its default (\code{sys.frame}),
+#' any arguments set with \code{set.args} will \emph{over-ride} any values currently assigned to those names.
+#'
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
+#' @export
+
+
+########################################################################
+
+set.args <- function(args, envir=sys.frame(which=0L)){
+
+  if(!is.list(args)) args <- as.list(args)
+  if(length(names(args)) != length(args)) stop("All elements of the args list must be named.")
+
+  sapply(c(1:length(args)), function(e) assign(names(args)[e], args[[e]], envir=envir))
+
+  return(NULL)
+} # end set.args
+
+
+
+
 ###############
 ## ggplot.bg ##
 ###############

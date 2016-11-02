@@ -9,6 +9,9 @@
 # "\\\\icnas1.cc.ic.ac.uk/cc5512/R/win-library/3.2",
 # "C:/Program Files/R/R-3.2.1/library"))
 
+##################################################################################################################
+
+
 #########################################
 ## fn getting order of tips as plotted ##
 #########################################
@@ -179,9 +182,9 @@ library(beeswarm)
 
 # setwd("C:/Cait 2016/Work/Xavier/Sims/set1/")
 
-set.n <- "set3"
+set.n <- "set1"
 
-dirname <- paste("C:/Cait 2016/Work/Xavier/Sims/", set.n, sep="")
+dirname <- paste("C:/Cait 2016/Work/Xavier/Sims/", set.n, sep="") #  "/coaltree",
 # dirname <- paste("/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims/", set.n, sep="")
 
 #################################################################################################
@@ -196,8 +199,8 @@ foo <- dir(dirname)
 ## get all performance Rdata names
 toKeep <- grep("performance", foo) ##??
 foo <- foo[toKeep]
+foo <- foo[1:20]
 foo
-
 
 ## load performance data
 dat <- list()
@@ -246,6 +249,7 @@ foo <- dir(dirname)
 ## get all performance Rdata names
 toKeep <- grep("_res", foo) ##??
 foo <- foo[toKeep]
+foo <- foo[1:20]
 foo
 
 
@@ -264,12 +268,12 @@ system.time(
 
 ## REORDER dat s.t. order is numeric not character...
 # dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
+# inds.new <- c(1:length(dat))
+# inds.ori <- sort(as.character(inds.new))
+# ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+#
+# dat.ori <- dat
+# dat <- dat[ord]
 
 score1.mean.ori <- score1.mean <- as.vector(unlist(dat))
 
@@ -282,14 +286,14 @@ score1.mean.ori <- score1.mean <- as.vector(unlist(dat))
 
 dat <- perf
 
-## REORDER dat s.t. order is numeric not character...
-# dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
+# ## REORDER dat s.t. order is numeric not character...
+# # dat <- snps.assoc
+# inds.new <- c(1:length(dat))
+# inds.ori <- sort(as.character(inds.new))
+# ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+#
+# dat.ori <- dat
+# dat <- dat[ord]
 
 perf <- dat
 
@@ -299,12 +303,12 @@ dat <- snps.assoc
 
 ## REORDER dat s.t. order is numeric not character...
 # dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
+# inds.new <- c(1:length(dat))
+# inds.ori <- sort(as.character(inds.new))
+# ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+#
+# dat.ori <- dat
+# dat <- dat[ord]
 
 snps.assoc <- dat
 
@@ -317,8 +321,10 @@ snps.assoc <- dat
 
 foo <- dir(dirname)
 toKeep <- grep("_args", foo) ##??
-foo <- foo[toKeep]
+foo <- foo[toKeep] #[1:20]
+foo <- foo[1:20]
 foo
+
 
 ## load args
 dat <- list()
@@ -333,12 +339,12 @@ system.time(
 
 ## REORDER dat s.t. order is numeric not character...
 # dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
+# inds.new <- c(1:length(dat))
+# inds.ori <- sort(as.character(inds.new))
+# ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+#
+# dat.ori <- dat
+# dat <- dat[ord]
 
 args.ori <- args <- dat
 
@@ -352,7 +358,8 @@ foo <- dir(dirname)
 
 ## get all performance Rdata names
 toKeep <- grep("phen.plot.col", foo) ##??
-foo <- foo[toKeep]
+foo <- foo[toKeep] #[1:20]
+foo <- foo[1:20]
 foo
 
 ## load performance data
@@ -368,12 +375,12 @@ system.time(
 
 ## REORDER dat s.t. order is numeric not character...
 # dat <- snps.assoc
-inds.new <- c(1:length(dat))
-inds.ori <- sort(as.character(inds.new))
-ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
-
-dat.ori <- dat
-dat <- dat[ord]
+# inds.new <- c(1:length(dat))
+# inds.ori <- sort(as.character(inds.new))
+# ord <- sapply(c(1:length(inds.new)), function(e) which(as.numeric(inds.ori) == inds.new[e]))
+#
+# dat.ori <- dat
+# dat <- dat[ord]
 
 phen.plot.col.ori <- phen.plot.col <- dat
 
@@ -565,29 +572,35 @@ evalStats <- rbind(term, sim, subsq)
 str(evalStats)
 
 ## SAVE
-save(evalStats, file="./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
+save(evalStats, file="./set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
 
-# evalStats <- get(load("./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
+# evalStats <- get(load("./set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
 
 ##########################################################################################################
 
 
 ## add parameters:
 
-n.subs <- c(rep("dist_0", 20), rep("dist_0.01", 20), rep("dist_0.05", 20), rep("dist_0.1", 20), rep("Poisson_1", 20))
-tree.type <- rep("coal", 100)
-s <- rep(2, 100)
-af <- rep(10, 100)
+# n.subs <- c(rep("dist_0", 20), rep("dist_0.01", 20), rep("dist_0.05", 20), rep("dist_0.1", 20), rep("Poisson_1", 20))
+# tree.type <- rep("rtree", 100)
+# s <- rep(2, 100)
+# af <- rep(10, 100)
+
+n.subs <- c(rep("dist_0", 20)) #, rep("dist_0.01", 20), rep("dist_0.05", 20), rep("dist_0.1", 20), rep("Poisson_1", 20))
+tree.type <- rep("rtree", 20)
+# s <- rep(0.2, 20)
+# af <- rep(10, 20)
+
 
 ## get parameters for all thresh and test:
 var <- tree.type
 tree.type.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
 
-var <- s
-s.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
+# var <- s
+# s.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
 
-var <- af
-af.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
+# var <- af
+# af.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
 
 var <- n.subs
 n.subs.thresh <- rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)
@@ -599,13 +612,15 @@ var <- score1.mean
 score1.mean.thresh <- as.vector(unlist(rep(sapply(c(1:length(var)), function(e) rep(var[e], 32)), 3)))
 
 df <- data.frame(evalStats[,c("assoc.test", "test")],
-                 "tree.type"=tree.type.thresh, "s"=s.thresh, "af"=af.thresh, "n.subs"=n.subs.thresh,
+                 "tree.type"=tree.type.thresh,
+                 # "s"=s.thresh, "af"=af.thresh,
+                 "n.subs"=n.subs.thresh,
                  "n.phen.subs"=n.phen.subs.thresh, "score1.mean"=score1.mean.thresh, evalStats[,c(3:ncol(evalStats))] )
 
 
 ## SAVE
 evalStats <- df
-save(evalStats, file="./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
+save(evalStats, file="./set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
 
 evalStats.ori <- evalStats.thresh <- evalStats
 ##########################################################################################################
@@ -628,10 +643,10 @@ evalStats.ori <- evalStats
 evalStats <- df
 
 ## SAVE:
-save(evalStats, file="./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata") ## WITH NaN values in F1.score & PPV!
+save(evalStats, file="./set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata") ## WITH NaN values in F1.score & PPV!
 
-# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set2/set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata"))
-# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata"))
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set2/set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata"))
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats_w_NaN.Rdata"))
 ##########################################################################################################
 
 
@@ -660,11 +675,11 @@ df$F1.score[toReplace] <- 0
 evalStats <- df
 
 ## SAVE:
-save(evalStats, file="./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata") ## withOUT NaN values!
-# save(evalStats, file="C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
+save(evalStats, file="./set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats.Rdata") ## withOUT NaN values!
+# save(evalStats, file="C:/Cait 2016/Work/Xavier/Sims/set3/set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats.Rdata")
 ##########################################################################################################
 
-# evalStats <- get(load("./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
+# evalStats <- get(load("./set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
 
 ######################
 ## PLOT PERFORMANCE ##
@@ -687,21 +702,21 @@ for(y in 1:length(Y)){ #
 #######################
 ## SAVE PLOTS AS PDF ##
 #######################
-set3_1_100_BY_THRESH_terminal_F1score
-set3_1_100_BY_THRESH_simultaneous_F1score
-set3_1_100_BY_THRESH_subsequent_F1score
+set1_rtree_101_120_BY_THRESH_terminal_F1score
+set1_rtree_101_120_BY_THRESH_simultaneous_F1score
+set1_rtree_101_120_BY_THRESH_subsequent_F1score
 
-set3_1_100_BY_THRESH_terminal_PPV
-set3_1_100_BY_THRESH_simultaneous_PPV
-set3_1_100_BY_THRESH_subsequent_PPV
+set1_rtree_101_120_BY_THRESH_terminal_PPV
+set1_rtree_101_120_BY_THRESH_simultaneous_PPV
+set1_rtree_101_120_BY_THRESH_subsequent_PPV
 
-set3_1_100_BY_THRESH_terminal_sensitivity
-set3_1_100_BY_THRESH_simultaneous_sensitivity
-set3_1_100_BY_THRESH_subsequent_sensitivity
+set1_rtree_101_120_BY_THRESH_terminal_sensitivity
+set1_rtree_101_120_BY_THRESH_simultaneous_sensitivity
+set1_rtree_101_120_BY_THRESH_subsequent_sensitivity
 
-set3_1_100_BY_THRESH_terminal_FPR
-set3_1_100_BY_THRESH_simultaneous_FPR
-set3_1_100_BY_THRESH_subsequent_FPR
+set1_rtree_101_120_BY_THRESH_terminal_FPR
+set1_rtree_101_120_BY_THRESH_simultaneous_FPR
+set1_rtree_101_120_BY_THRESH_subsequent_FPR
 
 ##########################################################################################################
 
@@ -772,9 +787,9 @@ for(t in 1:length(treeWAS.tests)){
 F1.ranks <- F1
 
 ## SAVE:
-save(F1.ranks, file="./set3_1_100_all_F1.ranks.Rdata")
+save(F1.ranks, file="./set1_rtree_101_120_all_F1.ranks.Rdata")
 
-# save(F1.ranks, file="C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_100_all_F1.ranks.Rdata")
+# save(F1.ranks, file="C:/Cait 2016/Work/Xavier/Sims/set3/set1_rtree_101_120_all_F1.ranks.Rdata")
 
 ################################################
 ## PLOT ranks by sim (and treeWAS assoc.test) ##
@@ -801,11 +816,11 @@ boxplot(F1.ranks.mat, col=transp(rainbow(32), 0.5), ylim=c(7, 0), cex.axis=0.7, 
 
 
 ## SAVE: ##
-set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_terminal
-set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_simultaneous
-set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_subsequent
+set1_rtree_101_120_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_terminal
+set1_rtree_101_120_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_simultaneous
+set1_rtree_101_120_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_subsequent
 ## save combined:
-set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_treeWAS_assoc_tests_COMBINED
+set1_rtree_101_120_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_treeWAS_assoc_tests_COMBINED
 
 #############################
 ## same w BEESWARM PLOT ?? ##
@@ -833,7 +848,7 @@ set3_1_100_ALL_BOXPLOT_compare_thresholds_by_F1score_RANK_treeWAS_assoc_tests_CO
 ## get evalStats for only best thresh: ##
 #########################################
 evalStats.thresh <- evalStats
-# evalStats <- get(load("./set3_1_100_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
+# evalStats <- get(load("./set1_rtree_101_120_treeWAS_ALL_THRESHOLDS_evalStats.Rdata"))
 
 
 str(evalStats)
@@ -878,10 +893,10 @@ df <- rbind(evalStats, df.other)
 evalStats.ori <- evalStats <- df
 
 ## SAVE:
-save(evalStats, file="set3_1_100_ALL_all_tests_best_thresh_evalStats_w_NaN.Rdata")
+save(evalStats, file="set1_rtree_101_120_ALL_all_tests_best_thresh_evalStats_w_NaN.Rdata")
 
 
-# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set2/set3_1_100_ALL_all_tests_best_thresh_evalStats.Rdata"))
+# evalStats <- get(load("C:/Cait 2016/Work/Xavier/Sims/set2/set1_rtree_101_120_ALL_all_tests_best_thresh_evalStats.Rdata"))
 
 ##########################################################################################################
 
@@ -906,7 +921,7 @@ df$F1.score[toReplace] <- 0
 evalStats <- df
 
 ## SAVE:
-save(evalStats, file="set3_1_100_ALL_all_tests_best_thresh_evalStats.Rdata")
+save(evalStats, file="set1_rtree_101_120_ALL_all_tests_best_thresh_evalStats.Rdata")
 
 ##########################################################################################################
 
@@ -919,7 +934,7 @@ table(df$assoc.test)
 # df$assoc.test <- as.factor(df$assoc.test)
 # evalStats <- df
 
-# save(evalStats, file="C:/Cait 2016/Work/Xavier/Sims/set3/set3_1_100_ALL_all_tests_best_thresh_evalStats.Rdata")
+# save(evalStats, file="C:/Cait 2016/Work/Xavier/Sims/set3/set1_rtree_101_120_ALL_all_tests_best_thresh_evalStats.Rdata")
 
 ###################
 ## BEESWARM PLOT ##
@@ -940,7 +955,7 @@ df$assoc.test <- ordered(df$assoc.test, levels = levels(df$assoc.test)[c(6, 8, 9
 evalStats <- df
 
 ## SAVE:
-save(evalStats, file="set3_1_100_ALL_all_tests_best_thresh_evalStats.Rdata")
+save(evalStats, file="set1_rtree_101_120_ALL_all_tests_best_thresh_evalStats.Rdata")
 
 evalStats.set3 <- evalStats
 # evalStats.set2 <- evalStats
@@ -967,10 +982,10 @@ for(y in 1:length(Y)){ #
 ## SAVE PLOTS AS PDF ##
 #######################
 
-set3_1_100_BY_ASSOC_TEST_F1score
-set3_1_100_BY_ASSOC_TEST_PPV
-set3_1_100_BY_ASSOC_TEST_sensitivity
-set3_1_100_BY_ASSOC_TEST_FPR
+set1_rtree_101_120_BY_ASSOC_TEST_F1score
+set1_rtree_101_120_BY_ASSOC_TEST_PPV
+set1_rtree_101_120_BY_ASSOC_TEST_sensitivity
+set1_rtree_101_120_BY_ASSOC_TEST_FPR
 
 ##########################################################################################################
 
@@ -995,30 +1010,30 @@ for(n in 1:length(N.SUBS)){
 ## SAVE PLOTS AS PDF ##
 #######################
 
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_F1score
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_PPV
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_sensitivity
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_FPR
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_F1score
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_PPV
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_sensitivity
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_FPR
 
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_01_F1score
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_01_PPV
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_01_sensitivity
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_01_FPR
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_01_F1score
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_01_PPV
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_01_sensitivity
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_01_FPR
 
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_05_F1score
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_05_PPV
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_05_sensitivity
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_05_FPR
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_05_F1score
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_05_PPV
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_05_sensitivity
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_05_FPR
 
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_1_F1score
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_1_PPV
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_1_sensitivity
-set3_1_100_BY_ASSOC_TEST_n_subs_dist_0_1_FPR
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_1_F1score
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_1_PPV
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_1_sensitivity
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_dist_0_1_FPR
 
-set3_1_100_BY_ASSOC_TEST_n_subs_Poisson_1_F1score
-set3_1_100_BY_ASSOC_TEST_n_subs_Poisson_1_PPV
-set3_1_100_BY_ASSOC_TEST_n_subs_Poisson_1_sensitivity
-set3_1_100_BY_ASSOC_TEST_n_subs_Poisson_1_FPR
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_Poisson_1_F1score
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_Poisson_1_PPV
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_Poisson_1_sensitivity
+set1_rtree_101_120_BY_ASSOC_TEST_n_subs_Poisson_1_FPR
 
 
 

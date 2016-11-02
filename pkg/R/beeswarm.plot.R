@@ -44,7 +44,7 @@
 ##################
 
 beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
-                          pt.size=4, x.text=FALSE){
+                         pt.size=4, x.text=FALSE, mean=TRUE){
 
   require(beeswarm)
   require(Hmisc)
@@ -272,7 +272,54 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
   }
 
 
+  ## ADD MEANS? ##
+#   if(mean == TRUE){
+#
+#     require(plyr)
+#
+#     ## get data:
+#     dat <- df[,c(x,y)]
+#
+#     dat[,x] <- mapvalues(dat[,x], from = levels(dat[,x]), to = c(1:length(levels(dat[,x]))))
+#
+#     ## get means:
+#     sm <- summary(dat[,y] ~ dat[,x])
+#     y.means <- as.vector(sm[, 2])[c(1:(nrow(sm)-1))]
+#
+#     ## rep y.means to match ggplot requirements?
+#     l <- length(beeswarm.plot4$data$x)
+#     n.lev <- length(levels(dat[,x]))
+#     n.rep <- l/n.lev
+#     y.means <- rep(y.means, n.rep)
+#     # y.means <- as.vector(unlist(sapply(c(1:length(y.means)), function(e) rep(y.means[e], n.rep), simplify=FALSE)))
+#     # x.vals <- unique(beeswarm.plot4$data$x)
+#
+#     ## add points for means on top of plot:
+#     # beeswarm.pot5 <- beeswarm.plot4 + stat_summary(fun.y=mean, shape=18, col='red', geom='point')
+#     # beeswarm.plot5 <- beeswarm.plot4 + geom_point(data=df, aes(x=eval(parse(text=x)), y=y.means), shape=18, color="red", size=pt.size) ## NEED X coordinates for widths of boxplots!
+#
+#     ## add horizontal lines for means on top of plot:
+#     # beeswarm.plot5 <- beeswarm.plot4 + geom_hline(yintercept=y.means, color="red") ## NEED X coordinates for widths of boxplots!
+#
+#   }
+
   ## PRINT PLOT ##
+
   plot(beeswarm.plot4)
+  # plot(beeswarm.plot5)
 
 } # end beeswarmPlot
+
+# points(data.frame(c(1:32), y.means), col = "red", add=T)
+
+
+
+
+
+#   #####################################
+#   ## with MEANS instead of medians?  ##
+#   #####################################
+#
+#   p <- qplot(y, x, data=df, geom='boxplot')
+#   p <- p + stat_summary(fun.y=mean, shape=1, col='red', geom='point')
+#   print(p)

@@ -5,7 +5,7 @@
 \title{Beeswarm-and-Box-Plot.}
 \usage{
 beeswarmPlot(y = "sensitivity", x = "test", df, y.lab = NULL,
-  pt.size = 4, x.text = FALSE)
+  pt.size = 4, x.text = FALSE, mean = TRUE)
 }
 \arguments{
 \item{y}{A character string specifying the label of the (numeric) column
@@ -13,6 +13,9 @@ in data frame \code{df} to be plotted along the y-axis.}
 }
 \description{
 Wrapper combining the beeswarm and box plot functions from packages \code{beeswarm} and \code{ggplot2}.
+}
+\details{
+NOTE TO SELF--CAREFUL: y.lim is HARD-CODED as (0,1). Change this is you want to release this wrapper!
 }
 \examples{
 

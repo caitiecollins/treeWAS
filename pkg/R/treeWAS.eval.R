@@ -135,7 +135,6 @@ treeWAS <- function(snps,
                     snps.assoc = NULL, # for (manhattan) plot
                     snps.reconstruction = "parsimony",
                     phen.reconstruction = "parsimony",
-                    coaltree = TRUE,
                     filename.plot = NULL){
 
   ###################
@@ -217,6 +216,16 @@ treeWAS <- function(snps,
 
   }# end tree...
 
+  ##################################
+  ## Check if COALESCENT or RTREE ## (is.ultrametric? any other tests required here???) ##
+  ########################################################################################
+
+  if(is.ultrametric(tree)){
+    coaltree <- TRUE
+  }else{
+    coaltree <- FALSE
+  }
+
 
   ##############################
   ## HANDLE TIP & NODE LABELS ##
@@ -235,27 +244,37 @@ treeWAS <- function(snps,
   if(is.null(n.subs)){
 
     ## TIP labels ##
-    if(all.is.numeric(tree$tip.label)){
-      ## if we can convert to numeric, do so:
-      tree$tip.label <- as.numeric(tree$tip.label)
-    }else{
 
-      ## if we can remove "NODE_" to get numeric, do so:
-      prefix <- keepFirstN(tree$tip.label, 1)
-      if(all(tolower(prefix) == "t")){
-        temp <- removeFirstN(tree$tip.label, 1)
-        if(all.is.numeric(temp)){
-          tree$tip.label <- as.numeric(temp)
-        }else{
-          ## else, replace with numeric indices:
-          # tree$tip.label <- c(1:length(tree$tip.label))
-          warning("Site-wise parsimony scores (phangorn's
-                  fitch parsimony function) may not be calculated correctly
-                  when tip.labels are not numeric.
-                  Please change tree$tip.label to numeric values.")
-        }
-      }
-    }
+    #######################################################################################
+    ## CAREFUL -- YOU MAY STILL HAVE PROBLEMS HERE!!! (see misc/rtree.troubleshooting.R) ##
+    #######################################################################################
+
+    ## FOR NOW -- REPLACING tree$tip.label w c(1:N)
+    ## WARNING -- ASSUMES that tree$edge cells containing 1:N CORRESPOND to snps rown 1:N!!!!!!!!
+
+    tree$tip.label <- c(1:(tree$Nnode+1))
+
+    #     if(all.is.numeric(tree$tip.label)){
+    #       ## if we can convert to numeric, do so:
+    #       tree$tip.label <- as.numeric(tree$tip.label)
+    #     }else{
+    #
+    #       ## if we can remove "t" to get numeric, do so:
+    #       prefix <- keepFirstN(tree$tip.label, 1)
+    #       if(all(tolower(prefix) == "t")){
+    #         temp <- removeFirstN(tree$tip.label, 1)
+    #         if(all.is.numeric(temp)){
+    #           tree$tip.label <- as.numeric(temp)
+    #         }else{
+    #           ## else, replace with numeric indices:
+    #           # tree$tip.label <- c(1:length(tree$tip.label))
+    #           warning("Site-wise parsimony scores (phangorn's
+    #                   fitch parsimony function) may not be calculated correctly
+    #                   when tip.labels are not numeric.
+    #                   Please change tree$tip.label to numeric values.")
+    #         }
+    #       }
+    #     }
 
     ## NODE labels ##
     if(all.is.numeric(tree$node.label)){
@@ -928,6 +947,36 @@ treeWAS <- function(snps,
   ## assign test names to main list components:
   names(RES) <- names(VALS) <- test
 
+
+  ################################
+  ## NEW! Get COMBINED results: ##
+  ################################
+  ## get uniques(sig.snps) for terminal, simultaneous, subsequent results combined
+  ## for best thresh only (ie. pval.0.01.bonf.count.10.x.n.snps)
+  SNP.loci <- vector("list", length=length(test))
+  names(SNP.loci) <- test
+  for(t in 1:length(test)){
+    temp <- RES[[t]]$pval.0.01.bonf.count.10.x.n.snps$sig.snps
+    if(is.vector(temp)){
+      SNP.loci[[t]] <- NULL
+    }else{
+      SNP.loci[[t]] <- temp$SNP.locus
+    }
+  }
+  ## store 3 tests in separate list:
+  SNP.loci.ori <- SNP.loci
+
+  ## make list of length 2 (all, separately):
+  SNP.loci <- vector("list", length=2)
+  names(SNP.loci) <- c("treeWAS.combined", "treeWAS")
+  if(length(as.vector(unlist(SNP.loci.ori))) > 0){
+    SNP.loci[[1]] <- sort(unique(as.vector(unlist(SNP.loci.ori))), decreasing=FALSE)
+  }else{
+    SNP.loci[[1]] <- NULL
+  }
+  SNP.loci[[2]] <- SNP.loci.ori
+
+
   ## get data:
   DAT <- list(snps.sim = snps.sim.complete,
               snps.rec = snps.rec.complete,
@@ -939,6 +988,7 @@ treeWAS <- function(snps,
                   vals=VALS,
                   thresh=thresholds,
                   res=RES,
+                  treeWAS.combined=SNP.loci,
                   SCORE3=SCORE3)
 
   return(results)

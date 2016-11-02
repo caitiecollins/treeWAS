@@ -1,0 +1,512 @@
+assoc.prob = 100, # 90, #
+grp.min = 0.25,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+out <- simTest(
+## simTest args:
+set.number = 1, # 2, # 3,
+n.reps = 10,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = 1, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob = 100, # 90, #
+grp.min = 0.25,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+dev.off()
+?rtree
+source('C:/Users/Caitlin/treeWAS/pkg/R/coalescent.sim.R')
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+source('C:/Users/Caitlin/treeWAS/pkg/R/coalescent.sim.R')
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+library(treeWAS)
+out <- simTest(
+## simTest args:
+set.number = 1,
+n.reps = 1,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = 1, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob = 90, # 90, #
+grp.min = 0.25,
+s = 1,
+af = 5,
+coaltree = FALSE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+library(treeWAS)
+out <- simTest(
+## simTest args:
+set.number = 2,
+n.reps = 14,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = 1, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob = 100, # 90, #
+grp.min = 0.25,
+s = 1,
+af = 5,
+coaltree = TRUE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+n.ind <- 100
+seed <- 31
+tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
+clades <- tab <- grp.options <- sets.complete <- list()
+min.size <- ceiling((tree$Nnode+1)*(1/3))
+max.size <- floor((tree$Nnode+1)*(2/3))
+min.size
+max.size
+grp1 <- tree$Nnode+1
+grp1
+tree.hc <- as.hclust.phylo(tree)
+i <- 2
+counter <- 0
+clades[[i]] <- cutree(tree.hc, k=i)
+tab[[i]] <- table(clades[[i]])
+grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+## make grp1 first clade in grp.options:
+group1 <- grp.opts[1]
+group1
+grp.opts <- grp.opts[-1]
+grp.opts
+n.grp <- 1
+group1
+min.size
+group1 < min.size
+grp.opts[1]
+grp.opts[-1]
+clades <- tab <- grp.options <- sets.complete <- list()
+min.size <- ceiling((tree$Nnode+1)*(1/3))
+max.size <- floor((tree$Nnode+1)*(2/3))
+grp1 <- tree$Nnode+1
+tree.hc <- as.hclust.phylo(tree)
+i <- 2
+counter <- 0
+clades[[i]] <- cutree(tree.hc, k=i)
+tab[[i]] <- table(clades[[i]])
+grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+grp.opts
+tab
+grp.opts
+clades <- tab <- grp.options <- sets.complete <- list()
+min.size <- ceiling((tree$Nnode+1)*(1/3))
+max.size <- floor((tree$Nnode+1)*(2/3))
+grp1 <- tree$Nnode+1
+tree.hc <- as.hclust.phylo(tree)
+i <- 2
+counter <- 0
+#######################################
+## WHILE LOOP to get size of clades: ##
+#######################################
+while(grp1 < min.size | grp1 > max.size){
+clades[[i]] <- cutree(tree.hc, k=i)
+tab[[i]] <- table(clades[[i]])
+# grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+grp.opts <- grp.options[[i]] <- sapply(c(1:(i)), function(e) sum(tab[[i]][1:e]))
+## make grp1 first clade in grp.options:
+group1 <- grp.opts[1]
+## remove first clade from options:
+grp.opts <- grp.opts[-1]
+## and record n.grps:
+n.grp <- 1
+## try to identify a (set of) clade(s) that's big enough (but not too big):
+while(group1 < min.size){
+group1 <- sum(group1, grp.opts[1])
+grp.opts <- grp.opts[-1]
+n.grp <- n.grp+1
+}
+sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
+sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
+grp1 <- sum(grp.options[[i]][1:n.grp])
+k <- i
+i <- i+1
+counter <- counter+1
+} # end while loop
+###########
+sets.complete
+clades <- tab <- grp.options <- sets.complete <- list()
+min.size <- ceiling((tree$Nnode+1)*(1/3))
+max.size <- floor((tree$Nnode+1)*(2/3))
+grp1 <- tree$Nnode+1
+tree.hc <- as.hclust.phylo(tree)
+i <- 2
+counter <- 0
+#######################################
+## WHILE LOOP to get size of clades: ##
+#######################################
+while(grp1 < min.size | grp1 > max.size){
+clades[[i]] <- cutree(tree.hc, k=i)
+tab[[i]] <- table(clades[[i]])
+grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+# grp.opts <- grp.options[[i]] <- sapply(c(1:(i)), function(e) sum(tab[[i]][1:e]))
+## make grp1 first clade in grp.options:
+group1 <- grp.opts[1]
+## remove first clade from options:
+grp.opts <- grp.opts[-1]
+## and record n.grps:
+n.grp <- 1
+## try to identify a (set of) clade(s) that's big enough (but not too big):
+while(group1 < min.size){
+group1 <- sum(group1, grp.opts[1])
+grp.opts <- grp.opts[-1]
+n.grp <- n.grp+1
+}
+sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
+sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
+grp1 <- sum(grp.options[[i]][1:n.grp])
+k <- i
+i <- i+1
+counter <- counter+1
+} # end while loop
+###########
+sets.complete
+seed <- 30
+tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
+plot(tree)
+clades <- tab <- grp.options <- sets.complete <- list()
+min.size <- ceiling((tree$Nnode+1)*(1/3))
+max.size <- floor((tree$Nnode+1)*(2/3))
+grp1 <- tree$Nnode+1
+tree.hc <- as.hclust.phylo(tree)
+i <- 2
+counter <- 0
+#######################################
+## WHILE LOOP to get size of clades: ##
+#######################################
+while(grp1 < min.size | grp1 > max.size){
+clades[[i]] <- cutree(tree.hc, k=i)
+tab[[i]] <- table(clades[[i]])
+grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+# grp.opts <- grp.options[[i]] <- sapply(c(1:(i)), function(e) sum(tab[[i]][1:e]))
+## make grp1 first clade in grp.options:
+group1 <- grp.opts[1]
+## remove first clade from options:
+grp.opts <- grp.opts[-1]
+## and record n.grps:
+n.grp <- 1
+## try to identify a (set of) clade(s) that's big enough (but not too big):
+while(group1 < min.size){
+group1 <- sum(group1, grp.opts[1])
+grp.opts <- grp.opts[-1]
+n.grp <- n.grp+1
+}
+sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
+sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
+grp1 <- sum(grp.options[[i]][1:n.grp])
+k <- i
+i <- i+1
+counter <- counter+1
+} # end while loop
+###########
+load("C:/Cait 2016/Work/Xavier/Sims/set2/set2_34_args.Rdata")
+args
+seed <- 35
+tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
+plot(tree)
+clades <- tab <- grp.options <- sets.complete <- list()
+min.size <- ceiling((tree$Nnode+1)*(1/3))
+max.size <- floor((tree$Nnode+1)*(2/3))
+grp1 <- tree$Nnode+1
+tree.hc <- as.hclust.phylo(tree)
+i <- 2
+counter <- 0
+#######################################
+## WHILE LOOP to get size of clades: ##
+#######################################
+while(grp1 < min.size | grp1 > max.size){
+clades[[i]] <- cutree(tree.hc, k=i)
+tab[[i]] <- table(clades[[i]])
+grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+# grp.opts <- grp.options[[i]] <- sapply(c(1:(i)), function(e) sum(tab[[i]][1:e]))
+## make grp1 first clade in grp.options:
+group1 <- grp.opts[1]
+## remove first clade from options:
+grp.opts <- grp.opts[-1]
+## and record n.grps:
+n.grp <- 1
+## try to identify a (set of) clade(s) that's big enough (but not too big):
+while(group1 < min.size){
+group1 <- sum(group1, grp.opts[1])
+grp.opts <- grp.opts[-1]
+n.grp <- n.grp+1
+}
+sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
+sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
+grp1 <- sum(grp.options[[i]][1:n.grp])
+k <- i
+i <- i+1
+counter <- counter+1
+} # end while loop
+clades <- tab <- grp.options <- sets.complete <- list()
+min.size <- ceiling((tree$Nnode+1)*(1/3))
+max.size <- floor((tree$Nnode+1)*(2/3))
+grp1 <- tree$Nnode+1
+tree.hc <- as.hclust.phylo(tree)
+i <- 2
+counter <- 0
+while(grp1 < min.size | grp1 > max.size){
+clades[[i]] <- cutree(tree.hc, k=i)
+tab[[i]] <- table(clades[[i]])
+# grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
+grp.opts <- grp.options[[i]] <- sapply(c(1:(i)), function(e) sum(tab[[i]][1:e]))
+## make grp1 first clade in grp.options:
+group1 <- grp.opts[1]
+## remove first clade from options:
+grp.opts <- grp.opts[-1]
+## and record n.grps:
+n.grp <- 1
+## try to identify a (set of) clade(s) that's big enough (but not too big):
+while(group1 < min.size){
+group1 <- sum(group1, grp.opts[1])
+grp.opts <- grp.opts[-1]
+n.grp <- n.grp+1
+}
+sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
+sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
+grp1 <- sum(grp.options[[i]][1:n.grp])
+k <- i
+i <- i+1
+counter <- counter+1
+} # end while loop
+###########
+sets.complete
+source('C:/Users/Caitlin/treeWAS/pkg/R/snp.sim.Q.R')
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+library(treeWAS)
+out <- simTest(
+## simTest args:
+set.number = 2,
+n.reps = 8,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = 1, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob = 100, # 90, #
+grp.min = 0.25,
+s = 1,
+af = 5,
+coaltree = TRUE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+out <- simTest(
+## simTest args:
+set.number = 3,
+n.reps = 10,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = 1, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob = 100, # 90, #
+grp.min = 0.25,
+s = 0.5,
+af = 5,
+coaltree = TRUE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+out <- simTest(
+## simTest args:
+set.number = 3,
+n.reps = 10,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = 1, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob = 100, # 90, #
+grp.min = 0.25,
+s = 0.1,
+af = 5,
+coaltree = TRUE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+out <- simTest(
+## simTest args:
+set.number = 3,
+n.reps = 10,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = 1, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob = 100, # 90, #
+grp.min = 0.25,
+s = 0.5,
+af = 5,
+coaltree = FALSE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+gc()
+out <- simTest(
+## simTest args:
+set.number = 3,
+n.reps = 10,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = 1, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob = 100, # 90, #
+grp.min = 0.25,
+s = 0.1,
+af = 5,
+coaltree = FALSE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.05, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+gc()
+source('C:/Users/Caitlin/treeWAS/pkg/R/snp.sim.Q.R')

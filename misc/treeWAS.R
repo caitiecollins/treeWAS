@@ -213,6 +213,17 @@ treeWAS <- function(snps,
   }# end tree...
 
 
+  ##################################
+  ## Check if COALESCENT or RTREE ## (is.ultrametric? any other tests required here???) ##
+  ########################################################################################
+
+  if(is.ultrametric(tree)){
+    coaltree <- TRUE
+  }else{
+    coaltree <- FALSE
+  }
+
+
   ##############################
   ## HANDLE TIP & NODE LABELS ##
   ##############################
@@ -230,17 +241,37 @@ treeWAS <- function(snps,
   if(is.null(n.subs)){
 
     ## TIP labels ##
-    if(all.is.numeric(tree$tip.label)){
-      ## if we can convert to numeric, do so:
-      tree$tip.label <- as.numeric(tree$tip.label)
-    }else{
-      ## else, replace with numeric indices:
-      # tree$tip.label <- c(1:length(tree$tip.label))
-      warning("Site-wise parsimony scores (phangorn's
-              fitch parsimony function) may not be calculated correctly
-              when tip.labels are not numeric.
-              Please change tree$tip.label to numeric values.")
-    }
+
+    #######################################################################################
+    ## CAREFUL -- YOU MAY STILL HAVE PROBLEMS HERE!!! (see misc/rtree.troubleshooting.R) ##
+    #######################################################################################
+
+    ## FOR NOW -- REPLACING tree$tip.label w c(1:N)
+    ## WARNING -- ASSUMES that tree$edge cells containing 1:N CORRESPOND to snps rown 1:N!!!!!!!!
+
+    tree$tip.label <- c(1:(tree$Nnode+1))
+
+    #     if(all.is.numeric(tree$tip.label)){
+    #       ## if we can convert to numeric, do so:
+    #       tree$tip.label <- as.numeric(tree$tip.label)
+    #     }else{
+    #
+    #       ## if we can remove "t" to get numeric, do so:
+    #       prefix <- keepFirstN(tree$tip.label, 1)
+    #       if(all(tolower(prefix) == "t")){
+    #         temp <- removeFirstN(tree$tip.label, 1)
+    #         if(all.is.numeric(temp)){
+    #           tree$tip.label <- as.numeric(temp)
+    #         }else{
+    #           ## else, replace with numeric indices:
+    #           # tree$tip.label <- c(1:length(tree$tip.label))
+    #           warning("Site-wise parsimony scores (phangorn's
+    #                   fitch parsimony function) may not be calculated correctly
+    #                   when tip.labels are not numeric.
+    #                   Please change tree$tip.label to numeric values.")
+    #         }
+    #       }
+    #     }
 
     ## NODE labels ##
     if(all.is.numeric(tree$node.label)){
@@ -331,6 +362,7 @@ treeWAS <- function(snps,
     ## SIMULATE A DATASET | your tree ##
     out[[i]] <- snp.sim(n.snps = sim.n.snps,
                         n.subs = n.subs,
+                        snp.root = NULL,
                         n.snps.assoc = 0,
                         assoc.prob = 100,
                         tree = tree,
@@ -339,6 +371,8 @@ treeWAS <- function(snps,
                         reconstruct = FALSE,
                         dist.dna.model = dist.dna.model,
                         row.names = row.names(snps),
+                        coaltree = coaltree,
+                        set = NULL,
                         seed = NULL)
 
     genomes[[i]] <- out[[i]][[1]]
@@ -556,22 +590,22 @@ treeWAS <- function(snps,
 
   ## Run get.sig.snps fn once for each association test:
   for(i in 1:length(TEST)){
-    sig.list[[i]] <- get.sig.snps(snps = snps,
-                                  snps.unique = snps.unique,
-                                  snps.index = snps.index,
-                                  snps.sim = snps.sim,
-                                  snps.sim.unique = snps.sim.unique,
-                                  snps.sim.index = snps.sim.index,
-                                 phen = phen,
-                                 tree = tree,
-                                 test = TEST[[i]],
-                                 n.tests = length(TEST),
-                                 p.value = p.value,
-                                 p.value.correct = p.value.correct,
-                                 p.value.by = p.value.by,
-                                 snps.reconstruction = snps.rec,
-                                 snps.sim.reconstruction = snps.sim.rec,
-                                 phen.reconstruction = phen.rec)
+    sig.list[[i]] <-  get.sig.snps(snps = snps,
+                                   snps.unique = snps.unique,
+                                   snps.index = snps.index,
+                                   snps.sim = snps.sim,
+                                   snps.sim.unique = snps.sim.unique,
+                                   snps.sim.index = snps.sim.index,
+                                   phen = phen,
+                                   tree = tree,
+                                   test = TEST[[i]],
+                                   n.tests = length(TEST),
+                                   p.value = p.value,
+                                   p.value.correct = p.value.correct,
+                                   p.value.by = p.value.by,
+                                   snps.reconstruction = snps.rec,
+                                   snps.sim.reconstruction = snps.sim.rec,
+                                   phen.reconstruction = phen.rec)
   }
 
   # sig <- list()

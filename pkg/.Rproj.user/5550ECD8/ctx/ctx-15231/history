@@ -1,0 +1,512 @@
+temp <- removeFirstN(tree$node.label, 5)
+if(all.is.numeric(temp)){
+tree$node.label <- as.numeric(temp)
+}else{
+## else, replace with numeric indices:
+# tree$node.label <- c((n.ind+1):(n.ind+tree$Nnode))
+warning("Site-wise parsimony scores (phangorn's
+fitch parsimony function) may not be calculated correctly
+when node.labels are not numeric.
+Please change tree$node.label to numeric values.")
+}
+}
+}
+}
+###################
+## HANDLE N.SUBS ##
+###################
+## if n.subs is a vector (ie. distribution) ##
+## we use this distribution directly (but in proportion with the number of sites)
+## to specify the n.subs per site. (Handled within snp.sim fn.)
+## if n.subs is NULL ##
+## we compute the distribution of the n.subs-per-site
+## using the Fitch parsimony score calculation fns from phangorn.
+if(is.null(n.subs)){
+###########
+## TO DO ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+###########
+## if either test 2 or test 3 will be run with parsimonious/user-provided reconstruction,
+## get n.subs from this to avoid duplication..?
+#     if(any(c("simultaneous", "subsequent") %in% test) & snps.reconstruction != "ace"){
+#
+#       ## run get.ancestral.pars
+#       snps.pars <- get.ancestral.pars(var=snps, tree=tree)
+#
+#       ## get elements of output
+#       snps.rec <- snps.pars$var.rec
+#       snps.subs.edges <- snps.pars$subs.edges
+#
+#       ## CHECK--Compare costs:
+#       cost1 <- get.fitch.n.mts(snps=snps, tree=tree)
+#       cost2 <- sapply(c(1:length(snps.subs.edges)), function(e) length(snps.subs.edges[[e]][["total"]]))
+#       table(cost1)
+#       table(cost2) ## longer tail...
+#
+#     }else{
+###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+## get parsimomy cost for each SNP locus using fitch:
+n.subs <- get.fitch.n.mts(snps=snps, tree=tree)
+n.subs <- table(n.subs)
+## handle n.subs "levels" with 0 SNP loci at those levels:
+noms <- as.numeric(names(n.subs))
+temp <- rep(0, max(noms))
+for(i in 1:max(noms)){
+if(i %in% noms) temp[i] <- n.subs[which(noms==i)]
+}
+n.subs <- temp
+# }
+}
+if(is.null(sim.n.snps)) sim.n.snps <- n.snps
+out <- genomes <- snps.mat <- list()
+for(i in 1:n.reps){
+## SIMULATE A DATASET | your tree ##
+out[[i]] <- snp.sim(n.snps = sim.n.snps,
+n.subs = n.subs,
+n.snps.assoc = 0,
+assoc.prob = 100,
+tree = tree,
+phen.loci = NULL,
+heatmap = FALSE,
+reconstruct = FALSE,
+dist.dna.model = dist.dna.model,
+row.names = row.names(snps),
+coaltree = coaltree,
+seed = NULL)
+genomes[[i]] <- out[[i]][[1]]
+## Modify genomes/snps matrices
+if(!is.null(genomes[[i]])){
+snps.mat[[i]] <- genomes[[i]]
+}else{
+snps.mat[[i]] <- NULL
+}
+gc()
+} # end for loop
+print("treeWAS snps sim done.")
+snps.unique <- snps.index <- snps.sim.unique <- snps.sim.index <- NULL
+#################
+## Handle snps ##
+#################
+## Check snps column names
+if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+################################
+## Handle snps.sim --> matrix ##
+################################
+snps.sim <- snps.mat
+## Handle matrix/list input:
+if(class(snps.sim) == "list"){
+## If list of length 1...
+if(length(snps.sim) == 1){
+## keep matrix:
+snps.sim <- snps.sim[[1]]
+}else{
+## If list of multiple matrices...
+## merge all elements into one big matrix
+## by pasting columns together:
+snps.sim <- do.call("cbind", snps.sim)
+}
+}
+#################
+## Handle phen ##
+#################
+## convert phenotype to numeric:
+## NOTE--this is also necessary for returning results in step (5)!
+phen.ori <- phen
+if(!is.numeric(phen)) phen <- as.numeric(phen)
+## for ease of interpretation,
+## if phen has 2 levels, 1 and 2,
+## make these 0 and 1:
+if(length(unique(phen))!=2){
+stop("This function is only designed for phenotypes with two levels.")
+}else{
+if(length(phen[-c(which(phen==1), which(phen==2))])==0){
+phen <- replace(phen, which(phen==1), 0)
+phen <- replace(phen, which(phen==2), 1)
+}
+}
+## ensure ind names not lost
+names(phen) <- names(phen.ori)
+##############################################################################################
+## Reconstruct ancestral SNPs & phen by parsimony/ACE (for tests simultaneous & subsequent) ##
+##############################################################################################
+## Ensure we are only reconstructing ancestral states ONCE here, to be used in MULTIPLE tests later.
+snps.REC <- snps.sim.REC <- phen.REC <- NULL
+snps.REC <- asr(var = snps, tree = tree, type = "parsimony")
+snps.rec <- snps.REC$var.rec
+## Reconstruct SIMULATED SNPs: ##
+snps.sim.REC <- asr(var = snps.sim, tree = tree, type = "parsimony")
+snps.sim.rec <- snps.sim.REC$var.rec
+phen.REC <- asr(var = phen, tree = tree, type = "parsimony")
+phen.rec <- phen.REC$var.rec
+## Get UNIQUE snps + index
+snps.complete <- snps
+temp <- get.unique.matrix(snps, MARGIN=2)
+snps.unique <- temp$unique.data
+snps.index <- temp$index
+## Get UNIQUE snps.sim + index
+snps.sim.complete <- snps.sim
+temp <- get.unique.matrix(snps.sim, MARGIN=2)
+snps.sim.unique <- temp$unique.data
+snps.sim.index <- temp$index
+## Get UNIQUE snps.reconstruction
+snps.rec.complete <- snps.rec
+temp <- get.unique.matrix(snps.rec, MARGIN=2)
+snps.rec <- temp$unique.data
+snps.rec.index <- temp$index
+if(!identical(snps.rec.index, snps.index)){
+warning("Careful-- snps and snps.rec should have the same index when reduced
+to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+}
+## Get UNIQUE snps.sim.reconstruction
+snps.sim.rec.complete <- snps.sim.rec
+temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
+snps.sim.rec <- temp$unique.data
+snps.sim.rec.index <- temp$index
+if(!identical(snps.sim.rec.index, snps.sim.index)){
+warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
+to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+}
+print("reconstructions done")
+str(snps.rec)
+sig.list <- list()
+# test <- c("terminal", "simultaneous", "subsequent")
+TEST <- as.list(test)
+test <- "subsequent"
+if(is.null(snps.unique)){
+## Check snps column names
+if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+## Get UNIQUE snps + index
+snps.ori <- snps
+temp <- get.unique.matrix(snps, MARGIN=2)
+snps.unique <- temp$unique.data
+snps.index <- temp$index
+snps <- snps.unique
+## record whether all snps are unique or not for later:
+if(ncol(snps.unique) == ncol(snps.ori)){
+all.unique <- TRUE
+}else{
+all.unique <- FALSE
+}
+}else{
+## If snps.unique provided as well as snps:
+## CHECK: is index provided as well??
+if(is.null(snps.index)){
+warning("if snps.unique is provided,
+snps.index must also be provided to indicate
+original mapping locations for all unique sites.
+Ignoring unique snps provided; working with snps only.")
+## repeat above steps (as if no snps.unique was provided):
+## Check snps column names
+if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+## Get UNIQUE snps + index
+snps.ori <- snps
+temp <- get.unique.matrix(snps, MARGIN=2)
+snps.unique <- temp$unique.data
+snps.index <- temp$index
+snps <- snps.unique
+## record whether all snps are unique or not for later:
+if(ncol(snps.unique) == ncol(snps.ori)){
+all.unique <- TRUE
+}else{
+all.unique <- FALSE
+}
+}else{
+snps.ori <- snps
+snps <- snps.unique
+## record whether all snps are unique or not for later:
+if(ncol(snps.unique) == ncol(snps.ori)){
+all.unique <- TRUE
+}else{
+all.unique <- FALSE
+}
+}
+}
+##############
+## snps.sim ##
+##############
+## Handle matrix/list input:
+if(class(snps.sim) == "list"){
+## If list of length 1...
+if(length(snps.sim) == 1){
+## keep matrix:
+snps.sim <- snps.sim[[1]]
+}else{
+## If list of multiple matrices...
+## merge all elements into one big matrix
+## by pasting columns together:
+snps.sim <- do.call("cbind", snps.sim)
+}
+}
+## Get UNIQUE snps.sim + index
+if(is.null(snps.sim.unique)){
+snps.sim.ori <- snps.sim
+temp <- get.unique.matrix(snps.sim, MARGIN=2)
+snps.sim.unique <- temp$unique.data
+snps.sim.index <- temp$index
+snps.sim <- snps.sim.unique
+## record whether all snps are unique or not for later:
+if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+all.unique.sim <- TRUE
+}else{
+all.unique.sim <- FALSE
+}
+}else{
+## If snps.sim.unique provided as well as snps:
+## CHECK: is index provided as well??
+if(is.null(snps.sim.index)){
+warning("if snps.sim.unique is provided,
+snps.sim.index must also be provided to indicate
+original mapping locations for all unique sites.
+Ignoring unique snps.sim provided; working with snps.sim only.")
+## repeat above steps (as if no snps.unique was provided):
+snps.sim.ori <- snps.sim
+temp <- get.unique.matrix(snps.sim, MARGIN=2)
+snps.sim.unique <- temp$unique.data
+snps.sim.index <- temp$index
+snps.sim <- snps.sim.unique
+## record whether all snps are unique or not for later:
+if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+all.unique.sim <- TRUE
+}else{
+all.unique.sim <- FALSE
+}
+}else{
+snps.sim.ori <- snps.sim
+snps.sim <- snps.sim.unique
+## record whether all snps are unique or not for later:
+if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+all.unique.sim <- TRUE
+}else{
+all.unique.sim <- FALSE
+}
+}
+}
+#################
+## HANDLE PHEN ##
+#################
+## convert phenotype to numeric:
+phen.ori <- phen
+if(!is.numeric(phen)) phen <- as.numeric(phen)
+## for ease of interpretation,
+## if phen has 2 levels, 1 and 2,
+## make these 0 and 1:
+if(length(unique(phen))!=2){
+stop("This function is only designed for phenotypes with two levels.")
+}else{
+if(length(phen[-c(which(phen==1), which(phen==2))])==0){
+phen <- replace(phen, which(phen==1), 0)
+phen <- replace(phen, which(phen==2), 1)
+}
+}
+## ensure ind names not lost
+names(phen) <- names(phen.ori)
+str(snps.ori.ori)
+all.unique
+str(snps.reconstruction)
+snps.reconstruction <- snps.rec
+phen.reconstruction <- phen.rec
+snps.sim.reconstruction <- snps.sim.rec
+str(snps.rec)
+if(all.unique == FALSE){
+## check if snsp.rec is already in UNIQUE form:
+if(ncol(snps.reconstruction) != ncol(snps.unique)){
+temp <- get.unique.matrix(snps.reconstruction, MARGIN=2)
+snps.reconstruction <- temp$unique.data
+snps.reconstruction.index <- temp$index
+if(!identical(snps.reconstruction.index, snps.index)){
+warning("Careful-- snps and snps.reconstruction should have the same index when reduced
+to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+}
+}else{
+snps.reconstruction.index <- snps.index
+}
+}
+if(all.unique.sim == FALSE){
+## check if snsp.rec is already in UNIQUE form:
+if(ncol(snps.reconstruction) != ncol(snps.unique)){
+temp <- get.unique.matrix(snps.sim.reconstruction, MARGIN=2)
+snps.sim.reconstruction <- temp$unique.data
+snps.sim.reconstruction.index <- temp$index
+if(!identical(snps.sim.reconstruction.index, snps.sim.index)){
+warning("Careful-- snps.sim and snps.sim.reconstruction should have the same index when reduced
+to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+}
+}else{
+snps.sim.reconstruction.index <- snps.sim.index
+}
+}
+str(snps.reconstruction)
+corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+#############################################################
+## Calculate correlations btw SIMULATED SNPs and phenotype ##
+#############################################################
+corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+length(corr.dat)
+names(corr.dat)
+corr.dat.list <- corr.dat
+corr.sim.list <- corr.sim
+corr.dat.out <- list()
+corr.sim.out <- list()
+for(i in 1:3){ # (tally) score3.1 # (integral) score.L # (integral) score.NoL
+corr.dat <- corr.dat.list[[i]]
+corr.sim <- corr.sim.list[[i]]
+## Expand corr.dat (if not all snps columns unique):
+if(all.unique == FALSE){
+corr.dat.complete <- corr.dat[snps.index]
+names(corr.dat.complete) <- colnames(snps.ori)
+corr.dat <- corr.dat.complete
+}
+## Expand corr.sim (if not all snps.sim columns unique):
+if(all.unique.sim == FALSE){
+corr.sim.complete <- corr.sim[snps.sim.index]
+names(corr.sim.complete) <- colnames(snps.sim.ori)
+corr.sim <- corr.sim.complete
+}
+corr.dat.out[[i]] <- corr.dat
+corr.sim.out[[i]] <- corr.sim
+}
+names(corr.dat.out) <- names(corr.dat.list)
+names(corr.sim.out) <- names(corr.sim.list)
+SCORE3 <-list(corr.dat = corr.dat.out,
+corr.sim = corr.sim.out)
+length(SCORE3)
+length(SCORE3[[1]])
+length(SCORE3[[1]][[1]])
+length(SCORE3[[2]][[1]])
+corr.dat <- corr.dat.out[[3]]
+corr.sim <- corr.sim.out[[3]]
+length(corr.dat)
+hist(corr.dat)
+str(snps.rec)
+Pa <- phen.rec[edges[,1]]
+Pd <- phen.rec[edges[,2]]
+Sa <- snps.rec[edges[,1], ]
+Sd <- snps.rec[edges[,2], ]
+edges <- tree$edge
+Pa <- phen.rec[edges[,1]]
+Pd <- phen.rec[edges[,2]]
+Sa <- snps.rec[edges[,1], ]
+Sd <- snps.rec[edges[,2], ]
+bl <- tree$edge.length
+score3.L <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = bl)
+score3.NoL <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
+hist(score3.L)
+hist(score3.NoL)
+length(score3.NoL)
+nrow(edges)
+score.L <- abs(colSums(score3.L, na.rm=TRUE))
+names(score.L) <- colnames(snps.rec)
+score.NoL <- abs(colSums(score3.NoL, na.rm=TRUE))
+names(score.NoL) <- colnames(snps.rec)
+hist(score.L)
+hist(score.NoL)
+score3.L <- abs(colSums(score3.L, na.rm=TRUE))
+names(score3.L) <- colnames(snps.rec)
+score3.NoL <- abs(colSums(score3.NoL, na.rm=TRUE))
+names(score3.NoL) <- colnames(snps.rec)
+hist(score3.L)
+hist(score3.NoL)
+all.unique
+str(snps.rec)
+str(snps.rec.ori)
+score3.1.complete <- score3.1[index]
+names(score3.1.complete) <- colnames(snps.rec.ori)
+score3.L.complete <- score3.L[index]
+names(score3.L.complete) <- colnames(snps.rec.ori)
+score3.NoL.complete <- score3.NoL[index]
+names(score3.NoL.complete) <- colnames(snps.rec.ori)
+all.unique.sim
+length(snps.index)
+score <- list("score3.1" = score3.1,
+"score3.L" = score3.L,
+"score3.NoL" = score3.NoL)
+head(colnames(snps.rec))
+score3.p <- c("00|00", "11|11", "00|11", "11|00", "01|00", "10|00", "01|11", "10|11")
+score3.n <- c("00|01", "00|10", "11|01", "11|10", "01|01", "10|10", "01|10", "10|01")
+score3.1 <- t(matrix(paste(Sa, Pa, "|", Sd, Pd, sep=""), nrow=ncol(snps.rec), byrow=T))
+score3.1 <- abs(sapply(c(1:ncol(score3.1)), function(e) length(which(score3.1[,e] %in% score3.p)) - length(which(score3.1[,e] %in% score3.n))))
+names(score3.1) <- colnames(snps.rec)
+hist(score3.1)
+score3.L <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = bl)
+score3.NoL <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
+length(score3.L)
+length(score.L)
+load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_36_snps.Rdata")
+str(snps)
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+gc()
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+library(treeWAS)
+dist_0.05 <- get(load("C:/Users/Caitlin/treeWAS/misc/CFML_R_0.05_dist.Rdata"))
+barplot(dist_0.05, names.arg=c(1:length(dist_0.05)))
+gc()
+out <- simTest(
+## simTest args:
+set.number = 3,
+n.reps = 1,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = dist_0.05, # 15, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob =  90, # 100,
+grp.min = 0.25,
+s = 10,
+af = 5,
+coaltree = TRUE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.01, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+gc()
+out <- simTest(
+## simTest args:
+set.number = 3,
+n.reps = 9,
+set.seed.as = "file.number",
+working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+## data from file args:
+from.file = FALSE,
+file.n =NULL,
+Windows=TRUE,
+## coalescent.sim args:
+n.ind = 100,
+n.snps = 10000, # gen.size
+# sim.by = "locus",
+n.subs = dist_0.05, # 15, # theta (*2)
+n.phen.subs = 15, # theta_p = NULL # 15
+n.snps.assoc = 10, # = 0
+# assoc.option = "all",
+assoc.prob =  90, # 100,
+grp.min = 0.25,
+s = 10,
+af = 5,
+coaltree = TRUE,
+## treeWAS args:
+## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+p.value = 0.01, # REQUIRED FOR FISHER TEST
+#   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#   p.value.by = c("count", "density"),
+sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+snps.reconstruction = "parsimony",
+phen.reconstruction = "parsimony"
+)
+source('C:/Users/Caitlin/treeWAS/pkg/R/simTest.R')
+pdf()
+dev.off()
+2+2

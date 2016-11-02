@@ -162,11 +162,11 @@ manhattan.plot <- function(p.vals,
     }else{
       thresh <- sig.thresh[i]
     }
-    ## move sig thresh below nearest points
-    thresh <- thresh-0.05
+    ## move sig thresh below nearest points by 0.5% of ylim
+    thresh <- thresh-(max(log.pval)*0.005)
     ## draw threshold line on plot:
     # abline(h=thresh, col = thresh.col[i], lwd = 2)
-    lines(x=c(-400, 10400), y=c(thresh, thresh), col=thresh.col[i], lwd=2)
+    lines(x=c(-400, length(log.pval+400)), y=c(thresh, thresh), col=thresh.col[i], lwd=2)
   } # end for loop plotting thresh lines
 
 } # end manhattan.plot
@@ -439,8 +439,9 @@ plot.sig.snps <- function(corr.dat,
 
       thresh <- sig.thresh[i]
 
-      ## move sig thresh below nearest points
-      thresh <- thresh-0.05
+      ## move sig thresh below nearest points?
+      # thresh <- thresh-0.05
+
       ## draw threshold line on plot:
       # abline(v=thresh, col = my.thresh.col[i], lwd = 2)
       lines(x=c(thresh, thresh), y=c(0, max(h.null$counts)), col=thresh.col[i], lwd=2)
@@ -623,7 +624,8 @@ plot.sig.snps <- function(corr.dat,
       thresh <- sig.thresh[i]
 
       ## move sig thresh below nearest points
-      thresh <- thresh-0.05
+      # thresh <- thresh-0.05
+
       ## draw threshold line on plot:
       # abline(v=thresh, col = my.thresh.col[i], lwd = 2)
       lines(x=c(thresh, thresh), y=c(0, max(h.null$counts)), col=thresh.col[i], lwd=2)

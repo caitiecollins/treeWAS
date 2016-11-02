@@ -134,8 +134,8 @@
 # dist.dna.model <- "JC69"
 # grp.min <- 0.25
 # row.names <- NULL
-# set <- 1 # NULL #
-# seed <- 21
+# set <- 2 # NULL #
+# seed <- 1
 
 
 ## EG:
@@ -156,7 +156,7 @@
 #                         s = 10,
 #                         af = 5,
 #                         filename = NULL,
-#                         set=3,
+#                         set=2,
 #                         seed=1)
 
 
@@ -175,8 +175,8 @@ coalescent.sim <- function(n.ind=100,
                            row.names=NULL,
                            set=NULL,
                            coaltree = TRUE,
-                           s = 1,
-                           af = 2,
+                           s = 20,
+                           af = 10,
                            filename = NULL,
                            seed=NULL){
   ## load packages:
@@ -216,14 +216,16 @@ coalescent.sim <- function(n.ind=100,
     ## QUESTION -- In practice, is "s" getting multiplied by 4 ?????
     # s <- n.phen.subs/4
 
-    if(is.null(s)) s <- 2 # n.subs
-    if(is.null(af)){
-      if(coaltree == TRUE){
-        af <- 10 # association factor
-      }else{
-        af <- 0.1
-      }
-    }
+    if(is.null(s)) s <- 20 # n.subs
+    if(is.null(af)) af <- 10 # association factor
+
+    ## Modify s to account for sum(tree$edge.length):
+    ## --> ~ s/10 (= 2) for coaltree
+    ## OR --> ~ s/100 (= 0.2) for rtree
+
+    s <- s/sum(tree$edge.length)
+
+
     Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
                       1*af*s, NA, 0, 1*af*s,
                       1*af*s, 0, NA, 1*af*s,

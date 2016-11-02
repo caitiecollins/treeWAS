@@ -73,67 +73,11 @@
 
 
 
-####################
-## PARALLELIZE ?? ##
-####################
+#################
+## PARALLELIZE ##
+#################
 
-# ## Load library:
-# library(parallel)
-#
-# ## Calculate the number of cores:
-# no_cores <- detectCores() - 1 # 3
-#
-# ## Initiate cluster:
-# cl <- makeCluster(no_cores) # click Allow...
-#
-#
-# parSapply(cl=cl, rep(1, 10), function(x){
-#   out <- simTest(
-#           ## simTest args:
-#           set.number = 3,
-#           n.reps = x,
-#           set.seed.as = "file.number",
-#           working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#           ## data from file args:
-#           from.file = FALSE,
-#           file.n =NULL,
-#           Windows=TRUE,
-#
-#           ## coalescent.sim args:
-#           n.ind = 100,
-#           n.snps = 10000, # gen.size
-#           # sim.by = "locus",
-#           n.subs = dist_0, # 15, # theta (*2)
-#           n.phen.subs = 15, # theta_p = NULL # 15
-#           n.snps.assoc = 10, #
-#           # assoc.option = "all",
-#           assoc.prob = NULL, #100, #  90, #
-#           grp.min = 0.25,
-#           s = 0.1,
-#           af = 10,
-#           coaltree = FALSE,
-#
-#           ## treeWAS args:
-#           ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#           p.value = 0.01, # REQUIRED FOR FISHER TEST
-#           #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#           #   p.value.by = c("count", "density"),
-#           sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#           treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#           snps.reconstruction = "parsimony",
-#           phen.reconstruction = "parsimony")
-# }
-# )
-#
-# ## AT THE END, RUN:
-# stopCluster()
-
-
-###############
-## OR:
-
-# # ## Load libraries:
+# ## Load libraries:
 # library(foreach)
 # library(doParallel)
 #
@@ -142,8 +86,17 @@
 #
 # ## Initiate implicit cluster:
 # registerDoParallel(no_cores)
-#
-# out <- foreach(n.reps=rep(1, 9), file.n=c(102:110), .packages="treeWAS") %dopar%
+
+
+################################################################################################################################
+
+################################################################################################################################
+
+## set 2 failing after running treeWAS w:
+# Error in simTest(set.number = 2, n.reps = n.reps, set.seed.as = "file.number",  :
+# task 1 failed - "$ operator is invalid for atomic vectors"
+
+# out <- foreach(n.reps=rep(1, 10), file.n=c(111:120), .packages="treeWAS") %dopar%
 #   simTest(
 #     ## simTest args:
 #     set.number = 3,
@@ -166,7 +119,45 @@
 #     # assoc.option = "all",
 #     assoc.prob = NULL, #100, #  90, #
 #     grp.min = 0.25,
-#     s = 0.2,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(111:120), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 2,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
 #     af = 10,
 #     coaltree = FALSE,
 #
@@ -182,617 +173,987 @@
 #   )
 #
 #
-# ## AT THE END, RUN:
+# out <- foreach(n.reps=rep(1, 10), file.n=c(11:120), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 1,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+
+
+
+
+# ################################################################################################################################
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(121:140), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.01, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(121:140), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 2,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.01, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(121:140), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 1,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.01, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+#
+# ################################################################################################################################
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(141:160), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.05, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(141:160), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 2,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.05, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(141:160), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 1,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.05, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+#
+# ################################################################################################################################
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(161:180), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(161:180), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 2,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(161:180), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 1,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+#
+# ################################################################################################################################
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(181:200), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = 1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(181:200), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 2,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = 1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+#
+# out <- foreach(n.reps=rep(1, 20), file.n=c(181:200), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 1,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = 1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 20,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+
+
+################################################################################################################################
+
+################################################################################################################################
+
+
+
+
+
+#######################
+## NEW PARAMETER SET ##
+#######################
+
+
+# ################################################################################################################################
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(201:210), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 30,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(211:220), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.01, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 30,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(221:230), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.05, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 30,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(231:240), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 30,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(241:250), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = 1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 30,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# ################################################################################################################################
+
+
+
+#######################
+## NEW PARAMETER SET ##
+#######################
+
+
+################################################################################################################################
+
+################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(251:260), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 50,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(261:270), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.01, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 50,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(271:280), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.05, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 50,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(281:290), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = dist_0.1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 50,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# out <- foreach(n.reps=rep(1, 10), file.n=c(291:300), .packages="treeWAS") %dopar%
+#   simTest(
+#     ## simTest args:
+#     set.number = 3,
+#     n.reps = n.reps,
+#     set.seed.as = "file.number",
+#     working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+#
+#     ## data from file args:
+#     from.file = FALSE,
+#     file.n = file.n,
+#     Windows=TRUE,
+#
+#     ## coalescent.sim args:
+#     n.ind = 100,
+#     n.snps = 10000, # gen.size
+#     # sim.by = "locus",
+#     n.subs = 1, # 15, # theta (*2)
+#     n.phen.subs = 15, # theta_p = NULL # 15
+#     n.snps.assoc = 10, #
+#     # assoc.option = "all",
+#     assoc.prob = NULL, #100, #  90, #
+#     grp.min = 0.25,
+#     s = 50,
+#     af = 10,
+#     coaltree = FALSE,
+#
+#     ## treeWAS args:
+#     ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
+#     p.value = 0.01, # REQUIRED FOR FISHER TEST
+#     #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
+#     #   p.value.by = c("count", "density"),
+#     sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
+#     treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
+#     snps.reconstruction = "parsimony",
+#     phen.reconstruction = "parsimony"
+#   )
+#
+# ################################################################################################################################
+#
+# ################################################################################################################################
+
+
+
+## AT THE END, RUN:
 # stopImplicitCluster()
 
 
-# ##################
-# ## TREE = rtree ##
-# ##################
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 1,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n = 101,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.2,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 2,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 1,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# ##############################################################################################################################################
-#
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.01, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 2,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.01, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 1,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.01, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.05, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 2,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.05, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 1,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.05, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 2,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 1,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = 1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 2,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = 1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 1,
-#   n.reps = 10,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = 1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
 
-###############################################################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ###############################################################################################################################################
 
@@ -801,931 +1162,6 @@
 ###############################################################################################################################################
 
 
-
-
-#
-#
-#
-# ######################################
-# ## NEW ROUND -->  NEW PARAMETER SET ##
-# ######################################
-#
-#
-# ######################
-# ## TREE = coal tree ##
-# ######################
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 3,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.01, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 3,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.05, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 3,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 3,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = 1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 3,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-#
-#
-#
-#
-#
-# ##################
-# ## TREE = rtree ##
-# ##################
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.5,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.01, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.5,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.05, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.5,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.5,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = 1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.5,
-#   af = 10,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-# ######################################
-# ## NEW ROUND -->  NEW PARAMETER SET ##
-# ######################################
-#
-#
-# ######################
-# ## TREE = coal tree ##
-# ######################
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 1,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.01, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 1,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.05, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 1,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 1,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = 1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 1,
-#   af = 10,
-#   coaltree = TRUE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
-#
-#
-#
-#
-#
-# ##################
-# ## TREE = rtree ##
-# ##################
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 5,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.01, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 5,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.05, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 5,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = dist_0.1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 5,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# out <- simTest(
-#   ## simTest args:
-#   set.number = 3,
-#   n.reps = 20,
-#   set.seed.as = "file.number",
-#   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-#
-#   ## data from file args:
-#   from.file = FALSE,
-#   file.n =NULL,
-#   Windows=TRUE,
-#
-#   ## coalescent.sim args:
-#   n.ind = 100,
-#   n.snps = 10000, # gen.size
-#   # sim.by = "locus",
-#   n.subs = 1, # 15, # theta (*2)
-#   n.phen.subs = 15, # theta_p = NULL # 15
-#   n.snps.assoc = 10, #
-#   # assoc.option = "all",
-#   assoc.prob = NULL, #100, #  90, #
-#   grp.min = 0.25,
-#   s = 0.1,
-#   af = 5,
-#   coaltree = FALSE,
-#
-#   ## treeWAS args:
-#   ## RUNNING ALL OF THESE OPTIONS (FOR NOW):
-#   p.value = 0.01, # REQUIRED FOR FISHER TEST
-#   #   p.value.correct = c("bonf", "fdr", FALSE), #mt.correct = FALSE
-#   #   p.value.by = c("count", "density"),
-#   sim.n.snps = 100000, # 10*n.snps #sim.gen.size = NULL ###################### CAREFUL (10,000) !!
-#   treeWAS.test = c("terminal", "simultaneous", "subsequent"), # "score"
-#   snps.reconstruction = "parsimony",
-#   phen.reconstruction = "parsimony"
-# )
-#
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-# ###############################################################################################################################################
-#
-#
 
 
 
@@ -1748,7 +1184,7 @@
 # barplot(dist_0.05, names.arg=c(1:length(dist_0.05)))
 
 ## simTest args:
-# set.number = 3
+# set.number = 1
 # n.reps = 1
 # set.seed.as = "file.number"
 # working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims"
@@ -1762,15 +1198,15 @@
 # n.ind = 100
 # n.snps = 10000 # 10000 # gen.size
 # # sim.by = "locus"
-# n.subs =  1 # dist_0 # 1 #theta (*2)
+# n.subs =  dist_0 # 1 #theta (*2)
 # n.phen.subs = 15 #theta_p = NULL
 # n.snps.assoc = 10 # = 0
 # # assoc.option = "all"
-# assoc.prob = 90 # 100
+# assoc.prob = 100 # 90 # 100
 # grp.min = 0.25
-# s = 2
+# s = 0.2
 # af = 10
-# coaltree = TRUE
+# coaltree = FALSE
 #
 # ## treeWAS args:
 # p.value = 0.01
@@ -2203,21 +1639,21 @@ simTest <- function(
 
       ## Save both Manhattan and Hist per test:
       filename.plot[[i]][[t]] <- c(## manhattan:
-                                  paste("./set",
-                                       set.number,
-                                       "_", number,
-                                       "_plot_manhattan_",
-                                       treeWAS.test[t],
-                                       ".pdf", sep=""),
+        paste("./set",
+              set.number,
+              "_", number,
+              "_plot_manhattan_",
+              treeWAS.test[t],
+              ".pdf", sep=""),
 
-                                   ## null.dist:
-                                   paste("./set",
-                                         set.number,
-                                         "_", number,
-                                         "_plot_",
-                                         treeWAS.test[t],
-                                         ".pdf", sep="")
-                                   )
+        ## null.dist:
+        paste("./set",
+              set.number,
+              "_", number,
+              "_plot_",
+              treeWAS.test[t],
+              ".pdf", sep="")
+      )
     }
 
     #################
@@ -2228,25 +1664,25 @@ simTest <- function(
     set.seed(seed)
 
     syst.time <- system.time( # 341
-    out <- treeWAS(snps = snps,
-                  phen = phen,
-                  n.subs = NULL,
-                  tree = tree,
-                  dist.dna.model = "JC69",
-                  plot.tree = FALSE,
-                  test = treeWAS.test,
-                  p.value = p.value,
-                  p.value.correct = p.value.correct,
-                  p.value.by = p.value.by,
-                  sim.n.snps = sim.n.snps,
-                  n.reps = 1,
-                  plot.manhattan = TRUE,
-                  plot.null.dist = TRUE,
-                  plot.dist = FALSE,
-                  snps.assoc = snps.assoc,
-                  snps.reconstruction = "parsimony",
-                  phen.reconstruction = "parsimony",
-                  filename.plot=filename.plot[[i]])
+      out <- treeWAS(snps = snps,
+                     phen = phen,
+                     n.subs = NULL,
+                     tree = tree,
+                     dist.dna.model = "JC69",
+                     plot.tree = FALSE,
+                     test = treeWAS.test,
+                     p.value = p.value,
+                     p.value.correct = p.value.correct,
+                     p.value.by = p.value.by,
+                     sim.n.snps = sim.n.snps,
+                     n.reps = 1,
+                     plot.manhattan = TRUE,
+                     plot.null.dist = TRUE,
+                     plot.dist = FALSE,
+                     snps.assoc = snps.assoc,
+                     snps.reconstruction = "parsimony",
+                     phen.reconstruction = "parsimony",
+                     filename.plot=filename.plot[[i]])
     )
 
     print("treeWAS done")
@@ -2265,6 +1701,8 @@ simTest <- function(
     res.complete <- out
     res <- out$res
 
+    treeWAS.all <- out$treeWAS.combined ## also stored in res.complete, which gets saved later.
+
     score3 <- out$SCORE3
 
     ##############
@@ -2280,15 +1718,15 @@ simTest <- function(
 
     args <- mget(names(formals()), sys.frame(sys.nframe()))
 
-  #     args <- list(set.number = 1, n.reps = 1, set.seed.as = "file.number",
-  #                  working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-  #                  from.file = FALSE, file.n = NULL, Windows = TRUE, n.ind = 100,
-  #                  n.snps = 10000, n.subs = 1, n.phen.subs = 15, n.snps.assoc = 10,
-  #                  assoc.prob = 90, grp.min = 0.25, s = 10, af = 5, coaltree = TRUE,
-  #                  p.value = 0.01, sim.n.snps = 1e+05, treeWAS.test = c("terminal",
-  #                                                                       "simultaneous", "subsequent"),
-  #                  snps.reconstruction = "parsimony",
-  #                  phen.reconstruction = "parsimony")
+    #     args <- list(set.number = 1, n.reps = 1, set.seed.as = "file.number",
+    #                  working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+    #                  from.file = FALSE, file.n = NULL, Windows = TRUE, n.ind = 100,
+    #                  n.snps = 10000, n.subs = 1, n.phen.subs = 15, n.snps.assoc = 10,
+    #                  assoc.prob = 90, grp.min = 0.25, s = 10, af = 5, coaltree = TRUE,
+    #                  p.value = 0.01, sim.n.snps = 1e+05, treeWAS.test = c("terminal",
+    #                                                                       "simultaneous", "subsequent"),
+    #                  snps.reconstruction = "parsimony",
+    #                  phen.reconstruction = "parsimony")
 
     # args <- list(set.number,
     #              seed,
@@ -2902,11 +2340,11 @@ simTest <- function(
     ## SLOW STEP..
     pval2 <- numeric(0)
     # system.time( # 120.78
-      for(i in 1:ncol(snps.corrected)){
-        foo <- suppressWarnings(glm(phen ~ snps.corrected[,i], family="binomial"))
-        ANOVA <- anova(foo, test="Chisq")
-        pval2[i] <- ANOVA$"Pr(>Chi)"[2]
-      } # end for loop
+    for(i in 1:ncol(snps.corrected)){
+      foo <- suppressWarnings(glm(phen ~ snps.corrected[,i], family="binomial"))
+      ANOVA <- anova(foo, test="Chisq")
+      pval2[i] <- ANOVA$"Pr(>Chi)"[2]
+    } # end for loop
     # )
 
 
@@ -3136,7 +2574,7 @@ simTest <- function(
     ##############################
     ## FOR LOOP FOR ALL 3 TESTS ##
     ##############################
-    for(j in 2:106){
+    for(j in 2:107){
 
 
       if(j==2) test <- "fisher.bonf"
@@ -3157,6 +2595,8 @@ simTest <- function(
       if(j == 104) test <- "pca"
       if(j == 105) test <- "dapc"
       if(j == 106) test <- "cmh"
+
+      if(j == 107) test <- "treeWAS.combined"
 
       ################
       ## PCA & DAPC ## ########### ########### ########### ########### ########### ###########
@@ -3259,6 +2699,13 @@ simTest <- function(
         }
       } # end test = treeWAS
 
+      ######################
+      ## treeWAS.combined ##
+      ######################
+      if(test == "treeWAS.combined"){
+        test.positive <- treeWAS.all$treeWAS.combined
+      }
+
       ########### ########### ########### ########### ########### ########### ###########
 
 
@@ -3298,7 +2745,7 @@ simTest <- function(
       #   #         snps.associated <- paste(sapply(c(1:length(snps.assoc)),
       #   #                                         function(e)
       #   #                                           rep(names(snps.assoc)[e], 2)), c(1, 2), sep=".")
-        snps.associated <- names(snps.assoc)
+      snps.associated <- names(snps.assoc)
       # }
       true.positive <- test.positive[which(test.positive %in% snps.associated)]
       TP <- length(true.positive)
@@ -3308,7 +2755,7 @@ simTest <- function(
       # if(set.number < 3){
       #   snps.not <- snps.names
       # }else{
-        snps.not <- snps.names[-which(snps.names %in% snps.associated)]
+      snps.not <- snps.names[-which(snps.names %in% snps.associated)]
       # }
       true.negative <- test.negative[which(test.negative %in% snps.not)]
       TN <- length(true.negative)
@@ -3418,7 +2865,8 @@ simTest <- function(
                             treeWAS.names,
                             "plink.assoc.bonf", "plink.assoc.fdr",
                             "plink.assoc.gc.bonf", "plink.assoc.gc.fdr",
-                            "pca", "dapc", "cmh")
+                            "pca", "dapc", "cmh",
+                            "treeWAS.combined")
 
     ################################    ################################    ################################
 

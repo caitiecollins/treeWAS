@@ -1,0 +1,7 @@
+{
+    "installOptions" : {
+        "installDependencies" : true,
+        "installFromRepository" : true,
+        "libraryPath" : "\\\\icnas1.cc.ic.ac.uk/cc5512/R/win-library/3.2"
+    }
+}
