@@ -52,10 +52,14 @@
 phen.sim <- function(tree,
                      n.subs = 15,
                      grp.min = 0.2,
-                     coaltree = TRUE,
+                     # coaltree = TRUE,
                      seed = NULL){
 
   if(!is.null(seed)) set.seed(seed)
+
+  ## HANDLE TREE: ##
+  ## Always work with trees in "pruningwise" order:
+  tree <- reorder.phylo(tree, order="pruningwise")
 
   ####################################
   ## PHENOTYPE simulation procedure ## ~ sim.by.locus...
@@ -92,7 +96,7 @@ phen.sim <- function(tree,
 
     while(toRepeat == TRUE){
 
-      ## draw the number of mutations to occur:
+      ## draw the number of substitutions to occur:
       n.subs <- rpois(n=1, lambda=n.phen.subs)
       ## if n.subs==0 or ==1, re-sample
       while(n.subs <= 1){
@@ -117,6 +121,7 @@ phen.sim <- function(tree,
       ## set phenotype for all branches and nodes to be phen.root:
       phen.branch[1:length(tree$edge.length)] <- phen.root
       names(phen.branch) <- paste("e", c(1:length(phen.branch)), sep=".")
+
       phen.nodes[1:length(unique(as.vector(unlist(tree$edge))))] <- phen.root
       names(phen.nodes) <- paste("n", c(1:length(phen.nodes)), sep=".")
 
@@ -124,15 +129,32 @@ phen.sim <- function(tree,
 
       #############################################################################
 
-      ## get the node names for all individuals (terminal and internal)
-      all.inds <- sort(unique(as.vector(unlist(tree$edge))))
+      ## get the node INDICES for all individuals (terminal and internal)
+      all.inds <- sort(unique(as.vector(unlist(tree$edge)))) # 1:(n.ind*2 - 1)
 
-      x <- rev(c(1:nrow(tree$edge)))
+      ####################################################################
+      ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
+      ####################################################################
 
-      if(coaltree == FALSE){
-        ## use normal/reverse (top:bottom) edge mat:
+      # if(coaltree == FALSE){
+      ## Simulation should start from the lowest internal node index (ie n.terminal+1):
+      if(unique(tree$edge[,1])[1] == (tree$Nnode+2)){
+        ## Simulate from top:bottom?
         x <- 1:nrow(tree$edge)
-      }
+      }else{
+        ## Simulate from bottom:top?
+        x <- rev(c(1:nrow(tree$edge)))
+
+        ## Extra check:
+        if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] != (tree$Nnode+2)){
+          stop("This simulation procedure expects to find the root node/first internal node
+               (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
+               once the tree has been reordered to be in 'pruningwise' configuration.
+               This is NOT the case with your tree. Please check.")
+        }
+        }
+      ####################################################################
+
 
       ## get phen of nodes
       for(i in 1:length(x)){
@@ -148,11 +170,25 @@ phen.sim <- function(tree,
       ## get phen of TERMINAL nodes (leaves)
       n.ind <- tree$Nnode+1
       phen.leaves <- as.factor(as.vector(unlist(phen.nodes[c(1:n.ind)])))
-      names(phen.leaves) <- c(1:length(phen.leaves))
-      # names(phen.leaves) <- paste("ind",
-      #                             c(1:length(phen.leaves)),
-      #                             sep=".")
 
+      ## Assign names to phen as tree$tip.labs in original order ##
+      ## If checks fail, individuals in phen.leaves will be named 1:N (not ideal)
+      names(phen.leaves) <- c(1:length(phen.leaves))
+      ## Check that tip.labs are not NULL:
+      if(is.null(tree$tip.label)){
+        warning("tree$tip.label was NULL.
+                Assigning individuals names 1:N. Note that these may NOT match sequence labels!")
+      }else{
+        ## Check that tip.labs is of correct length:
+        if(length(tree$tip.label) != length(phen.leaves)){
+          warning("The length of tree$tip.label did not match
+                  the number of terminal node phenotypes simulated.
+                  Assigning individuals names 1:N. Note that these may NOT match sequence labels!")
+        }else{
+          ## If checks passed, assign tip.labs to be names of phen.leaves:
+          names(phen.leaves) <- tree$tip.label
+        }
+      }
 
       ## CHECK THAT MIN GRP.SIZE >= THRESHOLD ##
       if(!is.null(grp.min)){
@@ -194,19 +230,31 @@ phen.sim <- function(tree,
 
   ## convert phen.nodes to factor
   phen.nodes <- as.factor(as.vector(unlist(phen.nodes)))
-  if(!is.null(names(phen.leaves))){
-    names(phen.leaves) <- c(1:length(phen.leaves))
-    # names(phen.leaves) <- paste("ind",
-    #                             c(1:length(phen.leaves)),
-    #                             sep=".")
+
+
+  ## Assign names to phen.nodes ##
+  ## ... as c(tree$tip.labs, tree$node.labs) in original order:
+  ## If checks fail, individuals in phen.leaves will be named 1:N, node.1:node.Ninternal
+
+  ## Assign terminal nodes names same as phen.leaves (ideally = tree$tip.label)
+  noms.term <- names(phen.leaves)
+
+  ## Assign internal nodes either tree$node.label or node.1:node.N:
+  int.inds <- c((length(phen.leaves)+1):length(phen.nodes))
+  noms.int <- paste("node", int.inds, sep=".")
+  ## Check that node.labs are not NULL:
+  if(!is.null(tree$node.label)){
+    ## Check that node.labs is of correct length:
+    if(length(tree$node.label) == length(int.inds)){
+      noms.int <- tree$node.label
+    }
   }
-  if(!is.null(names(phen.nodes))){
-    names(phen.nodes) <- c(1:length(phen.nodes))
-    # names(phen.nodes) <- c(names(phen.leaves),
-    #                        paste("node",
-    #                              c((length(phen.leaves)+1):length(phen.nodes)),
-    #                              sep="."))
-  }
+
+  ## Assign these names to phen.nodes:
+  names(phen.nodes) <- c(noms.term, noms.int)
+
+
+
   ## make output list
   phen.list <- list(phen.leaves, phen.nodes, phen.branch, phen.loci)
   names(phen.list) <- c("phen", "phen.nodes", "phen.edges", "phen.loci")

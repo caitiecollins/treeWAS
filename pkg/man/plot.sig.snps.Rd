@@ -8,7 +8,7 @@ plot.sig.snps(corr.dat, corr.sim, corr.sim.subset = NULL, sig.corrs, sig.snps,
   sig.thresh = NULL, test = NULL, sig.snps.col = "blue",
   hist.col = rgb(0, 0, 1, 0.5), hist.subset.col = rgb(1, 0, 0, 0.5),
   thresh.col = "seasun", snps.assoc = NULL, snps.assoc.col = "red",
-  bg = "lightgray", grid = TRUE, plot.null.dist = TRUE,
+  bg = "lightgray", grid = TRUE, freq = FALSE, plot.null.dist = TRUE,
   plot.dist = FALSE)
 }
 \arguments{

@@ -5,7 +5,8 @@
 \title{Beeswarm-and-Box-Plot.}
 \usage{
 beeswarmPlot(y = "sensitivity", x = "test", df, y.lab = NULL,
-  pt.size = 4, x.text = FALSE, mean = TRUE)
+  pt.size = 4, x.text = FALSE, x.text.size = 15, y.text.size = 15,
+  y.title.size = 20, mean = TRUE)
 }
 \arguments{
 \item{y}{A character string specifying the label of the (numeric) column

@@ -44,12 +44,16 @@
 ##################
 
 beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
-                         pt.size=4, x.text=FALSE, mean=TRUE){
+                         pt.size=4, x.text=FALSE,
+                         x.text.size = 15, y.text.size = 15, y.title.size = 20,
+                         mean=TRUE){
 
   require(beeswarm)
   require(Hmisc)
   # library(plyr)
   # library(ggplot2)
+
+  beeswarm.ori <- fm <- NULL
 
   if(is.null(y.lab)) y.lab <- y
 
@@ -64,7 +68,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                                      #priority="descending", ## ONLY for SWARM method...
                                      pwcol = eval(parse(text=x)),
                                      #col = myCol, ## to set w funky colours (INSTEAD of pwcol = test)
-                                     ylim = c(-0.001,1.001), # otherwise ggplot can't plot ZERO values --> NAs
+                                     ylim = c(-0.002, 1.002), # otherwise ggplot can't plot ZERO values --> NAs
                                      las=2,
                                      cex=0.8,
                                      corral = "omit",
@@ -142,7 +146,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
       xlab("") +
       guides(fill=FALSE) +
       scale_x_discrete(drop=FALSE) +
-      scale_y_continuous(y.lab, limits=c(0,1))  # expression("char")
+      scale_y_continuous(y.lab, limits=c(-0.002, 1.02))  # expression("char")
 
     beeswarm.plot2 <- beeswarm.plot1 +
       guides(fill=FALSE) +
@@ -151,7 +155,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                    outlier.size=0) +
       theme(axis.text.x=element_blank(),
             axis.ticks.x=element_blank(), axis.title.x=element_blank(),
-            axis.text.y = element_text(size=13),
+            axis.text.y = element_text(size=y.text.size),
             # axis.title.y=element_text(size=18),
             axis.title.y=element_blank(),
             legend.position="none")
@@ -160,7 +164,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
       geom_point(data=beeswarm.ori, aes(colour = col), pch = PCH, size=pt.size, na.rm=TRUE, alpha=0.6) +
       guides(fill=FALSE) +
       theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.x=element_blank(),
-            axis.text.y = element_text(size=13),
+            axis.text.y = element_text(size=y.text.size),
             # axis.title.y=element_text(size=18),
             axis.title.y=element_blank(),
             legend.position="none")
@@ -171,7 +175,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                    outlier.shape = 17,
                    outlier.size=0) +
       theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.x=element_blank(),
-            axis.text.y = element_text(size=13),
+            axis.text.y = element_text(size=y.text.size),
             # axis.title.y=element_text(size=18),
             axis.title.y=element_blank(),
             legend.position="none")
@@ -189,27 +193,27 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
         xlab("") +
         guides(fill=FALSE) +
         scale_x_discrete(drop=FALSE) +
-        scale_y_continuous(y.lab, limits=c(0,1)) # expression("char")
+        scale_y_continuous(y.lab, limits=c(-0.002, 1.02)) # expression("char")
 
       beeswarm.plot2 <- beeswarm.plot1 +
         guides(fill=FALSE) +
         geom_boxplot(data=df, aes(x=eval(parse(text=x)), y=eval(parse(text=y)), fill=eval(parse(text=x))), alpha=0.25,
                      outlier.shape = 17,
                      outlier.size=0) +
-        theme(axis.text.x = element_text(size=13),
+        theme(axis.text.x = element_text(size=x.text.size),
               # axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=10),
-              axis.text.y = element_text(size=13),
-              axis.title.y = element_text(size=18),
+              axis.text.y = element_text(size=y.text.size),
+              axis.title.y = element_text(size=y.title.size),
               axis.title.x = element_blank(),
               legend.position="none")
 
       beeswarm.plot3 <- beeswarm.plot2 +
         geom_point(data=beeswarm.ori, aes(colour = col), pch = PCH, size=pt.size, na.rm=TRUE, alpha=0.6) +
         guides(fill=FALSE) +
-        theme(axis.text.x = element_text(size=13),
+        theme(axis.text.x = element_text(size=x.text.size),
               # axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=10),
-              axis.text.y = element_text(size=13),
-              axis.title.y = element_text(size=18),
+              axis.text.y = element_text(size=y.text.size),
+              axis.title.y = element_text(size=y.title.size),
               axis.title.x = element_blank(),
               legend.position="none")
 
@@ -218,12 +222,13 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
         geom_boxplot(data=df, aes(x=eval(parse(text=x)), y=eval(parse(text=y)), fill=eval(parse(text=x))), alpha=0.0, fatten=3,
                      outlier.shape = 17,
                      outlier.size=0) +
-        theme(axis.text.x = element_text(size=13),
+        theme(axis.text.x = element_text(size=x.text.size),
               # axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=10),
-              axis.text.y = element_text(size=13),
-              axis.title.y = element_text(size=18),
+              axis.text.y = element_text(size=y.text.size),
+              axis.title.y = element_text(size=y.title.size),
               axis.title.x = element_blank(),
               legend.position="none")
+
     }else{
 
       ######################################
@@ -233,27 +238,25 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
         xlab("") +
         guides(fill=FALSE) +
         scale_x_discrete(drop=FALSE) +
-        scale_y_continuous(y.lab, limits=c(0,1)) # expression("char")
+        scale_y_continuous(y.lab, limits=c(-0.002, 1.02)) # expression("char")
 
       beeswarm.plot2 <- beeswarm.plot1 +
         guides(fill=FALSE) +
         geom_boxplot(data=df, aes(x=eval(parse(text=x)), y=eval(parse(text=y)), fill=eval(parse(text=x))), alpha=0.25,
                      outlier.shape = 17,
                      outlier.size=0) +
-        theme(axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=10),
-              # axis.text.x = element_text(size=13),
-              axis.text.y = element_text(size=13),
-              axis.title.y = element_text(size=18),
+        theme(axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=x.text.size),
+              axis.text.y = element_text(size=y.text.size),
+              axis.title.y = element_text(size=y.title.size),
               axis.title.x = element_blank(),
               legend.position="none")
 
       beeswarm.plot3 <- beeswarm.plot2 +
         geom_point(data=beeswarm.ori, aes(colour = col), pch = PCH, size=pt.size, na.rm=TRUE, alpha=0.6) +
         guides(fill=FALSE) +
-        theme(axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=10),
-              # axis.text.x = element_text(size=13),
-              axis.text.y = element_text(size=13),
-              axis.title.y = element_text(size=18),
+        theme(axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=x.text.size),
+              axis.text.y = element_text(size=y.text.size),
+              axis.title.y = element_text(size=y.title.size),
               axis.title.x = element_blank(),
               legend.position="none")
 
@@ -262,51 +265,49 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
         geom_boxplot(data=df, aes(x=eval(parse(text=x)), y=eval(parse(text=y)), fill=eval(parse(text=x))), alpha=0.0, fatten=3,
                      outlier.shape = 17,
                      outlier.size=0) +
-        theme(axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=10),
-              # axis.text.x = element_text(size=13),
-              axis.text.y = element_text(size=13),
-              axis.title.y = element_text(size=18),
+        theme(axis.text.x = element_text(angle=35, hjust=1, vjust=0.95, size=x.text.size),
+              axis.text.y = element_text(size=y.text.size),
+              axis.title.y = element_text(size=y.title.size),
               axis.title.x = element_blank(),
               legend.position="none")
     }
   }
 
+  beeswarm.plot5 <- beeswarm.plot4
 
   ## ADD MEANS? ##
-#   if(mean == TRUE){
-#
-#     require(plyr)
-#
-#     ## get data:
-#     dat <- df[,c(x,y)]
-#
-#     dat[,x] <- mapvalues(dat[,x], from = levels(dat[,x]), to = c(1:length(levels(dat[,x]))))
-#
-#     ## get means:
-#     sm <- summary(dat[,y] ~ dat[,x])
-#     y.means <- as.vector(sm[, 2])[c(1:(nrow(sm)-1))]
-#
-#     ## rep y.means to match ggplot requirements?
-#     l <- length(beeswarm.plot4$data$x)
-#     n.lev <- length(levels(dat[,x]))
-#     n.rep <- l/n.lev
-#     y.means <- rep(y.means, n.rep)
-#     # y.means <- as.vector(unlist(sapply(c(1:length(y.means)), function(e) rep(y.means[e], n.rep), simplify=FALSE)))
-#     # x.vals <- unique(beeswarm.plot4$data$x)
-#
-#     ## add points for means on top of plot:
-#     # beeswarm.pot5 <- beeswarm.plot4 + stat_summary(fun.y=mean, shape=18, col='red', geom='point')
-#     # beeswarm.plot5 <- beeswarm.plot4 + geom_point(data=df, aes(x=eval(parse(text=x)), y=y.means), shape=18, color="red", size=pt.size) ## NEED X coordinates for widths of boxplots!
-#
-#     ## add horizontal lines for means on top of plot:
-#     # beeswarm.plot5 <- beeswarm.plot4 + geom_hline(yintercept=y.means, color="red") ## NEED X coordinates for widths of boxplots!
-#
-#   }
+  if(mean == TRUE){
+
+    ## get means:
+    sm <- summary(df[,y] ~ df[,x])
+    y.means <- as.vector(sm[, 2])[c(1:(nrow(sm)-1))]
+
+    # n.reps <- as.vector(sm[, 1])[length(as.vector(sm[,1]))] / (length(as.vector(sm[,1])) - 1)
+    n.reps <- nrow(df) / length(levels(df[,x]))
+    y.means <- rep(y.means, n.reps)
+
+    x.vals <- factor(rep(levels(df[,x]), n.reps))
+    # if(all.is.numeric(levels(df[,x]))) x.vals <- factor(rep(c(1:length(levels(df[,x]))), n.reps))
+
+    beeswarm.plot5 <- beeswarm.plot4 +
+                geom_point(data=df, aes(x=x.vals, y=y.means),
+                           na.rm=TRUE, shape=18, color="red", size=(pt.size*1.5)) # pt.size*1.5 (x=assoc.test)
+
+    ## LINE??
+    ## Problems: x.min &.max for each level = ?? BUT saving width weird if using "---"...
+    #     beeswarm.plot5 <- beeswarm.plot4 +
+    #       geom_text(data=df, aes(x=x.vals, y=y.means, label="---"),
+    #                  na.rm=TRUE, color="red", size=20)# size=(pt.size*2)) # alpha??
+
+    # darkorange # firebrick1 # indianred1
+  }
 
   ## PRINT PLOT ##
 
-  plot(beeswarm.plot4)
-  # plot(beeswarm.plot5)
+  # plot(beeswarm.plot4)
+  plot(beeswarm.plot5)
+
+  return(NULL)
 
 } # end beeswarmPlot
 

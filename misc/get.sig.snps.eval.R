@@ -89,7 +89,8 @@ get.sig.snps <- function(snps,
                          p.value.by = "count",
                          snps.reconstruction,
                          snps.sim.reconstruction,
-                         phen.reconstruction){
+                         phen.reconstruction,
+                         rec = "parsimony"){
 
   #################
   ## HANDLE SNPS ##
@@ -310,14 +311,14 @@ get.sig.snps <- function(snps,
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
-    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test, rec = rec)
 
 
 
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
-    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test, rec = rec)
   }
 
   ###################################
@@ -332,7 +333,7 @@ get.sig.snps <- function(snps,
     corr.dat.out <- list()
     corr.sim.out <- list()
 
-    for(i in 1:3){ # (tally) score3.1 # (integral) score.L # (integral) score.NoL
+    for(i in 1:length(corr.dat.list)){ # (tally) score3.1 # (integral) score.L # (integral) score.NoL
 
       corr.dat <- corr.dat.list[[i]]
       corr.sim <- corr.sim.list[[i]]
@@ -360,8 +361,8 @@ get.sig.snps <- function(snps,
     SCORE3 <-list(corr.dat = corr.dat.out,
                   corr.sim = corr.sim.out)
 
-    corr.dat <- corr.dat.out[[3]]
-    corr.sim <- corr.sim.out[[3]]
+    corr.dat <- corr.dat.out$score3.NoL
+    corr.sim <- corr.sim.out$score3.NoL
 
   }else{
 
@@ -600,7 +601,8 @@ assoc.test <- function(snps,
                                 "simultaneous",
                                 "subsequent",
                                 "cor",
-                                "fisher")){
+                                "fisher"),
+                       rec = "parsimony"){
 
   ##########################################
   ## TERMINAL (test 1: correlation score) ##
@@ -649,7 +651,7 @@ assoc.test <- function(snps,
   ## SUBSEQUENT TEST ##
   #####################
   if(test == "subsequent"){
-    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree)
+    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree, rec = rec)
   } # end test subsequent
 
 

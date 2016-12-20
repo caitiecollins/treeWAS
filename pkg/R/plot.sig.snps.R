@@ -261,6 +261,7 @@ plot.sig.snps <- function(corr.dat,
                           snps.assoc.col = "red",
                           bg = "lightgray",
                           grid=TRUE,
+                          freq = FALSE,
                           plot.null.dist=TRUE,
                           plot.dist=FALSE){
 
@@ -276,6 +277,8 @@ plot.sig.snps <- function(corr.dat,
   }
 
   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=TRUE)
+
+  h.null <- h.null.subset <- ymax <- xmax <- NULL
 
   ##############################
   ## plot.null.dist ############
@@ -303,7 +306,19 @@ plot.sig.snps <- function(corr.dat,
       }
     }
 
+    ## Get plot limits:
+    ## Get x-max:
     xmax <- ceiling(max(corr.dat)+.05)
+    ## Get y-max (only really necessary when overlaying 2 hists):
+    if(freq == TRUE){
+      yvals <- h.null$counts
+      ymax <- ceiling(max(yvals)+.05)
+      if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+.05))
+    }else{
+      yvals <- h.null$density
+      ymax <- max(yvals)+.005
+      if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+.005)
+    }
 
     ## if the true correlation value for SNP i is >
     ## max bin, then extend the x-axis of the plot
@@ -319,6 +334,8 @@ plot.sig.snps <- function(corr.dat,
                       , sep=" "),
            xlab=paste(test, "score", sep=" "),
            xlim=c(min(h.null$breaks), xmax),
+           ylim=c(0, ymax),
+           freq=freq,
            col=hist.col)
 
 
@@ -346,7 +363,9 @@ plot.sig.snps <- function(corr.dat,
                           , sep=" "),
                xlab=paste(test, "score", sep=" "),
                xlim=c(min(h.null$breaks), xmax),
+               ylim=c(0, ymax),
                col=hist.col,
+               freq=freq,
                add = TRUE)
 
         }
@@ -357,11 +376,14 @@ plot.sig.snps <- function(corr.dat,
       if(!is.null(h.null.subset)){
         plot(h.null.subset,
              xlim=c(min(h.null$breaks), xmax),
+             ylim=c(0, ymax),
              col=hist.subset.col,
+             freq=freq,
              add=TRUE)
       }
 
     }else{
+
       ## plot histogram of correlations btw real
       ## SNPs and phenotype: ##
       ## WITHOUT EXTENDING THE X-AXIS
@@ -370,6 +392,8 @@ plot.sig.snps <- function(corr.dat,
            # \n (with significant SNPs indicated)"
                       , sep=" "),
            xlab=paste(test, "score", sep=" "),
+           ylim=c(0, ymax),
+           freq=freq,
            col=hist.col)
 
       ## Add grey background? ##
@@ -394,7 +418,9 @@ plot.sig.snps <- function(corr.dat,
                 # \n (with significant SNPs indicated)"
                           , sep=" "),
                xlab=paste(test, "score", sep=" "),
+               ylim=c(0, ymax),
                col=hist.col,
+               freq=freq,
                add = TRUE)
 
         }
@@ -404,7 +430,9 @@ plot.sig.snps <- function(corr.dat,
       if(!is.null(h.null.subset)){
         plot(h.null.subset,
              xlim=c(min(h.null$breaks), max(h.null$breaks)),
+             ylim=c(0, ymax),
              col=hist.subset.col,
+             freq=freq,
              add=TRUE)
       }
 
@@ -429,24 +457,27 @@ plot.sig.snps <- function(corr.dat,
                   "flame", "azur",
                   "seasun", "lightseasun", "deepseasun",
                   "spectral", "wasp", "funky")
-    if(thresh.col %in% col.pals){
-      my.thresh.col <- eval(parse(text=paste(thresh.col, "(", length(sig.thresh), ")")))
-    }else{
-      my.thresh.col <- rep(thresh.col, length(sig.thresh))
+    if(length(sig.thresh) > 0){
+
+      if(thresh.col %in% col.pals){
+        my.thresh.col <- eval(parse(text=paste(thresh.col, "(", length(sig.thresh), ")")))
+      }else{
+        my.thresh.col <- rep(thresh.col, length(sig.thresh))
+      }
+      thresh.col <- my.thresh.col
+
+      for(i in 1:length(sig.thresh)){
+
+        thresh <- sig.thresh[i]
+
+        ## move sig thresh below nearest points?
+        # thresh <- thresh-0.05
+
+        ## draw threshold line on plot:
+        # abline(v=thresh, col = my.thresh.col[i], lwd = 2)
+        lines(x=c(thresh, thresh), y=c(0, max(yvals)), col=thresh.col[i], lwd=2)
+      } # end for loop plotting thresh lines
     }
-
-    for(i in 1:length(sig.thresh)){
-
-      thresh <- sig.thresh[i]
-
-      ## move sig thresh below nearest points?
-      # thresh <- thresh-0.05
-
-      ## draw threshold line on plot:
-      # abline(v=thresh, col = my.thresh.col[i], lwd = 2)
-      lines(x=c(thresh, thresh), y=c(0, max(h.null$counts)), col=thresh.col[i], lwd=2)
-    } # end for loop plotting thresh lines
-
     #######
 
     ## get significant loci (incl. snps.assoc)
@@ -475,8 +506,8 @@ plot.sig.snps <- function(corr.dat,
     ## overlay/highlight sig.loc
     if(length(sig.loc) > 0){
       X <- corr.dat[sig.loc]
-      ymin <- max(h.null$counts)/10 # 10%
-      ymax <- max(h.null$counts) - max(h.null$counts)/10 # 90%
+      ymin <- max(yvals)/10 # 10%
+      ymax <- max(yvals) - max(yvals)/10 # 90%
 
       Y <- seq(ymin, ymax, length.out = length(X))
 
@@ -492,9 +523,9 @@ plot.sig.snps <- function(corr.dat,
 
     }else{
       text(x=(max(h.null$breaks)*3/4),
-           y=(max(h.null$counts)*3/4),
+           y=(max(yvals)*3/4),
            labels="no significant SNPs found",
-           col=myCol, font=2, pos=2, cex = 0.7)
+           col="red", font=2, pos=2, cex = 0.7)
     }
 
   } # end plot.null.dist
@@ -516,6 +547,7 @@ plot.sig.snps <- function(corr.dat,
     h.null <- hist(as.vector(unlist(corr.dat)), plot=FALSE)
 
     xmax <- ceiling(max(corr.dat)+.05)
+    yvals <- h.null$counts
 
     ## if the true correlation value for SNP i is >
     ## max bin, then extend the x-axis of the plot
@@ -530,6 +562,7 @@ plot.sig.snps <- function(corr.dat,
                       , sep=" "),
            xlab=paste(test, "score", sep=" "),
            xlim=c(min(h.null$breaks), xmax),
+           freq=freq,
            col=hist.col)
 
       ## Add grey background? ##
@@ -556,6 +589,7 @@ plot.sig.snps <- function(corr.dat,
                xlab=paste(test, "score", sep=" "),
                xlim=c(min(h.null$breaks), xmax),
                col=hist.col,
+               freq=freq,
                add = TRUE)
 
         }
@@ -570,6 +604,7 @@ plot.sig.snps <- function(corr.dat,
                       # \n (with significant SNPs indicated)"
                       , sep=" "),
            xlab=paste(test, "score", sep=" "),
+           freq=freq,
            col=hist.col)
 
       ## Add grey background? ##
@@ -595,6 +630,7 @@ plot.sig.snps <- function(corr.dat,
                           , sep=" "),
                xlab=paste(test, "score", sep=" "),
                col=hist.col,
+               freq=freq,
                add = TRUE)
 
         }
@@ -628,7 +664,7 @@ plot.sig.snps <- function(corr.dat,
 
       ## draw threshold line on plot:
       # abline(v=thresh, col = my.thresh.col[i], lwd = 2)
-      lines(x=c(thresh, thresh), y=c(0, max(h.null$counts)), col=thresh.col[i], lwd=2)
+      lines(x=c(thresh, thresh), y=c(0, max(yvals)), col=thresh.col[i], lwd=2)
     } # end for loop plotting thresh lines
 
     #######
@@ -659,8 +695,8 @@ plot.sig.snps <- function(corr.dat,
     ## overlay/highlight sig.loc
     if(length(sig.loc) > 0){
       X <- corr.dat[sig.loc]
-      ymin <- max(h.null$counts)/10 # 10%
-      ymax <- max(h.null$counts) - max(h.null$counts)/10 # 90%
+      ymin <- max(yvals)/10 # 10%
+      ymax <- max(yvals) - max(yvals)/10 # 90%
 
       Y <- seq(ymin, ymax, length.out = length(X))
 
@@ -676,9 +712,9 @@ plot.sig.snps <- function(corr.dat,
 
     }else{
       text(x=(max(h.null$breaks)*3/4),
-           y=(max(h.null$counts)*3/4),
+           y=(max(yvals)*3/4),
            labels="no significant SNPs found",
-           col=myCol, font=2, pos=2, cex = 0.7)
+           col="red", font=2, pos=2, cex = 0.7)
     }
 
   } # end plot.dist == TRUE

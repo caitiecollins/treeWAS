@@ -4,7 +4,7 @@
 \alias{phen.sim}
 \title{Short one-phrase description.}
 \usage{
-phen.sim(tree, n.subs = 15, grp.min = 0.2, coaltree = TRUE, seed = NULL)
+phen.sim(tree, n.subs = 15, grp.min = 0.2, seed = NULL)
 }
 \arguments{
 \item{tree}{An phylo object.}

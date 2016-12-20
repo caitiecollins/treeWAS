@@ -361,7 +361,6 @@ snp.sim.Q <- function(n.snps = 10000,
                       reconstruct = FALSE,
                       dist.dna.model = "JC69",
                       grp.min = 0.25,
-                      coaltree = TRUE,
                       row.names = NULL,
                       set=3,
                       seed=1){
@@ -369,6 +368,35 @@ snp.sim.Q <- function(n.snps = 10000,
   # require(adegenet)
   # require(ape)
   # require(phangorn)
+
+
+  ## HANDLE TREE: ##
+  ## Always work with trees in "pruningwise" order:
+  tree <- reorder.phylo(tree, order="pruningwise")
+
+  ####################################################################
+  ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
+  ####################################################################
+
+  # if(coaltree == FALSE){
+  ## Simulation should start from the lowest internal node index (ie n.terminal+1):
+  if(unique(tree$edge[,1])[1] == (tree$Nnode+2)){
+    ## Simulate from top:bottom?
+    x <- 1:nrow(tree$edge)
+  }else{
+    ## Extra check:
+    if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] == (tree$Nnode+2)){
+      ## Simulate from bottom:top?
+      x <- rev(c(1:nrow(tree$edge)))
+    }else{
+      stop("This simulation procedure expects to find the root node/first internal node
+           (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
+           once the tree has been reordered to be in 'pruningwise' configuration.
+           This is NOT the case with your tree. Please check.")
+    }
+    }
+  ####################################################################
+
 
   ##################################
   ## GET MUTATIONS' branch & loci ##
@@ -575,14 +603,8 @@ snp.sim.Q <- function(n.snps = 10000,
   snps.loci.ori <- snps.loci
   ## will need to treat repeat loci differently...
   snps.loci.unique <- lapply(snps.loci, unique)
-  ## the last individual in the first column of tree$edge
-  ## (ie. ind.length(tree$tip.label)+1 ) is our root individual:
-  x <- rev(c(1:nrow(tree$edge)))
 
-  if(coaltree == FALSE){
-    ## use normal/reverse (top:bottom) edge mat:
-    x <- 1:nrow(tree$edge)
-  }
+
 
   #############################
   ## For Loop to get new nts ##
@@ -741,8 +763,7 @@ snp.sim.Q <- function(n.snps = 10000,
       ## get nt for each individual at this locus
       temp[,i] <- .get.locus01(subs.edges = subs.edges,
                                root.nt = root.nt,
-                               tree = tree,
-                               coaltree = coaltree)[1:n.ind]
+                               tree = tree)[1:n.ind]
 
     } # end FOR LOOP for NON-associated SNPs
 
@@ -827,13 +848,6 @@ snp.sim.Q <- function(n.snps = 10000,
     i <- 1
 
     edges <- tree$edge
-
-    x <- rev(c(1:nrow(edges)))
-
-    if(coaltree == FALSE){
-      ## use normal/reverse (top:bottom) edge mat:
-      x <- 1:nrow(edges)
-    }
 
     root.nt <- gen.root[snps.assoc[i]]
 
@@ -1322,14 +1336,24 @@ snp.sim.Q <- function(n.snps = 10000,
 
   ## assign/generate row.names
   if(!is.null(row.names)){
+    ## If row.names have been provided in args list, assign them:
     if(length(row.names) == nrow(snps)){
       rownames(snps) <- row.names
     }else{
       if(is.null(rownames(snps))) rownames(snps) <- c(1:nrow(snps))
     }
   }else{
-    if(is.null(rownames(snps))) rownames(snps) <- c(1:nrow(snps))
-  }
+    ## Otherwise, try to assign rownames(snps) to match tree$tip.label:
+    if(!is.null(tree$tip.label)){
+      if(length(tree$tip.label) == nrow(snps)){
+        rownames(snps) <- tree$tip.label
+      }else{
+        rownames(snps) <- 1:nrow(snps)
+        warning("The length of tree$tip.label was not equal to nrow(snps) being simulated;
+                rownames(snps) have been set to 1:N and will not match tree$tip.label.")
+      }
+      }
+    }
 
   ## generate column names:
   colnames(snps) <- 1:ncol(snps)
@@ -1352,98 +1376,50 @@ snp.sim.Q <- function(n.snps = 10000,
 
         ## get 2 sets of clades:
 
-        ##############
-        ## coaltree ##
-        ##############
+        ##########################################
+        ## Pick SETS for ANY TREE (pretty sure) ##
+        ##########################################
+        dec <- grp <- sets.temp <- sets.complete <- list()
 
-        if(coaltree == TRUE){
-          ## Get tree as hclust tree:
-          tree.hc <- as.hclust.phylo(tree)
+        inds <- c(1:(tree$Nnode+1))
+        # new.root <- tree$edge[1,1] # initial root
+        new.root <- tree$Nnode+2 # initial root
 
-          i <- 2
-          counter <- 0
-          #######################################
-          ## WHILE LOOP to get size of clades: ##
-          #######################################
-          while(grp1 < min.size | grp1 > max.size){
-            clades[[i]] <- cutree(tree.hc, k=i)
-            tab[[i]] <- table(clades[[i]])
-            # grp.opts <- grp.options[[i]] <- sapply(c(1:(i-1)), function(e) sum(tab[[i]][1:e]))
-            grp.opts <- grp.options[[i]] <- sapply(c(1:(i)), function(e) sum(tab[[i]][1:e]))
-            ## make grp1 first clade in grp.options:
-            group1 <- grp.opts[1]
-            ## remove first clade from options:
-            grp.opts <- grp.opts[-1]
-            ## and record n.grps:
-            n.grp <- 1
-            ## try to identify a (set of) clade(s) that's big enough (but not too big):
-            while(group1 < min.size){
-              group1 <- sum(group1, grp.opts[1])
-              grp.opts <- grp.opts[-1]
-              n.grp <- n.grp+1
-            }
-            sets.complete[[i]] <- replace(clades[[i]], which(clades[[i]] %in% (1:n.grp)), 1)
-            sets.complete[[i]] <- replace(sets.complete[[i]], which(!clades[[i]] %in% (1:n.grp)), 2)
-            grp1 <- sum(grp.options[[i]][1:n.grp])
-            k <- i
-            i <- i+1
-            counter <- counter+1
-          } # end while loop
-          ###########
+        counter <- 0
+        #######################################
+        ## WHILE LOOP to get size of clades: ##
+        #######################################
+        while(grp1 < min.size | grp1 > max.size){
 
-          sets <- sets.complete[[length(sets.complete)]]
+          ## get all descendants of root node:
+          all.dec <- .getDescendants(tree, node=new.root)
 
-          ###########
+          ## get all descendants in first 2 major clades:
+          dec[[1]] <- .getDescendants(tree, node=all.dec[1])
+          dec[[2]] <- .getDescendants(tree, node=all.dec[2])
 
-        }else{
-          ###########
-          ## rtree ##
-          ###########
-          dec <- grp <- sets.temp <- sets.complete <- list()
+          ## get terminal inds only:
+          sets.temp[[1]] <- dec[[1]][which(dec[[1]] %in% inds)]
+          sets.temp[[2]] <- dec[[2]][which(dec[[2]] %in% inds)]
 
-          inds <- c(1:(tree$Nnode+1))
-          new.root <- tree$edge[1,1] # initial root
+          grp[[1]] <- length(sets.temp[[1]])
+          grp[[2]] <- length(sets.temp[[2]])
 
-          counter <- 0
-          #######################################
-          ## WHILE LOOP to get size of clades: ##
-          #######################################
-          while(grp1 < min.size | grp1 > max.size){
+          max.grp <- which.max(c(grp[[1]], grp[[2]]))
+          new.root <- all.dec[max.grp]
 
-            ## get all descendants of root node:
-            all.dec <- .getDescendants(tree, node=new.root)
+          set1 <- sets.temp[[max.grp]]
 
-            ## get all descendants in first 2 major clades:
-            dec[[1]] <- .getDescendants(tree, node=all.dec[1])
-            dec[[2]] <- .getDescendants(tree, node=all.dec[2])
+          sets <- rep(2, length(inds))
+          sets <- replace(sets, set1, 1)
+          names(sets) <- tree$tip.label
 
-            ## get terminal inds only:
-            sets.temp[[1]] <- dec[[1]][which(dec[[1]] %in% inds)]
-            sets.temp[[2]] <- dec[[2]][which(dec[[2]] %in% inds)]
+          counter <- counter+1
 
-            grp[[1]] <- length(sets.temp[[1]])
-            grp[[2]] <- length(sets.temp[[2]])
+          grp1 <- grp[[max.grp]]
 
-            max.grp <- which.max(c(grp[[1]], grp[[2]]))
-            new.root <- all.dec[max.grp]
+        } # end while loop
 
-            set1 <- sets.temp[[max.grp]]
-
-            sets <- rep(2, length(inds))
-            sets <- replace(sets, set1, 1)
-            names(sets) <- rownames(snps)
-
-            counter <- counter+1
-
-            grp1 <- grp[[max.grp]]
-
-          } # end while loop
-
-        } # end rtree
-
-        ###########################
-        ## BOTH coaltree & rtree ##
-        ###########################
 
         set1 <- names(sets)[which(sets == 1)]
         set2 <- names(sets)[which(sets == 2)]
@@ -1476,7 +1452,10 @@ snp.sim.Q <- function(n.snps = 10000,
 
   return(out)
 
-  } # end snp.sim.Q
+} # end snp.sim.Q
+
+
+
 
 
 
@@ -1530,7 +1509,38 @@ snp.sim.Q <- function(n.snps = 10000,
 #
 # ########################################################################
 
-.get.locus01 <- function(subs.edges, root.nt, tree, coaltree=TRUE){
+.get.locus01 <- function(subs.edges, root.nt, tree){
+
+
+  ##################
+  ## HANDLE TREE: ##
+  ##################
+  ## Always work with trees in "pruningwise" order:
+  tree <- reorder.phylo(tree, order="pruningwise")
+
+  ####################################################################
+  ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
+  ####################################################################
+
+  # if(coaltree == FALSE){
+  ## Simulation should start from the lowest internal node index (ie n.terminal+1):
+  if(unique(tree$edge[,1])[1] == (tree$Nnode+2)){
+    ## Simulate from top:bottom?
+    x <- 1:nrow(tree$edge)
+  }else{
+    ## Simulate from bottom:top?
+    x <- rev(c(1:nrow(tree$edge)))
+
+    ## Extra check:
+    if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] != (tree$Nnode+2)){
+      stop("This simulation procedure expects to find the root node/first internal node
+               (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
+               once the tree has been reordered to be in 'pruningwise' configuration.
+               This is NOT the case with your tree. Please check.")
+    }
+  }
+  ####################################################################
+
 
   ## convert subs.edges into appropriate format:
   snps.loci <- list()
@@ -1562,14 +1572,7 @@ snp.sim.Q <- function(n.snps = 10000,
   snps.loci.ori <- snps.loci
   ## will need to treat repeat loci differently...
   snps.loci.unique <- lapply(snps.loci, unique)
-  ## the last individual in the first column of tree$edge
-  ## (ie. ind.length(tree$tip.label)+1 ) is our root individual:
-  x <- rev(c(1:nrow(tree$edge)))
 
-  if(coaltree == FALSE){
-    ## use normal/reverse (top:bottom) edge mat:
-    x <- 1:nrow(tree$edge)
-  }
 
   #############################
   ## For Loop to get new nts ##

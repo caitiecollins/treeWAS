@@ -7,7 +7,7 @@
 coalescent.sim(n.ind = 100, n.snps = 10000, n.subs = 1,
   n.snps.assoc = 0, assoc.prob = 100, n.phen.subs = 15, phen = NULL,
   plot = TRUE, heatmap = FALSE, reconstruct = FALSE,
-  dist.dna.model = "JC69", grp.min = NULL, row.names = NULL, set = NULL,
+  dist.dna.model = "JC69", grp.min = NULL, row.names = TRUE, set = NULL,
   coaltree = TRUE, s = 20, af = 10, filename = NULL, seed = NULL)
 }
 \arguments{

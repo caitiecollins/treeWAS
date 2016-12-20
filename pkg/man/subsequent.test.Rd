@@ -4,7 +4,8 @@
 \alias{subsequent.test}
 \title{Short one-phrase description.}
 \usage{
-subsequent.test(snps.reconstruction, phen.reconstruction, tree)
+subsequent.test(snps.reconstruction, phen.reconstruction, tree,
+  rec = "parsimony")
 }
 \arguments{
 \item{tree}{A phylo object.}

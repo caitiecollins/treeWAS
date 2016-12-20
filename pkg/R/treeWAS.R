@@ -117,6 +117,32 @@
 # snps.reconstruction <- "parsimony"
 # phen.reconstruction <- "parsimony"
 
+
+
+
+
+# foo  <- treeWAS(snps,
+#                 phen,
+#                 n.subs = NULL,
+#                 tree = tree,
+#                 dist.dna.model = "JC69",
+#                 plot.tree = FALSE,
+#                 test = c("terminal", "simultaneous", "subsequent"),
+#                 p.value = 0.01,
+#                 p.value.correct = "bonf", ## DO WE WANT TO ALLOW USERS TO RUN MANY DIFFERENT MULTIPLE TESTING CORRECTION METHODS FOR EACH TEST?????????
+#                 p.value.by = "count",
+#                 sim.n.snps = ncol(snps)*10,
+#                 # n.reps = 1,
+#                 plot.manhattan = TRUE,
+#                 plot.null.dist = TRUE,
+#                 plot.dist = FALSE,
+#                 snps.assoc = NULL, # for (manhattan) plot
+#                 snps.reconstruction = "parsimony",
+#                 phen.reconstruction = "parsimony",
+#                 filename.plot = NULL)
+
+
+
 treeWAS <- function(snps,
                     phen,
                     n.subs = NULL,
@@ -124,11 +150,11 @@ treeWAS <- function(snps,
                     dist.dna.model = "JC69",
                     plot.tree = FALSE,
                     test = c("terminal", "simultaneous", "subsequent"),
-                    p.value = 0.001,
+                    p.value = 0.01,
                     p.value.correct = c("bonf", "fdr", FALSE), ## DO WE WANT TO ALLOW USERS TO RUN MANY DIFFERENT MULTIPLE TESTING CORRECTION METHODS FOR EACH TEST?????????
                     p.value.by = c("count", "density"),
                     sim.n.snps = ncol(snps),
-                    n.reps = 1,
+                    # n.reps = 1,
                     plot.manhattan = TRUE,
                     plot.null.dist = TRUE,
                     plot.dist = FALSE,
@@ -163,15 +189,15 @@ treeWAS <- function(snps,
   ## HANDLE SNPS & PHEN ##
   ########################
   if(!is.matrix(snps)) snps <- as.matrix(snps)
-  x <- snps
+  # x <- snps
   n.snps <- ncol(snps)
 
   ## convert phenotype to factor
   phen <- as.factor(phen)
-  y <- phen
+  # y <- phen
 
   ## set n.ind:
-  n.ind <- length(y)
+  n.ind <- length(phen)
   inds <- c(1:n.ind)
 
   #################
@@ -207,6 +233,10 @@ treeWAS <- function(snps,
     ## if the tree is not already rooted, root it:
     if(!is.rooted(tree)) tree <- midpoint(tree)
 
+    ## HANDLE TREE: ##
+    ## Always work with trees in "pruningwise" order:
+    tree <- reorder.phylo(tree, order="pruningwise")
+
 
     if(plot.tree==TRUE){
       plot(tree)
@@ -216,15 +246,29 @@ treeWAS <- function(snps,
 
   }# end tree...
 
-  ##################################
-  ## Check if COALESCENT or RTREE ## (is.ultrametric? any other tests required here???) ##
-  ########################################################################################
 
-  if(is.ultrametric(tree)){
-    coaltree <- TRUE
+  ####################################################################
+  ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
+  ####################################################################
+
+  # if(coaltree == FALSE){
+  ## Simulation should start from the lowest internal node index (ie n.terminal+1):
+  if(unique(tree$edge[,1])[1] == (tree$Nnode+2)){
+    ## Simulate from top:bottom?
+    x <- 1:nrow(tree$edge)
   }else{
-    coaltree <- FALSE
-  }
+    ## Extra check:
+    if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] == (tree$Nnode+2)){
+      ## Simulate from bottom:top?
+      x <- rev(c(1:nrow(tree$edge)))
+    }else{
+      stop("This simulation procedure expects to find the root node/first internal node
+           (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
+           once the tree has been reordered to be in 'pruningwise' configuration.
+           This is NOT the case with your tree. Please check.")
+    }
+    }
+  ####################################################################
 
 
   ##############################
@@ -249,69 +293,32 @@ treeWAS <- function(snps,
     ## CAREFUL -- YOU MAY STILL HAVE PROBLEMS HERE!!! (see misc/rtree.troubleshooting.R) ##
     #######################################################################################
 
-    ## FOR NOW -- REPLACING tree$tip.label w c(1:N)
-    ## WARNING -- ASSUMES that tree$edge cells containing 1:N CORRESPOND to snps rown 1:N!!!!!!!!
 
-    tree$tip.label <- c(1:(tree$Nnode+1))
+    ## RUN CHECKS TO ENSURE tree$tip.label and rownames(snps) CONTAIN SAME SET OF LABELS!
+    ## Check snps vs. tree$tip.labs:
+    if(is.null(tree$tip.label)) stop("Trees must have tip.labels corresponding to rownames(snps).")
+    if(is.null(rownames(snps))) stop("SNPs must have rownames corresponding to tree$tip.label.")
+    if(!all(tree$tip.label %in% rownames(snps))) stop("tree$tip.label and rownames(snps)
+                                                      must contain the same set of labels
+                                                      so that individuals can be correctly identified.")
+    ## Check phen vs. tree$tip.labs:
+    if(is.null(names(phen))) stop("Phen must have names corresponding to tree$tip.label.")
+    if(!all(tree$tip.label %in% names(phen))) stop("tree$tip.label and names(phen)
+                                                   must contain the same set of labels
+                                                   so that individuals can be correctly identified.")
 
-    #     if(all.is.numeric(tree$tip.label)){
-    #       ## if we can convert to numeric, do so:
-    #       tree$tip.label <- as.numeric(tree$tip.label)
-    #     }else{
-    #
-    #       ## if we can remove "t" to get numeric, do so:
-    #       prefix <- keepFirstN(tree$tip.label, 1)
-    #       if(all(tolower(prefix) == "t")){
-    #         temp <- removeFirstN(tree$tip.label, 1)
-    #         if(all.is.numeric(temp)){
-    #           tree$tip.label <- as.numeric(temp)
-    #         }else{
-    #           ## else, replace with numeric indices:
-    #           # tree$tip.label <- c(1:length(tree$tip.label))
-    #           warning("Site-wise parsimony scores (phangorn's
-    #                   fitch parsimony function) may not be calculated correctly
-    #                   when tip.labels are not numeric.
-    #                   Please change tree$tip.label to numeric values.")
-    #         }
-    #       }
-    #     }
+    ###################
+    ## HANDLE N.SUBS ##
+    ###################
 
-    ## NODE labels ##
-    if(all.is.numeric(tree$node.label)){
-      tree$node.label <- as.numeric(tree$node.label)
-    }else{
-      ## if we can remove "NODE_" to get numeric, do so:
-      prefix <- keepFirstN(tree$node.label, 4)
-      if(all(tolower(prefix) == "node")){
-        temp <- removeFirstN(tree$node.label, 5)
-        if(all.is.numeric(temp)){
-          tree$node.label <- as.numeric(temp)
-        }else{
-          ## else, replace with numeric indices:
-          # tree$node.label <- c((n.ind+1):(n.ind+tree$Nnode))
-          warning("Site-wise parsimony scores (phangorn's
-                  fitch parsimony function) may not be calculated correctly
-                  when node.labels are not numeric.
-                  Please change tree$node.label to numeric values.")
-        }
-        }
-        }
-        }
+    ## if n.subs is a vector (ie. distribution) ##
+    ## we use this distribution directly (but in proportion with the number of sites)
+    ## to specify the n.subs per site. (Handled within snp.sim fn.)
 
+    ## if n.subs is NULL ##
+    ## we compute the distribution of the n.subs-per-site
+    ## using the Fitch parsimony score calculation fns from phangorn.
 
-  ###################
-  ## HANDLE N.SUBS ##
-  ###################
-
-  ## if n.subs is a vector (ie. distribution) ##
-  ## we use this distribution directly (but in proportion with the number of sites)
-  ## to specify the n.subs per site. (Handled within snp.sim fn.)
-
-  ## if n.subs is NULL ##
-  ## we compute the distribution of the n.subs-per-site
-  ## using the Fitch parsimony score calculation fns from phangorn.
-
-  if(is.null(n.subs)){
 
     ###########
     ## TO DO ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
@@ -361,33 +368,30 @@ treeWAS <- function(snps,
   if(is.null(sim.n.snps)) sim.n.snps <- n.snps
   out <- genomes <- snps.mat <- list()
 
-  for(i in 1:n.reps){
-    ## SIMULATE A DATASET | your tree ##
-    out[[i]] <- snp.sim(n.snps = sim.n.snps,
-                        n.subs = n.subs,
-                        n.snps.assoc = 0,
-                        assoc.prob = 100,
-                        tree = tree,
-                        phen.loci = NULL,
-                        heatmap = FALSE,
-                        reconstruct = FALSE,
-                        dist.dna.model = dist.dna.model,
-                        row.names = row.names(snps),
-                        coaltree = coaltree,
-                        seed = NULL)
+  ## SIMULATE A DATASET | your tree ##
+  out[[1]] <- snp.sim(n.snps = sim.n.snps,
+                      n.subs = n.subs,
+                      n.snps.assoc = 0,
+                      assoc.prob = 100,
+                      tree = tree,
+                      phen.loci = NULL,
+                      heatmap = FALSE,
+                      reconstruct = FALSE,
+                      dist.dna.model = dist.dna.model,
+                      row.names = rownames(snps),
+                      seed = NULL)
 
-    genomes[[i]] <- out[[i]][[1]]
+  genomes[[1]] <- out[[1]][[1]]
 
-    ## Modify genomes/snps matrices
-    if(!is.null(genomes[[i]])){
-      snps.mat[[i]] <- genomes[[i]]
-    }else{
-      snps.mat[[i]] <- NULL
-    }
+  ## Modify genomes/snps matrices
+  if(!is.null(genomes[[1]])){
+    snps.mat[[1]] <- genomes[[1]]
+  }else{
+    snps.mat[[1]] <- NULL
+  }
 
-    gc()
+  gc()
 
-  } # end for loop
 
   print("treeWAS snps sim done.")
 
@@ -407,13 +411,6 @@ treeWAS <- function(snps,
   ## NOTE: These checks are repeated within the get.sig.snps fn
   ## as an extra layer of safety/ in case users want to use it alone,
   ## but it is more economical to run them once outside of the for loop..
-
-
-  ## NOTE TO CHECK! ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
-
-  ## Are we SLOWING things down significantly by identifying UNIQUE snps & snps.sim WITHIN the get.sig.snps fn??
-  ## And could we identify unique snps/snps.sim HERE (AND add an extra INDEX argument to get.sig.snps)??
-  ## (ie. get.sig.snps INPUT = UNIQUE snps, snps.sim + index & OUTPUT = results for ALL ORIGINAL/NON-unique sites...).
 
   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
@@ -492,67 +489,44 @@ treeWAS <- function(snps,
 
     ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
-
-
-
     #######################
     ## Reconstruct SNPs: ##
     #######################
 
-    ## By PARSIMONY: ##
-    if(snps.reconstruction == "parsimony"){
-      ## Reconstruct REAL SNPs: ##
-      snps.REC <- asr(var = snps, tree = tree, type = "parsimony")
-      snps.rec <- snps.REC$var.rec
+    ## By PARSIMONY or ACE: ##
 
-      ## Reconstruct SIMULATED SNPs: ##
-      snps.sim.REC <- asr(var = snps.sim, tree = tree, type = "parsimony")
-      snps.sim.rec <- snps.sim.REC$var.rec
-    }
+    ## Reconstruct REAL SNPs: ##
+    system.time( # 274
+      snps.REC <- asr(var = snps, tree = tree, type = snps.reconstruction)
+    )
+    snps.rec <- snps.REC$var.rec
 
-    ## By ACE: ##
-    if(snps.reconstruction == "ace"){
-      ## Reconstruct REAL SNPs: ##
-      snps.REC <- asr(var = snps, tree = tree, type = "ace")
-      snps.rec <- snps.REC$var.rec
+    ## Reconstruct SIMULATED SNPs: ##
+    system.time(
+      snps.sim.REC <- asr(var = snps.sim, tree = tree, type = snps.reconstruction)
+    )
+    snps.sim.rec <- snps.sim.REC$var.rec
 
-      ## Reconstruct SIMULATED SNPs: ##
-      snps.sim.REC <- asr(var = snps.sim, tree = tree, type = "ace")
-      snps.sim.rec <- snps.sim.REC$var.rec
-    }
 
     #######################
     ## Reconstruct phen: ##
     #######################
 
-    ## By PARSIMONY: ##
-    if(phen.reconstruction == "parsimony"){
-      phen.REC <- asr(var = phen, tree = tree, type = "parsimony")
-      phen.rec <- phen.REC$var.rec
-    }
+    ## By PARSIMONY or ACE: ##
 
-    ## By ACE: ##
-    if(phen.reconstruction == "ace"){
-      phen.REC <- asr(var = phen, tree = tree, type = "ace")
-      phen.rec <- phen.REC$var.rec
-    }
+    phen.REC <- asr(var = phen, tree = tree, type = phen.reconstruction)
+    phen.rec <- phen.REC$var.rec
+
 
   } # end reconstruction for tests 2 & 3
 
-  # save(snps.rec, file= "/home/caitiecollins/treeWAS/misc/snps.rec.Rdata")
-  # save(snps.sim.rec, file= "/home/caitiecollins/treeWAS/misc/snps.sim.rec.Rdata")
-  # save(phen.rec, file= "/home/caitiecollins/treeWAS/misc/phen.rec.Rdata")
+
+  ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
+
 
   ###########################
   ## GET UNIQUE SNPS(.SIM) ##
   ###########################
-
-  ## TO DO: ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
-  ## NOTE--WOULD BE GOOD TO ADD SIMILAR SOLN FOR RECONSTRUCT ABOVE AS W GET.SIG.SNPS BELOW (ie.
-  ## ALLOW FOR INPUT OF UNIQUE VAR AND INDEX AS ARGUMENTS).
-  ## ONCE DONE--MOVE UNIQUE CODE BELOW TO ABOVE THE RECONSTRUCTION CODE SEGMENT...
-
-  ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
 
   ## Get UNIQUE snps + index
   snps.complete <- snps
@@ -573,7 +547,7 @@ treeWAS <- function(snps,
   snps.rec.index <- temp$index
   if(!identical(snps.rec.index, snps.index)){
     warning("Careful-- snps and snps.rec should have the same index when reduced
-              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+            to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
   }
 
   ## Get UNIQUE snps.sim.reconstruction
@@ -583,7 +557,7 @@ treeWAS <- function(snps,
   snps.sim.rec.index <- temp$index
   if(!identical(snps.sim.rec.index, snps.sim.index)){
     warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
-              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+            to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
   }
 
   print("reconstructions done")
@@ -591,7 +565,6 @@ treeWAS <- function(snps,
   #######################
   ## identify sig.snps ##
   #######################
-
   ## Note: UNIQUE snps & snps.sim are identified WITHIN the get.sig.snps fn
   ## to reduce computational time, but results are identified on the basis of all
   ## ORIGINAL snps & snps.sim columns inputted.
@@ -603,28 +576,26 @@ treeWAS <- function(snps,
 
   ## Run get.sig.snps fn once for each association test:
   system.time( # 100 - 164 (why such a difference?)
-  for(i in 1:length(TEST)){
-    sig.list[[i]] <- get.sig.snps(snps = snps,
-                                  snps.unique = snps.unique,
-                                  snps.index = snps.index,
-                                  snps.sim = snps.sim,
-                                  snps.sim.unique = snps.sim.unique,
-                                  snps.sim.index = snps.sim.index,
-                                  phen = phen,
-                                  tree = tree,
-                                  test = TEST[[i]],
-                                  n.tests = length(TEST),
-                                  p.value = p.value,
-                                  p.value.correct = p.value.correct,
-                                  p.value.by = p.value.by,
-                                  snps.reconstruction = snps.rec,
-                                  snps.sim.reconstruction = snps.sim.rec,
-                                  phen.reconstruction = phen.rec)
-  }
+    for(i in 1:length(TEST)){
+      sig.list[[i]] <- get.sig.snps(snps = snps,
+                                    snps.unique = snps.unique,
+                                    snps.index = snps.index,
+                                    snps.sim = snps.sim,
+                                    snps.sim.unique = snps.sim.unique,
+                                    snps.sim.index = snps.sim.index,
+                                    phen = phen,
+                                    tree = tree,
+                                    test = TEST[[i]],
+                                    n.tests = length(TEST),
+                                    p.value = p.value,
+                                    p.value.correct = p.value.correct,
+                                    p.value.by = p.value.by,
+                                    snps.reconstruction = snps.rec,
+                                    snps.sim.reconstruction = snps.sim.rec,
+                                    phen.reconstruction = phen.rec,
+                                    rec = snps.reconstruction)
+    }
   )
-
-  SCORE3 <- sig.list[[3]]$SCORE3
-  sig.list[[3]] <- sig.list[[3]]$res
 
   names(sig.list) <- test
   # str(sig.list)
@@ -656,212 +627,73 @@ treeWAS <- function(snps,
   #     snps.sim.reconstruction <- snps.sim.rec
   #     phen.reconstruction <- phen.rec
 
-
   #################
   ## GET RESULTS ##
   #################
 
-  RES <- thresholds <- VALS <- DAT <- list()
+  RES <- list()
 
   ## get results for each test run:
-  for(j in 1:length(sig.list)){
+  for(i in 1:length(sig.list)){
 
-    RES[[j]] <- list()
+    #############################################
+    ## isolate elements of get.sig.snps output ##
+    #############################################
 
-    ## get corr.dat, corr.sim, p.vals x2:
-    VALS[[j]] <- list()
-    VALS[[j]][[1]] <- sig.list[[j]][[1]]$corr.dat
-    VALS[[j]][[2]] <- sig.list[[j]][[1]]$corr.sim
+    corr.dat <- sig.list[[i]]$corr.dat
+    corr.sim <- sig.list[[i]]$corr.sim
+    p.vals <- sig.list[[i]]$p.vals
+    sig.snps.names <- sig.list[[i]]$sig.snps.names
+    sig.snps <- sig.list[[i]]$sig.snps
+    sig.corrs <- sig.list[[i]]$sig.corrs
+    sig.p.vals <- sig.list[[i]]$sig.p.vals
+    min.p <- sig.list[[i]]$min.p
+    sig.thresh <- sig.list[[i]]$sig.thresh
 
-    VALS[[j]][[3]] <- list()
-    VALS[[j]][[3]][[1]] <- sig.list[[j]][[1]]$p.vals
-    VALS[[j]][[3]][[2]] <- sig.list[[j]][[2]]$p.vals
-    names(VALS[[j]][[3]]) <- c("10.x.n.snps", "1.x.n.snps")
-
-
-    names(VALS[[j]]) <- c("corr.dat",
-                         "corr.sim",
-                         "p.vals")
-
-    ## isolate thresholds for plot:
-    THRESH <- list()
-    for(n in 1:length(sig.list[[j]])){
-      THRESH[[n]] <- sig.list[[j]][[n]]$sig.thresh
-    }
-    names(THRESH) <- names(sig.list[[j]])
-    thresholds[[j]] <- THRESH
-
-    ## Only plot the threshold that our sims show is most-consistently performing the best:
-    thresh.best <- THRESH[["pval.0.01.bonf.count.10.x.n.snps"]]
+    ########################################
 
     ##########################
     ## NEW: MANHATTAN PLOT! ##
     ##########################
     if(plot.manhattan == TRUE){
 
-      ## save next plot:
-      if(!is.null(filename.plot)){
-        if(length(filename.plot) == length(sig.list)){
-          if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
-
-          ## save whatever plots before dev.off:
-          pdf(file=filename.plot[[j]][1], width=7, height=11)
-        }
-      }
-
-
-      manhattan.plot(p.vals = sig.list[[j]][[1]]$corr.dat,
+      manhattan.plot(p.vals = corr.dat,
                      col = "wasp",
                      transp = 0.75,
-                     sig.thresh = thresh.best,
+                     sig.thresh = sig.thresh,
                      thresh.col="red",
-                     snps.assoc = snps.assoc,
+                     snps.assoc = NULL,
                      snps.assoc.col = "red",
                      jitter.amount = 0.00001,
                      min.p = NULL,
                      log10=FALSE,
-                     ylab=paste(TEST[[j]], "score", sep=" "))
-
-      ## End saving:
-      ## CHECK-- Do we need if statements??
-      dev.off() ## Not sure what happens if you run this without having used pdf or dev.copy previously..
-
-
-      ####
-      ## NOTE-- if you want to see the plot, you need to plot it again (dev.copy not working consistently!)
-      manhattan.plot(p.vals = sig.list[[j]][[1]]$corr.dat,
-                     col = "wasp",
-                     transp = 0.75,
-                     sig.thresh = thresh.best,
-                     thresh.col="red",
-                     snps.assoc = snps.assoc,
-                     snps.assoc.col = "red",
-                     jitter.amount = 0.00001,
-                     min.p = NULL,
-                     log10=FALSE,
-                     ylab=paste(TEST[[j]], "score", sep=" "))
-
-      # ## save plot:
-      # if(!is.null(filename.plot)){
-      #   if(length(filename.plot) == length(sig.list)){
-      #     if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
-      #     dev.copy(pdf, file=filename.plot[[j]][1], width=7, height=11) # , pointsize=12
-      #     dev.off()
-      #   }
-      # } # end save pdf
-
-    } # end plot.manhattan
-
-
-    ########################################################
-    ## Plot the null distribution w thresholds & findings ##
-    ########################################################
-
-    ## NOTE: For simplicity & clarity, only plotting truly significant SNPs,
-    ## instead of plotting all findings from all tests/thresholds.
-
-
-    ## save next plot:
-    if(!is.null(filename.plot)){
-      if(length(filename.plot) == length(sig.list)){
-        if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
-
-        if(length(filename.plot[[j]]) > 1){
-          pdf(file=filename.plot[[j]][2], width=7, height=11) # , pointsize=12
-        }else{
-          pdf(file=filename.plot[[j]][1], width=7, height=11) # , pointsize=12
-        }
-      }
-    }
-
-    ## Generate one histogram per test:
-    plot.sig.snps(corr.dat = sig.list[[j]][[1]]$corr.dat,
-                  corr.sim = sig.list[[j]][[1]]$corr.sim,
-                  corr.sim.subset = sig.list[[j]][[1]]$corr.sim[1:10000],
-                  sig.corrs = corr.dat[snps.assoc],
-                  sig.snps = snps.assoc,
-                  sig.thresh = thresh.best,
-                  test = TEST[[j]],
-                  sig.snps.col = "blue",
-                  hist.col = rgb(0,0,1,0.5), # rgb(0,0,1,0.5) # blue ## OR ## rgb(0.1,0.1,0.1,0.5) # darkgrey
-                  hist.subset.col = rgb(1,0,0,0.5), # rgb(1,0,0,0.5) # red ## OR ## rgb(0.8,0.8,0.8,0.5) # lightgrey
-                  thresh.col = "red",
-                  snps.assoc = snps.assoc,
-                  snps.assoc.col = "black",
-                  bg = "lightgrey",
-                  grid = TRUE,
-                  plot.null.dist = TRUE,
-                  plot.dist = FALSE)
-
-    ## End saving:
-    dev.off()
-
-
-
-
-    #####
-    ## Again-- to see this plot as simTest runs, need to plot again bc dev.copy failing/corrupting at random...
-    plot.sig.snps(corr.dat = sig.list[[j]][[1]]$corr.dat,
-                  corr.sim = sig.list[[j]][[1]]$corr.sim,
-                  corr.sim.subset = sig.list[[j]][[1]]$corr.sim[1:10000],
-                  sig.corrs = corr.dat[snps.assoc],
-                  sig.snps = snps.assoc,
-                  sig.thresh = thresh.best,
-                  test = TEST[[j]],
-                  sig.snps.col = "blue",
-                  hist.col = rgb(0,0,1,0.5), # rgb(0,0,1,0.5) # blue ## OR ## rgb(0.1,0.1,0.1,0.5) # darkgrey
-                  hist.subset.col = rgb(1,0,0,0.5), # rgb(1,0,0,0.5) # red ## OR ## rgb(0.8,0.8,0.8,0.5) # lightgrey
-                  thresh.col = "red",
-                  snps.assoc = snps.assoc,
-                  snps.assoc.col = "black",
-                  bg = "lightgrey",
-                  grid = TRUE,
-                  plot.null.dist = TRUE,
-                  plot.dist = FALSE)
-
-    # ## save plot:
-    # if(!is.null(filename.plot)){
-    #   if(length(filename.plot) == length(sig.list)){
-    #     if(class(filename.plot) != "list") filename.plot <- as.list(filename.plot)
-    #     if(length(filename.plot[[j]]) > 1){
-    #       dev.copy(pdf, file=filename.plot[[j]][2], width=7, height=11) # , pointsize=12
-    #     }else{
-    #       dev.copy(pdf, file=filename.plot[[j]][1], width=7, height=11) # , pointsize=12
-    #     }
-    #     dev.off()
-    #   }
-    # } # edn save pdf
-
-
-    ## legend for thresholds? ##
-
-  for(i in 1:length(sig.list[[j]])){
-
-    #############################################
-    ## isolate elements of get.sig.snps output ##
-    #############################################
-
-    corr.dat <- sig.list[[j]][[i]]$corr.dat
-    corr.sim <- sig.list[[j]][[i]]$corr.sim
-    p.vals <- sig.list[[j]][[i]]$p.vals
-    sig.snps.names <- sig.list[[j]][[i]]$sig.snps.names
-    sig.snps <- sig.list[[j]][[i]]$sig.snps
-    sig.corrs <- sig.list[[j]][[i]]$sig.corrs
-    sig.p.vals <- sig.list[[j]][[i]]$sig.p.vals
-    min.p <- sig.list[[j]][[i]]$min.p
-    sig.thresh <- sig.list[[j]][[i]]$sig.thresh
-
-    ########################################
+                     ylab=paste(TEST[[i]], "score", sep=" "))
+    } # end plot manhattan
 
 
     ##################################
     ## 4) (A) Plot the distribution ##
     ##################################
 
-    # plot.sig.snps(corr.dat, corr.sim, sig.corrs, sig.snps,
-    #               sig.thresh=sig.thresh, test=TEST[[j]],
-    #               plot.null.dist = plot.null.dist,
-    #               plot.dist = plot.dist)
+    ## Generate one histogram per test:
+    plot.sig.snps(corr.dat = corr.dat,
+                  corr.sim = corr.sim,
+                  corr.sim.subset = NULL,
+                  sig.corrs = corr.dat[sig.snps],
+                  sig.snps = sig.snps.names,
+                  sig.thresh = sig.thresh,
+                  test = TEST[[i]],
+                  sig.snps.col = "black",
+                  hist.col = rgb(0,0,1,0.5),
+                  hist.subset.col = rgb(1,0,0,0.5),
+                  thresh.col = "red",
+                  snps.assoc = NULL,
+                  snps.assoc.col = "blue",
+                  bg = "lightgrey",
+                  grid = TRUE,
+                  freq = FALSE,
+                  plot.null.dist = TRUE,
+                  plot.dist = FALSE)
 
 
     ########################################
@@ -929,23 +761,22 @@ treeWAS <- function(snps,
     ## ADD MANHATTAN PLOT
 
     results <- list()
-    results[[1]] <- sig.thresh
-    results[[2]] <- df
-    results[[3]] <- min.p
+    results[[1]] <- corr.dat
+    results[[2]] <- corr.sim
+    results[[3]] <- p.vals
+    results[[4]] <- sig.thresh
+    results[[5]] <- df
+    results[[6]] <- min.p
 
-    names(results) <- c("sig.thresh",
+    names(results) <- c("corr.dat",
+                        "corr.sim",
+                        "p.vals",
+                        "sig.thresh",
                         "sig.snps",
                         "min.p.value")
 
-    RES[[j]][[i]] <- results
-  } # end for loop (i)
-
-    names(RES[[j]]) <- names(sig.list[[j]])
-
-  } # end for loop (j)
-
-  ## assign test names to main list components:
-  names(RES) <- names(VALS) <- test
+    RES[[i]] <- results
+  } # end for loop
 
 
   ################################
@@ -956,7 +787,7 @@ treeWAS <- function(snps,
   SNP.loci <- vector("list", length=length(test))
   names(SNP.loci) <- test
   for(t in 1:length(test)){
-    temp <- RES[[t]]$pval.0.01.bonf.count.10.x.n.snps$sig.snps
+    temp <- RES[[t]]$sig.snps
     if(is.vector(temp)){
       SNP.loci[[t]] <- NULL
     }else{
@@ -977,23 +808,17 @@ treeWAS <- function(snps,
   SNP.loci[[2]] <- SNP.loci.ori
 
 
-  ## get data:
-  DAT <- list(snps.sim = snps.sim.complete,
-              snps.rec = snps.rec.complete,
-              snps.sim.rec = snps.sim.rec.complete,
-              phen.rec = phen.rec)
+  ## Assign to last element of RES:
+  RES[[(length(RES)+1)]] <- SNP.loci
 
-  ## get output:
-  results <- list(dat=DAT,
-                  vals=VALS,
-                  thresh=thresholds,
-                  res=RES,
-                  treeWAS.combined=SNP.loci,
-                  SCORE3=SCORE3)
+  ## name elements of RES:
+  names(RES) <- c(test, "treeWAS.combined")
+  results <- RES
 
   return(results)
 
 } # end treeWAS
+
 
 
 

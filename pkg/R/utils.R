@@ -83,6 +83,17 @@ set.args <- function(args, envir=sys.frame(which=0L)){
 #' again \emph{with the added argument} \code{add=TRUE}
 #' so that your plot can be overlayed on top of the background.
 #'
+#' @param bg The background colour, by default ``lightgray'' with 50\% transparency.
+#' @param x.ax A logical specifying whether to re-draw the x-axis.
+#' @param y.ax A logical specifying whether to re-draw the y-axis.
+#' @param box A logical specifying whether to draw a box around the plotting area.
+#' @param grid A logical specifying whether to draw a grid across the background within the plotting area.
+#' @param grid.col The color of the gridlines, ``white'' by default. Only used if grid is set to TRUE.
+#' @param grid.nx An optional integer to specify the number of gridlines to be drawn along the x-axis.
+#' @param grid.ny An optional integer to specify the number of gridlines to be drawn along the y-axis.
+#' @param grid.lwd An integer specifying the lwd (line weight) of the gridlines; by default, set to 1.
+#' @param grid.lty An integer specifying the line type to be used for the gridlines; by default, set to 1 (i.e., solid lines).
+#'
 #' @importFrom adegenet transp
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -116,6 +127,7 @@ ggplot.bg <- function(bg=transp("lightgray", 0.5),
 
   if(box == TRUE) box()   ## and the plot frame
 
+  return(NULL)
 } # end ggplot.bg
 
 ################################################################################

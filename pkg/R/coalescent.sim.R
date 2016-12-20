@@ -120,12 +120,12 @@
 #  haploid=TRUE, biallelic=TRUE, seed=NULL,
 #  plot=TRUE, heatmap=FALSE, plot2="UPGMA")
 
-# ## NEW ARGS: ##
+## NEW ARGS: ##
 # n.ind <- 100
-# n.snps <- 1000 # 10000
-# n.subs <- 1
+# n.snps <- 10000
+# n.subs <- dist_0.1
 # n.snps.assoc <- 10
-# assoc.prob <- 100 # 90
+# assoc.prob <- 100
 # n.phen.subs <- 15
 # phen <- NULL
 # plot <- TRUE
@@ -134,14 +134,18 @@
 # dist.dna.model <- "JC69"
 # grp.min <- 0.25
 # row.names <- NULL
-# set <- 2 # NULL #
-# seed <- 1
+# coaltree <- FALSE
+# s <- 20
+# af <- 10
+# set <- 3 # NULL #
+# filename <- NULL
+# seed <- 77
 
 
 ## EG:
 # c.sim <- coalescent.sim(n.ind=100,
-#                         n.snps=1000,
-#                         n.subs=dist_0.05,
+#                         n.snps=10000,
+#                         n.subs=dist_0.1,
 #                         n.snps.assoc=10,
 #                         assoc.prob=100,
 #                         n.phen.subs=15,
@@ -157,7 +161,7 @@
 #                         af = 5,
 #                         filename = NULL,
 #                         set=2,
-#                         seed=1)
+#                         seed=78)
 
 
 coalescent.sim <- function(n.ind=100,
@@ -172,7 +176,7 @@ coalescent.sim <- function(n.ind=100,
                            reconstruct=FALSE,
                            dist.dna.model="JC69",
                            grp.min = NULL,
-                           row.names=NULL,
+                           row.names=TRUE,
                            set=NULL,
                            coaltree = TRUE,
                            s = 20,
@@ -183,6 +187,8 @@ coalescent.sim <- function(n.ind=100,
   # require(adegenet)
   # require(ape)
   # require(phangorn)
+
+  sets <- NULL
 
   if(length(which(c(plot, heatmap, reconstruct)==TRUE))==1){
     par(ask=FALSE)
@@ -199,6 +205,7 @@ coalescent.sim <- function(n.ind=100,
     set.seed(seed)
     tree <- rtree(n = n.ind)
   }
+  tree <- reorder.phylo(tree, order="pruningwise")
 
 
   ########################
@@ -210,19 +217,13 @@ coalescent.sim <- function(n.ind=100,
     ## NEW Q: ##
     ############
     ## if Q contains RATES --> P contains probs
-
-    ## QUESTION -- NOT SURE IF/WHY BL:TR DIAGONAL NEEDS TO BE 0-0-0-0 ?? HOW TO CONTROL SIMULTANEOUS SUBS PROBS/RATES ??????????
-    ## QUESTION -- HOW TO INTERPRET/PREDICT THE RELATIVE EFFECTS OF ASSOC.FACTOR AND N.SUBS (+ BRANCH LENGTH) ON ASSOC STRENGTH, N.SUBS PER TREE ?????
-    ## QUESTION -- In practice, is "s" getting multiplied by 4 ?????
-    # s <- n.phen.subs/4
+    ## QUESTION -- HOW TO INTERPRET/PREDICT THE RELATIVE EFFECTS OF ASSOC.FACTOR AND N.SUBS (+ BRANCH LENGTH) ON ASSOC STRENGTH, N.SUBS PER TREE ?
 
     if(is.null(s)) s <- 20 # n.subs
     if(is.null(af)) af <- 10 # association factor
-
     ## Modify s to account for sum(tree$edge.length):
     ## --> ~ s/10 (= 2) for coaltree
     ## OR --> ~ s/100 (= 0.2) for rtree
-
     s <- s/sum(tree$edge.length)
 
 
@@ -234,10 +235,6 @@ coalescent.sim <- function(n.ind=100,
 
     diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
     # Q <- Q.mat
-
-    ## Expected n.subs??
-    # Exp.n.subs <- round(sum(tree$edge.length)*((s + (s*af)) / 2), 0)
-    # print("EXP n.subs ??"); print(Exp.n.subs)
 
     ## SAVE PANEL PLOT:
     if(!is.null(filename)){
@@ -254,8 +251,6 @@ coalescent.sim <- function(n.ind=100,
                            assoc.prob = assoc.prob,
                            ## dependent/corr' transition rate/prob mat:
                            Q = Q.mat,
-                           # Q = matrix(c(2, 0.75, 0.75, 1, 3, 0.5, 0.25,  3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2),
-                           #            nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2)),
                            tree = tree,
                            n.phen.subs = n.phen.subs,
                            phen.loci = NULL,
@@ -263,7 +258,6 @@ coalescent.sim <- function(n.ind=100,
                            reconstruct = FALSE,
                            dist.dna.model = "JC69",
                            grp.min = grp.min,
-                           coaltree = coaltree,
                            row.names = NULL,
                            set=set,
                            seed=seed)
@@ -274,8 +268,10 @@ coalescent.sim <- function(n.ind=100,
     phen <- snps.list$phen
     phen.nodes <- snps.list$phen.nodes
 
-    ## end saving panel plot:
-    dev.off()
+    if(!is.null(filename)){
+      ## end saving panel plot:
+      dev.off()
+    }
 
   }else{
 
@@ -286,7 +282,7 @@ coalescent.sim <- function(n.ind=100,
 
   if(is.null(phen)){
     ## get list of phenotype simulation output
-    phen.list <- phen.sim(tree, n.subs = n.phen.subs, grp.min = grp.min, coaltree = coaltree, seed = seed)
+    phen.list <- phen.sim(tree, n.subs = n.phen.subs, grp.min = grp.min, seed = seed)
 
     ## get phenotype for terminal nodes only
     phen <- phen.list$phen
@@ -332,7 +328,6 @@ coalescent.sim <- function(n.ind=100,
                        reconstruct=reconstruct,
                        dist.dna.model=dist.dna.model,
                        row.names = NULL,
-                       coaltree = coaltree,
                        set=set,
                        seed=seed)
   # )
@@ -363,7 +358,7 @@ coalescent.sim <- function(n.ind=100,
     }else{
       phen.plot.col <- plot.phen(tree = tree,
                                  phen.nodes = phen.nodes,
-                                 plot = plot)
+                                 plot = plot, main.title=FALSE)
     }
 
     ##################
@@ -383,23 +378,25 @@ coalescent.sim <- function(n.ind=100,
       ## PLOT CLADES along tips:
       ## coaltree:
       if(coaltree == TRUE){
-        tiplabels(text=NULL, cex=0.6, adj=c(0.55, 0.5), col=cladeCol, pch=15) # adj=c(0.65, 0.75) ## NOT SURE WHY/WHEN ADJ WORKS/w WHAT VALUES?????
+        tiplabels(text=NULL, cex=0.6, adj=c(0.65, 0.5), col=cladeCol, pch=15) # adj=c(0.65, 0.75) ## NOT SURE WHY/WHEN ADJ WORKS/w WHAT VALUES?????
       }else{
         ## rtree:
         tiplabels(text=NULL, cex=0.75, adj=c(0.65, 0.75), col=cladeCol, pch=15) # adj=c(0.65, 0.75) ## NOT SURE WHY/WHEN ADJ WORKS/w WHAT VALUES?????
       }
     }
 
-    ## end saving tree plot:
-    dev.off()
+    if(!is.null(filename)){
+      ## end saving tree plot:
+      dev.off()
+    }
 
   }
 
   ################
   ## Get Output ##
   ################
-  out <- list(snps, snps.assoc, phen, phen.plot.col, tree)
-  names(out) <- c("snps", "snps.assoc", "phen", "phen.plot.col", "tree")
+  out <- list(snps, snps.assoc, phen, phen.plot.col, tree, sets)
+  names(out) <- c("snps", "snps.assoc", "phen", "phen.plot.col", "tree", "sets")
   return(out)
 
 } # end coalescent.sim

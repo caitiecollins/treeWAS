@@ -70,6 +70,11 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
   # require(phangorn)
   # require(adegenet)
 
+  ## HANDLE TREE: ##
+  ## Always work w tree in pruningwise order..
+  ## Note: plot.phen expects output from phen.sim as input, and phen.sim works w pruningwise trees...
+  tree <- reorder.phylo(tree, order="pruningwise")
+
   #############################################################################
   ######################## PLOT phylo with PHEN ###############################
   #############################################################################
@@ -86,10 +91,8 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
     ## get COLOR for NODES
     nodeCol <- as.vector(phen.nodes)
     nodeCol <- as.character(nodeCol)
-    # nodeCol <- replace(nodeCol, which(nodeCol == "B"), "red")
-    # nodeCol <- replace(nodeCol, which(nodeCol == "A"), "blue")
-    nodeCol <- replace(nodeCol, which(nodeCol %in% c("B", "1")), "red")
-    nodeCol <- replace(nodeCol, which(nodeCol %in% c("A", "0")), "blue")
+    nodeCol <- replace(nodeCol, which(nodeCol %in% c("R", "B", "1")), "red")
+    nodeCol <- replace(nodeCol, which(nodeCol %in% c("S", "A", "0")), "blue")
     nodeCol <- as.vector(unlist(nodeCol))
     ## get COLOR for LEAVES ONLY
     leafCol <- nodeCol[1:n.ind]
@@ -121,7 +124,15 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
                    cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
-        nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+        if(is.null(tree$node.label)){
+          # nodeLabs <- unique(tree$edge[,1])
+          ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
+          # if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
+          nodeLabs <- sort(unique(tree$edge[,1])) ## This seems to work...
+          nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
+        }else{
+          nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
+        }
 
       }else{
 
@@ -146,8 +157,18 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
           ## if direction="leftwards"
           tiplabels(text=tree$tip.label, cex=0.6, adj=c(1.5,0), col=leafCol, frame="none")
         }
-        ## make sure this isn't backward...:
-        #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+
+        ## TOO CROWDED:
+        #         if(is.null(tree$node.label)){
+        #           # nodeLabs <- unique(tree$edge[,1])
+        #           ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
+        #           # if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
+        #           nodeLabs <- sort(unique(tree$edge[,1])) ## This seems to work...
+        #           nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
+        #           # nodelabels(text=nodeLabs, cex=0.5, col=internalNodeCol, bg="yellow")
+        #         }else{
+        #           nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
+        #         }
         ## should be numbered s.t. the root node is n.term+1
         ## RECALL: terminal nodes are numbered 1:n.ind from bottom to top of plot of tree;
         ## edges are numbered 1:nrow(edges) by following the lowest trace on the plot
@@ -167,10 +188,8 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         ## get COLOR for NODES
         nodeCol <- as.vector(phen.nodes)
         nodeCol <- as.character(nodeCol)
-        # nodeCol <- replace(nodeCol, which(nodeCol == "B"), "red")
-        # nodeCol <- replace(nodeCol, which(nodeCol == "A"), "blue")
-        nodeCol <- replace(nodeCol, which(nodeCol %in% c("B", "1")), "red")
-        nodeCol <- replace(nodeCol, which(nodeCol %in% c("A", "0")), "blue")
+        nodeCol <- replace(nodeCol, which(nodeCol %in% c("R", "B", "1")), "red")
+        nodeCol <- replace(nodeCol, which(nodeCol %in% c("S", "A", "0")), "blue")
         nodeCol <- as.vector(unlist(nodeCol))
         ## get COLOR for LEAVES ONLY
         leafCol <- nodeCol[1:n.ind]
@@ -203,7 +222,15 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
             edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
                        cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
             tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
-            nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
+            if(is.null(tree$node.label)){
+              # nodeLabs <- unique(tree$edge[,1])
+              ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
+              # if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
+              nodeLabs <- sort(unique(tree$edge[,1])) ## This seems to work..
+              nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
+            }else{
+              nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
+            }
 
           }else{
 
@@ -219,11 +246,20 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
             # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
             # cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
 
-            tiplabels(text=tree$tip.label, cex=0.6, adj=c(1.5, 0), col=leafCol, frame="none") # adj=c(1.5,0) # if direction="leftwards"
+            tiplabels(text=tree$tip.label, cex=0.6, adj=c(1.5, 0), col=leafCol, frame="none")
 
-            ## make sure this isn't backward...:
-            #nodelabels(text=rev(unique(tree$edge[,1])), cex=0.5, bg=transp(internalNodeCol, 0.3))
-            ## should be numbered s.t. the root node is n.term+1
+            ## Too cluttered if included w N > 20:
+            #             if(is.null(tree$node.label)){
+            #               # nodeLabs <- unique(tree$edge[,1])
+            #               ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
+            #               # if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
+            #               nodeLabs <- sort(unique(tree$edge[,1])) ## This seems to work...
+            #               nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
+            #               # nodelabels(text=nodeLabs, cex=0.5, col=internalNodeCol, bg="yellow")
+            #             }else{
+            #               nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
+            #             }
+
             ## RECALL: terminal nodes are numbered 1:n.ind from bottom to top of plot of tree;
             ## edges are numbered 1:nrow(edges) by following the lowest trace on the plot
             ## (starting from the root down to the lowermost tips);
@@ -278,6 +314,15 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         title("Tree with terminal phenotype")
         axisPhylo()
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
+        ## Too cluttered if included:
+        #   if(is.null(tree$node.label)){
+        #     nodeLabs <- unique(tree$edge[,1])
+        #     ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
+        #     if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
+        #     nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
+        #   }else{
+        #     nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
+        #   }
       } # end plot = TRUE
     } # end if(!is.null(phen)) ## ie. PROVIDED phenotype & plotting
   } # end if phen for terminal nodes only

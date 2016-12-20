@@ -89,7 +89,8 @@ get.sig.snps <- function(snps,
                          p.value.by = "count",
                          snps.reconstruction,
                          snps.sim.reconstruction,
-                         phen.reconstruction){
+                         phen.reconstruction,
+                         rec = "parsimony"){
 
   #################
   ## HANDLE SNPS ##
@@ -278,35 +279,46 @@ get.sig.snps <- function(snps,
     ## NOTE: If snps(.sim) are UNIQUE but snps(.sim).reconstruction are NOT, test will give INCORRECT OUTPUT!!!
 
     if(all.unique == FALSE){
-      temp <- get.unique.matrix(snps.reconstruction, MARGIN=2)
-      snps.reconstruction <- temp$unique.data
-      snps.reconstruction.index <- temp$index
-      if(!identical(snps.reconstruction.index, snps.index)){
-        warning("Careful-- snps and snps.reconstruction should have the same index when reduced
-                to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+      ## check if snsp.rec is already in UNIQUE form:
+      if(ncol(snps.reconstruction) != ncol(snps.unique)){
+        temp <- get.unique.matrix(snps.reconstruction, MARGIN=2)
+        snps.reconstruction <- temp$unique.data
+        snps.reconstruction.index <- temp$index
+        if(!identical(snps.reconstruction.index, snps.index)){
+          warning("Careful-- snps and snps.reconstruction should have the same index when reduced
+                  to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+        }
+        }else{
+          snps.reconstruction.index <- snps.index
       }
     }
 
     if(all.unique.sim == FALSE){
-      temp <- get.unique.matrix(snps.sim.reconstruction, MARGIN=2)
-      snps.sim.reconstruction <- temp$unique.data
-      snps.sim.reconstruction.index <- temp$index
-      if(!identical(snps.sim.reconstruction.index, snps.sim.index)){
-        warning("Careful-- snps.sim and snps.sim.reconstruction should have the same index when reduced
-                to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+      ## check if snsp.rec is already in UNIQUE form:
+      if(ncol(snps.reconstruction) != ncol(snps.unique)){
+        temp <- get.unique.matrix(snps.sim.reconstruction, MARGIN=2)
+        snps.sim.reconstruction <- temp$unique.data
+        snps.sim.reconstruction.index <- temp$index
+        if(!identical(snps.sim.reconstruction.index, snps.sim.index)){
+          warning("Careful-- snps.sim and snps.sim.reconstruction should have the same index when reduced
+                  to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+        }
+        }else{
+          snps.sim.reconstruction.index <- snps.sim.index
       }
     }
 
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
-    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test, rec = rec)
+
 
 
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
-    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test, rec = rec)
   }
 
   ###################################
@@ -332,13 +344,18 @@ get.sig.snps <- function(snps,
   # hist(corr.dat, xlim=c(0,1))
 
 
-
-
   ############################
   ## HANDLE P.VALUE OPTIONS ##
   ############################
 
-  p.value.ori <- p.value
+  out <- nom <- list()
+  corr.dat.ori <- corr.dat
+  corr.sim.ori <- corr.sim
+
+
+  ## n.snps.sim ##
+  corr.sim <- corr.sim.ori
+
 
   #####################
   ## p.value.correct ##
@@ -348,7 +365,7 @@ get.sig.snps <- function(snps,
     ## bonf ##
     ##########
 
-    p.value <- p.value.ori/(length(corr.dat)*n.tests)
+    p.value <- p.value/(length(corr.dat)*n.tests)
 
     ################
     ## p.value.by ##
@@ -362,9 +379,11 @@ get.sig.snps <- function(snps,
     #########
     ## fdr ##
     #########
-    p.vals <- .get.p.vals(corr.sim)
+    p.vals <- .get.p.vals(corr.sim,
+                          corr.dat = NULL,
+                          fisher.test = TRUE)
     p.vals <- sort(p.vals, decreasing=TRUE)
-    p.fdr <- p.adjust(p.vals, method="fdr", n=length(p.vals)*n.tests)
+    p.fdr <- p.adjust(p.vals, method="fdr", n=length(p.vals)*n.tests) # CHECK--IS THIS THE CORRECT MT APPROACH FOR FDR????????????????????????
     p.thresh <- quantile(p.fdr, probs=1-p.value)
 
     ################
@@ -372,38 +391,6 @@ get.sig.snps <- function(snps,
     ################
     if(p.value.by == "count") thresh <- quantile(corr.sim, probs=p.thresh)
     if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=p.thresh)
-
-    #     colnames(snps)[which(pval.fdr < p.thresh)]
-
-    #     ## COMPARING THRESHOLDS ATTAINED BY DIFFERENT METHODS ##
-    #
-    ## quick look at corr.sim & corr.dat
-    # hist(corr.sim, xlim=c(0,1))
-    # hist(corr.dat, xlim=c(0,1))
-    #
-    #
-    #     ## get threshold by counts
-    #     thresh.uncorr <- quantile(corr.sim, probs=1-p.value)
-    #     thresh.bonf <- quantile(corr.sim, probs=1-(p.value/length(corr.sim)))
-    #     thresh.fdr <- quantile(corr.sim, probs=p.thresh)
-    #
-    #     ## plot
-    #     hist(corr.sim, breaks=50, xlim=c(0,1))
-    #     abline(v=thresh.uncorr, col="black", lwd=2)
-    #     abline(v=thresh.bonf, col="red", lwd=2)
-    #     abline(v=thresh.fdr, col="blue", lwd=2)
-    #
-    #     ## get threshold by density
-    #     thresh.uncorr.d <- quantile(density(corr.sim)$x, probs=1-p.value)
-    #     thresh.bonf.d <- quantile(density(corr.sim)$x, probs=1-(p.value/length(corr.sim)))
-    #     thresh.fdr.d <- quantile(density(corr.sim)$x, probs=p.thresh)
-    #
-    #     ## plot
-    #     par(new=TRUE)
-    #     plot(density(corr.sim), xlim=c(0,1), col="blue")
-    #     abline(v=thresh.uncorr.d, col="black", lwd=2, lty=2)
-    #     abline(v=thresh.bonf.d, col="red", lwd=2, lty=2)
-    #     abline(v=thresh.fdr.d, col="blue", lwd=2, lty=2)
 
   } # end p.value.correct == "fdr"
 
@@ -415,15 +402,15 @@ get.sig.snps <- function(snps,
     ## Identify (real) SNPs w correlations > thresh:
     sig.snps <- which(corr.dat < thresh)
     p.vals <- .get.p.vals(corr.sim = corr.sim,
-                         corr.dat = corr.dat,
-                         fisher.test = TRUE)
+                          corr.dat = corr.dat,
+                          fisher.test = TRUE)
     sig.p.vals <- p.vals[sig.snps]
   }else{
     ## Identify (real) SNPs w correlations > thresh:
     sig.snps <- which(corr.dat > thresh)
     p.vals <- .get.p.vals(corr.sim = corr.sim,
-                         corr.dat = corr.dat,
-                         fisher.test = FALSE)
+                          corr.dat = corr.dat,
+                          fisher.test = FALSE)
     sig.p.vals <- p.vals[sig.snps]
   }
 
@@ -437,7 +424,7 @@ get.sig.snps <- function(snps,
   sig.corrs <- corr.dat[sig.snps]
   ## get the list of those SNPs (ie. their locus names)
   # sig.snps <- dimnames(snps)[[2]][sig.snps]
-  sig.snps.names <- dimnames(snps)[[2]][sig.snps]
+  sig.snps.names <- dimnames(snps.ori)[[2]][sig.snps]
 
   ## re-order list of sig.snps and sig.corrs by value of sig.corr
   if(test=="fisher"){
@@ -456,24 +443,25 @@ get.sig.snps <- function(snps,
   #################
 
   out <- list(corr.dat,
-              corr.sim,
-              p.vals,
-              thresh,
-              sig.snps.names,
-              sig.snps,
-              sig.corrs,
-              sig.p.vals,
-              min.p)
+                   corr.sim,
+                   p.vals,
+                   thresh,
+                   sig.snps.names,
+                   sig.snps,
+                   sig.corrs,
+                   sig.p.vals,
+                   min.p)
 
   names(out) <- c("corr.dat",
-                  "corr.sim",
-                  "p.vals",
-                  "sig.thresh",
-                  "sig.snps.names",
-                  "sig.snps",
-                  "sig.corrs",
-                  "sig.p.vals",
-                  "min.p")
+                 "corr.sim",
+                 "p.vals",
+                 "sig.thresh",
+                 "sig.snps.names",
+                 "sig.snps",
+                 "sig.corrs",
+                 "sig.p.vals",
+                 "min.p")
+
 
   return(out)
 
@@ -520,7 +508,8 @@ assoc.test <- function(snps,
                                 "simultaneous",
                                 "subsequent",
                                 "cor",
-                                "fisher")){
+                                "fisher"),
+                       rec = "parsimony"){
 
   ##########################################
   ## TERMINAL (test 1: correlation score) ##
@@ -541,8 +530,9 @@ assoc.test <- function(snps,
   ## CORRELATION ##
   #################
   if(test=="cor"){
-    corr.dat <- sapply(c(1:ncol(snps)), function(e)
-      cor(snps[,e], phen)) # regular correlation...
+    corr.dat <- as.vector(cor(snps[, 1:ncol(snps)], phen)) # regular correlation...
+    # corr.dat <- as.vector(cor(snps, phen)) # ? identical ??
+
   } # end test cor
 
   #########################
@@ -568,13 +558,15 @@ assoc.test <- function(snps,
   ## SUBSEQUENT TEST ##
   #####################
   if(test == "subsequent"){
-    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree)
+    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree, rec = rec)
   } # end test subsequent
 
 
 
   ## USE ABSOLUTE VALUE
-  corr.dat <- abs(corr.dat)
+  # if(test != "subsequent"){
+    corr.dat <- abs(corr.dat)
+  # }
 
   return(corr.dat)
 } # end assoc.test
@@ -639,6 +631,7 @@ assoc.test <- function(snps,
     ## get real p.vals using corr.dat for break points:
     p.vals.dat <- list()
 
+
     if(fisher.test == FALSE){
       for(i in 1:length(cd.tab)){
         tab.above <- which(as.numeric(names(cs.tab)) > as.numeric(names(cd.tab[i])))
@@ -659,6 +652,7 @@ assoc.test <- function(snps,
         }
       }
     }
+
     p.vals.dat <- as.vector(unlist(p.vals.dat))
 
     ## get the unique index that

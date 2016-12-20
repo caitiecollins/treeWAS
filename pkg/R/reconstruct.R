@@ -37,11 +37,21 @@ asr <- function(var,
                 type = c("parsimony", "ace"),
                 method = "discrete"){
 
-  # require(ape)
+  ## HANDLE TREE: ##
+  ## Always work with trees in "pruningwise" order:
+  tree <- reorder.phylo(tree, order="pruningwise")
 
   ## get tree edges
   edges <- tree$edge
   ord <- NULL
+
+  ## Arg checks:
+  type <- tolower(type)
+  if(!type %in% c("parsimony", "ace")) stop("type must be one of 'parsimony' or 'ace'.")
+
+  method <- tolower(method)
+  if(method != "discrete") warning("Only method = 'discrete' has been tested.
+                                   Results with non-discrete phenotypes may be incorrect.")
 
   #######################
   ## MATRIX (eg. SNPs) ##
@@ -66,6 +76,8 @@ asr <- function(var,
     ## work w only unique snps:
     snps.ori <- snps
     snps <- snps.unique
+
+    print("N snps.unique (reconstruction):"); print(ncol(snps.unique))
 
     ############################
     ## run PARSIMONY on SNPs: ##
@@ -239,8 +251,9 @@ asr <- function(var,
 
 get.ancestral.pars <- function(var, tree){
 
-  # require(ape)
-  # require(phangorn)
+  ## HANDLE TREE: ##
+  ## Always work with trees in "pruningwise" order:
+  tree <- reorder.phylo(tree, order="pruningwise")
 
   ord <- NULL
   edges <- tree$edge
@@ -283,18 +296,15 @@ get.ancestral.pars <- function(var, tree){
     ## ACCTRAN = "ACCelerated TRANsformation"
 
     ## as.phyDat requires row/col names:
-    if(is.null(row.names(snps))){
-      warning("Replacing NULL row.names(snps) with tree$tip.label (or assigning 1:N to both).
-              Careful--if tree$tip.label and row.names(snps) should NOT be in the same order,
-              please STOP and assign these names in the correct order.")
-      if(!is.null(tree$tip.label)){
-        row.names(snps) <- tree$tip.label
-      }else{
-        row.names(snps) <- c(1:nrow(snps))
-        tree$tip.label <- c(1:nrow(snps)) # ???
-      }
-    }
+    ## RUN CHECKS TO ENSURE tree$tip.label and rownames(snps) CONTAIN SAME SET OF LABELS!
+    if(is.null(tree$tip.label)) stop("Trees must have tip.labels corresponding to rownames(snps).")
+    if(is.null(rownames(snps))) stop("SNPs must have rownames corresponding to tree$tip.label.")
+    if(!all(tree$tip.label %in% rownames(snps))) stop("tree$tip.label and rownames(snps)
+                                                      must contain the same set of labels
+                                                      so that individuals can be correctly identified.")
+    ## Assign colnames if NULL:
     if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+
     ## get levels (ie. 0, 1)
     snps.levels <- sort(unique(as.vector(snps)))
     ## returns only unique patterns...
@@ -479,11 +489,16 @@ get.ancestral.pars <- function(var, tree){
     #############
 
     phen.ori <- phen
-    phen <- as.numeric(as.character(phen))
+    phen <- as.numeric(as.factor(phen))
+    names(phen) <- names(phen.ori)
+
     ## as.phyDat requires names...
-    if(is.null(names(phen))){
-      if(!is.null(tree$tip.label)) names(phen) <- tree$tip.label
-    }
+    ## RUN CHECKS TO ENSURE tree$tip.label and rownames(snps) CONTAIN SAME SET OF LABELS!
+    if(is.null(tree$tip.label)) stop("Trees must have tip.labels corresponding to names(phen).")
+    if(is.null(names(phen))) stop("Phen must have names corresponding to tree$tip.label.")
+    if(!all(tree$tip.label %in% names(phen))) stop("tree$tip.label and names(phen)
+                                                      must contain the same set of labels
+                                                      so that individuals can be correctly identified.")
 
     ## get levels (ie. 0, 1)
     phen.levels <- sort(unique(phen))

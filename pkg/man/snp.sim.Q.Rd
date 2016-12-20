@@ -10,8 +10,7 @@ snp.sim.Q(n.snps = 10000, n.subs = 1, snp.root = NULL,
   dimnames = rep(list(c("0|0", "0|1", "1|0", "1|1")), 2)),
   tree = coalescent.tree.sim(100), n.phen.subs = 15, phen.loci = NULL,
   heatmap = FALSE, reconstruct = FALSE, dist.dna.model = "JC69",
-  grp.min = 0.25, coaltree = TRUE, row.names = NULL, set = 3,
-  seed = 1)
+  grp.min = 0.25, row.names = NULL, set = 3, seed = 1)
 }
 \arguments{
 \item{snps}{description.}

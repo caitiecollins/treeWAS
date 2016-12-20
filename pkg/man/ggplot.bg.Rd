@@ -8,6 +8,27 @@
   y.ax = FALSE, box = TRUE, grid = TRUE, grid.col = "white",
   grid.nx = NULL, grid.ny = NULL, grid.lwd = 1, grid.lty = 1)
 }
+\arguments{
+\item{bg}{The background colour, by default ``lightgray'' with 50\% transparency.}
+
+\item{x.ax}{A logical specifying whether to re-draw the x-axis.}
+
+\item{y.ax}{A logical specifying whether to re-draw the y-axis.}
+
+\item{box}{A logical specifying whether to draw a box around the plotting area.}
+
+\item{grid}{A logical specifying whether to draw a grid across the background within the plotting area.}
+
+\item{grid.col}{The color of the gridlines, ``white'' by default. Only used if grid is set to TRUE.}
+
+\item{grid.nx}{An optional integer to specify the number of gridlines to be drawn along the x-axis.}
+
+\item{grid.ny}{An optional integer to specify the number of gridlines to be drawn along the y-axis.}
+
+\item{grid.lwd}{An integer specifying the lwd (line weight) of the gridlines; by default, set to 1.}
+
+\item{grid.lty}{An integer specifying the line type to be used for the gridlines; by default, set to 1 (i.e., solid lines).}
+}
 \description{
 Get an imitation ggplot2-style background for plots made outside ggplot2
 }

@@ -207,6 +207,107 @@ hist(fitch.complete)
 
 names(out$dat)
 
+
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+
+###################################################################
+## Try running pipeline on a coalescent tree generated w rcoal?! ##
+###################################################################
+
+## (i) Check that rtree and rcoal give same tree label ordering
+## (ii) Run w rcoal tree & coal=FALSE
+######  (OR better yet, write in code so you can distinguish appropriate action given tree structure AND label order!)
+
+set.seed(1)
+tree.r <- rtree(n=10, rooted=TRUE)
+set.seed(1)
+tree.c <- rcoal(n=10, rooted=TRUE)
+
+plot(tree.r)
+plot(tree.c)
+
+
+str(tree.r)
+str(tree.c)
+
+tree.ori <- tree
+phen.ori <- phen
+snps.ori <- snps
+
+head(tree$edge)
+
+###################################################################
+
+# labs <- rownames(snps)
+labs <- c(1:100)
+
+if(all.is.numeric(tree$tip.label)){
+  ## if we can convert to numeric, do so:
+  if(!is.null(tree$tip.label)) tree$tip.label <- as.numeric(tree$tip.label)
+}else{
+  ## if we can remove "t" to get numeric, do so:
+  prefix <- keepFirstN(tree$tip.label, 1)
+  if(all(tolower(prefix) == "t")){
+    temp <- removeFirstN(tree$tip.label, 1)
+    if(all.is.numeric(temp)){
+      tree$tip.label <- as.numeric(temp)
+    }else{
+      ## else, replace with numeric indices:
+      # tree$tip.label <- c(1:length(tree$tip.label))
+      warning("Site-wise parsimony scores (phangorn's
+              fitch parsimony function) may not be calculated correctly
+              when tip.labels are not numeric.
+              Please change tree$tip.label to numeric values.")
+    }
+  }
+}
+
+## NODE labels ##
+if(all.is.numeric(tree$node.label)){
+  if(!is.null(tree$node.label)) tree$node.label <- as.numeric(tree$node.label)
+}else{
+  ## if we can remove "NODE_" to get numeric, do so:
+  prefix <- keepFirstN(tree$node.label, 4)
+  if(all(tolower(prefix) == "node")){
+    temp <- removeFirstN(tree$node.label, 5)
+    if(all.is.numeric(temp)){
+      tree$node.label <- as.numeric(temp)
+    }else{
+      ## else, replace with numeric indices:
+      # tree$node.label <- c((n.ind+1):(n.ind+tree$Nnode))
+      warning("Site-wise parsimony scores (phangorn's
+              fitch parsimony function) may not be calculated correctly
+              when node.labels are not numeric.
+              Please change tree$node.label to numeric values.")
+    }
+  }
+}
+
+treelabs <- c(tree$tip.label, tree$node.label)
+edges <- tree$edge
+# for (i in 1:nrow(edges)) for (j in 1:ncol(edges)) edges[i,j] <- which(labs==treelabs[edges[i,j]]) ## original (from readCFML)
+
+## replace indices in cells of tree$edge with the corresponding index in rownames(snps)
+for (i in 1:nrow(edges)){
+  for (j in 1:ncol(edges)){
+    if(!is.na(treelabs[edges[i,j]])){
+      edges[i,j] <- which(labs==treelabs[edges[i,j]])
+    }
+  }
+}
+
+
+
+##################################################  Try it w rtree(10)     ##################################################
+
+set.seed(1)
+tree.r <- rtree(n=10, rooted=TRUE)
+
+labs <- paste("t", c(1:10), sep="")
+
 #
 
 
@@ -216,6 +317,33 @@ names(out$dat)
 
 
 #
+
+
+
+#
+
+
+
+
+#
+
+
+
+
+
+
+#
+
+
+
+
+
+
+
+#
+
+
+
 
 
 

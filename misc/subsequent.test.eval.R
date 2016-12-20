@@ -64,14 +64,38 @@ subsequent.test <- function(snps.reconstruction,
   bl <- tree$edge.length
 
   #################################################################     #####
+
+  ## NOTE: SCORE 3.1 will NOT work when reconstructions are done w ACE!
+  if(rec == "ace"){
+    score3.1 <- NULL
+  }else{
+
+    ###############
+    ## SCORE 3.1 ##
+    ###############
+    ## SIMPLE UNWEIGHTED TALLY SCORE (1 point for each of "subsequent", "maintained", "simultaneous")
+
+    score3.p <- c("00|00", "11|11", "00|11", "11|00", "01|00", "10|00", "01|11", "10|11")
+    score3.n <- c("00|01", "00|10", "11|01", "11|10", "01|01", "10|10", "01|10", "10|01")
+
+    score3.1 <- t(matrix(paste(Sa, Pa, "|", Sd, Pd, sep=""), nrow=ncol(snps.rec), byrow=T))
+    score3.1 <- abs(sapply(c(1:ncol(score3.1)), function(e) length(which(score3.1[,e] %in% score3.p)) - length(which(score3.1[,e] %in% score3.n))))
+
+    names(score3.1) <- colnames(snps.rec)
+  }
+  #################################################################     #####
   ###############
   ## SCORE 3.0 ##
   ###############
-  ## ORIGINAL AND NEW INTEGRAL-BASED SCORE3 (without edge length):
-  score3 <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
+  ## ORIGINAL AND NEW INTEGRAL-BASED SCORE3 (with and without edge length):
+  score3.L <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = bl)
+  score3.NoL <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
 
-  score3 <- abs(colSums(score3, na.rm=TRUE))
-  names(score3) <- colnames(snps.rec)
+  score3.L <- abs(colSums(score3.L, na.rm=TRUE))
+  names(score3.L) <- colnames(snps.rec)
+
+  score3.NoL <- abs(colSums(score3.NoL, na.rm=TRUE))
+  names(score3.NoL) <- colnames(snps.rec)
 
   ################################################
   ## get values for duplicate snps.rec columns: ##
@@ -79,15 +103,35 @@ subsequent.test <- function(snps.reconstruction,
 
   ## get reconstruction for all original sites
   if(all.unique == TRUE){
-    score3.complete <- score3
+    score3.1.complete <- score3.1
+    score3.L.complete <- score3.L
+    score3.NoL.complete <- score3.NoL
   }else{
-    score3.complete <- score3[index]
-    names(score3.complete) <- colnames(snps.rec.ori)
+    ## only expand score3.1 if rec is by parsimony:
+    if(!is.null(score3.1)){
+      score3.1.complete <- score3.1[index]
+      names(score3.1.complete) <- colnames(snps.rec.ori)
+    }
+    score3.L.complete <- score3.L[index]
+    names(score3.L.complete) <- colnames(snps.rec.ori)
+    score3.NoL.complete <- score3.NoL[index]
+    names(score3.NoL.complete) <- colnames(snps.rec.ori)
   }
 
-  score3 <- score3.complete
+  score3.1 <- score3.1.complete
+  score3.L <- score3.L.complete
+  score3.NoL <- score3.NoL.complete
 
-  return(score3)
+  ## only return score3.1 if present (ie. rec == parsimony)
+  if(is.null(score3.1)){
+    score <- list("score3.L" = score3.L,
+                  "score3.NoL" = score3.NoL)
+  }else{
+    score <- list("score3.1" = score3.1,
+                  "score3.L" = score3.L,
+                  "score3.NoL" = score3.NoL)
+  }
+  return(score)
 
 } # end subsequent.test
 
