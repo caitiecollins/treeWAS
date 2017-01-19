@@ -65,6 +65,8 @@
 
 
 
+# phen.nodes <- phen.plot.col$all.nodes
+
 plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, main.title = TRUE, ...){
 
   # require(phangorn)
@@ -74,6 +76,16 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
   ## Always work w tree in pruningwise order..
   ## Note: plot.phen expects output from phen.sim as input, and phen.sim works w pruningwise trees...
   tree <- reorder.phylo(tree, order="pruningwise")
+
+  ## PLOT MARGINS: ##
+  mar.ori <- par()$mar
+  if(RTL==FALSE){
+    mar.new <- c(2.5,0.5,0,1.5)
+  }else{
+    mar.new <- c(2.5,1.5,0,0.5)
+  }
+  ## Set plot margins:
+  par(mar=mar.new)
 
   #############################################################################
   ######################## PLOT phylo with PHEN ###############################
@@ -111,30 +123,30 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
     ## plot TREE ##
     ###############
     if(plot==TRUE){
-      if(n.ind <= 20){
-        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
-        ## Add title?
-        if(main.title == TRUE){
-          # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
-          title("Tree with phenotypic changes")
-        }else{
-          if(!is.null(main.title)) title(main.title)
-        }
-        axisPhylo()
-        edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
-                   cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
-        tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
-        if(is.null(tree$node.label)){
-          # nodeLabs <- unique(tree$edge[,1])
-          ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
-          # if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
-          nodeLabs <- sort(unique(tree$edge[,1])) ## This seems to work...
-          nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
-        }else{
-          nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
-        }
-
-      }else{
+      #       if(n.ind <= 20){
+      #         plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
+      #         ## Add title?
+      #         if(main.title == TRUE){
+      #           # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
+      #           title("Tree with phenotypic changes")
+      #         }else{
+      #           if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
+      #         }
+      #         axisPhylo()
+      #         edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+      #                    cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
+      #         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
+      #         if(is.null(tree$node.label)){
+      #           # nodeLabs <- unique(tree$edge[,1])
+      #           ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
+      #           # if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
+      #           nodeLabs <- sort(unique(tree$edge[,1])) ## This seems to work...
+      #           nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
+      #         }else{
+      #           nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
+      #         }
+      #
+      #       }else{
 
         if(RTL == FALSE){
           plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
@@ -146,7 +158,7 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
           # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
           title("Tree with phenotypic changes")
         }else{
-          if(!is.null(main.title)) title(main.title)
+          if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
         }
         axisPhylo()
         # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
@@ -157,6 +169,27 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
           ## if direction="leftwards"
           tiplabels(text=tree$tip.label, cex=0.6, adj=c(1.5,0), col=leafCol, frame="none")
         }
+
+        ## TEMP: (LTR)
+        # plot(tree, show.tip=FALSE, edge.width=6, edge.color=edgeCol)
+        ## terminal symbols?
+        # tiplabels(text=NULL, cex=2, adj=c(0.58, 0.5), col=leafCol, pch=15)
+        #         ord <- get.tip.order(tree)
+        #         setCol <- rep("black", 15)
+        #         toChange <- rev(tree$tip.label[ord])[1:6]
+        #         setCol[toChange] <- "darkgrey"
+        #         tiplabels(text=NULL, cex=2, adj=c(0.58, 0.5), col=setCol, pch=15)
+
+        ## TEMP: (RTL)
+        # plot(tree, show.tip=FALSE, edge.width=6, edge.color=edgeCol, direction = "leftwards")
+        ## terminal symbols?
+        # tiplabels(text=NULL, cex=2, adj=c(0.44, 0.5), col=leafCol, pch=15)
+
+        ## TEMP: (cladogram)
+        # plot(tree, show.tip=FALSE, edge.width=6, edge.color=edgeCol, type="c", use.edge.length=F)
+        ## terminal symbols?
+        # tiplabels(text=NULL, cex=1.5, adj=c(1.15, 0.5), col=leafCol, pch=15)
+
 
         ## TOO CROWDED:
         #         if(is.null(tree$node.label)){
@@ -175,7 +208,7 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         ## (starting from the root down to the lowermost tips);
         ## thus, internal nodes are numbered (n.ind+1):(n.ind+(n.ind-1)),
         ## from root to the top-most internal node to be connected (ie. the highest in the plot)
-      }
+      # }
     } # end plot = TRUE
 
     if(!is.null(snp.nodes)){
@@ -209,38 +242,38 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         ## plot TREE ##
         ###############
         if(plot==TRUE){
-          if(n.ind <= 20){
+          #           if(n.ind <= 20){
+          #             plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
+          #             ## Add title?
+          #             if(main.title == TRUE){
+          #               # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
+          #               title("Tree with phenotypic changes")
+          #             }else{
+          #               if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
+          #             }
+          #             axisPhylo()
+          #             edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
+          #                        cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
+          #             tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
+          #             if(is.null(tree$node.label)){
+          #               # nodeLabs <- unique(tree$edge[,1])
+          #               ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
+          #               # if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
+          #               nodeLabs <- sort(unique(tree$edge[,1])) ## This seems to work..
+          #               nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
+          #             }else{
+          #               nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
+          #             }
+          #
+          #           }else{
+
             plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
             ## Add title?
             if(main.title == TRUE){
               # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
               title("Tree with phenotypic changes")
             }else{
-              if(!is.null(main.title)) title(main.title)
-            }
-            axisPhylo()
-            edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
-                       cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
-            tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
-            if(is.null(tree$node.label)){
-              # nodeLabs <- unique(tree$edge[,1])
-              ## nodeLabs should start from the lowest internal node index (ie n.terminal+1):
-              # if(nodeLabs[length(nodeLabs)] == (tree$Nnode+2)) nodeLabs <- rev(nodeLabs)
-              nodeLabs <- sort(unique(tree$edge[,1])) ## This seems to work..
-              nodelabels(text=nodeLabs, cex=0.5, bg=transp(internalNodeCol, 0.3))
-            }else{
-              nodelabels(text=tree$node.label, cex=0.5, bg=transp(internalNodeCol, 0.3))
-            }
-
-          }else{
-
-            plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
-            ## Add title?
-            if(main.title == TRUE){
-              # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
-              title("Tree with phenotypic changes")
-            }else{
-              if(!is.null(main.title)) title(main.title)
+              if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
             }
             axisPhylo()
             # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
@@ -265,7 +298,7 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
             ## (starting from the root down to the lowermost tips);
             ## thus, internal nodes are numbered (n.ind+1):(n.ind+(n.ind-1)),
             ## from root to the top-most internal node to be connected (ie. the highest in the plot)
-          }
+          # }
         } # end plot = TRUE
       } # end check for length snp.nodes
     } # end snp.nodes
@@ -311,7 +344,13 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
       if(plot==TRUE){
         plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...)
         # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotype at leaves")
-        title("Tree with terminal phenotype")
+        ## Add title?
+        if(main.title == TRUE){
+          # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
+          title("Tree with phenotypic changes")
+        }else{
+          if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
+        }
         axisPhylo()
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
         ## Too cluttered if included:
@@ -326,6 +365,10 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
       } # end plot = TRUE
     } # end if(!is.null(phen)) ## ie. PROVIDED phenotype & plotting
   } # end if phen for terminal nodes only
+
+
+  ## Reset plot margins: ##
+  par(mar=mar.ori)
 
   ## get all info relevant to plotting phenotype with colored phylo:
   phen.plot.colors <- list(edgeLabCol, edgeCol, nodeCol, internalNodeCol, leafCol)

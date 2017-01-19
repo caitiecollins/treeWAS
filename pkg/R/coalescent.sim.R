@@ -142,10 +142,31 @@
 # seed <- 77
 
 
+## TOY EG for PRESENTATION:
+# c.sim <- coalescent.sim(n.ind=15,
+#                         n.snps=1000,
+#                         n.subs=dist_0,
+#                         n.snps.assoc=10,
+#                         assoc.prob=90,
+#                         n.phen.subs=5,
+#                         phen=NULL,
+#                         plot=TRUE,
+#                         heatmap=FALSE,
+#                         reconstruct=FALSE,
+#                         dist.dna.model="JC69",
+#                         grp.min = 0.25,
+#                         row.names=NULL,
+#                         coaltree = TRUE,
+#                         s = 10,
+#                         af = 5,
+#                         filename = NULL,
+#                         set=1,
+#                         seed=5)
+
 ## EG:
 # c.sim <- coalescent.sim(n.ind=100,
 #                         n.snps=10000,
-#                         n.subs=dist_0.1,
+#                         n.subs=dist_0,
 #                         n.snps.assoc=10,
 #                         assoc.prob=100,
 #                         n.phen.subs=15,
@@ -160,7 +181,7 @@
 #                         s = 10,
 #                         af = 5,
 #                         filename = NULL,
-#                         set=2,
+#                         set=1,
 #                         seed=78)
 
 

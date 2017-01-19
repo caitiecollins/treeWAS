@@ -27,6 +27,7 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
+#' @importFrom scales rescale
 
 ########################################################################
 
@@ -56,6 +57,12 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   ## work w only unique snps:
   snps.rec.ori <- snps.rec
   snps.rec <- snps.rec.unique
+
+  ################################################
+  ## RE-SCALE NON-BINARY VALUES (phen only ...) ##
+  ################################################
+  ## phen.rec (both Pa and Pd should be on same scale):
+  phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
 
   ###############################
   ## GET DIFFS ACROSS BRANCHES ##

@@ -255,13 +255,24 @@ snp.sim <- function(n.snps = 10000,
   ## Get vector of FALSEs of length tree$edge.length:
   null.vect <- rep(FALSE, length(tree$edge.length))
 
-  snps.loci <- sapply(c(1:length(n.mts)),
-                      function(e)
-                        replace(null.vect,
-                        sample(c(1:length(tree$edge.length)),
-                               n.mts[e],
-                               replace=FALSE,
-                               prob=tree$edge.length), TRUE))
+
+  if(max(n.mts) > length(tree$edge.length)){
+    snps.loci <- sapply(c(1:length(n.mts)),
+                        function(e)
+                          replace(null.vect,
+                                  sample(c(1:length(tree$edge.length)),
+                                         n.mts[e],
+                                         replace=TRUE,
+                                         prob=tree$edge.length), TRUE))
+  }else{
+    snps.loci <- sapply(c(1:length(n.mts)),
+                        function(e)
+                          replace(null.vect,
+                          sample(c(1:length(tree$edge.length)),
+                                 n.mts[e],
+                                 replace=FALSE,
+                                 prob=tree$edge.length), TRUE))
+  }
 
   ## rearrange snps.loci s.t it becomes a
   ## list of length tree$edge.length,
@@ -425,10 +436,17 @@ snp.sim <- function(n.snps = 10000,
     ## you will assign the mts for this site
     ## (~ branch length):
 
-    subs.edges <- sample(c(1:length(tree$edge.length)),
-                         n.mt,
-                         replace=FALSE,
-                         prob=tree$edge.length)
+    if(n.mt > length(tree$edge.length)){
+      subs.edges <- sample(c(1:length(tree$edge.length)),
+                           n.mt,
+                           replace=TRUE,
+                           prob=tree$edge.length)
+    }else{
+      subs.edges <- sample(c(1:length(tree$edge.length)),
+                           n.mt,
+                           replace=FALSE,
+                           prob=tree$edge.length)
+    }
 
     ## TO DO: COULD REPLACE (all instances!!!) LATER WITH:
     ## Get vector of FALSEs of length tree$edge.length:

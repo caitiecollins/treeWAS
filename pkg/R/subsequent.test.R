@@ -22,6 +22,8 @@
 #' ## basic use of fn
 #' tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
 #'
+#' @importFrom scales rescale
+#'
 
 ########################################################################
 
@@ -52,6 +54,12 @@ subsequent.test <- function(snps.reconstruction,
   ## work w only unique snps:
   snps.rec.ori <- snps.rec
   snps.rec <- snps.rec.unique
+
+  ################################################
+  ## RE-SCALE NON-BINARY VALUES (phen only ...) ##
+  ################################################
+  ## phen.rec (both Pa and Pd should be on same scale):
+  phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
 
   ###############################
   ## GET SCORE ACROSS BRANCHES ##

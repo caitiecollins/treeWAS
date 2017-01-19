@@ -1,7 +1,7 @@
 
-######################
-## get.correlations ##
-######################
+##################
+## get.sig.snps ##
+##################
 
 ########################################################################
 
@@ -84,7 +84,7 @@ get.sig.snps <- function(snps,
                          tree,
                          test = "terminal",
                          n.tests = 1,
-                         p.value = 0.001,
+                         p.value = 0.01,
                          p.value.correct = "bonf",
                          p.value.by = "count",
                          snps.reconstruction,
@@ -511,21 +511,6 @@ assoc.test <- function(snps,
                                 "fisher"),
                        rec = "parsimony"){
 
-  ##########################################
-  ## TERMINAL (test 1: correlation score) ##
-  ##########################################
-  if(test=="terminal"){
-    # ~ Correlation "SCORE" =
-    # ((nS1P1 + nS0P0) - (nS1P0 + nS0P1) / (n.total))
-    ## must be calculated for each SNP individually...
-    corr.dat <- sapply(c(1:ncol(snps)), function(e)
-      (((length(which(snps[which(phen==1),e]==1)) +
-           length(which(snps[which(phen==0),e]==0)))
-        - (length(which(snps[which(phen==1),e]==0)) +
-             length(which(snps[which(phen==0),e]==1))))
-       / nrow(snps)))
-  } # end test terminal
-
   #################
   ## CORRELATION ##
   #################
@@ -546,6 +531,22 @@ assoc.test <- function(snps,
     ## the phen have EITHER more 1s or 0s
   } # end test fisher
 
+
+  ################################################
+  ## TERMINAL TEST (score 1: correlation score) ##
+  ################################################
+  if(test=="terminal"){
+    corr.dat <- terminal.test(snps = snps, phen = phen)
+    # ~ Correlation "SCORE" =
+    # ((nS1P1 + nS0P0) - (nS1P0 + nS0P1) / (n.total))
+    ## must be calculated for each SNP individually...
+    #     corr.dat <- sapply(c(1:ncol(snps)), function(e)
+    #       (((length(which(snps[which(phen==1),e]==1)) +
+    #            length(which(snps[which(phen==0),e]==0)))
+    #         - (length(which(snps[which(phen==1),e]==0)) +
+    #              length(which(snps[which(phen==0),e]==1))))
+    #        / nrow(snps)))
+  } # end test terminal
 
   #######################
   ## SIMULTANEOUS TEST ##
