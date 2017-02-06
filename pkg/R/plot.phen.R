@@ -76,13 +76,17 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
   ## Always work w tree in pruningwise order..
   ## Note: plot.phen expects output from phen.sim as input, and phen.sim works w pruningwise trees...
   tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ## PLOT MARGINS: ##
   mar.ori <- par()$mar
   if(RTL==FALSE){
-    mar.new <- c(2.5,0.5,0,1.5)
+    # mar.new <- c(2.5,0.5,0,0.5)
+    mar.new <- c(4, 2, 4, 0.5) + 0.1
   }else{
-    mar.new <- c(2.5,1.5,0,0.5)
+    # mar.new <- c(2.5,1.5,0,0.5)
+    mar.new <- c(5, 4, 4, 2) + 0.1
   }
   ## Set plot margins:
   par(mar=mar.new)
@@ -149,9 +153,11 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
       #       }else{
 
         if(RTL == FALSE){
-          plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
+          # plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
+          plot(tree, show.tip=T, tip.col="white", edge.width=2, edge.color=edgeCol, ...) # edgeCol
         }else{
-          plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction = "leftwards", ...) # edgeCol
+          # plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction = "leftwards", ...) # edgeCol
+          plot(tree, show.tip=T, tip.col="white", edge.width=2, edge.color=edgeCol, direction = "leftwards", ...) # edgeCol
         }
         ## Add title?
         if(main.title == TRUE){
@@ -164,10 +170,10 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
                   # cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
         if(RTL == FALSE){
-          tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), col=leafCol, frame="none")
+          tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.2, 0), col=leafCol, frame="none")
         }else{
           ## if direction="leftwards"
-          tiplabels(text=tree$tip.label, cex=0.6, adj=c(1.5,0), col=leafCol, frame="none")
+          tiplabels(text=tree$tip.label, cex=0.5, adj=c(1.2,0), col=leafCol, frame="none")
         }
 
         ## TEMP: (LTR)

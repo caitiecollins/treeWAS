@@ -17,11 +17,14 @@
 ## DOCUMENTATION ##
 ###################
 
-#' Short one-phrase description.
+#' Convert ClonalFrameML output.
 #'
-#' Longer proper discription of function...
+#' Convert the output of ClonalFrameML into a form usable within \code{treeWAS}.
 #'
 #' @param prefix A character string containing the prefix of all file names to be read in.
+#'
+#' @details The \code{prefix} must be the prefix to three files ending in:
+#' (i) "labelled_tree.newick", (ii) "ML_sequence.fasta", (iii) "position_cross_reference.txt".
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -96,7 +99,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
     if (length(unique(seqs[,i]))==2){
       num[i] <- sum(mapping==i) # Only count biallelic sites
       for (b in 1:nrow(edges)) if (seqs[edges[b,1],i]!=seqs[edges[b,2],i]) subs[i] <- subs[i]+1
-    } ## NOTE--if we're only counting biallelic sites for num, should do so fo subs as well...
+    } ## NOTE--if we're only counting biallelic sites for num, should do so for subs as well...
   } # end for loop
   ) # end system.time
 
@@ -142,90 +145,90 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 
 
 
-##############
-## readCFML ##
-##############
-
-########################################################################
-
-###################
-## DOCUMENTATION ##
-###################
-
-#' Short one-phrase description.
-#'
-#' Longer proper discription of function...
-#'
-#' @param prefix A character string containing the prefix of all file names to be read in.
-#'
-#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
-#' @examples
-#'
-#' ## load data
-#' data(dist)
-#' str(dist)
-#'
-#' ## basic use of fn
-#' fn(arg1, arg2)
-#'
-#' #' ## more elaborate use of fn
-#' fn(arg1, arg2)
-#'
-#' @import ape adegenet
-
-########################################################################
-
-##############
-## readCFML ##
-##############
-
-## ORIGINAL readCFML FN-- RETURNS DIST ONLY w barplot.
-## NOTE-- Use read.CFML (with a DOT) to get the LIST output!!
-
-## This function reads the output of CFML and outputs the distribution of substitutions per site
-
-readCFML <- function(prefix, plot=TRUE) {
-
-  # require(ape)
-  # require(adegenet)
-
-  tree<-read.tree(sprintf('%s.labelled_tree.newick',prefix))
-  seqs<-read.dna(sprintf('%s.ML_sequence.fasta',prefix),format='fasta')
-  mapping<-scan(sprintf('%s.position_cross_reference.txt',prefix),sep=',',quiet=T)
-  l<-length(seqs[1,])
-
-  ## Check tree (violations cause problems, eg. in phen.sim)
-  if(!is.binary.tree(tree)) tree <- multi2di(tree)
-  if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder")
-
-  ## Modify the edge matrix so that it uses the same indices as the fasta file
-  labs<-labels(seqs)
-  edges<-tree$edge
-  treelabs<-c(tree$tip.label,tree$node.label)
-  for (i in 1:nrow(edges)) for (j in 1:ncol(edges)) edges[i,j]=which(labs==treelabs[edges[i,j]])
-
-  ## Count substitutions for each site
-  subs=rep(0,l) # Number of substitutitions for patterns
-  num=rep(0,l) # Number of times a given pattern is used
-  for (i in 1:l) {
-    if (length(unique(seqs[,i]))==2) num[i]=sum(mapping==i) #Only count biallelic sites
-    for (b in 1:nrow(edges)) if (seqs[edges[b,1],i]!=seqs[edges[b,2],i]) subs[i]=subs[i]+1
-  }
-
-  ## Build distribution
-  dist=rep(0,max(subs))
-  for (i in 1:max(subs)) dist[i]=sum(num[which(subs==i)])
-
-  ## Plot distribution
-  if(plot==TRUE){
-    barplot(dist,
-            main="Number of substitutions per site",
-            names.arg=c(1:length(dist)),
-            ylab="Frequency",
-            col=transp("royalblue", alpha=0.5))
-  }
-
-
-  return(dist)
-}
+# ##############
+# ## readCFML ##
+# ##############
+#
+# ########################################################################
+#
+# ###################
+# ## DOCUMENTATION ##
+# ###################
+#
+# #' Short one-phrase description.
+# #'
+# #' Longer proper discription of function...
+# #'
+# #' @param prefix A character string containing the prefix of all file names to be read in.
+# #'
+# #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+# #' @export
+# #' @examples
+# #'
+# #' ## load data
+# #' data(dist)
+# #' str(dist)
+# #'
+# #' ## basic use of fn
+# #' fn(arg1, arg2)
+# #'
+# #' #' ## more elaborate use of fn
+# #' fn(arg1, arg2)
+# #'
+# #' @import ape adegenet
+#
+# ########################################################################
+#
+# ##############
+# ## readCFML ##
+# ##############
+#
+# ## ORIGINAL readCFML FN-- RETURNS DIST ONLY w barplot.
+# ## NOTE-- Use read.CFML (with a DOT) to get the LIST output!!
+#
+# ## This function reads the output of CFML and outputs the distribution of substitutions per site
+#
+# readCFML <- function(prefix, plot=TRUE) {
+#
+#   # require(ape)
+#   # require(adegenet)
+#
+#   tree<-read.tree(sprintf('%s.labelled_tree.newick',prefix))
+#   seqs<-read.dna(sprintf('%s.ML_sequence.fasta',prefix),format='fasta')
+#   mapping<-scan(sprintf('%s.position_cross_reference.txt',prefix),sep=',',quiet=T)
+#   l<-length(seqs[1,])
+#
+#   ## Check tree (violations cause problems, eg. in phen.sim)
+#   if(!is.binary.tree(tree)) tree <- multi2di(tree)
+#   if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder")
+#
+#   ## Modify the edge matrix so that it uses the same indices as the fasta file
+#   labs<-labels(seqs)
+#   edges<-tree$edge
+#   treelabs<-c(tree$tip.label,tree$node.label)
+#   for (i in 1:nrow(edges)) for (j in 1:ncol(edges)) edges[i,j]=which(labs==treelabs[edges[i,j]])
+#
+#   ## Count substitutions for each site
+#   subs=rep(0,l) # Number of substitutitions for patterns
+#   num=rep(0,l) # Number of times a given pattern is used
+#   for (i in 1:l) {
+#     if (length(unique(seqs[,i]))==2) num[i]=sum(mapping==i) #Only count biallelic sites
+#     for (b in 1:nrow(edges)) if (seqs[edges[b,1],i]!=seqs[edges[b,2],i]) subs[i]=subs[i]+1
+#   }
+#
+#   ## Build distribution
+#   dist=rep(0,max(subs))
+#   for (i in 1:max(subs)) dist[i]=sum(num[which(subs==i)])
+#
+#   ## Plot distribution
+#   if(plot==TRUE){
+#     barplot(dist,
+#             main="Number of substitutions per site",
+#             names.arg=c(1:length(dist)),
+#             ylab="Frequency",
+#             col=transp("royalblue", alpha=0.5))
+#   }
+#
+#
+#   return(dist)
+# } # end (OLD) readCFML

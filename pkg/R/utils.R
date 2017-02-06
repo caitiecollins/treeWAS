@@ -13,6 +13,132 @@
 
 ################################################################################
 
+
+#####################
+## get.binary.snps ##
+#####################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Reduce a genetic data matrix to only necessary columns.
+#'
+#' Function to reduce a genetic data matrix containing multiple columns per locus
+#' to one column for each binary locus and N columns for each N-allelic non-binary locus.
+#'
+#'
+#' @param snps A genetic data matrix.
+#'
+#' @details This funtion identifies the number of alleles at each locus by assuming that
+#' the allele of each column is contained in the last two characters of each column name.
+#' We recommend that the columns of \code{snps} be labelled using the following four suffixes:
+#' ".a", ".c", ".g", ".t" (e.g., "Locus_123243.a", "Locus_123243.g").
+#' If you are using an alternative naming convention,
+#' but the allele is also always being denoted using the last two characters
+#' (e.g., "Locus_123243_1", "Locus_123243_2"),
+#' the function will still work if you set the argument \code{force = TRUE}.
+#' Please also be careful not to accidentally remove any purposeful duplications with repeated names;
+#' for example, if you have deliberately duplicated unique columns
+#' (e.g., by expanding according to an index returned by ClonalFrameML).
+#'
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
+#' @export
+
+
+########################################################################
+
+get.binary.snps <- function(snps, force=FALSE){
+
+  suffixes <- keepLastN(colnames(snps), 2)
+  suffixes <- unique(suffixes)
+
+  if(all(suffixes %in% c(".a", ".c", ".g", ".t")) | force == TRUE){
+
+    noms <- removeLastN(colnames(snps), 2)
+    tab <- table(noms) ## note: tab in character order of colnames!
+
+    ## if any non-binary loci, set these columns aside and keep all N of them:
+    if(length(which(tab != 2))){
+
+      ## For NON-BINARY loci, KEEP all columns, PLUS EVERY OTHER BINARY column:
+      toKeep <- names(which(tab != 2))
+      cols.toKeep <- which(noms %in% toKeep)
+      ## make a cols.toKeep remaining vector:
+      cols.nonBin <- cols.toKeep
+
+      ## Identify number of columns to be in reduced matrix:
+      cols <- c(1:ncol(snps))
+      cols <- cols[-cols.toKeep]
+      ncol.red <- (length(cols)/2) + length(cols.toKeep)
+
+      ## make reduced snps matrix...
+      ## (with one column for each binary SNP and N columns for the non-binary loci):
+
+      COLS <- list()
+      COLS[[1]] <- c(1:(cols.toKeep[1] - 1))
+      COLS[[1]] <- COLS[[1]][seq(1, length(COLS[[1]]), 2)]
+      ## Isolate non-binary columns to add here:
+      cols.toAdd <- which(noms %in% noms[cols.nonBin[1]])
+      ## Append these columns to current sequence:
+      COLS[[1]] <- c(COLS[[1]], cols.toAdd)
+      ## Remove cols.toAdd from cols.nonBin:
+      cols.nonBin <- cols.nonBin[-which(cols.nonBin %in% cols.toAdd)]
+
+      ## FOR LOOP: ##
+      for(i in 2:length(toKeep)){
+        ## Isolate non-binary columns to add here:
+        cols.toAdd <- which(noms %in% noms[cols.nonBin[1]])
+        ## Get sequence from end of last COLS element to start of cols.toAdd
+        from <- COLS[[(i-1)]]
+        from <- (from[(length(from))] + 1)
+        to <- (cols.toAdd[1] - 1)
+        ## Append non-binary columns to binary sequence:
+        ## (Unless there are two non-binary columns in a row!)
+        if(to > from){
+          COLS[[i]] <- seq(from, to, 2)
+          COLS[[i]] <- c(COLS[[i]], cols.toAdd)
+        }else{
+          COLS[[i]] <- cols.toAdd
+        }
+        ## Remove cols.toAdd from cols.nonBin:
+        cols.nonBin <- cols.nonBin[-which(cols.nonBin %in% cols.toAdd)]
+      } # end for loop
+
+      COLS.ori <- COLS
+      COLS <- as.vector(unlist(COLS))
+
+      ## Finally, add seq to max new ncol(snps)...
+      if(length(COLS) < ncol.red){
+        from <- (COLS[length(COLS)] + 1)
+        COLS <- c(COLS, seq(from=from, by=2, length.out=(ncol.red - length(COLS))))
+      }
+
+      ## Get the appropriately reduced set of loci:
+      snps <- snps[, COLS]
+
+    }else{
+      ## For only BINARY loci, REMOVE 2nd column:
+      ## Keep every other snps column:
+      toKeep <- seq(1, ncol(snps), 2)
+      snps <- snps[, toKeep]
+    }
+  }else{
+    warning("This function requires column names using these suffixes:
+            '.a', '.c', '.g', '.t' (e.g., 'Locus_123243.a').
+            If there are redundant columns, please remove these by hand,
+            or see ?get.binary.snps for more.")
+  }
+  return(snps)
+} # end get.binary.snps
+
+################################################################################
+
+
 ##############
 ## set.args ##
 ##############
@@ -185,7 +311,12 @@ get.unique.matrix <- function(data, MARGIN=2, silent=TRUE){
   index <- tab.out$index
 
   if(MARGIN == 1){
-    row.names(unique.data) <- c(1:nrow(unique.data))
+
+    if(!is.null(row.names(data))){
+      row.names(unique.data) <- row.names(data)[!duplicated(index)] ## TO DO: CHECK (MAKE SURE THIS IS OK)
+    }else{
+      row.names(unique.data) <- c(1:nrow(unique.data))
+    }
     if(length(unique(index)) == nrow(data)){
       if(silent == FALSE){
       warning("Data inputted was already unique along the selected MARGIN.")
@@ -193,7 +324,12 @@ get.unique.matrix <- function(data, MARGIN=2, silent=TRUE){
     }
   }
   if(MARGIN == 2){
-    colnames(unique.data) <- c(1:ncol(unique.data))
+    if(!is.null(colnames(data))){
+      colnames(unique.data) <- colnames(data)[!duplicated(index)]
+    }else{
+      colnames(unique.data) <- c(1:ncol(unique.data)) ## TO DO: CHECK! (NOT SURE WHY I DID THIS INSTEAD OF JUST USING THE FIRST INSTANCE.. (PROBLEMATIC ANYWHERE? MISLEADING?))
+      ## PLUS -- WOULD IT BE BETTER HERE TO USE THE NON-DUPLICATED INDEX RATHER THAN JUST NUMBERING 1:NCOL?
+    }
     if(length(unique(index)) == ncol(data)){
       if(silent == FALSE){
       warning("Data inputted was already unique along the selected MARGIN.")

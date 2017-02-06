@@ -38,6 +38,10 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   snps.rec <- snps.reconstruction
   phen.rec <- phen.reconstruction
 
+  ## Always work with tree in pruningwise order:
+  tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
   ## Get tree edges:
   edges <- tree$edge
 

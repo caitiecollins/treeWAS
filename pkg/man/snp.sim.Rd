@@ -4,7 +4,7 @@
 \alias{snp.sim}
 \title{Short one-phrase description.}
 \usage{
-snp.sim(n.snps = 10000, n.subs = 1, snp.root = NULL, n.snps.assoc = 10,
+snp.sim(n.snps = 10000, n.subs = 1, snp.root = NULL, n.snps.assoc = 0,
   assoc.prob = 100, tree = coalescent.tree.sim(100), phen.loci = NULL,
   heatmap = FALSE, reconstruct = FALSE, dist.dna.model = "JC69",
   row.names = NULL, set = NULL, seed = 1)

@@ -35,16 +35,16 @@
 #                ylab = "Terminal Correlation Score")
 
 manhattan.plot <- function(p.vals,
-                           col = "wasp",
+                           col = "funky",
                            transp = 0.75,
-                           sig.thresh = 0.05,
-                           thresh.col="seasun",
+                           sig.thresh = NULL,
+                           thresh.col="red",
                            snps.assoc = NULL,
                            snps.assoc.col = "red",
                            jitter.amount = 0.00001,
                            min.p = NULL,
-                           log10=TRUE,
-                           ylab=NULL){
+                           log10 = FALSE,
+                           ylab = NULL){
 
   # require(adegenet) # transp, col.pal
 
@@ -82,21 +82,33 @@ manhattan.plot <- function(p.vals,
                 "flame", "azur",
                 "seasun", "lightseasun", "deepseasun",
                 "spectral", "wasp", "funky")
+
   if(col %in% col.pals){
-    myCol <- eval(parse(text=paste(col, "(", ceiling(length(pval)/1000), ")")))
+    ## get unit length for coloured sections:
+    l <- length(p.vals)
+    n1 <- keepFirstN(l, 1)
+    n1 <- as.numeric(n1)+1
+    n0 <- nchar(l)-1
+    n0 <- rep(0, n0)
+    n0 <- paste0(n0, collapse="")
+    N <- as.numeric(paste0(n1, n0, collapse=""))
+    N <- N/10
+
+    myCol <- eval(parse(text=paste(col, "(", 10, ")")))
     myCol <- as.vector(unlist(sapply(c(1:length(myCol)),
                                      function(e)
-                                       rep(myCol[e], 1000))))
+                                       rep(myCol[e], N))))
     myCol <- myCol[c(1:length(pval))]
   }else{
     ## from vector of colours?
     myCol <- as.vector(unlist(sapply(c(1:length(col)),
                                      function(e)
-                                       rep(col[e], 1000))))
-    myCol <- sort(myCol)
-    myCol <- rep(myCol, ceiling(length(pval)/(1000*(length(col)))))
+                                       rep(col[e], N))))
+    # myCol <- sort(myCol)
+    myCol <- rep(myCol, ceiling(length(pval)/(N*(length(col)))))
     myCol <- myCol[1:length(pval)]
   }
+
   ## add transparency?
   if(!is.null(transp)){
     if(transp < 0 | transp > 1){
@@ -108,6 +120,25 @@ manhattan.plot <- function(p.vals,
     myCol <- transp(myCol, alpha = transp)
   }
 
+
+  ## Get y-max (set above max or sig.thresh):
+  if(log10 == TRUE){
+    ymax <- max(log.pval)
+    if(ymax > max(-log10(sig.thresh))){
+      ymax <- ymax + (ymax/10)
+    }else{
+      ymax <- max(-log10(sig.thresh))
+      ymax <- ymax + (ymax/10)
+    }
+  }else{
+    ymax <- max(pval)
+    if(ymax > max(sig.thresh)){
+      ymax <- ymax + (ymax/10)
+    }else{
+      ymax <- max(sig.thresh)
+      ymax <- ymax + (ymax/10)
+    }
+  }
 
 
   ##p- Manhattan- Bonferroni
@@ -122,7 +153,8 @@ manhattan.plot <- function(p.vals,
          main="Manhattan plot",
          xlab="SNP loci",
          ylab=ylab,
-         cex.main=1)
+         cex.main=1,
+         ylim=c(0,ymax))
 
   }else{
     if(is.null(ylab)){
@@ -135,7 +167,8 @@ manhattan.plot <- function(p.vals,
          main="Manhattan plot",
          xlab="SNP loci",
          ylab=ylab,
-         cex.main=1)
+         cex.main=1,
+         ylim=c(0,ymax))
   }
 
   ## overlay/highlight snps.assoc?
@@ -308,16 +341,18 @@ plot.sig.snps <- function(corr.dat,
 
     ## Get plot limits:
     ## Get x-max:
-    xmax <- ceiling(max(corr.dat)+.05)
+    xmax <- ceiling(max(corr.dat)+.35*max(corr.dat))
     ## Get y-max (only really necessary when overlaying 2 hists):
     if(freq == TRUE){
       yvals <- h.null$counts
-      ymax <- ceiling(max(yvals)+.05)
-      if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+.05))
+      ymax <- ceiling(max(yvals)+(0.2*max(yvals)))
+      # if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+.05))
+      if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+(0.2*max(h.null.subset$counts))))
     }else{
       yvals <- h.null$density
-      ymax <- max(yvals)+.005
-      if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+.005)
+      ymax <- max(yvals)+(0.2*max(yvals))
+      # if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+0.005)
+      if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+(0.2*max(h.null.subset$density)))
     }
 
     ## if the true correlation value for SNP i is >
@@ -329,7 +364,7 @@ plot.sig.snps <- function(corr.dat,
       ## SNPs and phenotype: ##
       ## EXTENDING THE X-AXIS
       plot(h.null,
-           main=paste("Null distribution of", test, "scores"
+           main=paste("Null distribution \n(", test, "score)"
            # \n (with significant SNPs indicated)"
                       , sep=" "),
            xlab=paste(test, "score", sep=" "),
@@ -358,7 +393,7 @@ plot.sig.snps <- function(corr.dat,
 
           ## Re-plot original plot:
           plot(h.null,
-               main=paste("Null distribution of", test, "scores"
+               main=paste("Null distribution \n(", test, "score)"
                # \n (with significant SNPs indicated)"
                           , sep=" "),
                xlab=paste(test, "score", sep=" "),
@@ -388,7 +423,7 @@ plot.sig.snps <- function(corr.dat,
       ## SNPs and phenotype: ##
       ## WITHOUT EXTENDING THE X-AXIS
       plot(h.null,
-           main=paste("Null distribution of", test, "scores"
+           main=paste("Null distribution \n(", test, "score)"
            # \n (with significant SNPs indicated)"
                       , sep=" "),
            xlab=paste(test, "score", sep=" "),
@@ -414,7 +449,7 @@ plot.sig.snps <- function(corr.dat,
 
           ## Re-plot original plot:
           plot(h.null,
-               main=paste("Null distribution of", test, "scores"
+               main=paste("Null distribution \n(", test, "score)"
                 # \n (with significant SNPs indicated)"
                           , sep=" "),
                xlab=paste(test, "score", sep=" "),

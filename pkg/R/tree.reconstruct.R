@@ -14,10 +14,11 @@
 #'
 #' Longer proper discription of function...
 #'
-#' @param dna A DNAbin object containing genomes for only
-#' the terminal nodes of the tree to be reconstructed.
+#' @param dna A binary matrix or DNAbin object containing genomes for (only)
+#'                the terminal nodes of the tree to be reconstructed.
+#'                Individuals should be in the rows and loci in the columns; rows and columns should be labelled.
 #' @param dist.dna.model A character string specifying the type of model to use in
-#' calculating the genetic distance between individual genomes (see ?dist.dna).
+#'                          calculating the genetic distance between individual genomes (see ?dist.dna).
 #' @param plot A logical specifying whether to plot the reconstructed phylogenetic tree.
 #'
 #'
@@ -61,7 +62,17 @@ tree.reconstruct <- function(dna,
   ############
   ## CHECKS ##
   ############
-  if(class(dna) != "DNAbin") dna <- as.DNAbin(dna)
+  if(class(dna) != "DNAbin"){
+    # dna <- as.DNAbin(dna)
+    snps <- dna
+    sp <- as.character(snps)
+    sp <- replace(sp, which(sp == "0"), "a")
+    sp <- replace(sp, which(sp == "1"), "c")
+    sp <- matrix(sp, ncol=ncol(snps), nrow=nrow(snps))
+    dna <- as.DNAbin(sp)
+    rownames(dna) <- rownames(snps)
+    colnames(dna) <- colnames(snps)
+  }
   method <- tolower(method)
   if(!any(c("upgma", "nj", "ml") %in% method)){
     warning("method should be one of 'UPGMA', 'NJ', 'ML'. Choosing 'UPGMA'.")
@@ -79,7 +90,10 @@ tree.reconstruct <- function(dna,
     tree <- hclust(D, method="average")
     tree <- as.phylo(tree)
     #tree <- midpoint(ladderize(tree))
-    tree <- midpoint(tree)
+    ## Always work with tree in pruningwise order:
+    tree <- reorder.phylo(tree, order="pruningwise")
+    ## Trees must be rooted:
+    if(!is.rooted(tree)) tree <- midpoint(tree)
     if(plot==TRUE){
       plot(tree, main="")
       title("UPGMA tree")
@@ -91,7 +105,10 @@ tree.reconstruct <- function(dna,
   if(method=="nj"){
     tree <- nj(D)
     #tree <- midpoint(ladderize(tree))
-    tree <- midpoint(tree)
+    ## Always work with tree in pruningwise order:
+    tree <- reorder.phylo(tree, order="pruningwise")
+    ## Trees must be rooted:
+    if(!is.rooted(tree)) tree <- midpoint(tree)
     if(plot==TRUE){
       plot(tree, edge.width=2)
       title("Neighbour-joining tree")
@@ -120,7 +137,10 @@ tree.reconstruct <- function(dna,
 
     tree <- fit$tree
     #tree <- midpoint(ladderize(tree))
-    tree <- midpoint(tree)
+    ## Always work with tree in pruningwise order:
+    tree <- reorder.phylo(tree, order="pruningwise")
+    ## Trees must be rooted:
+    if(!is.rooted(tree)) tree <- midpoint(tree)
     if(plot==TRUE){
       plot(tree, show.tip=TRUE, edge.width=2)
       title("Maximum-likelihood tree")

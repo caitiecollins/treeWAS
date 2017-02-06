@@ -48,11 +48,15 @@ get.fitch.n.mts <- function(snps, tree){
   # require(phangorn)
 
   ## checks
-  if(!is.matrix(snps)) stop("snps must be of class matrix.")
-  if(!is.numeric(snps) | length(unique(as.vector(snps)))!=2){
-    stop("snps must be a numeric matrix with exactly two unique values.")
+  if(!is.matrix(snps)) stop("snps must be a matrix.")
+  levs <- unique(as.vector(snps))
+  if(any(is.na(levs))) levs <- levs[-which(is.na(levs))]
+  if(!is.numeric(snps) | length(levs)!=2){
+    stop("snps must be a numeric matrix with exactly two unique values,
+         excluding NAs (though we recommend that NAs be in the minority for each column).")
   }
-  snps.levels <- unique(as.vector(snps))
+
+  snps.levels <- sort(unique(as.vector(snps)), na.last = TRUE)
   ## returns only unique patterns...
   snps.phyDat <- as.phyDat(as.matrix(snps),
                            type="USER", levels=snps.levels)

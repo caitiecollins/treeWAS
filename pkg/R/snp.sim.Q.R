@@ -23,6 +23,7 @@
 #' ## Example ##
 #'
 #' @import adegenet ape phangorn
+#' @importFrom Hmisc all.is.numeric
 
 ########################################################################
 
@@ -31,299 +32,7 @@
 ## n.subs <- either an integer or a vector containing a distribution of n.subs-per-site
 ## phen.loci <- a vector containing the indices of the edges on which phen subs occurred
 
-# snps <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_snps.Rdata"))
-# phen <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_phen.Rdata"))
-# perf <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_performance.Rdata"))
-# snps.assoc <- perf$snps.assoc
-#
-# res <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_res.Rdata"))
-# tree <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_tree.Rdata"))
-# tree <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_Q.corr_unweighted/set3_9_tree.Rdata"))
-# tree <- get(load("/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims/set3/08.2016/set3_9_tree.Rdata"))
-
-# phen.rec <- res$dat$phen.rec
-# snps.rec <- res$dat$snps.rec
-#
-# plot.phen(tree, phen.nodes=phen.rec, snp.nodes=snps.rec[,i])
-#
-# ## NOTE-- snps.rec has inverted snps numbering (ie. 0,1 --> 2,1)
-# ## AND kept plink version w added columns:
-# snps <- snps[, seq.int(1, ncol(snps), 2)]
-# rownames(snps) <- c(1:nrow(snps))
-# colnames(snps) <- c(1:ncol(snps))
-# str(snps)
-
-###########################################
-## trying to get RATES out of Q probs... ##
-###########################################
-# SCORE3 <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_score3.Rdata"))
-#
-# Q.ew <- SCORE3$corr.dat[[13]]
-# Q.uw <- SCORE3$corr.dat[[14]]
-#
-# score3 <- SCORE3$corr.dat[[6]]
-#
-# i <- snps.assoc[3]
-#
-# #######################
-# ## UN-edge-weighted: ##
-# #######################
-#
-# Qi <- Q.uw[[i]]
-#
-# ## get NUMBERS of subs:
-# Qi.subs <- Qi*length(score3[[i]][!is.na(score3[[i]])])
-# # NOTICE much heavier diagonal :)
-#
-# ## re-weight by ROW?:
-# temp <- t(sapply(c(1:nrow(Qi.subs)),
-#                function(e)
-#                  Qi.subs[e,]/sum(Qi.subs[e,])))
-# colnames(temp) <- rownames(temp) <- colnames(Qi.subs)
-# temp.uw <- temp
-# temp.uw
-#
-# ## all rows should sum to 1:
-# sum(temp.uw[1,])
-#
-#
-# ####################
-# ## EDGE-weighted: ##
-# ####################
-# # i <- snps.assoc[1]
-#
-# Qi <- Q.ew[[i]]
-#
-# ## get sum of edge lengths with these subs:
-# Qi.ew <- Qi*sum(tree$edge.length[!is.na(score3[[i]])])
-# # NOTICE much heavier diagonal :)
-#
-# sum(tree$edge.length)
-# sum(tree$edge.length[!is.na(score3[[i]])])
-# sum(Qi.ew)
-#
-# ## re-weight by ROW?:
-# temp <- t(sapply(c(1:nrow(Qi.ew)),
-#                  function(e)
-#                    Qi.ew[e,]/sum(Qi.ew[e,])))
-# colnames(temp) <- rownames(temp) <- colnames(Qi.ew)
-# temp.ew <- temp
-# temp.ew
-#
-# ## all rows should sum to 1:
-# sum(temp.ew[1,])
-#
-# #############
-# ## Q.corr: ##
-# #############
-#
-# ## Q.corr (original): ##
-# Q.corr <- matrix(c(2, 0.75, 0.75, 1, 3, 0.5, 0.25,  3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2),
-#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-#
-# ## re-weight by ROW?:
-# temp <- t(sapply(c(1:nrow(Q.corr)),
-#                  function(e)
-#                    Q.corr[e,]/sum(Q.corr[e,])))
-# colnames(temp) <- rownames(temp) <- colnames(Q.corr)
-# temp.corr <- temp
-# temp.corr
-#
-# ## NEW Q.corr ( --> reduced n.subs??)
-# Q <- matrix(c(0.6, 0.1, 0.1, 0.2, 0.4, 0.15, 0.05,  0.4, 0.4, 0.05, 0.15, 0.4, 0.2, 0.1, 0.1, 0.6),
-#             nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-# Q
-# Q.new1 <- Q.new
-#
-# ## 2nd NEW Q.corr ( --> reduced n.subs??)
-# Q <- matrix(c(0.7, 0.05, 0.05, 0.2, 0.45, 0.1, 0.0,  0.45, 0.45, 0.0, 0.1, 0.45, 0.2, 0.05, 0.05, 0.7),
-#             nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-# Q
-# Q.new2 <- Q.new <- Q
-#
-############################
-
-############
-## Q.inst ##
-############
-## IGNORE !!
-# Q.inst <- matrix(c(0, 0.5, 0.5, 0, 2, 0, 0,  2, 2, 0, 0, 2, 0, 0.5, 0.5, 0),
-#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-# Q.inst
-# Q <- Q.inst
-#################################
-
-##########################
-## Q.new3 (w/ matexpo!) ##
-##########################
-## if Q contains RATES --> P contains probs
-# Q.new3 <- matrix(c(0, 0.5, 0.5, 1,
-#                    2, 0, 0.25,  2,
-#                    2, 0.25, 0, 2,
-#                    1, 0.5, 0.5, 0),
-#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-#
-# Q.mat <- matrix(c(-1*s, 0.5*s, 0.5*s, 0,
-#                   2*s, -4*s, 0, 2*s,
-#                   2*s, 0, -4*s, 2*s,
-#                   0, 0.5*s, 0.5*s, -1*s),
-#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-#
-# af <- 4
-# s <- 0.5
-# Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
-#                   1*af*s, NA, 0, 1*af*s,
-#                   1*af*s, 0, NA, 1*af*s,
-#                   0, 1*s, 1*s, NA),
-#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-#
-# ## GET PROBABILITY MATRIX:
-# diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
-# Q <- Q.mat
-# Q.new3 <- Q.mat
-# Q.mat
-#
-# ## get conditional probs for each edge w matexpo! ##
-# ## (run within code...)
-# x <- rev(1:nrow(tree$edge))
-# Qt <- list()
-# for(e in x){
-#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
-# }
-# e <- x[1]
-# P <- Qt[[e]]
-# rownames(P) <- rownames(Q)
-# colnames(P) <- colnames(Q)
-# P
-
-## CHECK -- Does expm (pkg "Matrix") give same results as matexpo?? ## (YES)
-
-##########################
-## Q.new4 (w/ matexpo!) ##
-##########################
-## if Q contains RATES --> P contains probs
-
-## ?? -- (WHY) DOES THE BL:TR DIAGONAL NEED TO BE ALL ZEROS???? ################################    ####        ####        ####    ??????????       ####
-# s <- 1
-# Q.new4 <- matrix(c(-2*s, 0.5*s, 0.5*s, 1*s,
-#                    2*s, -4.25*s, 0.25*s,  2*s,
-#                    2*s, 0.25*s, -4.25*s, 2*s,
-#                    1*s, 0.5*s, 0.5*s, -2*s),
-#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-
-# s <- 1
-# Q.new4 <- matrix(c(-1*s, 0.5*s, 0.5*s, 0,
-#                    2*s, -4*s, 0, 2*s,
-#                    2*s, 0, -4*s, 2*s,
-#                    0, 0.5*s, 0.5*s, -1*s),
-#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-#
-# Q.new4
-# Q <- Q.new4
-#
-# ## GET PROBABILITY MATRIX:
-# ## get conditional probs for each edge w matexpo! ##
-# ## (run within code...)
-# x <- rev(1:nrow(tree$edge))
-# Qt <- list()
-# for(e in x){
-#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
-# }
-# e <- x[2]
-# P <- Qt[[e]]
-# rownames(P) <- rownames(Q)
-# colnames(P) <- colnames(Q)
-# P
-
-
-
-
-####################
-
-#########################
-## Q.xav (w/ matexpo!) ##
-#########################
-## if Q contains RATES --> P contains probs
-
-# ## s = substitution rate
-# s <- 1
-# ## NOT SURE IF ROW/COLNAMES ARE RIGHT FOR THIS ONE:
-# Q.xav <- matrix(c(-2*s, 1*s, 1*s, 0,
-#                    2*s, -4*s, 0,  2*s,
-#                    2*s, 0, -4*s, 2*s,
-#                    0, 1*s, 1*s, -2*s),
-#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-# Q <- Q.xav
-# Q.xav
-#
-# #########
-#
-# ##  NOT SURE HOW TO INTERPRET/PREDICT THE RELATIVE EFFECTS OF ASSOC.FACTOR AND N.SUBS
-# ## (ie AF, S) ON ASSOC STRENGTH AND N.SUBS PER TREE (AND HOW SUB PROBS VARY W BRANCH LENGTH)
-# ## ALSO -- (WHY) DO THE DIAGONALS NEED TO BE NEG AND 0?
-# ## (CONSIDERING WE WANT TO SIM SOME SIMULTANEOUS SUBS..)
-# ## (SEEMS LIKE THE 0-DIAGONAL HAS NO IMPACT WHETHER IT'S 0S OR OTHER VALUES?)
-#
-# af <- 6 # association factor
-# s <- 20 # n.subs
-#
-# # Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
-# #                   1*af*s, NA, 0, 1*af*s,
-# #                   1*af*s, 0, NA, 1*af*s,
-# #                   0, 1*s, 1*s, NA),
-# #                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-#
-# Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
-#                   1*af*s, NA, 0, 1*af*s,
-#                   1*af*s, 0, NA, 1*af*s,
-#                   0, 1*s, 1*s, NA),
-#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-#
-# diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
-#
-# Q <- Q.mat
-# Q
-#
-#
-# ## GET PROBABILITY MATRIX:
-#
-# ## get conditional probs for each edge w matexpo! ##
-# ## (run within code...)
-# x <- rev(1:nrow(tree$edge))
-# Qt <- list()
-# for(e in x){
-#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
-# }
-# e <- x[112]
-# P <- Qt[[e]]
-# rownames(P) <- rownames(Q)
-# colnames(P) <- colnames(Q)
-# P
-
-
-#####################
-
-# ######################################################
-# ## WANT -- 15 subs/tree (thus 183 no-sub branches): ##
-# ######################################################
-# # probs.e <- round((tree$edge.length/sum(tree$edge.length)),3)
-# probs.e <- (tree$edge.length/sum(tree$edge.length))
-#
-# ## IDEA -- multiply all 3 non-stay-the-same cells of Q by above (or make it s.t. these cells are x% of the row sum)
-# ## EG -- if you would expect 1.4/15 subs to occur on edge 1
-#
-# ## --> Need to find Pr(at least one sub occurs on branch e)
-# ## bc we are/were working with sampling WITHOUT replacement w probs proportional to edge.length
-#
-# ## Pr(no sub on branch 198) =
-# (1-probs.e[198])^15 # 0.022
-# ## Therefore: Pr(at least one sub on branch 198) =
-# 1 - (1-probs.e[198])^15 # 0.98
-
-## Then -- need to re-work probs from Q s.t Pr(stay the same) = 0.02 and Pr(sub) sums to 0.98
-
-
-
+#########
 # tree <- get(load("/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims/set1/set1_31_tree.Rdata"))
 
 # ## ARGS (Eg): ##
@@ -373,6 +82,8 @@ snp.sim.Q <- function(n.snps = 10000,
   ## HANDLE TREE: ##
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ####################################################################
   ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
@@ -459,7 +170,7 @@ snp.sim.Q <- function(n.snps = 10000,
   ## OR a vector (containing a distribution)
   ## --> use this distribution to define n.subs-per-site
 
-  if(length(n.subs)==1){
+  if(length(n.subs)==1 & is.null(names(n.subs))){
 
     #####################
     ## NO DISTRIBUTION ##
@@ -494,6 +205,22 @@ snp.sim.Q <- function(n.snps = 10000,
     ## we may not be simulating the same number of sites)
 
     dist <- n.subs
+
+    ## check for names first!
+    if(!is.null(names(dist))){
+      ## only modify if names are numeric
+      if(all.is.numeric(names(dist))){
+        noms <- as.numeric(names(dist))
+        aligned <- sapply(c(1:length(dist)), function(e) noms[e] == e)
+        ## if any names do not correspond to their index, add zeros where missing:
+        if(any(aligned == FALSE)){
+          dist.new <- rep(0, max(noms))
+          dist.new[noms] <- dist
+          names(dist.new) <- c(1:length(dist.new))
+          dist <- dist.new
+        }
+      }
+    } # end check for missing places
 
     ## get dist.prop, a distribution containing the counts
     ## of the number of SNPs to be simulated that will have
@@ -1338,6 +1065,16 @@ snp.sim.Q <- function(n.snps = 10000,
   if(!is.null(row.names)){
     ## If row.names have been provided in args list, assign them:
     if(length(row.names) == nrow(snps)){
+      ## match tree$tip.label?
+      if(!is.null(tree$tip.label)){
+        if(all(row.names %in% tree$tip.label) & all(tree$tip.label %in% row.names)){
+          ## REORDER to match tree$tip.labs if possible:
+          if(!identical(row.names, tree$tip.label)){
+            ord <- match(tree$tip.label, rownames(snps))
+            row.names <- row.names[ord]
+          }
+        }
+      }
       rownames(snps) <- row.names
     }else{
       if(is.null(rownames(snps))) rownames(snps) <- c(1:nrow(snps))
@@ -1517,6 +1254,8 @@ snp.sim.Q <- function(n.snps = 10000,
   ##################
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ####################################################################
   ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
@@ -1636,3 +1375,309 @@ snp.sim.Q <- function(n.snps = 10000,
   return(locus)
 
 } # end .get.locus01
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# snps <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_snps.Rdata"))
+# phen <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_phen.Rdata"))
+# perf <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_performance.Rdata"))
+# snps.assoc <- perf$snps.assoc
+#
+# res <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_res.Rdata"))
+# tree <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_tree.Rdata"))
+# tree <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_Q.corr_unweighted/set3_9_tree.Rdata"))
+# tree <- get(load("/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims/set3/08.2016/set3_9_tree.Rdata"))
+
+# phen.rec <- res$dat$phen.rec
+# snps.rec <- res$dat$snps.rec
+#
+# plot.phen(tree, phen.nodes=phen.rec, snp.nodes=snps.rec[,i])
+#
+# ## NOTE-- snps.rec has inverted snps numbering (ie. 0,1 --> 2,1)
+# ## AND kept plink version w added columns:
+# snps <- snps[, seq.int(1, ncol(snps), 2)]
+# rownames(snps) <- c(1:nrow(snps))
+# colnames(snps) <- c(1:ncol(snps))
+# str(snps)
+
+###########################################
+## trying to get RATES out of Q probs... ##
+###########################################
+# SCORE3 <- get(load("C:/Cait 2016/Work/Xavier/Sims/set3/set3_9_score3.Rdata"))
+#
+# Q.ew <- SCORE3$corr.dat[[13]]
+# Q.uw <- SCORE3$corr.dat[[14]]
+#
+# score3 <- SCORE3$corr.dat[[6]]
+#
+# i <- snps.assoc[3]
+#
+# #######################
+# ## UN-edge-weighted: ##
+# #######################
+#
+# Qi <- Q.uw[[i]]
+#
+# ## get NUMBERS of subs:
+# Qi.subs <- Qi*length(score3[[i]][!is.na(score3[[i]])])
+# # NOTICE much heavier diagonal :)
+#
+# ## re-weight by ROW?:
+# temp <- t(sapply(c(1:nrow(Qi.subs)),
+#                function(e)
+#                  Qi.subs[e,]/sum(Qi.subs[e,])))
+# colnames(temp) <- rownames(temp) <- colnames(Qi.subs)
+# temp.uw <- temp
+# temp.uw
+#
+# ## all rows should sum to 1:
+# sum(temp.uw[1,])
+#
+#
+# ####################
+# ## EDGE-weighted: ##
+# ####################
+# # i <- snps.assoc[1]
+#
+# Qi <- Q.ew[[i]]
+#
+# ## get sum of edge lengths with these subs:
+# Qi.ew <- Qi*sum(tree$edge.length[!is.na(score3[[i]])])
+# # NOTICE much heavier diagonal :)
+#
+# sum(tree$edge.length)
+# sum(tree$edge.length[!is.na(score3[[i]])])
+# sum(Qi.ew)
+#
+# ## re-weight by ROW?:
+# temp <- t(sapply(c(1:nrow(Qi.ew)),
+#                  function(e)
+#                    Qi.ew[e,]/sum(Qi.ew[e,])))
+# colnames(temp) <- rownames(temp) <- colnames(Qi.ew)
+# temp.ew <- temp
+# temp.ew
+#
+# ## all rows should sum to 1:
+# sum(temp.ew[1,])
+#
+# #############
+# ## Q.corr: ##
+# #############
+#
+# ## Q.corr (original): ##
+# Q.corr <- matrix(c(2, 0.75, 0.75, 1, 3, 0.5, 0.25,  3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# ## re-weight by ROW?:
+# temp <- t(sapply(c(1:nrow(Q.corr)),
+#                  function(e)
+#                    Q.corr[e,]/sum(Q.corr[e,])))
+# colnames(temp) <- rownames(temp) <- colnames(Q.corr)
+# temp.corr <- temp
+# temp.corr
+#
+# ## NEW Q.corr ( --> reduced n.subs??)
+# Q <- matrix(c(0.6, 0.1, 0.1, 0.2, 0.4, 0.15, 0.05,  0.4, 0.4, 0.05, 0.15, 0.4, 0.2, 0.1, 0.1, 0.6),
+#             nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# Q
+# Q.new1 <- Q.new
+#
+# ## 2nd NEW Q.corr ( --> reduced n.subs??)
+# Q <- matrix(c(0.7, 0.05, 0.05, 0.2, 0.45, 0.1, 0.0,  0.45, 0.45, 0.0, 0.1, 0.45, 0.2, 0.05, 0.05, 0.7),
+#             nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# Q
+# Q.new2 <- Q.new <- Q
+#
+############################
+
+############
+## Q.inst ##
+############
+## IGNORE !!
+# Q.inst <- matrix(c(0, 0.5, 0.5, 0, 2, 0, 0,  2, 2, 0, 0, 2, 0, 0.5, 0.5, 0),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# Q.inst
+# Q <- Q.inst
+#################################
+
+##########################
+## Q.new3 (w/ matexpo!) ##
+##########################
+## if Q contains RATES --> P contains probs
+# Q.new3 <- matrix(c(0, 0.5, 0.5, 1,
+#                    2, 0, 0.25,  2,
+#                    2, 0.25, 0, 2,
+#                    1, 0.5, 0.5, 0),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# Q.mat <- matrix(c(-1*s, 0.5*s, 0.5*s, 0,
+#                   2*s, -4*s, 0, 2*s,
+#                   2*s, 0, -4*s, 2*s,
+#                   0, 0.5*s, 0.5*s, -1*s),
+#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# af <- 4
+# s <- 0.5
+# Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
+#                   1*af*s, NA, 0, 1*af*s,
+#                   1*af*s, 0, NA, 1*af*s,
+#                   0, 1*s, 1*s, NA),
+#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# ## GET PROBABILITY MATRIX:
+# diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
+# Q <- Q.mat
+# Q.new3 <- Q.mat
+# Q.mat
+#
+# ## get conditional probs for each edge w matexpo! ##
+# ## (run within code...)
+# x <- rev(1:nrow(tree$edge))
+# Qt <- list()
+# for(e in x){
+#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
+# }
+# e <- x[1]
+# P <- Qt[[e]]
+# rownames(P) <- rownames(Q)
+# colnames(P) <- colnames(Q)
+# P
+
+## CHECK -- Does expm (pkg "Matrix") give same results as matexpo?? ## (YES)
+
+##########################
+## Q.new4 (w/ matexpo!) ##
+##########################
+## if Q contains RATES --> P contains probs
+
+## ?? -- (WHY) DOES THE BL:TR DIAGONAL NEED TO BE ALL ZEROS???? ################################    ####        ####        ####    ??????????       ####
+# s <- 1
+# Q.new4 <- matrix(c(-2*s, 0.5*s, 0.5*s, 1*s,
+#                    2*s, -4.25*s, 0.25*s,  2*s,
+#                    2*s, 0.25*s, -4.25*s, 2*s,
+#                    1*s, 0.5*s, 0.5*s, -2*s),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+
+# s <- 1
+# Q.new4 <- matrix(c(-1*s, 0.5*s, 0.5*s, 0,
+#                    2*s, -4*s, 0, 2*s,
+#                    2*s, 0, -4*s, 2*s,
+#                    0, 0.5*s, 0.5*s, -1*s),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# Q.new4
+# Q <- Q.new4
+#
+# ## GET PROBABILITY MATRIX:
+# ## get conditional probs for each edge w matexpo! ##
+# ## (run within code...)
+# x <- rev(1:nrow(tree$edge))
+# Qt <- list()
+# for(e in x){
+#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
+# }
+# e <- x[2]
+# P <- Qt[[e]]
+# rownames(P) <- rownames(Q)
+# colnames(P) <- colnames(Q)
+# P
+
+
+
+
+####################
+
+#########################
+## Q.xav (w/ matexpo!) ##
+#########################
+## if Q contains RATES --> P contains probs
+
+# ## s = substitution rate
+# s <- 1
+# ## NOT SURE IF ROW/COLNAMES ARE RIGHT FOR THIS ONE:
+# Q.xav <- matrix(c(-2*s, 1*s, 1*s, 0,
+#                    2*s, -4*s, 0,  2*s,
+#                    2*s, 0, -4*s, 2*s,
+#                    0, 1*s, 1*s, -2*s),
+#                  nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+# Q <- Q.xav
+# Q.xav
+#
+# #########
+#
+# ##  NOT SURE HOW TO INTERPRET/PREDICT THE RELATIVE EFFECTS OF ASSOC.FACTOR AND N.SUBS
+# ## (ie AF, S) ON ASSOC STRENGTH AND N.SUBS PER TREE (AND HOW SUB PROBS VARY W BRANCH LENGTH)
+# ## ALSO -- (WHY) DO THE DIAGONALS NEED TO BE NEG AND 0?
+# ## (CONSIDERING WE WANT TO SIM SOME SIMULTANEOUS SUBS..)
+# ## (SEEMS LIKE THE 0-DIAGONAL HAS NO IMPACT WHETHER IT'S 0S OR OTHER VALUES?)
+#
+# af <- 6 # association factor
+# s <- 20 # n.subs
+#
+# # Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
+# #                   1*af*s, NA, 0, 1*af*s,
+# #                   1*af*s, 0, NA, 1*af*s,
+# #                   0, 1*s, 1*s, NA),
+# #                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
+#                   1*af*s, NA, 0, 1*af*s,
+#                   1*af*s, 0, NA, 1*af*s,
+#                   0, 1*s, 1*s, NA),
+#                 nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
+#
+# diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
+#
+# Q <- Q.mat
+# Q
+#
+#
+# ## GET PROBABILITY MATRIX:
+#
+# ## get conditional probs for each edge w matexpo! ##
+# ## (run within code...)
+# x <- rev(1:nrow(tree$edge))
+# Qt <- list()
+# for(e in x){
+#   Qt[[e]] <- matexpo(Q*tree$edge.length[e])
+# }
+# e <- x[112]
+# P <- Qt[[e]]
+# rownames(P) <- rownames(Q)
+# colnames(P) <- colnames(Q)
+# P
+
+
+#####################
+
+# ######################################################
+# ## WANT -- 15 subs/tree (thus 183 no-sub branches): ##
+# ######################################################
+# # probs.e <- round((tree$edge.length/sum(tree$edge.length)),3)
+# probs.e <- (tree$edge.length/sum(tree$edge.length))
+#
+# ## IDEA -- multiply all 3 non-stay-the-same cells of Q by above (or make it s.t. these cells are x% of the row sum)
+# ## EG -- if you would expect 1.4/15 subs to occur on edge 1
+#
+# ## --> Need to find Pr(at least one sub occurs on branch e)
+# ## bc we are/were working with sampling WITHOUT replacement w probs proportional to edge.length
+#
+# ## Pr(no sub on branch 198) =
+# (1-probs.e[198])^15 # 0.022
+# ## Therefore: Pr(at least one sub on branch 198) =
+# 1 - (1-probs.e[198])^15 # 0.98
+
+## Then -- need to re-work probs from Q s.t Pr(stay the same) = 0.02 and Pr(sub) sums to 0.98

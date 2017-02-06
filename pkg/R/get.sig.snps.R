@@ -89,8 +89,7 @@ get.sig.snps <- function(snps,
                          p.value.by = "count",
                          snps.reconstruction,
                          snps.sim.reconstruction,
-                         phen.reconstruction,
-                         rec = "parsimony"){
+                         phen.reconstruction){
 
   #################
   ## HANDLE SNPS ##
@@ -311,14 +310,14 @@ get.sig.snps <- function(snps,
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
-    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test, rec = rec)
+    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
 
 
 
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
-    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test, rec = rec)
+    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
   }
 
   ###################################
@@ -508,8 +507,7 @@ assoc.test <- function(snps,
                                 "simultaneous",
                                 "subsequent",
                                 "cor",
-                                "fisher"),
-                       rec = "parsimony"){
+                                "fisher")){
 
   #################
   ## CORRELATION ##
@@ -559,7 +557,7 @@ assoc.test <- function(snps,
   ## SUBSEQUENT TEST ##
   #####################
   if(test == "subsequent"){
-    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree, rec = rec)
+    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree)
   } # end test subsequent
 
 

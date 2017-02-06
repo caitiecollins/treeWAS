@@ -4,9 +4,9 @@
 \alias{manhattan.plot}
 \title{Short one-phrase description.}
 \usage{
-manhattan.plot(p.vals, col = "wasp", transp = 0.75, sig.thresh = 0.05,
-  thresh.col = "seasun", snps.assoc = NULL, snps.assoc.col = "red",
-  jitter.amount = 1e-05, min.p = NULL, log10 = TRUE, ylab = NULL)
+manhattan.plot(p.vals, col = "funky", transp = 0.75, sig.thresh = NULL,
+  thresh.col = "red", snps.assoc = NULL, snps.assoc.col = "red",
+  jitter.amount = 1e-05, min.p = NULL, log10 = FALSE, ylab = NULL)
 }
 \arguments{
 \item{arg}{Description.}

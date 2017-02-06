@@ -129,6 +129,10 @@ coalescent.tree.sim <- function(n.ind=100, seed=NULL){
 
   ## change class by force
   class(tree) <- "phylo"
+  ## return tree in pruningwise order:
+  tree <- reorder.phylo(tree, order="pruningwise")
+  ## root tree:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   return(tree)
 

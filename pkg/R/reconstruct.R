@@ -20,9 +20,9 @@
 #' @param tree A phylo object containing the tree representing the ancestral relationships
 #' between the individuals for which snps and phen are known.
 #' @param type A character string specifying whether ancestral state reconstruction should be
-#' performed by \code{parsimony} or \code{ace} (as performed in package \emph{ape}).
-#' @param method A character string specifying the type of ACE method to implement (only used if
-#' \code{type} is set to "ace").
+#' performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} function in package \emph{ape}).
+#' @param method A character string specifying the type of ASR method to implement (only used if
+#' \code{type} is set to "ML").
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -34,29 +34,46 @@
 
 asr <- function(var,
                 tree,
-                type = c("parsimony", "ace"),
-                method = "discrete"){
+                type = c("parsimony", "ML", "ace"), ## keeping "ace", in case I missed any instances, though deprecated.
+                method = c("discrete", "continuous")){
+
 
   ## HANDLE TREE: ##
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ## get tree edges
   edges <- tree$edge
   ord <- NULL
 
   ## Arg checks:
+  if(length(type) > 1) type <- type[1]
   type <- tolower(type)
-  if(!type %in% c("parsimony", "ace")) stop("type must be one of 'parsimony' or 'ace'.")
+  if(type == "ace") type <- "ml"
+  if(!type %in% c("parsimony", "ml", "ace")) stop("type should be one of 'parsimony' or 'ML'.")
 
+  if(length(method) > 1) method <- method[1]
   method <- tolower(method)
-  if(method != "discrete") warning("Only method = 'discrete' has been tested.
-                                   Results with non-discrete phenotypes may be incorrect.")
+  if(!method %in% c("discrete", "continuous")) warning("Only 'discrete' and 'continuous' are allowed as method argument.
+                                   Note that handling of non-binary categorical phenotypes has not yet been implemented.")
+
+  #####################################################
+  ## CHECK: If non-binary, use "ml" and "continuous" ##
+  #####################################################
+  levs <- unique(as.vector(unlist(var)))
+  levs <- levs[!is.na(levs)]
+  if(length(levs) != 2){
+    type <- "ml"
+    method <- "continuous"
+    warning("Variable is non-binary. Setting method to 'continuous' and type to 'ML'.")
+  }
 
   #######################
   ## MATRIX (eg. SNPs) ##
   #######################
-  if(class(var) == "matrix"){
+  if(is.matrix(var)){
 
     snps <- var
 
@@ -95,11 +112,11 @@ asr <- function(var,
 
 
     ######################
-    ## run ACE on SNPs: ##
+    ## run ML on SNPs: ##
     ######################
-    if(type == "ace"){
+    if(type == "ml"){
 
-      snps.rec <- snps.ACE <- list()
+      snps.rec <- snps.ML <- list()
 
       for(i in 1:ncol(snps)){
 
@@ -109,9 +126,9 @@ asr <- function(var,
         ## get terminal values
         var.terminal <- var
 
-        ## get internal values (from ACE output for variable i)
-        snps.ACE[[i]] <- ace(var, tree, type=method)
-        var.internal <- snps.ACE[[i]]$lik.anc[,2]
+        ## get internal values (from ML output for variable i)
+        snps.ML[[i]] <- ace(var, tree, type=method)
+        var.internal <- snps.ML[[i]]$lik.anc[,2]
 
         ## get reconstruction from terminal & internal values
         snps.rec[[i]] <- c(var.terminal, var.internal)
@@ -121,7 +138,7 @@ asr <- function(var,
       snps.rec <- do.call("cbind", snps.rec)
       colnames(snps.rec) <- colnames(snps)#
 
-    } # end ace
+    } # end ML
 
 
     ############################################
@@ -170,22 +187,22 @@ asr <- function(var,
 
 
     ######################
-    ## run ACE on phen: ##
+    ## run ML on phen: ##
     ######################
-    if(type == "ace"){
+    if(type == "ml"){
       ## Do we need to check phen is numeric??
 
       ## get terminal values
       phen.terminal <- phen
 
-      ## get internal values (from ACE output)
-      phen.ACE <- ace(phen, tree, type=method)
-      phen.internal <- phen.ACE$lik.anc[,2]
+      ## get internal values (from ML output)
+      phen.ML <- ace(phen, tree, type=method)
+      phen.internal <- phen.ML$lik.anc[,2]
 
       ## get reconstruction from terminal & internal values
       var.rec <- c(phen.terminal, phen.internal)
 
-    } # end ace
+    } # end ML
 
   } # end vector (phen)   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
@@ -197,7 +214,7 @@ asr <- function(var,
     output <- list("var.rec" = var.rec,
                    "subs.edges" = subs.edges)
   }else{
-    ## NOTE that ACE does NOT return subs.edges...
+    ## NOTE that ML does NOT return subs.edges...
     output <- list("var.rec" = var.rec)
   }
 
@@ -254,6 +271,8 @@ get.ancestral.pars <- function(var, tree){
   ## HANDLE TREE: ##
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ord <- NULL
   edges <- tree$edge
@@ -306,12 +325,13 @@ get.ancestral.pars <- function(var, tree){
     if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
 
     ## get levels (ie. 0, 1)
-    snps.levels <- sort(unique(as.vector(snps)))
+    # snps.levels <- sort(unique(as.vector(snps)))
+    snps.levels <- sort(unique(as.vector(snps)), na.last = TRUE)
     ## returns only unique patterns...
     snps.phyDat <- as.phyDat(as.matrix(snps),
                              type="USER", levels=snps.levels)
     ## get index of all original snps columns to map to unique pattern
-    index <- attr(snps.phyDat, "index")
+    index.phyDat <- attr(snps.phyDat, "index")
 
     ## pace == ancestral.pars
     pa.ACCTRAN <- pace(tree, snps.phyDat, type="ACCTRAN")
@@ -330,36 +350,22 @@ get.ancestral.pars <- function(var, tree){
     # rec <- pa.MPR
     rec <- pa.ACCTRAN
 
-    ## Handle terminal nodes (ie. reorder)
+    # REC <- rec
 
-    ## (1) Bind rows together:
-    #     REC <- list()
-    #     for(i in 1:length(rec)) REC[[i]] <- rec[[i]][,2]
-    #     REC <- do.call("rbind", REC)
-    #     row.names(REC) <- names(rec)
-    #     colnames(REC) <- colnames(snps)
-    #
-    #     ## (2) Reorder rows to correctly match labels, SNPs...??????????????????????
-    #     df.ori <- data.frame(REC[1:100,1:10], snps[1:100,1:10])
-    #     df.ori[1:10,]
-    #     ## EQUIVALENTLY, EITHER.........
-    #
-    #     ## (2.A)
-    #     ord <- list()
-    #     for(i in 1:nrow(snps)) ord[[i]] <- which(row.names(snps) == i)
-    #     ord <- as.vector(unlist(ord))
-    #     ## check
-    #     df <- data.frame(REC[ord,1:10], snps[1:100,1:10])
-    #
-    #     ## (2.B)
-    #     ord <- as.numeric(row.names(snps))
-    #     REC2 <- matrix(NA, nrow=nrow(REC), ncol=ncol(REC))
-    #     for(i in ord) REC2[i,] <- REC[which(ord == i),]
-    #     REC <- REC2
-    #     row.names(REC) <- names(rec)
-    #     colnames(REC) <- colnames(snps)
-    #     ## check
-    #     df2 <- data.frame(REC2[1:100,1:10], snps[1:100,1:10])
+    ## If NAs are present, replace column 1 0s with NA values
+    ## whenever column 3 (NA) has a 1 in it:
+    if(any(is.na(snps.levels))){
+      na.col <- which(is.na(snps.levels))
+      for(i in 1:length(rec)){
+        foo <- rec[[i]]
+        toReplace <- which(foo[,na.col] == 1)
+        if(length(toReplace) > 0){
+          foo[toReplace,1] <- NA
+          foo[toReplace,2] <- NA
+        }
+        rec[[i]] <- foo
+      } # end for loop
+    }
 
     ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
     ## First, check to ensure all row.names(snps) are matched in tree$tip.label
@@ -374,11 +380,25 @@ get.ancestral.pars <- function(var, tree){
     ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
     ord <- c(ord, c(nrow(snps)+1):length(rec))
     snps.rec <- do.call(cbind, rec[ord])
-    snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), 2)])
+    snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))])
 
     ## assign rownames for all terminal and internal nodes
     rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):((nrow(snps)*2)-1)))
     colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
+
+
+    ## Handle index.phyDat! ##
+    ## get reconstruction for all pre-phyDat sites
+    if(ncol(snps) != ncol(snps.rec)){
+      snps.rec.complete <- snps.rec[, index.phyDat]
+      rownames(snps.rec.complete) <- rownames(snps.rec)
+      colnames(snps.rec.complete) <- 1:ncol(snps.rec.complete)
+      snps.rec <- snps.rec.complete
+    }
+
+
+
+
 
 
     ###########################################

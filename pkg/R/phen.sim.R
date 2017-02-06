@@ -60,6 +60,8 @@ phen.sim <- function(tree,
   ## HANDLE TREE: ##
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ####################################
   ## PHENOTYPE simulation procedure ## ~ sim.by.locus...
@@ -142,11 +144,11 @@ phen.sim <- function(tree,
         ## Simulate from top:bottom?
         x <- 1:nrow(tree$edge)
       }else{
-        ## Simulate from bottom:top?
-        x <- rev(c(1:nrow(tree$edge)))
-
         ## Extra check:
-        if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] != (tree$Nnode+2)){
+        if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] == (tree$Nnode+2)){
+          ## Simulate from bottom:top?
+          x <- rev(c(1:nrow(tree$edge)))
+        }else{
           stop("This simulation procedure expects to find the root node/first internal node
                (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
                once the tree has been reordered to be in 'pruningwise' configuration.

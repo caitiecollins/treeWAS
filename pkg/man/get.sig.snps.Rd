@@ -8,7 +8,7 @@ get.sig.snps(snps, snps.unique = NULL, snps.index = NULL, snps.sim,
   snps.sim.unique = NULL, snps.sim.index = NULL, phen, tree,
   test = "terminal", n.tests = 1, p.value = 0.01,
   p.value.correct = "bonf", p.value.by = "count", snps.reconstruction,
-  snps.sim.reconstruction, phen.reconstruction, rec = "parsimony")
+  snps.sim.reconstruction, phen.reconstruction)
 }
 \arguments{
 \item{snps}{A matrix containing the real snps.}

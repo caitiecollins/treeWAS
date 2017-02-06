@@ -4,7 +4,8 @@
 \alias{asr}
 \title{Short one-phrase description.}
 \usage{
-asr(var, tree, type = c("parsimony", "ace"), method = "discrete")
+asr(var, tree, type = c("parsimony", "ML", "ace"), method = c("discrete",
+  "continuous"))
 }
 \arguments{
 \item{var}{Either a matrix or a vector containing the state of a variable (eg. SNPs or a phenotype)
@@ -14,10 +15,10 @@ for all individuals (ie. for all terminal nodes in the tree).}
 between the individuals for which snps and phen are known.}
 
 \item{type}{A character string specifying whether ancestral state reconstruction should be
-performed by \code{parsimony} or \code{ace} (as performed in package \emph{ape}).}
+performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} function in package \emph{ape}).}
 
-\item{method}{A character string specifying the type of ACE method to implement (only used if
-\code{type} is set to "ace").}
+\item{method}{A character string specifying the type of ASR method to implement (only used if
+\code{type} is set to "ML").}
 }
 \description{
 Longer proper discription of function...

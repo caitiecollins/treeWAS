@@ -29,12 +29,15 @@
 
 subsequent.test <- function(snps.reconstruction,
                             phen.reconstruction,
-                            tree,
-                            rec = "parsimony"){
+                            tree){
 
   snps.rec <- snps.reconstruction
   phen.rec <- phen.reconstruction
 
+  ## Always work with tree in pruningwise order:
+  tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
   ## get tree edges:
   edges <- tree$edge
 

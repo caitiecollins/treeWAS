@@ -23,6 +23,7 @@
 #' ## Example ##
 #'
 #' @import adegenet ape phangorn
+#' @importFrom Hmisc all.is.numeric
 
 ########################################################################
 
@@ -35,7 +36,7 @@
 snp.sim <- function(n.snps = 10000,
                     n.subs = 1,
                     snp.root = NULL,
-                    n.snps.assoc = 10,
+                    n.snps.assoc = 0,
                     assoc.prob = 100,
                     tree = coalescent.tree.sim(100),
                     phen.loci = NULL,
@@ -43,8 +44,8 @@ snp.sim <- function(n.snps = 10000,
                     reconstruct = FALSE,
                     dist.dna.model = "JC69",
                     row.names = NULL,
-                    set=NULL,
-                    seed=1){
+                    set = NULL,
+                    seed = 1){
 
   # require(adegenet)
   # require(ape)
@@ -55,6 +56,8 @@ snp.sim <- function(n.snps = 10000,
   ##################
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ####################################################################
   ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
@@ -93,26 +96,27 @@ snp.sim <- function(n.snps = 10000,
   ## For n.subs = n or = dist approaches:
   gen.root <- sample(c("a", "c", "g", "t"), gen.size, replace=TRUE)
 
-  ## For ACE/Pagel-test approach:
-  if(class(n.subs) == "matrix"){
-  ## Input = either:
-  ## one state (chosen by directly selecting the more likely state), or
-  ## two likelihoods (taken from fit.iQ$lik.anc[1,] from w/in fitPagel).
+  ## For ACE/Pagel-test approach: ##   ##   ##    <--    ##   Don't think we need this....
+  #   if(is.matrix(n.subs)){
+  #   ## Input = either:
+  #   ## one state (chosen by directly selecting the more likely state), or
+  #   ## two likelihoods (taken from fit.iQ$lik.anc[1,] from w/in fitPagel).
+  #
+  #   ## One state:
+  #   if(!is.null(snp.root)){
+  #     if(length(snp.root) == 1){
+  #       ## select only root state --> different SNP sim method (???)
+  #       if(snp.root == 0) gen.root <- "a"
+  #       if(snp.root == 1) gen.root <- "t"
+  #
+  #       ## select root state & assign this state to all nodes,
+  #       ## to be changed later by a modifiction of the existing SNP sim method...
+  #       #if(snp.root == 0) gen.root <- rep("a", gen.size)
+  #       #if(snp.root == 1) gen.root <- rep("t", gen.size)
+  #     }
+  #   }
+  #   } #
 
-  ## One state:
-  if(!is.null(snp.root)){
-    if(length(snp.root) == 1){
-      ## select only root state --> different SNP sim method (???)
-      if(snp.root == 0) gen.root <- "a"
-      if(snp.root == 1) gen.root <- "t"
-
-      ## select root state & assign this state to all nodes,
-      ## to be changed later by a modifiction of the existing SNP sim method...
-      #if(snp.root == 0) gen.root <- rep("a", gen.size)
-      #if(snp.root == 1) gen.root <- rep("t", gen.size)
-    }
-  }
-  }
   ## get the sum of all branch lengths in the tree:
   time.total <- sum(tree$edge.length)
 
@@ -142,7 +146,7 @@ snp.sim <- function(n.snps = 10000,
   ## OR a vector (containing a distribution)
   ## --> use this distribution to define n.subs-per-site
 
-  if(length(n.subs)==1){
+  if(length(n.subs)==1 & is.null(names(n.subs))){
 
     #####################
     ## NO DISTRIBUTION ##
@@ -153,11 +157,20 @@ snp.sim <- function(n.snps = 10000,
     ## (ie. Poisson parameter 1):
 
     ## draw the number of mutations to occur at each site:
+    if(!is.null(seed)) set.seed(seed)
     n.mts <- rpois(n=gen.size, lambda=(n.subs))
     ## for any n.mts==0, re-sample
-    for(i in 1:length(n.mts)){
-      while(n.mts[i]==0){
-        n.mts[i] <- rpois(n=1, lambda=(n.subs))
+    if(any(n.mts == 0)){
+      ## need to change seed or we'll get trapped in the while loop
+      if(!is.null(seed)) seed.i <- seed
+      for(i in 1:length(n.mts)){
+        while(n.mts[i]==0){
+          if(!is.null(seed)){
+            seed.i <- seed.i+1
+            set.seed(seed.i)
+          }
+          n.mts[i] <- rpois(n=1, lambda=(n.subs))
+        }
       }
     }
 
@@ -177,6 +190,22 @@ snp.sim <- function(n.snps = 10000,
       ## we may not be simulating the same number of sites)
 
       dist <- n.subs
+
+      ## check for names first!
+      if(!is.null(names(dist))){
+        ## only modify if names are numeric
+        if(all.is.numeric(names(dist))){
+          noms <- as.numeric(names(dist))
+          aligned <- sapply(c(1:length(dist)), function(e) noms[e] == e)
+          ## if any names do not correspond to their index, add zeros where missing:
+          if(any(aligned == FALSE)){
+            dist.new <- rep(0, max(noms))
+            dist.new[noms] <- dist
+            names(dist.new) <- c(1:length(dist.new))
+            dist <- dist.new
+          }
+        }
+      } # end check for missing places
 
       ## get dist.prop, a distribution containing the counts
       ## of the number of SNPs to be simulated that will have
@@ -213,6 +242,7 @@ snp.sim <- function(n.snps = 10000,
         ## provided there are not 0 sites to have this number of substitutions...
         if(dist.prop[j] > 0){
           if(length(loci.available) > 1){
+            if(!is.null(seed)) set.seed(seed)
             ## assign dist.prop[i] elements of n.mts to be i
             loci.selected <- sample(loci.available, dist.prop[j], replace = FALSE)
             loci.available <- loci.available[-which(loci.available %in% loci.selected)]
@@ -257,6 +287,7 @@ snp.sim <- function(n.snps = 10000,
 
 
   if(max(n.mts) > length(tree$edge.length)){
+    if(!is.null(seed)) set.seed(seed)
     snps.loci <- sapply(c(1:length(n.mts)),
                         function(e)
                           replace(null.vect,
@@ -265,6 +296,7 @@ snp.sim <- function(n.snps = 10000,
                                          replace=TRUE,
                                          prob=tree$edge.length), TRUE))
   }else{
+    if(!is.null(seed)) set.seed(seed)
     snps.loci <- sapply(c(1:length(n.mts)),
                         function(e)
                           replace(null.vect,
@@ -426,6 +458,7 @@ snp.sim <- function(n.snps = 10000,
   ## AGAIN--NEED TO DOUBLE CHECK: No problems with seed? #############
 
   # counter <- 0
+  if(!is.null(seed)) seed.i <- seed
   while(length(toRepeat) > 0){
 
   for(i in toRepeat){
@@ -437,11 +470,19 @@ snp.sim <- function(n.snps = 10000,
     ## (~ branch length):
 
     if(n.mt > length(tree$edge.length)){
+      if(!is.null(seed)){
+        seed.i <- seed.i+1
+        set.seed(seed.i)
+      }
       subs.edges <- sample(c(1:length(tree$edge.length)),
                            n.mt,
                            replace=TRUE,
                            prob=tree$edge.length)
     }else{
+      if(!is.null(seed)){
+        seed.i <- seed.i+1
+        set.seed(seed.i)
+      }
       subs.edges <- sample(c(1:length(tree$edge.length)),
                            n.mt,
                            replace=FALSE,
@@ -708,6 +749,7 @@ snp.sim <- function(n.snps = 10000,
     ## Re-enabled snps.assoc loci "randomization" by
     ## just drawing indices and shuffling the columns accordingly...
     ## draw which SNPs will be associated to the phenotype
+    if(!is.null(seed)) set.seed(seed)
     snps.assoc.loci <- sort(sample(c(1:gen.size.final),
                                    n.snps.assoc,
                                    replace=FALSE))
@@ -733,6 +775,16 @@ snp.sim <- function(n.snps = 10000,
   if(!is.null(row.names)){
     ## If row.names have been provided in args list, assign them:
     if(length(row.names) == nrow(snps)){
+      ## match tree$tip.label?
+      if(!is.null(tree$tip.label)){
+        if(all(row.names %in% tree$tip.label) & all(tree$tip.label %in% row.names)){
+          ## REORDER to match tree$tip.labs if possible:
+          if(!identical(row.names, tree$tip.label)){
+            ord <- match(tree$tip.label, rownames(snps))
+            row.names <- row.names[ord]
+          }
+        }
+      }
       rownames(snps) <- row.names
     }else{
       if(is.null(rownames(snps))) rownames(snps) <- c(1:nrow(snps))
@@ -872,6 +924,8 @@ snp.sim <- function(n.snps = 10000,
   ##################
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
+  ## Trees must be rooted:
+  if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ####################################################################
   ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
@@ -883,17 +937,17 @@ snp.sim <- function(n.snps = 10000,
     ## Simulate from top:bottom?
     x <- 1:nrow(tree$edge)
   }else{
-    ## Simulate from bottom:top?
-    x <- rev(c(1:nrow(tree$edge)))
-
     ## Extra check:
-    if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] != (tree$Nnode+2)){
+    if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] == (tree$Nnode+2)){
+      ## Simulate from bottom:top?
+      x <- rev(c(1:nrow(tree$edge)))
+    }else{
       stop("This simulation procedure expects to find the root node/first internal node
-               (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
-               once the tree has been reordered to be in 'pruningwise' configuration.
-               This is NOT the case with your tree. Please check.")
+           (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
+           once the tree has been reordered to be in 'pruningwise' configuration.
+           This is NOT the case with your tree. Please check.")
     }
-  }
+    }
   ####################################################################
 
   ## convert subs.edges into appropriate format:
@@ -944,7 +998,7 @@ snp.sim <- function(n.snps = 10000,
       ## within their given branch length:
       if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
         ## identify which loci are repeaters
-        repeats <-table(snps.loci.ori[[i]])[which(table(snps.loci.ori[[i]])!=1)]
+        repeats <- table(snps.loci.ori[[i]])[which(table(snps.loci.ori[[i]])!=1)]
         ## how many times they repeat
         n.reps <- repeats - 1
         ## the positions of these loci in the vector of snps loci

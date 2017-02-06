@@ -12,3 +12,6 @@ Depends: adegenet,
     Hmisc
 Imports: ggplot2,
     beeswarm
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
