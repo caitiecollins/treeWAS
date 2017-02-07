@@ -1,15 +1,4 @@
 
----
-title: "*treeWAS* Vignette"
-author: "Caitlin Collins"
-date: "`r Sys.Date()`"
-output: 
-  rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{*treeWAS* Vignette}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
 
 # *treeWAS*: A phylogenetic tree-based approach to genome-wide association studies in microbes
 
@@ -51,13 +40,6 @@ values lying above this threshold are deemed to be significantly associated to t
 By default, three measures of association are used to identify significant loci within *treeWAS*.
 
 [Equation Notation](pkg/vignettes/figs/Eqn_Legend_genotype.png) 
-
-```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
-library(png)
-library(grid)
-img <- readPNG("figs/Eqn_Legend_genotype.png")
- grid.raster(img)
-```
 
 *Equations below use the following notation:*
 
@@ -121,27 +103,13 @@ At present, *treeWAS* is being hosted on GitHub at <https://github.com/caitiecol
 
 The most up-to-date version of *treeWAS* can be easily installed directly within R, using the `devtools` package. 
 
-
-```{r, echo=FALSE, include=FALSE}
-#  library(knitr)
-# opts_chunk$set(fig.path='figs', fig.keep='high', dev='pdf', fig.width=7, fig.height=7,
-# tidy=FALSE, warning=FALSE, fig.show="asis", fig.align='center', out.width=".8\\textwidth")
-## set syntax-highlighting color theme for R code?
-# opts_knit$set(out.format = "latex")
-# thm <- knit_theme$get("acid")  # parse the theme to a list
-# knit_theme$set(thm)
-```
-<!--
- if(!"devtools" %in% .packages()){
-  if(!"devtools" %in% installed.packages()){}} -->
-  
-```{r, eval=FALSE, highlight=TRUE}
+  ```{r, eval=FALSE, highlight=TRUE}
 ## install devtools, if necessary:
 install.packages("devtools", dep=TRUE)
 library(devtools)
 
 ## install treeWAS from github:
-install_github("caitiecollins/treeWAS/pkg")
+install_github("caitiecollins/treeWAS/pkg", build_vignettes = TRUE)
 library(treeWAS)
 ```
 
@@ -150,30 +118,35 @@ library(treeWAS, quietly = TRUE, verbose=FALSE)
 ```
 
 
+To open the vignette from within R (recommended if any formatted elements are not rendering properly where you are currently reading this), run `browseVignettes` and click on the `HTML` hyperlink:
+```{r, eval=FALSE}
+browseVignettes("treeWAS")
+```
+
 <!-- ########################################################################################################## -->
 ## Data
 <!-- ########################################################################################################## -->
 
 To carry out a GWAS using *treeWAS*, the following data is **required**:
 
-> A genetic dataset
+> **A genetic dataset**
 >   : A matrix containing binary genetic data (whether this encodes SNPs, gene presence/absence, etc. is up to you). Individuals should be in the rows, and genetic variables in the columns. Both rows and columns must be appropriately labelled. 
   
-> A phenotypic variable
+> **A phenotypic variable**
 >   : A vector containing either a binary or continuous variable encoding the phenotype for each individual. Each element should have a name that corresponds to the row labels of the genetic data matrix (though the order does not matter). 
 
 
 The following **optional** elements can also be provided by the user or, alternatively, these can be generated automatically by the `treeWAS` function:
 
-> A phylogenetic tree
+> **A phylogenetic tree**
 >   : An object of class `phylo` (from the *ape* package), containing a phylogenetic tree. Tip labels are required and must correspond to both the row labels of the genetic data matrix and the names of the phenotypic variable (again, the order does not matter). 
   
-> An ancestral state reconstruction of the genotype
+> **An ancestral state reconstruction of the genotype**
 >   : A reconstruction of the ancestral states of all loci in the genetic dataset, at all internal nodes. This should include the original states at the terminal nodes and have the same number of columns as the input genetic data matrix. The number of rows should be equal to the total number of nodes in the tree, including the terminal nodes (in rows 1:N). It must be reconstructed with either parsimony or ML (see `?treeWAS`) for consistency with th reconstruction of the ancestral states of the simulated genetic dataset within *treeWAS*.
   
 <!-- NOTE TO SELF: ADD CHECK FOR (ORDER OF) ROW LABELS TO ENSURE CONSISTENCY BTW INPUTTED SNPS.RECONSTRUCTION AND SNPS + PHEN.RECONSTRUCTION, PHEN -->
 
-> An ancestral state reconstruction of the phenotype
+> **An ancestral state reconstruction of the phenotype**
 >   : A reconstruction of the ancestral states of the phenotypic variable at all nodes in the tree, including the original states at the terminal nodes (at positions 1:N). 
 
 &nbsp;
@@ -206,12 +179,7 @@ data(phen.plot.col)
 plot.phen(tree, phen.nodes=phen.plot.col$all.nodes)
 ```
 
-```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
-library(png)
-library(grid)
-img <- readPNG("figs/tree_phen_eg.png")
- grid.raster(img)
-```
+[Tree showing Phenotype](pkg/vignettes/figs/tree_phen_eg.png)
 
 
 
@@ -262,7 +230,7 @@ for example, if you have deliberately duplicated columns without subsequently ge
 
 &nbsp;
 
-Before running the `get.binry.snps` function, you can check the suffixes of the genetic data matrix's column names using another small function in *treeWAS*, `keepLastN`, which allows you to keep the last N characters of a variable or vector:
+Before running the `get.binary.snps` function, you can check the suffixes of the genetic data matrix's column names using another small function in *treeWAS*, `keepLastN`, which allows you to keep the last N characters of a variable or vector:
 
 ```{r}
 suffixes <- keepLastN(colnames(snps), n = 2)
@@ -435,104 +403,42 @@ If `plot.null.dist` is set to `TRUE`, the null distributions and findings will b
 
 By default, `plot.null.dist` is set to `TRUE`. 
 
-<!--
-
-```{r fig.width=8, fig.height=4, fig.align = "left", echo=FALSE, eval=FALSE}
-# rl <- lapply(list("p1.png", "p2.png"), png::readPNG)
-# gl <- lapply(rl, grid::rasterGrob)
-# do.call(gridExtra::grid.arrange, gl)
-
-library(png)
-library(grid)
-library(ggplot2)
-img1 <- readPNG("figs/plot_hist_terminal.png")
-img2 <- readPNG("figs/plot_hist_simultaneous.png")
-img3 <- readPNG("figs/plot_hist_subsequent.png")
-
-# par(mfrow=c(3,1))
-# grid.raster(img1)
-# grid.raster(img2)
-# grid.raster(img3)
-
-img <- list(img1, img2, img3)
-ml <- marrangeGrob(img, nrow=1, ncol=3)
-ml
-```
-
--->
-
-```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
-library(png)
-library(grid)
-img <- readPNG("figs/plot_hist_terminal.png")
- grid.raster(img)
-```
-
-```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
-library(png)
-library(grid)
-img <- readPNG("figs/plot_hist_simultaneous.png")
- grid.raster(img)
-```
-
-```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
-library(png)
-library(grid)
-img <- readPNG("figs/plot_hist_subsequent.png")
- grid.raster(img)
-```
-
+[Null distribution ("Terminal" test)](pkg/vignettes/figs/plot_hist_terminal.png)
+[Null distribution ("Simultaneous" test)](pkg/vignettes/figs/plot_hist_simultaneous.png)
+[Null distribution ("Subsequent" test)](pkg/vignettes/figs/plot_hist_subsequent.png)
 
 
 
 By default, `plot.manhattan` is also set to `TRUE`.
-```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
-library(png)
-library(grid)
-img <- readPNG("figs/plot_manhattan_terminal.png")
- grid.raster(img)
-```
 
-```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
-library(png)
-library(grid)
-img <- readPNG("figs/plot_manhattan_simultaneous.png")
- grid.raster(img)
-```
+[Manhattan plot ("Terminal" test)](pkg/vignettes/figs/plot_manhattan_terminal.png)
+[Manhattan plot ("Simultaneous" test)](pkg/vignettes/figs/plot_manhattan_simultaneous.png)
+[Manhattan plot ("Subsequent" test)](pkg/vignettes/figs/plot_manhattan_subsequent.png)
 
-```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
-library(png)
-library(grid)
-img <- readPNG("figs/plot_manhattan_subsequent.png")
- grid.raster(img)
-```
+
+
 
 The `treeWAS` function returns a list containing one element comprising the complete pooled set of findings, as well as one element for each of the association scores applied (by default, three). 
 
 Each list element contains the following:
 
-`corr.dat`
-  : The association score values associated with the loci in the real genetic dataset.
-`corr.sim`
-  : The association score values associated with the loci in the simulated null dataset.
-`p.vals`
-  : The p-values associated with the loci in the real genetic dataset for this association score.
-`sig.thresh`
-  : The threshold of significance. 
-`sig.snps`
-  : A data frame describing the genetic loci identified as significant.
-`min.p.value`
-  : The minimum p-value. P-values listed as zero can only truly be defined as below this value.
+* `corr.dat`: The association score values associated with the loci in the real genetic dataset.
+* `corr.sim`: The association score values associated with the loci in the simulated null dataset.
+* `p.vals`: The p-values associated with the loci in the real genetic dataset for this association score.
+* `sig.thresh`: The threshold of significance. 
+* `sig.snps`: A data frame describing the genetic loci identified as significant.
+* `min.p.value`: The minimum p-value. P-values listed as zero can only truly be defined as below this value.
 
-Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified:
-
+Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified. 
+Note that `print.treeWAS` is just the `print` function for an object of class `treeWAS`:
 ```{r, eval=TRUE, echo=FALSE, include=FALSE}
+## Example output:
 data(treeWAS.out)
 out <- treeWAS.out
+class(out) # treeWAS
 ```
 
 ```{r, eval=TRUE}
-
 print(out, sort.by.p=FALSE)
 
 ```
@@ -563,7 +469,7 @@ data(example.output)
 
 To convert the data, use the `read.CFML` function:
 ```{r, eval=FALSE}
-prefix <- "./exmple.output"
+prefix <- "./example.output"
 dat <- read.CFML(prefix=prefix)
 ```
 

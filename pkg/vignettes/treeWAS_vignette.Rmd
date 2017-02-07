@@ -143,7 +143,7 @@ install.packages("devtools", dep=TRUE)
 library(devtools)
 
 ## install treeWAS from github:
-install_github("caitiecollins/treeWAS/pkg")
+install_github("caitiecollins/treeWAS/pkg", build_vignettes = TRUE)
 library(treeWAS)
 ```
 
@@ -151,6 +151,11 @@ library(treeWAS)
 library(treeWAS, quietly = TRUE, verbose=FALSE)
 ```
 
+
+To open the vignette from within R (recommended if any formatted elements are not rendering properly where you are currently reading this), run `browseVignettes` and click on the `HTML` hyperlink:
+```{r, eval=FALSE}
+browseVignettes("treeWAS")
+```
 
 <!-- ########################################################################################################## -->
 ## Data
@@ -264,7 +269,7 @@ for example, if you have deliberately duplicated columns without subsequently ge
 
 &nbsp;
 
-Before running the `get.binry.snps` function, you can check the suffixes of the genetic data matrix's column names using another small function in *treeWAS*, `keepLastN`, which allows you to keep the last N characters of a variable or vector:
+Before running the `get.binary.snps` function, you can check the suffixes of the genetic data matrix's column names using another small function in *treeWAS*, `keepLastN`, which allows you to keep the last N characters of a variable or vector:
 
 ```{r}
 suffixes <- keepLastN(colnames(snps), n = 2)
@@ -526,15 +531,16 @@ Each list element contains the following:
 `min.p.value`
   : The minimum p-value. P-values listed as zero can only truly be defined as below this value.
 
-Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified:
+Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified. Note that `print.treeWAS` is just the `print` function for an object of class `treeWAS`:
 
 ```{r, eval=TRUE, echo=FALSE, include=FALSE}
+## Example output:
 data(treeWAS.out)
 out <- treeWAS.out
+class(out) # treeWAS
 ```
 
 ```{r, eval=TRUE}
-
 print(out, sort.by.p=FALSE)
 
 ```
@@ -565,7 +571,7 @@ data(example.output)
 
 To convert the data, use the `read.CFML` function:
 ```{r, eval=FALSE}
-prefix <- "./exmple.output"
+prefix <- "./example.output"
 dat <- read.CFML(prefix=prefix)
 ```
 
