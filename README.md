@@ -55,7 +55,7 @@ By default, three measures of association are used to identify significant loci 
 >
 > The `terminal` test solves the following equation, for each genetic locus, at the terminal nodes of the tree only:
 >
-> *Terminal = | (1/Nterm)*((Pd*Gd) - (1 - Pd)*Gd - Pd*(1 - Gd) + (1 - Pd)*(1 - Gd)) |
+> *Terminal = | (1/Nterm) x ((Pd x Gd) - ((1 - Pd) x Gd) - (Pd x (1 - Gd)) + ((1 - Pd) x (1 - Gd))) |*
 >
 > The `terminal` test is a sample-wide test of association that seeks to identify broad patterns of correlation between genetic loci and the phenotype, without relying on inferences drawn from reconstructions of the ancestral states.
 
@@ -64,7 +64,7 @@ By default, three measures of association are used to identify significant loci 
 >
 > The `simultaneous` test solves the following equation, for each genetic locus, across each branch in the tree.
 > 
-> *Simultaneous = | (Pa - Pd)*(Ga - Gd) |
+> *Simultaneous = | ((Pa - Pd) x (Ga - Gd)) |*
 >
 >  This allows for the identification of simultaneous substitutions in both the genetic locus and phenotypic variable on the same branch of the phylogenetic tree (or parallel change in non-binary data). Simultaneous substitutions are an indicator of a deterministic relationship between genotype and phenotype. Moreover, because this score is not negatively impacted by the lack of association on other branches, it may be able to detect associations occurring through complementary pathways (i.e., in some clades but not others).
 
@@ -73,7 +73,7 @@ By default, three measures of association are used to identify significant loci 
 >
 > The `subsequent` test solves the following equation, for each genetic locus, across each branch in the tree:
 >
-> *Subsequent = | ((4/3)*(Pa*Ga) + (2/3)*(Pa*Gd) + (2/3)*(Pd*Ga) + (4/3)*(Pd*Gd) - Pa - Pd - Ga - Gd + 1) |
+> *Subsequent = | (((4/3) x (Pa x Ga)) + ((2/3) x (Pa*Gd)) + ((2/3) x (Pd x Ga)) + ((4/3) x (Pd x Gd)) - Pa - Pd - Ga - Gd + 1) |*
 >
 > Calculating this metric across all branches of the tree allows us to measure in what proportion of tree branches we expect the genotype and phenotype to be in the same state. By drawing on inferences from the ancestral state reconstructions as well as the terminal states, this score may allows us to identify broad, if imperfect, patterns of association.
 
