@@ -50,7 +50,7 @@ By default, three measures of association are used to identify significant loci 
 * Nterm = Number of terminal nodes 
 <!-- * Nbranch = Number of branches -->
 
-
+***
 > **Terminal**:
 >
 > The `terminal` test solves the following equation, for each genetic locus, at the terminal nodes of the tree only:
@@ -59,6 +59,7 @@ By default, three measures of association are used to identify significant loci 
 >
 > The `terminal` test is a sample-wide test of association that seeks to identify broad patterns of correlation between genetic loci and the phenotype, without relying on inferences drawn from reconstructions of the ancestral states.
 
+***
 > **Simultaneous**:
 >
 > The `simultaneous` test solves the following equation, for each genetic locus, across each branch in the tree.
@@ -67,6 +68,7 @@ By default, three measures of association are used to identify significant loci 
 >
 >  This allows for the identification of simultaneous substitutions in both the genetic locus and phenotypic variable on the same branch of the phylogenetic tree (or parallel change in non-binary data). Simultaneous substitutions are an indicator of a deterministic relationship between genotype and phenotype. Moreover, because this score is not negatively impacted by the lack of association on other branches, it may be able to detect associations occurring through complementary pathways (i.e., in some clades but not others).
 
+***
 > **Subsequent**:
 >
 > The `subsequent` test solves the following equation, for each genetic locus, across each branch in the tree:
