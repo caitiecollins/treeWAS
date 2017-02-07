@@ -1,0 +1,397 @@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt]{report}
+%%%%%%%
+% \makeatletter
+% \renewcommand{\@makechapterhead}[1]{%
+% \vspace*{50 pt}%
+% {\setlength{\parindent}{0pt} \raggedright \normalfont
+% \bfseries\Huge
+% \ifnum \value{secnumdepth}>1
+%    \if@mainmatter\thechapter.\ \fi%
+% \fi
+% #1\par\nobreak\vspace{40 pt}}}
+% \makeatother
+%%%%%%%
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{sectsty}
+\chapterfont{\color{MidnightBlue}}
+\sectionfont{\color{MidnightBlue}}
+\subsectionfont{\color{MidnightBlue}}
+\subsubsectionfont{\color{MidnightBlue}}
+
+% \titleformat{\chapter}[display]
+%   {\normalfont\bfseries}{}{0pt}{\Large}{\color{RoyalBlue}}
+% % \chapterfont{\color{RoyalBlue}}
+
+\definecolor{blue1}{RGB}{0,102,204}
+%% \usepackage[colorlinks=true,linkcolor=blue1,citecolor=blue1,urlcolor=blue1]{hyperref}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{array}
+\usepackage[english]{babel}
+\usepackage{amsfonts}
+\usepackage{url}
+\usepackage{bm}
+%\usepackage[margin=2.5cm]{geometry}
+\usepackage[a4paper,margin=2cm]{geometry}
+\usepackage[affil-it]{authblk}
+
+%% NEW (from DissDraft7.Rnw):
+\usepackage{blindtext}
+\usepackage{titlesec}
+\usepackage{colortbl}
+\usepackage[onehalfspacing]{setspace}
+\usepackage[font=singlespacing]{caption}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{wrapfig,lipsum,booktabs}
+\usepackage{subcaption}
+\usepackage[section]{placeins}
+
+\hypersetup{colorlinks=true, linkcolor=black}
+
+\captionsetup{font=small, skip=5pt, justification=justified, singlelinecheck=false}
+\newcommand{\sectionbreak}{\clearpage}
+\setlength{\parindent}{0pt}
+%%%%%%%%%%%%
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\m}[1]{\mathbf{#1}}
+\newcommand{\rcmd}[1]{\textcolor{red}{\texttt{#1}}}
+\newcommand{\code}[1]{{{\tt #1}}}
+\newcommand{\Rlogotitle}{\includegraphics[width=0.05\textwidth]{figs/Rlogo}~}
+\newcommand{\Rlogo}{\texttt{R}~}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Add page X of Y numbering??
+% \usepackage{lastpage}
+% \usepackage{fancyhdr}
+
+% \pagestyle{fancy}
+% \renewcommand{\headrulewidth}{0pt}
+% \fancyfoot[R]{\thepage\ of \pageref{LastPage}}
+% \fancypagestyle{plain}{%
+  % \renewcommand{\headrulewidth}{0pt}%
+  % \fancyhf{}%
+  % \fancyfoot[R]{{\footnotesize \textit{page}\ \thepage\ \textit{of}\ \pageref{LastPage}}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \title{\textit{treeWAS}: A phylogenetic method to perform genome-wide association studies in microbes}
+%
+% \author{\textbf{Caitlin Collins}\thanks{\texttt{caitlin.collins12@imperial.ac.uk}
+% }}
+%
+% \supervisor{Xavier Didelot & Christophe Fraser}
+% % {\Large\itshape John Birdwatch\par}
+%
+% % ~\\ Assessors: Daniel Wilson & David Aanensen
+%
+% \affil{{\footnotesize Imperial College London \\MRC Centre for Outbreak Analysis and Modelling}}
+%
+% %% \date{\today}
+% \date{\today}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Custom title page:
+\begin{document}
+\begin{titlepage}
+	\centering
+	% \includegraphics[width=0.15\textwidth]{figs/{ICL_crest}}\par\vspace{5mm}
+	% {\scshape\LARGE Imperial College London \par} %\\MRC Centre for Outbreak Analysis and Modelling \par}
+	\vspace{3cm}
+	{\scshape\large Vignette \par}
+	\vspace{2cm}
+	{\LARGE\bfseries Using \textit{treeWAS}: A phylogenetic method to perform genome-wide association studies in microbes\par}
+	\vspace{8mm}
+	\hline
+	\vspace{1.2cm}
+	{\LARGE\itshape Caitlin Collins\par} %\textsuperscript{1}
+	\vspace{2cm}
+	% \vfill
+	supervised by\par
+	Dr.~Xavier \textsc{Didelot} \& Prof.~Christophe \textsc{Fraser}
+	% \vspace{m}
+	% ~\\assessed by\par
+	% Dr.~Daniel \textsc{Wilson} \& Dr.~David \textsc{Aanensen}
+		\vspace{2cm}
+	{\scshape\small
+	PhD Candidate\\
+	CID: 00775347\\
+	\vspace{8mm}
+  	Department of Infectious Disease Epidemiology\\
+  	Faculty of Medicine, Imperial College London\\
+  	St. Mary's Campus, Norfolk Place, London, W2 1PG\\
+  	caitlin.collins12@imperial.ac.uk
+	\par}
+	% \vspace{3cm}
+  \vfill
+% Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+% \end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \documentclass[12pt,a4paper]{report}
+% \usepackage{graphicx}
+% \begin{document}
+% \begin{titlepage}
+% 	\centering
+% 	\includegraphics[width=0.15\textwidth]{example-image-1x1}\par\vspace{1cm}
+% 	{\scshape\LARGE Columbidae University \par}
+% 	\vspace{1cm}
+% 	{\scshape\Large Final year project\par}
+% 	\vspace{1.5cm}
+% 	{\huge\bfseries Pigeons love doves\par}
+% 	\vspace{2cm}
+% 	{\Large\itshape John Birdwatch\par}
+% 	\vfill
+% 	supervised by\par
+% 	Dr.~Mark \textsc{Brown}
+%
+% 	\vfill
+%
+% % Bottom of the page
+% 	{\large \today\par}
+% \end{titlepage}
+% \end{document}
+
+\sloppy
+\hyphenpenalty 10000
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{document}
+\SweaveOpts{concordance=TRUE}
+\selectlanguage{english}
+
+<<include=FALSE, echo=FALSE>>=
+library(knitr)
+library(adegenet)
+
+opts_chunk$set(fig.path='figs', fig.keep='high', dev='pdf', fig.width=7, fig.height=7,
+tidy=FALSE, warning=FALSE, fig.show="asis", fig.align='center', out.width=".8\\textwidth")
+@
+
+
+
+\color{black}
+
+% \maketitle
+
+\begin{abstract}
+% Genome-Wide Association Studies (GWAS) in microbial organisms have only recently begun to capitalise on the growing wealth of genetic sequence data available on a range of bacteria and viruses. GWAS has the potential to vastly improve the way we understand, manage, and treat infectious diseases; yet, microbial GWAS methods established thus far remain insufficient for achieving this aim. The purpose of this report is to introduce \textit{treeWAS}, a novel phylogenetic approach that has been tailor-made for microbial GWAS. Through rigorous testing via application to a large number of simulated datasets of increasing complexity, we are able to provide strong support for our hypothesis that the methods developed in \textit{treeWAS} are able to overcome critical limitations in the existing range of approaches to microbial GWAS. We aim to demonstrate how the objective and data-driven solutions adopted in \textit{treeWAS} make our approach robust to the confounding effects of both population stratification and recombination, while maintaining the power to detect associations with a statistical and evolutionary significance.
+\textit{treeWAS} is distributed as an open-source R package and is freely available at \url{https://github.com/caitiecollins/treeWAS}. \par
+% \vspace*{-\baselineskip}
+% \vspace{3mm}
+~\\\textsc{\textbf{Keywords:}} Genome-Wide Association Studies (GWAS), Pathogen genomics, Phylogenetics, Population structure, Recombination, Evolution, R, GitHub, CRAN, \textit{treeWAS}. \par
+
+% and can be installed directly within R
+
+% In the pages to come, we aim to demonstrate that, without sacrificing computational efficiency, \textit{treeWAS} can provide a microbial GWAS tool that is more effective, robust to error, and easier to use than any available alternative.
+
+% through effective use of the available data / objective data-driven solutions..
+
+
+% that is being made freely available as a user-friendly R package through the open-source R software
+
+\end{abstract}
+
+
+\newpage
+\tableofcontents
+
+
+%% here we tell R to display 80 characters per line
+<<echo=FALSE>>=
+  options(width=80)
+@
+
+%% start a new page
+% \newpage
+
+
+%% TO DO: %%
+%% REMOVE LIST OF TABLES & LIST OF FIGURES! (But (ask Xav if you can) keep ToC??)
+
+% \begingroup
+% \let\clearpage\relax
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{List of Tables}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \renewcommand\listtablename{}
+% \vspace*{-\baselineskip}
+% \vspace*{-\baselineskip}
+% \vspace*{-\baselineskip}
+% \vspace*{-\baselineskip}
+% \vspace*{-\baselineskip}
+% \listoftables
+%
+% ~\\
+% ~\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{List of Figures}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \renewcommand\listfigurename{}
+% \vspace*{-\baselineskip}
+% \vspace*{-\baselineskip}
+% \vspace*{-\baselineskip}
+% \vspace*{-\baselineskip}
+% \vspace*{-\baselineskip}
+% \listoffigures
+% \endgroup
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% DEFINE TABLE COLOURS (that repeat) %%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{lightBlue}{cmyk}{0.1, 0, 0, 0} % #cce6ff
+\definecolor{lightYellow}{rgb}{1.0000000, 1.0000000, 0.3019608} % #ffff4d
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% start a new page
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% start a new page
+% \newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data pre-processing}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% start a new page
+% \newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Arguments}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% start a new page
+% \newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Running \textit{treeWAS}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% start a new page
+% \newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Interpreting output}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% start a new page
+% \newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{(Bug reporting)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+% \begin{figure}[!ht]
+%   \caption{\textbf{Performance by association test (Set C, coalescent tree, ML)}}
+%   \label{fig:Performance by association test (Set C, coalescent tree, ML)}
+%     \centering
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \caption{\textbf{FPR}}
+%         \label{fig: FPR by association test (Set C, coalescent tree, ML)}
+%         \includegraphics[width=\textwidth]{figs/{results/set3/coaltree/ACE/set3_ACE_coal_1_80_BY_ASSOC_TEST_FPR}}
+%     \end{subfigure}
+%     ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+%       %(or a blank line to force the subfigure onto a new line)
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \caption{\textbf{sensitivity}}
+%         \label{fig: sensitivity by association test (Set C, coalescent tree, ML)}
+%         \includegraphics[width=\textwidth]{figs/{results/set3/coaltree/ACE/set3_ACE_coal_1_80_BY_ASSOC_TEST_sensitivity}}
+%     \end{subfigure}
+%     ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+%     %(or a blank line to force the subfigure onto a new line)
+%     \quad
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \caption{\textbf{PPV}}
+%         \label{fig: PPV by association test (Set C, coalescent tree, ML)}
+%         \includegraphics[width=\textwidth]{figs/{results/set3/coaltree/ACE/set3_ACE_coal_1_80_BY_ASSOC_TEST_PPV}}
+%     \end{subfigure}
+%         ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+%     %(or a blank line to force the subfigure onto a new line)
+%     \begin{subfigure}[b]{0.45\textwidth}
+%     \caption{\textbf{F1.score}}
+%         \label{fig: F1.score by association test (Set C, coalescent tree, ML)}
+%         \includegraphics[width=\textwidth]{figs/{results/set3/coaltree/ACE/set3_ACE_coal_1_80_BY_ASSOC_TEST_F1score}}
+%     \end{subfigure}
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \end{figure}
+%
+%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **** THE END!!! **** %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{ieeetr}
+\bibliography{bibtex}
+
+\newpage
+%% \bibliographystyle{plain}
+%% \bibliography{biblioTJ}
+
+\end{document}
+

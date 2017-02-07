@@ -2,13 +2,19 @@
 title: "*treeWAS* Vignette"
 author: "Caitlin Collins"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{*treeWAS* Vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+<!--rmarkdown::html_vignette
 
+html_document:
+    theme: spacelab
+    highlight: neon
+    -->
 
 <!-- ########################################################################################################## -->
 ## Introduction
@@ -89,9 +95,9 @@ $$
 $$
 \begin{align}
 Subsequent = |\sum_{i = 1}^{n_{branch}}\ \ 
-(&\frac{4}{3}(p_i^{anc}s_i^{anc})\ +\ \frac{2}{3}(p_i^{anc}s_i^{des})\ +\ \\
-& \frac{2}{3}(p_i^{des}s_i^{anc})\ +\ \frac{4}{3}(p_i^{des}s_i^{des})\ -\ \\
-& p_i^{anc}\ -\ p_i^{des}\ -\ s_i^{anc}\ -\ s_i^{des}\ +\ 1)\ |
+(&\frac{4}{3}(p_i^{anc}g_i^{anc})\ +\ \frac{2}{3}(p_i^{anc}g_i^{des})\ +\ \\
+& \frac{2}{3}(p_i^{des}g_i^{anc})\ +\ \frac{4}{3}(p_i^{des}g_i^{des})\ -\ \\
+& p_i^{anc}\ -\ p_i^{des}\ -\ g_i^{anc}\ -\ g_i^{des}\ +\ 1)\ |
 \end{align}
 $$
 >   : Calculating this metric across all branches of the tree allows us to measure in what proportion of tree branches we expect the genotype and phenotype to be in the same state. By drawing on inferences from the ancestral state reconstructions as well as the terminal states, this score may allows us to identify broad, if imperfect, patterns of association.
@@ -117,12 +123,32 @@ At present, *treeWAS* is being hosted on GitHub at <https://github.com/caitiecol
 
 The most up-to-date version of *treeWAS* can be easily installed directly within R, using the `devtools` package. 
 
-```{r, eval=FALSE}
-install.packages("devtools", dep=T)
+
+```{r, echo=FALSE, include=FALSE}
+#  library(knitr)
+# opts_chunk$set(fig.path='figs', fig.keep='high', dev='pdf', fig.width=7, fig.height=7,
+# tidy=FALSE, warning=FALSE, fig.show="asis", fig.align='center', out.width=".8\\textwidth")
+## set syntax-highlighting color theme for R code?
+# opts_knit$set(out.format = "latex")
+# thm <- knit_theme$get("acid")  # parse the theme to a list
+# knit_theme$set(thm)
+```
+<!--
+ if(!"devtools" %in% .packages()){
+  if(!"devtools" %in% installed.packages()){}} -->
+  
+```{r, eval=FALSE, highlight=TRUE}
+## install devtools, if necessary:
+install.packages("devtools", dep=TRUE)
 library(devtools)
 
-install_github("caitiecollins/treeWAS")
+## install treeWAS from github:
+install_github("caitiecollins/treeWAS/pkg")
 library(treeWAS)
+```
+
+```{r, echo=FALSE, include=FALSE}
+library(treeWAS, quietly = TRUE, verbose=FALSE)
 ```
 
 
@@ -156,7 +182,7 @@ The following **optional** elements can also be provided by the user or, alterna
 
 We will use the data stored within *treeWAS* as an example throughout this section of the vignette. We load the data using the `data` function and examine its structure below:
 
-```{r}
+```{r, highlight=TRUE}
 ## Load example data:
 data(snps)
 data(phen)
@@ -174,7 +200,7 @@ table(phen)
 str(tree)
 ```
 
-```{r, eval=F}
+```{r, eval=FALSE}
 ## Load colours:
 data(phen.plot.col)
 
@@ -182,7 +208,7 @@ data(phen.plot.col)
 plot.phen(tree, phen.nodes=phen.plot.col$all.nodes)
 ```
 
-```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
+```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
 library(png)
 library(grid)
 img <- readPNG("figs/tree_phen_eg.png")
@@ -411,43 +437,72 @@ If `plot.null.dist` is set to `TRUE`, the null distributions and findings will b
 
 By default, `plot.null.dist` is set to `TRUE`. 
 
-```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
+<!--
+
+```{r fig.width=8, fig.height=4, fig.align = "left", echo=FALSE, eval=FALSE}
+# rl <- lapply(list("p1.png", "p2.png"), png::readPNG)
+# gl <- lapply(rl, grid::rasterGrob)
+# do.call(gridExtra::grid.arrange, gl)
+
+library(png)
+library(grid)
+library(ggplot2)
+img1 <- readPNG("figs/plot_hist_terminal.png")
+img2 <- readPNG("figs/plot_hist_simultaneous.png")
+img3 <- readPNG("figs/plot_hist_subsequent.png")
+
+# par(mfrow=c(3,1))
+# grid.raster(img1)
+# grid.raster(img2)
+# grid.raster(img3)
+
+img <- list(img1, img2, img3)
+ml <- marrangeGrob(img, nrow=1, ncol=3)
+ml
+```
+
+-->
+
+```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
 library(png)
 library(grid)
 img <- readPNG("figs/plot_hist_terminal.png")
  grid.raster(img)
 ```
 
-```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
+```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
 library(png)
 library(grid)
 img <- readPNG("figs/plot_hist_simultaneous.png")
  grid.raster(img)
 ```
 
-```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
+```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
 library(png)
 library(grid)
 img <- readPNG("figs/plot_hist_subsequent.png")
  grid.raster(img)
 ```
 
+
+
+
 By default, `plot.manhattan` is also set to `TRUE`.
-```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
+```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
 library(png)
 library(grid)
 img <- readPNG("figs/plot_manhattan_terminal.png")
  grid.raster(img)
 ```
 
-```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
+```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
 library(png)
 library(grid)
 img <- readPNG("figs/plot_manhattan_simultaneous.png")
  grid.raster(img)
 ```
 
-```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
+```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
 library(png)
 library(grid)
 img <- readPNG("figs/plot_manhattan_subsequent.png")
@@ -472,9 +527,15 @@ Each list element contains the following:
   : The minimum p-value. P-values listed as zero can only truly be defined as below this value.
 
 Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified:
-```{r, eval=FALSE, results='asis'}
 
-print.treeWAS(out, sort.by.p=FALSE)
+```{r, eval=TRUE, echo=FALSE, include=FALSE}
+data(treeWAS.out)
+out <- treeWAS.out
+```
+
+```{r, eval=TRUE}
+
+print(out, sort.by.p=FALSE)
 
 ```
 
@@ -489,7 +550,7 @@ The *treeWAS* R package has also been designed to work with the output of [Clona
 
 <!-- For purposes of illustration, the output of the example from the [ClonalFrameML wiki](https://github.com/xavierdidelot/ClonalFrameML/wiki) has been stored within *treeWAS*. -->
 
-For practice using ClonalFrameML, [dowload](http://www.danielwilson.me.uk/files/cfml.tgz) the ClonalFrameML example data and follow the steps on the wiki to arrive at the `example.output` dataset. To run the example below, replace the prefix with the path to the `example.output` dataset on your computer or to another set of output from ClonalFrameML containing:
+For practice using ClonalFrameML, [download](http://www.danielwilson.me.uk/files/cfml.tgz) the ClonalFrameML example data and follow the steps on the wiki to arrive at the `example.output` dataset. To run the example below, replace the prefix with the path to the `example.output` dataset on your computer or to another set of output from ClonalFrameML containing:
 
 1. "prefix.labelled_tree.newick"
 1. "prefix.ML_sequence.fasta"
@@ -605,15 +666,4 @@ There may be a feature absent from *treeWAS* that you wish could be performed by
 We are working towards a number of features in the near future, for example, allowing *treeWAS* to handle non-binary categorical phenotypes. 
 
 
-<!-- ########################################################################################################## -->
-## Examples
-<!-- ########################################################################################################## -->
-
-### Example with Data Simulated by *treeWAS*
-<!-- ########################################################################################################## -->
-
-To Do: Run one of these examples throughout the vignette instead. 
-
-### Example with Data from ClonalFrameML
-<!-- ########################################################################################################## -->
 

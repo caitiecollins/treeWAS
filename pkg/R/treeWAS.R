@@ -1255,6 +1255,8 @@ treeWAS <- function(snps,
   names(RES) <- c("treeWAS.combined", test, "dat")
   results <- RES
 
+  class(results) <- "treeWAS"
+
   return(results)
 
 } # end treeWAS
