@@ -113,10 +113,6 @@ install_github("caitiecollins/treeWAS/pkg", build_vignettes = TRUE)
 library(treeWAS)
 ```
 
-```{r, echo=FALSE, include=FALSE}
-library(treeWAS, quietly = TRUE, verbose=FALSE)
-```
-
 
 To open the vignette from within R (recommended if any formatted elements are not rendering properly where you are currently reading this), run `browseVignettes` and click on the `HTML` hyperlink:
 ```{r, eval=FALSE}
@@ -403,8 +399,10 @@ If `plot.null.dist` is set to `TRUE`, the null distributions and findings will b
 
 By default, `plot.null.dist` is set to `TRUE`. 
 
-[Null distribution ("Terminal" test)](pkg/vignettes/figs/plot_hist_terminal.png)
+[Null distribution ("Terminal" test)](pkg/vignettes/figs/plot_hist_terminal.png) 
+
 [Null distribution ("Simultaneous" test)](pkg/vignettes/figs/plot_hist_simultaneous.png)
+
 [Null distribution ("Subsequent" test)](pkg/vignettes/figs/plot_hist_subsequent.png)
 
 
@@ -412,7 +410,9 @@ By default, `plot.null.dist` is set to `TRUE`.
 By default, `plot.manhattan` is also set to `TRUE`.
 
 [Manhattan plot ("Terminal" test)](pkg/vignettes/figs/plot_manhattan_terminal.png)
+
 [Manhattan plot ("Simultaneous" test)](pkg/vignettes/figs/plot_manhattan_simultaneous.png)
+
 [Manhattan plot ("Subsequent" test)](pkg/vignettes/figs/plot_manhattan_subsequent.png)
 
 
@@ -452,6 +452,9 @@ print(out, sort.by.p=FALSE)
 
 The *treeWAS* R package has also been designed to work with the output of [ClonalFrameML](https://github.com/xavierdidelot/ClonalFrameML). By using the simple `read.CFML` function, you can convert the output of ClonalFrameML into a form suitable for input into `treeWAS`.
 
+
+### The Data
+<!-- ########################################################################################################## -->
 <!-- For purposes of illustration, the output of the example from the [ClonalFrameML wiki](https://github.com/xavierdidelot/ClonalFrameML/wiki) has been stored within *treeWAS*. -->
 
 For practice using ClonalFrameML, [download](http://www.danielwilson.me.uk/files/cfml.tgz) the ClonalFrameML example data and follow the steps on the wiki to arrive at the `example.output` dataset. To run the example below, replace the prefix with the path to the `example.output` dataset on your computer or to another set of output from ClonalFrameML containing:
@@ -467,6 +470,8 @@ data(example.output)
 ```
 -->
 
+### Convert the Data
+<!-- ########################################################################################################## -->
 To convert the data, use the `read.CFML` function:
 ```{r, eval=FALSE}
 prefix <- "./example.output"
@@ -482,7 +487,8 @@ index <- foo$index
 dist <- foo$dist
 ```
 
-
+### More Data Processing
+<!-- ########################################################################################################## -->
 Convert the `DNAbin` object containing the genetic dataset into a binary `snps` matrix,
 and expand the unique columns back into the entire dataset:
 ```{r, eval=FALSE}
@@ -506,9 +512,11 @@ toKeep <- 1:N
 snps <- snps.rec[toKeep, ]
 ```
 
+### Input & Arguments
+<!-- ########################################################################################################## -->
 You can now run `treeWAS` using this `snps` matrix, and the `tree` returned from `read.CFML`. 
 
-Instead of supplying `snps.rec` to the argument `snps.reconstruction`, it may be worth (re-)creating the ancestral state reconstruction within \code{treeWAS}. This is recommended, provided the dataset you are working with is not very large, in case any inconsistencies exist between the reconstruction performed by ClonalFrameML and that run within `treeWAS` (which will also be applied to the simulated null dataset). 
+Instead of supplying `snps.rec` to the argument `snps.reconstruction`, it may be worth (re-)creating the ancestral state reconstruction within `treeWAS`. This is recommended, provided the dataset you are working with is not very large, in case any inconsistencies exist between the reconstruction performed by ClonalFrameML and that run within `treeWAS` (which will also be applied to the simulated null dataset). 
 
 The `dist` object can be provided in the `n.subs` argument, though you may also leave this `NULL` and have `treeWAS` recreate `n.subs` internally, again in case there is any discrepancy between the internal and external methods or reconstruction.
 
@@ -524,7 +532,8 @@ str(phen)
 table(phen)
 ```
 
-
+### Running treeWAS
+<!-- ########################################################################################################## -->
 You can now run `treeWAS` using the converted ClonalFrameML output:
 ```{r, eval=FALSE}
 
