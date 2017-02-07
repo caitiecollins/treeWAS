@@ -161,6 +161,9 @@ browseVignettes("treeWAS")
 ## Data
 <!-- ########################################################################################################## -->
 
+
+### Required Elements
+<!-- ########################################################################################################## -->
 To carry out a GWAS using *treeWAS*, the following data is **required**:
 
 > A genetic dataset
@@ -170,6 +173,8 @@ To carry out a GWAS using *treeWAS*, the following data is **required**:
 >   : A vector containing either a binary or continuous variable encoding the phenotype for each individual. Each element should have a name that corresponds to the row labels of the genetic data matrix (though the order does not matter). 
 
 
+### Optional Elements
+<!-- ########################################################################################################## -->
 The following **optional** elements can also be provided by the user or, alternatively, these can be generated automatically by the `treeWAS` function:
 
 > A phylogenetic tree
@@ -185,6 +190,8 @@ The following **optional** elements can also be provided by the user or, alterna
 
 &nbsp;
 
+### Example Data
+<!-- ########################################################################################################## -->
 We will use the data stored within *treeWAS* as an example throughout this section of the vignette. We load the data using the `data` function and examine its structure below:
 
 ```{r, highlight=TRUE}
@@ -228,6 +235,7 @@ img <- readPNG("figs/tree_phen_eg.png")
 Before entering the genetic and phenotypic data into the `treeWAS` function, the user must ensure that the data is in the appropriate format.
 
 ### Labels:
+<!-- ########################################################################################################## -->
 The genetic data matrix, phenotype, and phylogenetic tree (terminal nodes) 
 should all be labelled with corresponding sets of names for the individuals.
  
@@ -253,6 +261,7 @@ all(rownames(snps) %in% names(phen))
 The above checks are run within `treeWAS`, but it may be worthwhile to confirm for yourself that all labels are present and look correct.
 
 ### Biallelic loci:
+<!-- ########################################################################################################## -->
 If, in the genetic data matrix, redundant columns are present for binary loci
 (ie. Denoting the state of the second allele as the inverse of the previous colummn), these should be removed.
 For loci with more than two alleles, all columns should be retained. 
@@ -282,6 +291,7 @@ snps <- get.binary.snps(snps)
 
 
 ### Missing data:
+<!-- ########################################################################################################## -->
 Missing data is permitted (denoted by `NA` values only) in the genetic data matrix, 
 but if more than 50% of any column is composed of NAs,
 we recommend that this column be removed from the dataset. This will be done automatically within `treeWAS`. 
@@ -438,6 +448,8 @@ For large datasets, if you find you are running into errors relating to `memory.
 ## Interpreting Output
 <!-- ########################################################################################################## -->
 
+### Plots
+<!-- ########################################################################################################## -->
 If `plot.null.dist` is set to `TRUE`, the null distributions and findings will be plotted for each association score. If `plot.dist` is `TRUE`, a distribution of the values will be plotted for each association score. And if `plot.manhattan` is set to `TRUE`, a manhattan plot will show the values for each each association score, with a threshold delineating the significant findings from the insignificant. 
 
 By default, `plot.null.dist` is set to `TRUE`. 
@@ -514,6 +526,8 @@ img <- readPNG("figs/plot_manhattan_subsequent.png")
  grid.raster(img)
 ```
 
+### Output Returned
+<!-- ########################################################################################################## -->
 The `treeWAS` function returns a list containing one element comprising the complete pooled set of findings, as well as one element for each of the association scores applied (by default, three). 
 
 Each list element contains the following:
@@ -531,6 +545,9 @@ Each list element contains the following:
 `min.p.value`
   : The minimum p-value. P-values listed as zero can only truly be defined as below this value.
 
+
+### Printing Output
+<!-- ########################################################################################################## -->
 Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified. Note that `print.treeWAS` is just the `print` function for an object of class `treeWAS`:
 
 ```{r, eval=TRUE, echo=FALSE, include=FALSE}

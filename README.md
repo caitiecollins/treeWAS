@@ -43,44 +43,28 @@ By default, three measures of association are used to identify significant loci 
 
 *Equations below use the following notation:*
 
-* $g$ = Genotypic state...
-* $p$ = Phenotypic state...
-* $anc$ = ... at ancestral nodes
-* $des$ = ... at descendant nodes
-* $n_{term}$ = Number of terminal nodes 
-* $n_{branch}$ = Number of branches
+* G = Genotypic state...
+* P = Phenotypic state...
+* a = ... at ancestral nodes
+* d = ... at descendant nodes
+* Nterm = Number of terminal nodes 
+<!-- * Nbranch = Number of branches -->
 
 
-> Terminal
->   : The `terminal` test solves the following equation, for each genetic locus, at the terminal nodes of the tree only:
-$$
-\begin{align}
-Terminal = | \sum_{i = 1}^{n_{term}}\frac{1}{n_{term}}(&p_{i}^{des}g_{i}^{des}\ -\ (1 - p_{i}^{des})g_{i}^{des}\ -\ \\
-&p_{i}^{des}(1 - g_{i}^{des})\ +\ (1 - p_{i}^{des})(1 - g_{i}^{des}))\ |
-\end{align}
-$$
->   : The `terminal` test is a sample-wide test of association that seeks to identify broad patterns of correlation between genetic loci and the phenotype, without relying on inferences drawn from reconstructions of the ancestral states.
+> **Terminal**:
+> The `terminal` test solves the following equation, for each genetic locus, at the terminal nodes of the tree only:
+> *Terminal = | (1/Nterm)*((Pd*Gd) - (1 - Pd)*Gd - Pd*(1 - Gd) + (1 - Pd)*(1 - Gd)) |*
+> The `terminal` test is a sample-wide test of association that seeks to identify broad patterns of correlation between genetic loci and the phenotype, without relying on inferences drawn from reconstructions of the ancestral states.
 
-> Simultaneous
->   : The `simultaneous` test solves the following equation, for each genetic locus, across each branch in the tree. 
-$$
-\begin{align}
-Simultaneous = |\sum_{i = 1}^{n_{branch}}(p_i^{anc} - p_i^{des})(g_i^{anc} - g_i^{des})\ |
-\end{align}
-$$
->   : This allows for the identification of simultaneous substitutions in both the genetic locus and phenotypic variable on the same branch of the phylogenetic tree (or parallel change in non-binary data). Simultaneous substitutions are an indicator of a deterministic relationship between genotype and phenotype. Moreover, because this score is not negatively impacted by the lack of association on other branches, it may be able to detect associations occurring through complementary pathways (i.e., in some clades but not others).
+> **Simultaneous**:
+> The `simultaneous` test solves the following equation, for each genetic locus, across each branch in the tree. 
+> *Simultaneous = | (Pa - Pd)*(Ga - Gd) |*
+>  This allows for the identification of simultaneous substitutions in both the genetic locus and phenotypic variable on the same branch of the phylogenetic tree (or parallel change in non-binary data). Simultaneous substitutions are an indicator of a deterministic relationship between genotype and phenotype. Moreover, because this score is not negatively impacted by the lack of association on other branches, it may be able to detect associations occurring through complementary pathways (i.e., in some clades but not others).
 
-> Subsequent
->   : The `subsequent` test solves the following equation, for each genetic locus, across each branch in the tree:
-$$
-\begin{align}
-Subsequent = |\sum_{i = 1}^{n_{branch}}\ \ 
-(&\frac{4}{3}(p_i^{anc}g_i^{anc})\ +\ \frac{2}{3}(p_i^{anc}g_i^{des})\ +\ \\
-& \frac{2}{3}(p_i^{des}g_i^{anc})\ +\ \frac{4}{3}(p_i^{des}g_i^{des})\ -\ \\
-& p_i^{anc}\ -\ p_i^{des}\ -\ g_i^{anc}\ -\ g_i^{des}\ +\ 1)\ |
-\end{align}
-$$
->   : Calculating this metric across all branches of the tree allows us to measure in what proportion of tree branches we expect the genotype and phenotype to be in the same state. By drawing on inferences from the ancestral state reconstructions as well as the terminal states, this score may allows us to identify broad, if imperfect, patterns of association.
+> **Subsequent**:
+> The `subsequent` test solves the following equation, for each genetic locus, across each branch in the tree:
+> *Subsequent = | ((4/3)*(Pa*Ga) + (2/3)*(Pa*Gd) + (2/3)*(Pd*Ga) + (4/3)*(Pd*Gd) - Pa - Pd - Ga - Gd + 1) |*
+> Calculating this metric across all branches of the tree allows us to measure in what proportion of tree branches we expect the genotype and phenotype to be in the same state. By drawing on inferences from the ancestral state reconstructions as well as the terminal states, this score may allows us to identify broad, if imperfect, patterns of association.
 
 
 <!-- >   : $Subsequent = | 4/3(Pa*Ga) + 2/3(Pa*Gd) + 2/3(Pd*Ga) + 4/3(Pd*Gd) - Pa - Pd - Ga - Gd + 1 |$ -->
@@ -123,6 +107,8 @@ browseVignettes("treeWAS")
 ## Data
 <!-- ########################################################################################################## -->
 
+### Required Elements
+<!-- ########################################################################################################## -->
 To carry out a GWAS using *treeWAS*, the following data is **required**:
 
 > **A genetic dataset**
@@ -132,6 +118,8 @@ To carry out a GWAS using *treeWAS*, the following data is **required**:
 >   : A vector containing either a binary or continuous variable encoding the phenotype for each individual. Each element should have a name that corresponds to the row labels of the genetic data matrix (though the order does not matter). 
 
 
+### Optional Elements
+<!-- ########################################################################################################## -->
 The following **optional** elements can also be provided by the user or, alternatively, these can be generated automatically by the `treeWAS` function:
 
 > **A phylogenetic tree**
@@ -147,6 +135,8 @@ The following **optional** elements can also be provided by the user or, alterna
 
 &nbsp;
 
+### Example Data
+<!-- ########################################################################################################## -->
 We will use the data stored within *treeWAS* as an example throughout this section of the vignette. We load the data using the `data` function and examine its structure below:
 
 ```{r, highlight=TRUE}
@@ -185,6 +175,7 @@ plot.phen(tree, phen.nodes=phen.plot.col$all.nodes)
 Before entering the genetic and phenotypic data into the `treeWAS` function, the user must ensure that the data is in the appropriate format.
 
 ### Labels:
+<!-- ########################################################################################################## -->
 The genetic data matrix, phenotype, and phylogenetic tree (terminal nodes) 
 should all be labelled with corresponding sets of names for the individuals.
  
@@ -210,6 +201,7 @@ all(rownames(snps) %in% names(phen))
 The above checks are run within `treeWAS`, but it may be worthwhile to confirm for yourself that all labels are present and look correct.
 
 ### Biallelic loci:
+<!-- ########################################################################################################## -->
 If, in the genetic data matrix, redundant columns are present for binary loci
 (ie. Denoting the state of the second allele as the inverse of the previous colummn), these should be removed.
 For loci with more than two alleles, all columns should be retained. 
@@ -239,6 +231,7 @@ snps <- get.binary.snps(snps)
 
 
 ### Missing data:
+<!-- ########################################################################################################## -->
 Missing data is permitted (denoted by `NA` values only) in the genetic data matrix, 
 but if more than 50% of any column is composed of NAs,
 we recommend that this column be removed from the dataset. This will be done automatically within `treeWAS`. 
@@ -395,6 +388,9 @@ For large datasets, if you find you are running into errors relating to `memory.
 ## Interpreting Output
 <!-- ########################################################################################################## -->
 
+
+### Plots
+<!-- ########################################################################################################## -->
 If `plot.null.dist` is set to `TRUE`, the null distributions and findings will be plotted for each association score. If `plot.dist` is `TRUE`, a distribution of the values will be plotted for each association score. And if `plot.manhattan` is set to `TRUE`, a manhattan plot will show the values for each each association score, with a threshold delineating the significant findings from the insignificant. 
 
 By default, `plot.null.dist` is set to `TRUE`. 
@@ -416,8 +412,8 @@ By default, `plot.manhattan` is also set to `TRUE`.
 [Manhattan plot ("Subsequent" test)](pkg/vignettes/figs/plot_manhattan_subsequent.png)
 
 
-
-
+### Output Returned
+<!-- ########################################################################################################## -->
 The `treeWAS` function returns a list containing one element comprising the complete pooled set of findings, as well as one element for each of the association scores applied (by default, three). 
 
 Each list element contains the following:
@@ -429,6 +425,8 @@ Each list element contains the following:
 * `sig.snps`: A data frame describing the genetic loci identified as significant.
 * `min.p.value`: The minimum p-value. P-values listed as zero can only truly be defined as below this value.
 
+### Printing Output
+<!-- ########################################################################################################## -->
 Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified. 
 Note that `print.treeWAS` is just the `print` function for an object of class `treeWAS`:
 ```{r, eval=TRUE, echo=FALSE, include=FALSE}
