@@ -1,4 +1,16 @@
 
+---
+title: "*treeWAS* Vignette"
+author: "Caitlin Collins"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{*treeWAS* Vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
 # *treeWAS*: A phylogenetic tree-based approach to genome-wide association studies in microbes
 
 
