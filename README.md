@@ -38,7 +38,7 @@ values lying above this threshold are deemed to be significantly associated to t
 
 By default, three measures of association are used to identify significant loci within *treeWAS*.
 
-<!-- ![Equation Notation](figs/Eqn_Legend_genotype.JPG) -->
+[Equation Notation](pkg/vignette/figs/Eqn_Legend_genotype.png) 
 
 ```{r fig.width=2, fig.height=4, fig.align = "left", echo=FALSE}
 library(png)
