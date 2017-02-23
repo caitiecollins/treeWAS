@@ -4,9 +4,9 @@
 \alias{treeWAS}
 \title{Phylogenetic tree-based GWAS for microbes.}
 \usage{
-treeWAS(snps, phen, tree = c("UPGMA", "nj", "ml"), n.subs = NULL,
-  sim.n.snps = ncol(snps) * 10, test = c("terminal", "simultaneous",
-  "subsequent"), snps.reconstruction = "parsimony",
+treeWAS(snps, phen, tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
+  n.subs = NULL, n.snps.sim = ncol(snps) * 10, test = c("terminal",
+  "simultaneous", "subsequent"), snps.reconstruction = "parsimony",
   snps.sim.reconstruction = "parsimony", phen.reconstruction = "parsimony",
   na.rm = TRUE, p.value = 0.01, p.value.correct = c("bonf", "fdr", FALSE),
   p.value.by = c("count", "density"), dist.dna.model = "JC69",
@@ -15,22 +15,27 @@ treeWAS(snps, phen, tree = c("UPGMA", "nj", "ml"), n.subs = NULL,
   seed = NULL)
 }
 \arguments{
-\item{snps}{A matrix containing binary genetic data, with individuals in the rows and genetic loci in the columns and both rows and columns labelled.}
+\item{snps}{A matrix containing binary genetic data, with individuals in the rows
+and genetic loci in the columns and both rows and columns labelled.}
 
-\item{phen}{A vector containing the phenotypic state of each individual, whose length is equal to the number of rows in \code{snps} and which is named with the same set of labels.
+\item{phen}{A vector containing the phenotypic state of each individual, whose length is equal to the number of rows in
+\code{snps} and which is named with the same set of labels.
 The phenotype can be either binary (character or numeric) or continuous (numeric).}
 
-\item{tree}{A \code{phylo} object containing the phylogenetic tree; or, a character string, one of \code{"nj"}, \code{"ml"}, or \code{"UPGMA"} (the default),
+\item{tree}{A \code{phylo} object containing the phylogenetic tree; or, a character string,
+one of \code{"NJ"}, \code{"BIONJ"} (the default), \code{"ML"}, or \code{"UPGMA"},
+or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
 specifying the method of phylogenetic reconstruction.}
 
 \item{n.subs}{A numeric vector containing the homoplasy distribution (if known, see details), or NULL (the default).}
 
-\item{sim.n.snps}{An integer specifying the number of loci to be simulated for estimating the null distribution
+\item{n.snps.sim}{An integer specifying the number of loci to be simulated for estimating the null distribution
 (by default \code{10*ncol(snps)}). If memory errors arise during the analyis of a large dataset,
-it may be necesary to reduce \code{sim.n.snps} from a multiple of 10 to, for example, 5x the number of loci.}
+it may be necesary to reduce \code{n.snps.sim} from a multiple of 10 to, for example, 5x the number of loci.}
 
 \item{test}{A character string or vector containing one or more of the following available tests of association:
-\code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}. By default, the first three tests are run (see details).}
+\code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
+By default, the first three tests are run (see details).}
 
 \item{snps.reconstruction}{Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 for the ancestral state reconstruction of the genetic dataset,
@@ -43,41 +48,55 @@ for the ancestral state reconstruction of the simulated null genetic dataset.}
 for the ancestral state reconstruction of the phenotypic variable,
 or a vector containing this reconstruction if it has been performed elsewhere.}
 
-\item{na.rm}{A logical indicating whether columns in \code{snps} containing more than 50\% \code{NA}s should be removed at the outset (TRUE, the default) or not (FALSE).}
+\item{na.rm}{A logical indicating whether columns in \code{snps} containing more than 50\% \code{NA}s
+should be removed at the outset (TRUE, the default) or not (FALSE).}
 
 \item{p.value}{A number specifying the base p-value to be set the threshold of significance (by default, \code{0.01}).}
 
-\item{p.value.correct}{A character string, either \code{"bonf"} (the default) or \code{"fdr"}, specifying whether correction for multiple testing
+\item{p.value.correct}{A character string, either \code{"bonf"} (the default) or \code{"fdr"},
+specifying whether correction for multiple testing
 should be performed by Bonferonni correction (recommended) or the False Discovery Rate.}
 
 \item{p.value.by}{A character string specifying how the upper tail of the p-value distribution is to be identified.
-Either \code{"count"} (the default, recommended) for a simple count-based approach or \code{"density"} for a kernel-density based approximation.}
+Either \code{"count"} (the default, recommended) for a simple count-based approach or
+\code{"density"} for a kernel-density based approximation.}
 
 \item{dist.dna.model}{A character string specifying the type of model to use in reconstructing the phylogenetic tree for
-calculating the genetic distance between individual genomes, only used if \code{tree} is a character string (see ?dist.dna).}
+calculating the genetic distance between individual genomes,
+only used if \code{tree} is a character string (see ?dist.dna).}
 
-\item{plot.tree}{A logical indicating whether to generate a plot of the phylogenetic tree (\code{TRUE}) or not (\code{FALSE}, the default).}
+\item{plot.tree}{A logical indicating whether to generate a plot of the phylogenetic tree
+(\code{TRUE}) or not (\code{FALSE}, the default).}
 
-\item{plot.manhattan}{A logical indicating whether to generate a manhattan plot for each association score (\code{TRUE}, the default) or not (\code{FALSE}).}
+\item{plot.manhattan}{A logical indicating whether to generate a manhattan plot for each association score
+(\code{TRUE}, the default) or not (\code{FALSE}).}
 
-\item{plot.null.dist}{A logical indicating whether to plot the null distribution of association score statistics (\code{TRUE}, the default) or not (\code{FALSE}).}
+\item{plot.null.dist}{A logical indicating whether to plot the null distribution of association score statistics
+(\code{TRUE}, the default) or not (\code{FALSE}).}
 
-\item{plot.dist}{A logical indicating whether to plot the true distribution of association score statistics (\code{TRUE}) or not (\code{FALSE}, the default).}
+\item{plot.dist}{A logical indicating whether to plot the true distribution of association score statistics
+(\code{TRUE}) or not (\code{FALSE}, the default).}
 
-\item{snps.assoc}{An optional character string or vector specifying known associated loci to be demarked in results plots (e.g., from previous studies or if data is simulated); else NULL.}
+\item{snps.assoc}{An optional character string or vector specifying known associated loci to be demarked in
+results plots (e.g., from previous studies or if data is simulated); else NULL.}
 
-\item{filename.plot}{An optional character string denoting the file location for saving any plots produced; else \code{NULL}.}
+\item{filename.plot}{An optional character string denoting the file location for
+saving any plots produced; else \code{NULL}.}
 
-\item{seed}{An optional integer to control the pseudo-randomisation process and allow for identical repeat runs of the function; else \code{NULL}.}
+\item{seed}{An optional integer to control the pseudo-randomisation process and allow
+for identical repeat runs of the function; else \code{NULL}.}
 }
 \value{
 A list is returned as the output of \code{treeWAS} containing the data used within it,
 and results including information about significant loci identified, if any.
 }
 \description{
-This function implements a phylogenetic approach to genome-wide association studies (GWAS) designed for use in bacteria and viruses.
-The \code{treeWAS} approach allows for the identification of significant asociations between genotype and phenotype, while accounting for the
-confounding effects of clonal population structure, stratification (overlap between the population structure and phenotypic distribution),
+This function implements a phylogenetic approach to genome-wide association studies
+(GWAS) designed for use in bacteria and viruses.
+The \code{treeWAS} approach allows for the identification of
+significant asociations between genotype and phenotype, while accounting for the
+confounding effects of clonal population structure,
+stratification (overlap between the population structure and phenotypic distribution),
 and homologous recombination.
 }
 \details{
@@ -119,15 +138,19 @@ it can be provided in the \code{n.subs} argument.
 It must be in the form of a \emph{named} vector (or table), or a vector in which the \emph{i}'th element
 contains the number of \emph{loci} that have been estimated to undergo \emph{i} substitutions on the tree.
 The vector must be of length \emph{max n.subs}, and "empty" indices must contain zeros.
-For example: the vector \code{n.subs = c(1833, 642, 17, 6, 1, 0, 0, 1)}, could be used to define the homoplasy distribution for a dataset with 2500 loci,
-where the maximum number of substitutions to be undergone on the tree by any locus is 8, and no loci undergo either 6 or 7 substitutions.
+For example: the vector \code{n.subs = c(1833, 642, 17, 6, 1, 0, 0, 1)},
+could be used to define the homoplasy distribution for a dataset with 2500 loci,
+where the maximum number of substitutions to be undergone on the tree
+by any locus is 8, and no loci undergo either 6 or 7 substitutions.
 
 
 \strong{Ancestral State Reconstrution}
 
-If ancestral state reconstruction has been performed outside of \code{treeWAS} for the \code{snps} and/or \code{phen} variable,
+If ancestral state reconstruction has been performed
+outside of \code{treeWAS} for the \code{snps} and/or \code{phen} variable,
 these reconstructions can be submitted in the form of a matrix and a vector, respectively, to the
-\code{snps.reconstruction} and \code{phen.reconstruction} arguments. Please note the formatting requirements.
+\code{snps.reconstruction} and \code{phen.reconstruction} arguments.
+Please note the formatting requirements.
 
 If provided by the user, \code{snps.reconstruction} should contain \code{snps} in its first \code{nrow(snps)} rows,
 and then have the reconstructed states in rows \code{nrow(snps)+1} to \code{nrow(snps)+tree$Nnode}
@@ -135,9 +158,12 @@ and then have the reconstructed states in rows \code{nrow(snps)+1} to \code{nrow
 If provided by the user, \code{phen.reconstruction} should contain \code{phen} in its first \code{length(phen)} elements,
 and then have the reconstructed states in elements \code{length(phen)+1} to \code{length(phen)+tree$Nnode}
 
-If created externally, the \code{snps.reconstruction} must have been generated through either parsimony or ML, and the
-\code{snps.sim.reconstruction} argument should be set to match (as either \code{"parsimony"} or \code{"ML"}), so that a direct comparison can be made.
-At least for small datasets, it may be worth (re-)running this reconstruction within \code{treeWAS} instead, in case any inconsistencies exist between the
+If created externally, the \code{snps.reconstruction} must have
+been generated through either parsimony or ML, and the
+\code{snps.sim.reconstruction} argument should be set to match
+(as either \code{"parsimony"} or \code{"ML"}), so that a direct comparison can be made.
+At least for small datasets, it may be worth (re-)running this
+reconstruction within \code{treeWAS} instead, in case any inconsistencies exist between the
 external and internal methods of reconstruction.
 
 
@@ -217,7 +243,7 @@ out <- treeWAS(snps = snps,
                 phen = phen,
                 tree = tree,
                 n.subs = dist_0,
-                sim.n.snps = ncol(snps)*10,
+                n.snps.sim = ncol(snps)*10,
                 test = c("terminal", "simultaneous", "subsequent"),
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",

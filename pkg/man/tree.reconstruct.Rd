@@ -4,13 +4,18 @@
 \alias{tree.reconstruct}
 \title{Short one-phrase description.}
 \usage{
-tree.reconstruct(dna, method = c("UPGMA", "NJ", "ML"),
-  dist.dna.model = "JC69", plot = TRUE)
+tree.reconstruct(dna, method = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*",
+  "NJ*"), dist.dna.model = "JC69", plot = TRUE)
 }
 \arguments{
 \item{dna}{A binary matrix or DNAbin object containing genomes for (only)
 the terminal nodes of the tree to be reconstructed.
 Individuals should be in the rows and loci in the columns; rows and columns should be labelled.}
+
+\item{method}{A character string,
+one of \code{"NJ"}, \code{"BIONJ"} (the default), \code{"ML"}, or \code{"UPGMA"};
+or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
+specifying the method of phylogenetic reconstruction.}
 
 \item{dist.dna.model}{A character string specifying the type of model to use in
 calculating the genetic distance between individual genomes (see ?dist.dna).}

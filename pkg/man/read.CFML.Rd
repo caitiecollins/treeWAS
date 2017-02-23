@@ -2,7 +2,7 @@
 % Please edit documentation in R/readCFML.R
 \name{read.CFML}
 \alias{read.CFML}
-\title{Short one-phrase description.}
+\title{Convert ClonalFrameML output.}
 \usage{
 read.CFML(prefix, tree = NULL, plot = TRUE)
 }
@@ -10,7 +10,11 @@ read.CFML(prefix, tree = NULL, plot = TRUE)
 \item{prefix}{A character string containing the prefix of all file names to be read in.}
 }
 \description{
-Longer proper discription of function...
+Convert the output of ClonalFrameML into a form usable within \code{treeWAS}.
+}
+\details{
+The \code{prefix} must be the prefix to three files ending in:
+(i) "labelled_tree.newick", (ii) "ML_sequence.fasta", (iii) "position_cross_reference.txt".
 }
 \examples{
 

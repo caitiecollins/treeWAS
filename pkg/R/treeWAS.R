@@ -751,6 +751,16 @@ treeWAS <- function(snps,
     cat("Setting", length(toChange), "negative branch lengths to zero.", sep=" ")
   }
 
+  ####################################################################
+
+  ###################
+  ## filename.plot ##
+  ###################
+  if(!is.null(filename.plot)){
+    ## save whatever plots are drawn before dev.off() is called to filename.plot:
+    pdf(file = filename.plot, width = 7, height = 11)
+  }
+
 
   ###############
   ## PLOT TREE ##
@@ -1333,6 +1343,13 @@ treeWAS <- function(snps,
 
   ## return plot margins to their original state:
   par(mar=par.mar.ori)
+
+  #######################
+  ## end filename.plot ##
+  #######################
+  if(!is.null(filename.plot)){
+    dev.off()
+  }
 
 
   ################################
