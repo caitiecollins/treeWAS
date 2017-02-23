@@ -265,7 +265,7 @@ out <- treeWAS(snps,
                 phen,
                 tree = c("UPGMA", "nj", "ml"),
                 n.subs = NULL,
-                sim.n.snps = ncol(snps)*10,
+                n.snps.sim = ncol(snps)*10,
                 test = c("terminal", "simultaneous", "subsequent"),
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
@@ -288,69 +288,84 @@ out <- treeWAS(snps,
 
 
 > `snps`
->     : A matrix containing binary genetic data, with individuals in the rows and genetic loci in the columns and both rows and 
+>  : A matrix containing binary genetic data, with individuals in the rows and genetic loci in the columns and both rows and 
 > columns labelled.
 
 >`phen`
->    : A vector containing the phenotypic state of each individual, whose length is equal to the number of rows in `snps` and 
+>  : A vector containing the phenotypic state of each individual, whose length is equal to the number of rows in `snps` and 
 > which is named with the same set of labels.
 > The phenotype can be either binary (character or numeric) or continuous (numeric).
 
 > `tree`
->    : A `phylo` object containing the phylogenetic tree; or, a character string, one of `"nj"`, `"ml"`, or `"UPGMA"` (the
-> default), specifying the method of phylogenetic reconstruction.
+>  : A `phylo` object containing the phylogenetic tree; or, a character string, one of `"NJ"`, `"BIONJ"` (the default), `"ML"`, or `"UPGMA"`; or, if NAs are present in the distance matrix, one of: `"NJ*"` or `"BIONJ*"`, specifying the method of phylogenetic reconstruction.
 
 > `n.subs`
->    : A numeric vector containing the homoplasy distribution (if known, see details), or NULL (the default).
+>  : A numeric vector containing the homoplasy distribution (if known, see details), or NULL (the default).
 
-> `sim.n.snps` An integer specifying the number of loci to be simulated for estimating the null distribution (by default 
-> `10*ncol(snps)`).
+> `n.snps.sim` 
+>  : An integer specifying the number of loci to be simulated for estimating the null distribution (by default 
+> `10*ncol(snps)`). Note that 10x is the recommended *minimum*: where possible (i.e., for datasets that are not very large),  
+> simulating *more* loci (e.g., `100*ncol(snps)`) may further improve results.
 
-> `test` A character string or vector containing one or more of the following available tests of association:
+> `test` 
+>  : A character string or vector containing one or more of the following available tests of association:
 >       `"terminal"`, `"simultaneous"`, `"subsequent"`, `"cor"`, `"fisher"`. By default, the first three tests are run (see 
 >        details).
 
-> `snps.reconstruction` Either a character string specifying `"parsimony"` (the default) or `"ML"` (maximum likelihood) for the
+> `snps.reconstruction` 
+>  : Either a character string specifying `"parsimony"` (the default) or `"ML"` (maximum likelihood) for the
 > ancestral state reconstruction of the genetic dataset, or a matrix containing this reconstruction if it has been performed
 > elsewhere.
 
-> `snps.sim.reconstruction` A character string specifying `"parsimony"` (the default) or `"ML"` (maximum likelihood) for the
+> `snps.sim.reconstruction` 
+>  : A character string specifying `"parsimony"` (the default) or `"ML"` (maximum likelihood) for the
 > ancestral state reconstruction of the simulated null genetic dataset.
 
-> `phen.reconstruction` Either a character string specifying `"parsimony"` (the default) or `"ML"` (maximum likelihood) for the
+> `phen.reconstruction` 
+>  : Either a character string specifying `"parsimony"` (the default) or `"ML"` (maximum likelihood) for the
 > ancestral state reconstruction of the phenotypic variable, or a vector containing this reconstruction if it has been performed
 > elsewhere.
 
-> `p.value` A number specifying the base p-value to be set the threshold of significance (by default, `0.01`).
+> `p.value` 
+>  : A number specifying the base p-value to be set the threshold of significance (by default, `0.01`).
 
-> `p.value.correct` A character string, either `"bonf"` (the default) or `"fdr"`, specifying whether correction for multiple 
+> `p.value.correct` 
+>  : A character string, either `"bonf"` (the default) or `"fdr"`, specifying whether correction for multiple 
 > testing should be performed by Bonferonni correction (recommended) or the False Discovery Rate.
 
-> `p.value.by` A character string specifying how the upper tail of the p-value distribution is to be identified. Either `"count"` 
+> `p.value.by` 
+>  : A character string specifying how the upper tail of the p-value distribution is to be identified. Either `"count"` 
 > (the default, recommended) for a simple count-based approach or `"density"` for a kernel-density based approximation.
 
-> `dist.dna.model` A character string specifying the type of model to use in reconstructing the phylogenetic tree for calculating
+> `dist.dna.model` 
+>  : A character string specifying the type of model to use in reconstructing the phylogenetic tree for calculating
 > the genetic distance between individual genomes, only used if `tree` is a character string (see ?dist.dna).
 
-> `plot.tree` A logical indicating whether to generate a plot of the phylogenetic tree (`TRUE`) or not (`FALSE`, the default).
+> `plot.tree` 
+>  : A logical indicating whether to generate a plot of the phylogenetic tree (`TRUE`) or not (`FALSE`, the default).
 
-> `plot.manhattan` A logical indicating whether to generate a manhattan plot for each association score (`TRUE`, the default) or
+> `plot.manhattan` 
+>  : A logical indicating whether to generate a manhattan plot for each association score (`TRUE`, the default) or
 > not (`FALSE`).
 
-> `plot.null.dist` A logical indicating whether to plot the null distribution of association score statistics (`TRUE`, the
+> `plot.null.dist` 
+>  : A logical indicating whether to plot the null distribution of association score statistics (`TRUE`, the
 > default) or not (`FALSE`).
 
-> `plot.dist` A logical indicating whether to plot the true distribution of association score statistics (`TRUE`) or not (`FALSE`,
+> `plot.dist` 
+>  : A logical indicating whether to plot the true distribution of association score statistics (`TRUE`) or not (`FALSE`,
 > the default).
 
-> `snps.assoc` An optional character string or vector specifying known associated loci to be demarked in results plots (e.g., from
+> `snps.assoc` 
+>  : An optional character string or vector specifying known associated loci to be demarked in results plots (e.g., from
 > previous studies or if data is simulated); else NULL.
 
-> `filename.plot` An optional character string denoting the file location for saving any plots produced; else `NULL`.
+> `filename.plot` 
+>  : An optional character string denoting the file location for saving any plots produced; else `NULL`.
 
-> `seed` An optional integer to control the pseudo-randomisation process and allow for identical repeat runs of the function; else
+> `seed` 
+>  : An optional integer to control the pseudo-randomisation process and allow for identical repeat runs of the function; else
 > `NULL`.
-
 
 
 
@@ -368,7 +383,7 @@ out <- treeWAS(snps = snps,
                 phen = phen,
                 tree = tree,
                 n.subs = NULL,
-                sim.n.snps = ncol(snps)*10,
+                n.snps.sim = ncol(snps)*10,
                 test = c("terminal", "simultaneous", "subsequent"),
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
@@ -393,7 +408,7 @@ For large datasets, if you find you are running into errors relating to `memory.
 1. Run `treeWAS` on a computer with more memory, if you have access to one. 
 <!-- Replace "more memory" with something more specific? -->
 1. Restart your computer, open R and run `treeWAS` before opening any other programs. 
-1. If necessary, gradually reduce the number of simulated loci (`sim.n.snps`), e.g., to `5*ncol(snps)`.
+1. If necessary, gradually reduce the number of simulated loci (`n.snps.sim`), e.g., to `5*ncol(snps)`.
 
 <!-- ########################################################################################################## -->
 ## Interpreting Output
@@ -490,10 +505,15 @@ dat <- read.CFML(prefix=prefix)
 
 Isolate the elements of the output of `read.CFML`:
 ```{r, eval=FALSE}
-tree <- foo$tree
-seqs <- foo$seqs
-index <- foo$index
-dist <- foo$dist
+## Required input into treeWAS:
+snps <- dat$snps
+
+## Recommended input into treeWAS:
+tree <- dat$tree
+
+## Optional input into treeWAS:
+n.subs <- dat$n.subs
+snps.rec <- dat$snps.rec
 ```
 
 ### More Data Processing
@@ -551,7 +571,7 @@ out <- treeWAS(snps = snps,
                 phen = phen,
                 tree = tree,
                 n.subs = NULL,
-                sim.n.snps = ncol(snps)*10,
+                n.snps.sim = ncol(snps)*10,
                 test = c("terminal", "simultaneous", "subsequent"),
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",

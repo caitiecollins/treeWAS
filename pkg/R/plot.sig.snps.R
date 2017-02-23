@@ -36,7 +36,7 @@
 
 manhattan.plot <- function(p.vals,
                            col = "funky",
-                           transp = 0.75,
+                           transp = 0.5,
                            sig.thresh = NULL,
                            thresh.col="red",
                            snps.assoc = NULL,

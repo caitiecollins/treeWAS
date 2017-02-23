@@ -76,12 +76,32 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
   # treelabs.ori <- treelabs
   # edges.ori <- edges
 
-  ## If treelabs not of length labs (eg tree$node.label is NULL), fill in remainder w labs from seqs:
+  ## If treelabs not of length labs (eg tree$node.label is NULL), fill in remainder w labs from seqs??
   # if(length(treelabs) < length(labs))  treelabs <- c(treelabs, labs[c((length(treelabs)+1):length(labs))])
   if(length(treelabs) > length(labs) | length(treelabs) < length(labs)){
+    stopHere <- TRUE
+    ## (*** ONLY FOR NON-CFML/non-labelled.tree.newick trees: ***)
+    ## If treelabs are a subset of labs (i.e., if seqs are all labelled but one of node or tip labs are missing from tree):
+    if(all(treelabs %in% labs) & (length(treelabs) > 0) & (length(labs) == dim(seqs)[1] & (is.null(tree$tip.label) | is.null(tree$node.label)))){
+      ## replace empty nodelabs (probably OK)
+      if(is.null(tree$node.label)){
+        nodelabs <- labs[which(!labs %in% treelabs)]
+        treelabs <- c(tree$tip.label, nodelabs)
+        if(all(treelabs %in% labs)  & all(labs %in% treelabs)) stopHere <- FALSE
+      }
+      ## replace empty tiplabs (may be DANGEROUS...)
+      # if(is.null(tree$tip.label)){
+      #   tiplabs <- labs[which(!labs %in% treelabs)]
+      #   treelabs <- c(tiplabs, tree$node.label)
+      #   if(all(treelabs %in% labs)  & all(labs %in% treelabs)) stopHere <- FALSE
+      # }
+    }
+    if(stopHere == TRUE){
       stop("The number of individuals (terminal and internal nodes) labelled in the tree
             exceeds the number of individuals (rows) labelled in the sequences.")
-  }
+    }
+  } # end treelabs check
+
   ## Double check that treelabs and labs match up (order does NOT matter yet):
   if(!all(labs %in% treelabs)){
     stop("Sequence labels do not match tree labels.")
@@ -95,10 +115,11 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 
   ## SLOW STEP!!!
   system.time(
-  for (i in 1:l) {
-    if (length(unique(seqs[,i]))==2){
-      num[i] <- sum(mapping==i) # Only count biallelic sites
-      for (b in 1:nrow(edges)) if (seqs[edges[b,1],i]!=seqs[edges[b,2],i]) subs[i] <- subs[i]+1
+  for(i in 1:l) {
+    if(length(unique(seqs[,i])) == 2){
+      num[i] <- sum(mapping == i) # Only count biallelic sites
+      n <- length(which(seqs[edges[, 1], i] != seqs[edges[, 2], i])) ## faster
+      subs[i] <- subs[i]+n
     } ## NOTE--if we're only counting biallelic sites for num, should do so for subs as well...
   } # end for loop
   ) # end system.time
@@ -120,10 +141,38 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
             col=transp("royalblue", alpha=0.5))
   }
 
+  ## NEW ##
+
+  ## Expand seqs with mapping/index (??):
+
+  ## (?) DOES IT MAKE MORE SENSE TO RETURN SEQS UN-EXPANDED, OR EXPANDED, ALONGSIDE INDEX?   ####   ####   ####   ####   ####   ####   <-------- (??)
+  ## --> Seems confusing to return snps expanded & seqs unexpanded w a different n.cols...
+  ## (though also seems confusing to return snps & seqs expanded w a "useless" index object...?)
+
+  seqs <- seqs[,mapping]
+
+
+  ## Convert DNAbin object:
+  snps.rec <- DNAbin2genind(seqs, polyThres=0)
+  snps.rec <- snps.rec@tab
+
+  ## Get binary loci:
+  snps.rec.bin <- get.binary.snps(snps.rec)
+
+  ## Expand snps:
+  snps.rec <- snps.rec.bin
+
+  ## Get snps only:
+  N <- nrow(snps.rec)-tree$Nnode
+  toKeep <- 1:N
+  snps <- snps.rec[toKeep, ]
+
   out <- list(tree = tree,
+              snps = snps,
+              snps.rec = snps.rec,
               seqs = seqs,
               index = mapping,
-              dist = dist)
+              n.subs = dist)
 
   return(out)
 

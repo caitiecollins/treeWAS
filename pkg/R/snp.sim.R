@@ -457,8 +457,9 @@ snp.sim <- function(n.snps = 10000,
   ######################################
   ## AGAIN--NEED TO DOUBLE CHECK: No problems with seed? #############
 
-  # counter <- 0
+  counter <- 0
   if(!is.null(seed)) seed.i <- seed
+  system.time(
   while(length(toRepeat) > 0){
 
   for(i in toRepeat){
@@ -546,10 +547,12 @@ snp.sim <- function(n.snps = 10000,
     toRepeat <- as.vector(unlist(toRepeat))
   }
 
-  # counter <- counter+1
-  # print("COUNTER"); print(counter)
+  counter <- counter+1
+  print("COUNTER"); print(counter)
+  print("toRepeat"); print(length(toRepeat))
 
   } # end of while loop
+  )
   ######################################
   ## while loop ENDS here: #############
   ######################################

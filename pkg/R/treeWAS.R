@@ -1,6 +1,17 @@
 
 
 
+## dependencies problems?ssh caitlin@131.251.130.191
+
+## Hmisc new version requiring a non-existant version of pkg "survival"..
+## -->
+## Soln:
+# library(devtools)
+# install_version("Hmisc", version = "3.9-1", repos = "http://cran.us.r-project.org")
+
+## BUT -- how to rquire an older version in NAMESPACE???
+
+
 
 ###################
 ## print.treeWAS ##
@@ -38,7 +49,11 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
   cat("\t## All findings:  ## \n")
   cat("\t#################### \n")
   cat("Number of significant loci: ")
-  print(length(x$treeWAS.combined$treeWAS.combined))
+  l <- length(x$treeWAS.combined$treeWAS.combined)
+  if(any(is.na(x$treeWAS.combined$treeWAS.combined))){
+    l <- l - length(which(is.na(x$treeWAS.combined$treeWAS.combined)))
+  }
+  print(l)
 
   res <- x$treeWAS.combined$treeWAS.combined
   if(all.is.numeric(res)){
@@ -49,8 +64,10 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
       res <- res[ord]
     }
   }
-  cat("Significant loci: \n")
-  print(res)
+  if(l > 0){
+    cat("Significant loci: \n")
+    print(res)
+  }
 
   cat("\t \n")
 
@@ -112,23 +129,31 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 
 #' Phylogenetic tree-based GWAS for microbes.
 #'
-#' This function implements a phylogenetic approach to genome-wide association studies (GWAS) designed for use in bacteria and viruses.
-#' The \code{treeWAS} approach allows for the identification of significant asociations between genotype and phenotype, while accounting for the
-#' confounding effects of clonal population structure, stratification (overlap between the population structure and phenotypic distribution),
+#' This function implements a phylogenetic approach to genome-wide association studies
+#'(GWAS) designed for use in bacteria and viruses.
+#' The \code{treeWAS} approach allows for the identification of
+#' significant asociations between genotype and phenotype, while accounting for the
+#' confounding effects of clonal population structure,
+#' stratification (overlap between the population structure and phenotypic distribution),
 #' and homologous recombination.
 #'
 #'
-#' @param snps A matrix containing binary genetic data, with individuals in the rows and genetic loci in the columns and both rows and columns labelled.
-#' @param phen A vector containing the phenotypic state of each individual, whose length is equal to the number of rows in \code{snps} and which is named with the same set of labels.
+#' @param snps A matrix containing binary genetic data, with individuals in the rows
+#'                and genetic loci in the columns and both rows and columns labelled.
+#' @param phen A vector containing the phenotypic state of each individual, whose length is equal to the number of rows in
+#'              \code{snps} and which is named with the same set of labels.
 #'              The phenotype can be either binary (character or numeric) or continuous (numeric).
-#' @param tree A \code{phylo} object containing the phylogenetic tree; or, a character string, one of \code{"nj"}, \code{"ml"}, or \code{"UPGMA"} (the default),
+#' @param tree A \code{phylo} object containing the phylogenetic tree; or, a character string,
+#'                one of \code{"NJ"}, \code{"BIONJ"} (the default), \code{"ML"}, or \code{"UPGMA"},
+#'                or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
 #'                specifying the method of phylogenetic reconstruction.
 #' @param n.subs A numeric vector containing the homoplasy distribution (if known, see details), or NULL (the default).
-#' @param sim.n.snps An integer specifying the number of loci to be simulated for estimating the null distribution
+#' @param n.snps.sim An integer specifying the number of loci to be simulated for estimating the null distribution
 #'                      (by default \code{10*ncol(snps)}). If memory errors arise during the analyis of a large dataset,
-#'                      it may be necesary to reduce \code{sim.n.snps} from a multiple of 10 to, for example, 5x the number of loci.
+#'                      it may be necesary to reduce \code{n.snps.sim} from a multiple of 10 to, for example, 5x the number of loci.
 #' @param test A character string or vector containing one or more of the following available tests of association:
-#'              \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}. By default, the first three tests are run (see details).
+#'              \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
+#'              By default, the first three tests are run (see details).
 #'
 #' @param snps.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the genetic dataset,
@@ -140,22 +165,33 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' @param phen.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the phenotypic variable,
 #'                              or a vector containing this reconstruction if it has been performed elsewhere.
-#' @param na.rm A logical indicating whether columns in \code{snps} containing more than 50\% \code{NA}s should be removed at the outset (TRUE, the default) or not (FALSE).
+#' @param na.rm A logical indicating whether columns in \code{snps} containing more than 50\% \code{NA}s
+#'                should be removed at the outset (TRUE, the default) or not (FALSE).
 #'
 #' @param p.value A number specifying the base p-value to be set the threshold of significance (by default, \code{0.01}).
-#' @param p.value.correct A character string, either \code{"bonf"} (the default) or \code{"fdr"}, specifying whether correction for multiple testing
+#' @param p.value.correct A character string, either \code{"bonf"} (the default) or \code{"fdr"},
+#'                          specifying whether correction for multiple testing
 #'                          should be performed by Bonferonni correction (recommended) or the False Discovery Rate.
 #' @param p.value.by A character string specifying how the upper tail of the p-value distribution is to be identified.
-#'                      Either \code{"count"} (the default, recommended) for a simple count-based approach or \code{"density"} for a kernel-density based approximation.
+#'                      Either \code{"count"} (the default, recommended) for a simple count-based approach or
+#'                      \code{"density"} for a kernel-density based approximation.
 #' @param dist.dna.model A character string specifying the type of model to use in reconstructing the phylogenetic tree for
-#'                          calculating the genetic distance between individual genomes, only used if \code{tree} is a character string (see ?dist.dna).
-#' @param plot.tree A logical indicating whether to generate a plot of the phylogenetic tree (\code{TRUE}) or not (\code{FALSE}, the default).
-#' @param plot.manhattan A logical indicating whether to generate a manhattan plot for each association score (\code{TRUE}, the default) or not (\code{FALSE}).
-#' @param plot.null.dist A logical indicating whether to plot the null distribution of association score statistics (\code{TRUE}, the default) or not (\code{FALSE}).
-#' @param plot.dist A logical indicating whether to plot the true distribution of association score statistics (\code{TRUE}) or not (\code{FALSE}, the default).
-#' @param snps.assoc An optional character string or vector specifying known associated loci to be demarked in results plots (e.g., from previous studies or if data is simulated); else NULL.
-#' @param filename.plot An optional character string denoting the file location for saving any plots produced; else \code{NULL}.
-#' @param seed An optional integer to control the pseudo-randomisation process and allow for identical repeat runs of the function; else \code{NULL}.
+#'                          calculating the genetic distance between individual genomes,
+#'                          only used if \code{tree} is a character string (see ?dist.dna).
+#' @param plot.tree A logical indicating whether to generate a plot of the phylogenetic tree
+#'                    (\code{TRUE}) or not (\code{FALSE}, the default).
+#' @param plot.manhattan A logical indicating whether to generate a manhattan plot for each association score
+#'                         (\code{TRUE}, the default) or not (\code{FALSE}).
+#' @param plot.null.dist A logical indicating whether to plot the null distribution of association score statistics
+#'                        (\code{TRUE}, the default) or not (\code{FALSE}).
+#' @param plot.dist A logical indicating whether to plot the true distribution of association score statistics
+#'                    (\code{TRUE}) or not (\code{FALSE}, the default).
+#' @param snps.assoc An optional character string or vector specifying known associated loci to be demarked in
+#'                      results plots (e.g., from previous studies or if data is simulated); else NULL.
+#' @param filename.plot An optional character string denoting the file location for
+#'                        saving any plots produced; else \code{NULL}.
+#' @param seed An optional integer to control the pseudo-randomisation process and allow
+#'                for identical repeat runs of the function; else \code{NULL}.
 #'
 ###########################################################
 #'
@@ -199,16 +235,20 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' It must be in the form of a \emph{named} vector (or table), or a vector in which the \emph{i}'th element
 #' contains the number of \emph{loci} that have been estimated to undergo \emph{i} substitutions on the tree.
 #' The vector must be of length \emph{max n.subs}, and "empty" indices must contain zeros.
-#' For example: the vector \code{n.subs = c(1833, 642, 17, 6, 1, 0, 0, 1)}, could be used to define the homoplasy distribution for a dataset with 2500 loci,
-#' where the maximum number of substitutions to be undergone on the tree by any locus is 8, and no loci undergo either 6 or 7 substitutions.
+#' For example: the vector \code{n.subs = c(1833, 642, 17, 6, 1, 0, 0, 1)},
+#' could be used to define the homoplasy distribution for a dataset with 2500 loci,
+#' where the maximum number of substitutions to be undergone on the tree
+#' by any locus is 8, and no loci undergo either 6 or 7 substitutions.
 #'
 #'
 ###########################################################
 #' \strong{Ancestral State Reconstrution}
 #'
-#' If ancestral state reconstruction has been performed outside of \code{treeWAS} for the \code{snps} and/or \code{phen} variable,
+#' If ancestral state reconstruction has been performed
+#' outside of \code{treeWAS} for the \code{snps} and/or \code{phen} variable,
 #' these reconstructions can be submitted in the form of a matrix and a vector, respectively, to the
-#' \code{snps.reconstruction} and \code{phen.reconstruction} arguments. Please note the formatting requirements.
+#' \code{snps.reconstruction} and \code{phen.reconstruction} arguments.
+#' Please note the formatting requirements.
 #'
 #' If provided by the user, \code{snps.reconstruction} should contain \code{snps} in its first \code{nrow(snps)} rows,
 #' and then have the reconstructed states in rows \code{nrow(snps)+1} to \code{nrow(snps)+tree$Nnode}
@@ -216,9 +256,12 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' If provided by the user, \code{phen.reconstruction} should contain \code{phen} in its first \code{length(phen)} elements,
 #' and then have the reconstructed states in elements \code{length(phen)+1} to \code{length(phen)+tree$Nnode}
 #'
-#' If created externally, the \code{snps.reconstruction} must have been generated through either parsimony or ML, and the
-#' \code{snps.sim.reconstruction} argument should be set to match (as either \code{"parsimony"} or \code{"ML"}), so that a direct comparison can be made.
-#' At least for small datasets, it may be worth (re-)running this reconstruction within \code{treeWAS} instead, in case any inconsistencies exist between the
+#' If created externally, the \code{snps.reconstruction} must have
+#' been generated through either parsimony or ML, and the
+#' \code{snps.sim.reconstruction} argument should be set to match
+#' (as either \code{"parsimony"} or \code{"ML"}), so that a direct comparison can be made.
+#' At least for small datasets, it may be worth (re-)running this
+#' reconstruction within \code{treeWAS} instead, in case any inconsistencies exist between the
 #' external and internal methods of reconstruction.
 #'
 #'
@@ -309,7 +352,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'                 phen = phen,
 #'                 tree = tree,
 #'                 n.subs = dist_0,
-#'                 sim.n.snps = ncol(snps)*10,
+#'                 n.snps.sim = ncol(snps)*10,
 #'                 test = c("terminal", "simultaneous", "subsequent"),
 #'                 snps.reconstruction = "parsimony",
 #'                 snps.sim.reconstruction = "parsimony",
@@ -345,12 +388,6 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 
 
 
-
-
-
-
-# \deqn{Terminal = |\sum_{i = 1}^{n_{term}}\frac{1}{n_{term}} (p_{i}^{des}s_{i}^{des}\ -\ (1 - p_{i}^{des})s_{i}^{des}\ -\ p_{i}^{des}(1 - s_{i}^{des})\ +\ (1 - p_{i}^{des})(1 - s_{i}^{des}))\ |}
-
 #################
 ## PARAMETERS: ##
 #################
@@ -362,7 +399,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 # p.value <- 0.001
 # p.value.correct <- "fdr"
 # p.value.by <- "count"
-# sim.n.snps <- ncol(snps)*10
+# n.snps.sim <- ncol(snps)*10
 # n.reps <- 1
 # plot.manhattan <- TRUE
 # plot.null.dist <- TRUE
@@ -380,7 +417,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #                 phen,
 #                 tree = tree,
 #                 n.subs = NULL,
-#                 sim.n.snps = ncol(snps)*10,
+#                 n.snps.sim = ncol(snps)*10,
 #                 test = c("terminal", "simultaneous", "subsequent"),
 #                 p.value = 0.01,
 #                 p.value.correct = "bonf",
@@ -400,9 +437,9 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 
 treeWAS <- function(snps,
                     phen,
-                    tree = c("UPGMA", "nj", "ml"),
+                    tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
                     n.subs = NULL,
-                    sim.n.snps = ncol(snps)*10,
+                    n.snps.sim = ncol(snps)*10,
                     test = c("terminal", "simultaneous", "subsequent"),
                     snps.reconstruction = "parsimony",
                     snps.sim.reconstruction = "parsimony",
@@ -420,29 +457,54 @@ treeWAS <- function(snps,
                     filename.plot = NULL,
                     seed = NULL){
 
-  ###################
-  ## LOAD PACKAGES ##
-  ###################
-  # require(adegenet)
-  # require(phangorn)
-  # require(ape)
-  # # require(ade4) #?
-  # require(Hmisc) # all.is.numeric
-
   snps.sim <- snps.rec <- snps.REC <- snps.sim.rec <- snps.sim.REC <- phen.rec <- phen.REC <- NULL
 
   #####################################################################
   ## 0) HANDLE INPUT DATA #############################################
   #####################################################################
 
-  #####################
-  ## HANDLE TEST ARG ##
-  #####################
+  #################
+  ## HANDLE ARGS ##
+  #################
 
   ## Allow partial matching of argument names:
+
+  ## TEST ##
+  test <- tolower(test)
   test <- match.arg(arg = test,
                     choices = c("terminal", "simultaneous", "subsequent", "cor", "fisher"),
                     several.ok = TRUE)
+
+  ## TREE ##
+  if(is.character(tree)){
+    tree <- tolower(tree)
+    if(class(try(match.arg(arg = tree,
+                            choices = c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
+                            several.ok = FALSE), silent=TRUE)) == "try-error"){
+      tree <- "bionj"
+      cat("If tree is not a phylo object, please specify one of the following reconstruction methods:
+              'UPGMA', 'NJ', 'BIONJ', ML', 'NJ*', 'BIONJ*'. Choosing 'BIONJ' by default.")
+    }else{
+      tree <- match.arg(arg = tree,
+                        choices =  c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
+                        several.ok = FALSE)
+    }
+  }
+
+
+  ## P-VALUE CORRECT ##
+  p.value.correct <- tolower(p.value.correct)
+  p.value.correct <- match.arg(arg = p.value.correct,
+                              choices = c("bonf", "fdr", "false"),
+                              several.ok = FALSE)
+  if(p.value.correct == "false") p.value.correct <- FALSE
+
+
+  ## P-VALUE BY ##
+  p.value.by <- tolower(p.value.by)
+  p.value.by <- match.arg(arg = p.value.by,
+                               choices = c("count", "density"),
+                               several.ok = FALSE)
 
   ########################
   ## HANDLE SNPS & PHEN ##
@@ -467,20 +529,10 @@ treeWAS <- function(snps,
 
   if(class(tree) == "character"){
 
-    tree <- tolower(tree)
-
-    if(!any(c("upgma", "nj", "ml") %in% tree)){
-      warning("If tree is not a phylo object,
-              it should be one of 'UPGMA', 'NJ', 'ML',
-              specifying which method is to be used to
-              reconstruct the phylogenetic tree from the snps provided.
-              Choosing 'UPGMA' by default.")
-      tree <- "upgma"
-    }
     tree <- tree.reconstruct(snps,
                              method = tree,
                              dist.dna.model = dist.dna.model,
-                             plot = plot.tree)
+                             plot = FALSE)
 
     ## HANDLE TREE: ##
     ## Always work with trees in "pruningwise" order:
@@ -503,14 +555,7 @@ treeWAS <- function(snps,
     ## Trees must be rooted:
     if(!is.rooted(tree)) tree <- midpoint(tree)
 
-
-    if(plot.tree==TRUE){
-      plot(tree)
-      title("Phylogenetic tree (original)")
-      axisPhylo()
-    } # end plot.tree
-
-  }# end tree...
+  } # end tree...
 
 
   ####################################################################
@@ -581,6 +626,13 @@ treeWAS <- function(snps,
     phen <- phen[-which(names(phen) %in% toRemove)]
     ## remove individuals from snps:
     snps <- snps[-which(rownames(snps) %in% toRemove), ]
+    ## (+ snps.reconstruction)
+    if(is.matrix(snps.reconstruction)){
+      ## in case snps.rec lacks rownames..
+      rem <- which(rownames(snps.reconstruction) %in% toRemove)
+      if(is.null(rem)) rem <- which(rownames(snps) %in% toRemove)
+      snps.reconstruction <- snps.reconstruction[-rem, ]
+    }
     ## remove individuals from tree:
     tree <- drop.tip(tree, tip = toRemove)
   }
@@ -606,7 +658,10 @@ treeWAS <- function(snps,
   #   }
 
   ####################################################################
-  ## CHECK IF ALL CONTAIN MINORITY OF NAs:
+  ###############################################
+  ## CHECK IF ALL LOCI CONTAIN MINORITY OF NAs: ##
+  ###############################################
+  ## Columns:
   if(is.null(na.rm)) na.rm <- TRUE
   if(na.rm != FALSE){
   NA.tab <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e]))))
@@ -622,6 +677,37 @@ treeWAS <- function(snps,
     }
   }
   }
+
+  #######################################################
+  ## CHECK IF ANY INDIVIDUALS ARE 100% (or 75%??) NAS: ##
+  #######################################################
+  ## Rows:
+  # if(is.null(na.rm)) na.rm <- TRUE
+  # if(na.rm != FALSE){
+    NA.tab <- sapply(c(1:nrow(snps)), function(e) length(which(is.na(snps[e,]))))
+
+    ## What proportion of loci w NAs is acceptable?
+    # toRemove <- which(NA.tab > floor(ncol(snps)*0.75)) # Remove row w > 75% of NAs
+    toRemove <- rownames(snps)[which(NA.tab == ncol(snps))] # Remove ENTIRELY missing rows...
+
+    if(length(toRemove) > 0){
+      ## print notice:
+      cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
+      ## remove individuals from snps:
+      snps <- snps[-which(rownames(snps) %in% toRemove), ]
+      ## (+ snps.reconstruction)
+      if(is.matrix(snps.reconstruction)){
+        ## in case snps.rec lacks rownames..
+        rem <- which(rownames(snps.reconstruction) %in% toRemove)
+        if(is.null(rem)) rem <- which(rownames(snps) %in% toRemove)
+        snps.reconstruction <- snps.reconstruction[-rem, ]
+      }
+      ## remove individuals from phen:
+      phen <- phen[-which(names(phen) %in% toRemove)]
+      ## remove individuals from tree:
+      tree <- drop.tip(tree, tip = toRemove)
+    }
+  # }
   ####################################################################
   ## CHECK FOR NON-BINARY SNPS (?): ## DO THIS OUTSIDE OF THE treeWAS PIPELINE -- TOO MANY OPPORTUNITIES FOR ERRORS IF DONE AUTOMATICALLY.
   ## (This will only work if all snps colnames end in one of .a/.c/.g/.t)
@@ -633,32 +719,70 @@ treeWAS <- function(snps,
   ####################################################################
 
   ## REORDER SNPS TO MATCH TREE$TIP.LABEL
-  if(!identical(rownames(snps), tree$tip.label)){
+  if(!identical(as.character(rownames(snps)), as.character(tree$tip.label))){
     ord <- match(tree$tip.label, rownames(snps))
     snps <- snps[ord,]
     ## check:
-    if(!identical(rownames(snps), tree$tip.label)){
+    if(!identical(as.character(rownames(snps)), as.character(tree$tip.label))){
       stop("Unable to rearrange snps such that rownames(snps)
             match content and order of tree$tip.label.
-            Please do this by hand.")
+            Please check that these match.")
     }
   }
 
   ## REORDER PHEN TO MATCH TREE$TIP.LABEL
-  if(!identical(names(phen), tree$tip.label)){
+  if(!identical(as.character(names(phen)), as.character(tree$tip.label))){
     ord <- match(tree$tip.label, names(phen))
     phen <- phen[ord]
     ## check:
-    if(!identical(names(phen), tree$tip.label)){
+    if(!identical(as.character(names(phen)), as.character(tree$tip.label))){
       stop("Unable to rearrange phen such that names(phen)
            match content and order of tree$tip.label.
-           Please do this by hand.")
+           Please check that these match.")
     }
     }
 
   ####################################################################
 
+  ## CHECK TREE: (set NEGATIVE branch lengths to zero (??)) ##
+  toChange <- which(tree$edge.length < 0)
+  if(length(toChange) > 0){
+    tree$edge.length[toChange] <- 0
+    cat("Setting", length(toChange), "negative branch lengths to zero.", sep=" ")
+  }
 
+
+  ###############
+  ## PLOT TREE ##
+  ###############
+
+  if(plot.tree==TRUE){
+    ## get plot margins:
+    mar.ori <- par()$mar
+
+    ## get tip.col:
+    leafCol <- "black"
+    var <- as.character(phen)
+    levs <- unique(var)
+    if(length(levs) == 2){
+      myCol <- c("red", "blue")
+    }else{
+      myCol <- funky(length(levs))
+    }
+    leafCol <- var
+    ## for loop
+    for(i in 1:length(levs)){
+      leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
+    } # end for loop
+
+    ## PLOT TREE:
+    plot(tree, show.tip=T, tip.col=leafCol, align.tip.label=TRUE, cex=0.5)
+    title("Phylogenetic tree")
+    axisPhylo()
+
+    ## reset plot margins:
+    par(mar=mar.ori)
+  } # end plot.tree
 
 
 
@@ -712,46 +836,52 @@ treeWAS <- function(snps,
       if(i %in% noms) temp[i] <- n.subs[which(noms==i)]
     }
     n.subs <- temp
-    # names(n.subs) <- 1:length(n.subs)
+    names(n.subs) <- 1:length(n.subs)
     ## check?
     # sum(n.subs) == ncol(snps) ## should be TRUE
     # }
+  }else{
+
+    ## INPUT n.subs ##
+
+    ## Assign names IF null:
+    if(is.null(names(n.subs))) names(n.subs) <- 1:length(n.subs)
   }
 
   ## check:
   # barplot(n.subs, col=transp("blue", 0.5), names=c(1:length(n.subs)))
-  # title("Homoplasy distribution (snps)")
+  # title("Homoplasy distribution \n(treeWAS Fitch)")
 
   #####################################################
   ## 1) Simulate multiple snps datasets to compare your
   ## real correlations w phen to  #####################
   #####################################################
 
-  ## check sim.n.snps:
-  if(is.null(sim.n.snps)){
-    sim.n.snps <- ncol(snps)*10
+  ## check n.snps.sim:
+  if(is.null(n.snps.sim)){
+    n.snps.sim <- ncol(snps)*10
   }else{
-    ## Update sim.n.snps to match the REAL ncol(snps) after checks...
+    ## Update n.snps.sim to match the REAL ncol(snps) after checks...
     if(n.snps != ncol(snps)){
-      if(sim.n.snps == n.snps){
-        sim.n.snps.ori <- sim.n.snps
-        sim.n.snps <- ncol(snps)
-        warning(paste("Note: Updating sim.n.snps to match the number of real loci after data cleaning.
-                  Input:", sim.n.snps.ori, " -->
-                      Updated:", sim.n.snps))
+      if(n.snps.sim == n.snps){
+        n.snps.sim.ori <- n.snps.sim
+        n.snps.sim <- ncol(snps)
+        warning(paste("Note: Updating n.snps.sim to match the number of real loci after data cleaning.
+                  Input:", n.snps.sim.ori, " -->
+                      Updated:", n.snps.sim))
       }else{
-        Nx <- c(2:10)
-        if(any(n.snps*Nx %in% sim.n.snps)){
-          sim.n.snps.ori <- sim.n.snps
-          Nx <- Nx[which(Nx == (sim.n.snps/n.snps))]
-          sim.n.snps <- ncol(snps)*Nx
-          warning(paste("Note: Updating sim.n.snps to match ", Nx, "x the number of real loci after data cleaning.
-                  Input: ", sim.n.snps.ori, " -->
-                  Updated: ", sim.n.snps, sep=""))
+        Nx <- c(2:200)
+        if(any(n.snps*Nx %in% n.snps.sim)){
+          n.snps.sim.ori <- n.snps.sim
+          Nx <- Nx[which(Nx == (n.snps.sim/n.snps))]
+          n.snps.sim <- ncol(snps)*Nx
+          warning(paste("Note: Updating n.snps.sim to match ", Nx, "x the number of real loci after data cleaning.
+                  Input: ", n.snps.sim.ori, " -->
+                  Updated: ", n.snps.sim, sep=""))
           ## TO DO: ##
           ## If the user, for whatever reason, wanted to simulate the number they requested
           ## (ie. matching the input n.snps (coincidentally?)), could either
-          ## (A) Add an argument like upate.sim.n.snps = FALSE,
+          ## (A) Add an argument like upate.n.snps.sim = FALSE,
           ## (B) Tell them to do their own data cleaning exactly as I do but outside of/before running the treeWAS function.
           ## (C) Fudge--tell them to add 1, eg. 10,000 --> 10,001?
         }
@@ -762,7 +892,7 @@ treeWAS <- function(snps,
 
   ## SIMULATE A DATASET | your tree ##
   if(!is.null(seed)) set.seed(seed)
-  out[[1]] <- snp.sim(n.snps = sim.n.snps,
+  out[[1]] <- snp.sim(n.snps = n.snps.sim,
                       n.subs = n.subs,
                       n.snps.assoc = 0,
                       assoc.prob = 100,
@@ -978,6 +1108,8 @@ treeWAS <- function(snps,
 
   print("reconstructions done")
 
+  gc()
+
   #######################
   ## identify sig.snps ##
   #######################
@@ -1078,7 +1210,7 @@ treeWAS <- function(snps,
 
       manhattan.plot(p.vals = corr.dat,
                      col = "funky",
-                     transp = 0.75,
+                     transp = 0.25,
                      sig.thresh = sig.thresh,
                      thresh.col="red",
                      snps.assoc = NULL,
@@ -1087,6 +1219,7 @@ treeWAS <- function(snps,
                      min.p = NULL,
                      log10=FALSE,
                      ylab=paste(TEST[[i]], "score", sep=" "))
+      title(paste("\n \n (", TEST[[i]], "score)"), cex.main=0.9)
     } # end plot manhattan
 
 
