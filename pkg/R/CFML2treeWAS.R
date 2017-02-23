@@ -170,7 +170,13 @@ CFML2treeWAS <- function(prefix){
   #################
   save(out, file=sprintf('%s.treeWAS_out.Rdata', prefix))
 
-  return(out)
+
+  output <- list("treeWAS.out" = out,
+                 "snps" = snps,
+                 "phen" = phen,
+                 "tree" = tree,
+                 "read.CFML.dat" = dat)
+  return(output)
 
 } # end CFML2treeWAS
 
