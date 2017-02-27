@@ -75,11 +75,11 @@ snp.sim <- function(n.snps = 10000,
       x <- rev(c(1:nrow(tree$edge)))
     }else{
       stop("This simulation procedure expects to find the root node/first internal node
-               (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
-               once the tree has been reordered to be in 'pruningwise' configuration.
-               This is NOT the case with your tree. Please check.")
+           (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
+           once the tree has been reordered to be in 'pruningwise' configuration.
+           This is NOT the case with your tree. Please check.")
     }
-  }
+    }
   ####################################################################
 
   ##################################
@@ -174,87 +174,87 @@ snp.sim <- function(n.snps = 10000,
       }
     }
 
-    }else{
+  }else{
 
-      ###############################################
-      ## DISTRIBUTION or RATES (fitPagel Q matrix) ##
-      ###############################################
+    ###############################################
+    ## DISTRIBUTION or RATES (fitPagel Q matrix) ##
+    ###############################################
 
-      ##################
-      ## DISTRIBUTION ##
-      ##################
+    ##################
+    ## DISTRIBUTION ##
+    ##################
 
-      ## if a distribution is provided by the user,
-      ## we use this to determine the number of substitutions
-      ## to occur at what proportion of sites (note that
-      ## we may not be simulating the same number of sites)
+    ## if a distribution is provided by the user,
+    ## we use this to determine the number of substitutions
+    ## to occur at what proportion of sites (note that
+    ## we may not be simulating the same number of sites)
 
-      dist <- n.subs
+    dist <- n.subs
 
-      ## check for names first!
-      if(!is.null(names(dist))){
-        ## only modify if names are numeric
-        if(all.is.numeric(names(dist))){
-          noms <- as.numeric(names(dist))
-          aligned <- sapply(c(1:length(dist)), function(e) noms[e] == e)
-          ## if any names do not correspond to their index, add zeros where missing:
-          if(any(aligned == FALSE)){
-            dist.new <- rep(0, max(noms))
-            dist.new[noms] <- dist
-            names(dist.new) <- c(1:length(dist.new))
-            dist <- dist.new
-          }
-        }
-      } # end check for missing places
-
-      ## get dist.prop, a distribution containing the counts
-      ## of the number of SNPs to be simulated that will have
-      ## i many substitutions
-      dist.sum <- sum(dist)
-      dist.prop <- round((dist/dist.sum)*gen.size)
-      ## check that these counts sum to gen.size,
-      ## else add the remainder to the largest n.subs count
-      ## (OR should we just add these to the n.subs=1 set ??? ###
-      ## likely to be the same thing, but could not be...)
-      if(sum(dist.prop) != gen.size){
-        m <- which.max(dist.prop)
-        #m <- 1
-        if(sum(dist.prop) < gen.size){
-          dist.prop[m] <- dist.prop[m] + (gen.size - sum(dist.prop))
-        }
-        if(sum(dist.prop) > gen.size){
-          dist.prop[m] <- dist.prop[m] - (sum(dist.prop) - gen.size)
+    ## check for names first!
+    if(!is.null(names(dist))){
+      ## only modify if names are numeric
+      if(all.is.numeric(names(dist))){
+        noms <- as.numeric(names(dist))
+        aligned <- sapply(c(1:length(dist)), function(e) noms[e] == e)
+        ## if any names do not correspond to their index, add zeros where missing:
+        if(any(aligned == FALSE)){
+          dist.new <- rep(0, max(noms))
+          dist.new[noms] <- dist
+          names(dist.new) <- c(1:length(dist.new))
+          dist <- dist.new
         }
       }
+    } # end check for missing places
 
-      ## get rid of useless trailing 0s
-      while(dist.prop[length(dist.prop)] == 0){
-        dist.prop <- dist.prop[c(1:(length(dist.prop)-1))]
+    ## get dist.prop, a distribution containing the counts
+    ## of the number of SNPs to be simulated that will have
+    ## i many substitutions
+    dist.sum <- sum(dist)
+    dist.prop <- round((dist/dist.sum)*gen.size)
+    ## check that these counts sum to gen.size,
+    ## else add the remainder to the largest n.subs count
+    ## (OR should we just add these to the n.subs=1 set ??? ###
+    ## likely to be the same thing, but could not be...)
+    if(sum(dist.prop) != gen.size){
+      m <- which.max(dist.prop)
+      #m <- 1
+      if(sum(dist.prop) < gen.size){
+        dist.prop[m] <- dist.prop[m] + (gen.size - sum(dist.prop))
       }
+      if(sum(dist.prop) > gen.size){
+        dist.prop[m] <- dist.prop[m] - (sum(dist.prop) - gen.size)
+      }
+    }
 
-      ## make n.mts, a vector of length ncol(snps)
-      n.mts <- rep(1111, gen.size)
-      loci.available <- c(1:gen.size)
-      ## assign dist.prop[i] elements of n.mts
-      ## to be the same as the n.subs
-      ## indicated by i, the given element of dist.prop
-      for(j in 1:length(dist.prop)){
-        ## provided there are not 0 sites to have this number of substitutions...
-        if(dist.prop[j] > 0){
-          if(length(loci.available) > 1){
-            if(!is.null(seed)) set.seed(seed)
-            ## assign dist.prop[i] elements of n.mts to be i
-            loci.selected <- sample(loci.available, dist.prop[j], replace = FALSE)
-            loci.available <- loci.available[-which(loci.available %in% loci.selected)]
-          }else{
-            ## if there is only 1 (the last) loci available,
-            ## we select this one:
-            loci.selected <- loci.available
-          }
-          n.mts[loci.selected] <- j
+    ## get rid of useless trailing 0s
+    while(dist.prop[length(dist.prop)] == 0){
+      dist.prop <- dist.prop[c(1:(length(dist.prop)-1))]
+    }
+
+    ## make n.mts, a vector of length ncol(snps)
+    n.mts <- rep(1111, gen.size)
+    loci.available <- c(1:gen.size)
+    ## assign dist.prop[i] elements of n.mts
+    ## to be the same as the n.subs
+    ## indicated by i, the given element of dist.prop
+    for(j in 1:length(dist.prop)){
+      ## provided there are not 0 sites to have this number of substitutions...
+      if(dist.prop[j] > 0){
+        if(length(loci.available) > 1){
+          if(!is.null(seed)) set.seed(seed)
+          ## assign dist.prop[i] elements of n.mts to be i
+          loci.selected <- sample(loci.available, dist.prop[j], replace = FALSE)
+          loci.available <- loci.available[-which(loci.available %in% loci.selected)]
+        }else{
+          ## if there is only 1 (the last) loci available,
+          ## we select this one:
+          loci.selected <- loci.available
         }
+        n.mts[loci.selected] <- j
       }
-      # } # end dist
+    }
+    # } # end dist
   } # end fitPagel or dist
 
   ############################
@@ -300,10 +300,10 @@ snp.sim <- function(n.snps = 10000,
     snps.loci <- sapply(c(1:length(n.mts)),
                         function(e)
                           replace(null.vect,
-                          sample(c(1:length(tree$edge.length)),
-                                 n.mts[e],
-                                 replace=FALSE,
-                                 prob=tree$edge.length), TRUE))
+                                  sample(c(1:length(tree$edge.length)),
+                                         n.mts[e],
+                                         replace=FALSE,
+                                         prob=tree$edge.length), TRUE))
   }
 
   ## rearrange snps.loci s.t it becomes a
@@ -312,7 +312,7 @@ snp.sim <- function(n.snps = 10000,
   ## locations of the mutations that will
   ## occur on that branch
   snps.loci <- sapply(c(1:nrow(snps.loci)),
-                       function(e) which(snps.loci[e,] == TRUE))
+                      function(e) which(snps.loci[e,] == TRUE))
 
 
   ## get the node names for all individuals (terminal and internal)
@@ -320,8 +320,9 @@ snp.sim <- function(n.snps = 10000,
   # we will store the output in a list called genomes:
   genomes <- list()
   ## we start w all inds having same genotype as root:
-  genomes[all.inds] <- rep(list(gen.root), length(all.inds))
-
+  for(i in all.inds){
+    genomes[[all.inds[i]]] <- gen.root
+  }
   ## store replacement nts in list new.nts:
   new.nts <- list()
   ## distinguish btw list of loci and unique list
@@ -396,25 +397,27 @@ snp.sim <- function(n.snps = 10000,
   ## keep only rows containing terminal individuals:
   temp.ori <- temp.ori[1:n.ind, ]
 
-  ######################################################################################################################################################################
+  #########################
+  ## Get UNIQUE snps.rec ##
+  #########################
+  temp <- get.unique.matrix(temp.ori, MARGIN=2)
+  temp.unique <- temp$unique.data
+  index <- temp$index
 
-  temp <- temp.ori
+  if(ncol(temp.unique) == ncol(temp.ori)){
+    all.unique <- TRUE
+  }else{
+    all.unique <- FALSE
+  }
 
-  # #########################
-  # ## Get UNIQUE snps.rec ##
-  # #########################
-  # temp <- get.unique.matrix(temp.ori, MARGIN=2)
-  # temp.unique <- temp$unique.data
-  # index <- temp$index
-  #
-  # if(ncol(temp.unique) == ncol(temp.ori)){
-  #   all.unique <- TRUE
-  # }else{
-  #   all.unique <- FALSE
-  # }
-  #
-  # ## work w only unique snps:
-  # temp <- temp.unique
+  ## work w only unique snps:
+  temp <- temp.unique
+
+  #   ## Make loci list (in case you need it later (ie. if any loci not polymorphic))
+  #   loci <- list()
+  #   for(i in 1:ncol(temp)){
+  #     loci[[i]] <- temp[,i]
+  #   }
 
   ## identify n.minor.allele required to meet polyThres:
   polyThres <- 0.01
@@ -441,327 +444,130 @@ snp.sim <- function(n.snps = 10000,
   #################################################################
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
 
+
   #################################################
   ## REPLACE NON-POLYMORPHIC NON-ASSOCIATED SNPS ##
   #################################################
 
-  ## just working w rows containing inds (not internal nodes)
+  # toRepeat <- 1:length(n.mts)
+  # loci <- list()
 
-  ######################################################################################################################################################################
-  ######################################################################################################################################################################
-
-  ######################################################################################################################################################################
-  ######################################################################################################################################################################
-
-  ####################
-  ## NEW while loop ##
-  ####################
+  ######################################
+  ## while loop STARTS here: ###########
+  ######################################
+  ## AGAIN--NEED TO DOUBLE CHECK: No problems with seed? #############
 
   counter <- 0
   if(!is.null(seed)) seed.i <- seed
+  system.time(
+    while(length(toRepeat) > 0){
 
-  while(length(toRepeat) > 0){
-    ## for each site, draw the branches to which
-    ## you will assign the mts for this site
-    ## (~ branch length):
+      for(i in toRepeat){
+        ## get the lth element of n.mts to work with:
+        n.mt <- n.mts[i]
 
-    ## Get vector of FALSEs of length tree$edge.length:
-    null.vect <- rep(FALSE, length(tree$edge.length))
+        ## for each site, draw the branches to which
+        ## you will assign the mts for this site
+        ## (~ branch length):
 
-
-    if(max(n.mts[toRepeat]) > length(tree$edge.length)){
-      if(!is.null(seed)){
-        seed.i <- seed.i+1
-        set.seed(seed.i)
-      }
-      snps.loci <- sapply(c(1:length(n.mts[toRepeat])),
-                          function(e)
-                            replace(null.vect,
-                                    sample(c(1:length(tree$edge.length)),
-                                           n.mts[toRepeat][e],
-                                           replace=TRUE,
-                                           prob=tree$edge.length), TRUE))
-    }else{
-      if(!is.null(seed)){
-        seed.i <- seed.i+1
-        set.seed(seed.i)
-      }
-      snps.loci <- sapply(c(1:length(n.mts[toRepeat])),
-                          function(e)
-                            replace(null.vect,
-                                    sample(c(1:length(tree$edge.length)),
-                                           n.mts[toRepeat][e],
-                                           replace=FALSE,
-                                           prob=tree$edge.length), TRUE))
-    }
-
-    ## rearrange snps.loci s.t it becomes a
-    ## list of length tree$edge.length,
-    ## each element of which contains the
-    ## locations of the mutations that will
-    ## occur on that branch
-    snps.loci <- sapply(c(1:nrow(snps.loci)),
-                        function(e) which(snps.loci[e,] == TRUE))
-
-
-    ## get the node names for all individuals (terminal and internal)
-    all.inds <- sort(unique(as.vector(unlist(tree$edge))))
-    # we will store the output in a list called genomes:
-    # genomes <- list()
-    ## we start w all inds having same genotype as root:
-    # genomes[all.inds][toRepeat] <- rep(list(gen.root[toRepeat]), length(all.inds))
-    for(i in 1:length(all.inds)){
-      genomes[[all.inds[i]]][toRepeat] <- gen.root[toRepeat]
-    }
-
-    ## store replacement nts in list new.nts:
-    new.nts <- list()
-    ## distinguish btw list of loci and unique list
-    snps.loci.ori <- snps.loci
-    ## will need to treat repeat loci differently...
-    snps.loci.unique <- lapply(snps.loci, unique) # (identical to snps.loci?)
-
-
-    #############################
-    ## For Loop to get new nts ##
-    #############################
-    for(i in x){
-      ## for all genomes other than root, we mutate the
-      ## genome of the node preceding it, according to snps.loci.
-      ## Draw new nts for each locus selected for mutation:
-      if(!.is.integer0(snps.loci.unique[[i]])){
-        new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
-          selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                         %in% genomes[[tree$edge[i,1]]][toRepeat]
-                                                         [snps.loci.unique[[i]][e]])]))
-        ## if any loci are selected for multiple mutations
-        ## within their given branch length:
-        if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
-          ## identify which loci are repeaters
-          repeats <- table(snps.loci.ori[[i]])[which(table(snps.loci.ori[[i]])!=1)]
-          ## how many times they repeat
-          n.reps <- repeats - 1
-          ## the positions of these loci in the vector of snps loci
-          toRep <- which(snps.loci.unique[[i]] %in% names(repeats))
-          ## run chain of re-sampling to end in our new nt for repeater loci:
-          foo <- list()
-          for(j in 1:length(toRep)){
-            foo[[j]] <- new.nts[[i]][toRep[j]]
-            for(k in 1:n.reps[j]){
-              if(k==1){
-                foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                                              %in% foo[[j]][1])])
-
-              }else{
-                foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                                              %in% foo[[j]][k-1])])
-              }
-            }
-            ## retain only the last nt selected
-            out <- sapply(c(1:length(foo)),
-                          function(e) foo[[e]][length(foo[[e]])])
+        if(n.mt > length(tree$edge.length)){
+          if(!is.null(seed)){
+            seed.i <- seed.i+1
+            set.seed(seed.i)
           }
-          ## for the loci with repeated mts, replace these positions
-          ## in new.nts with the corresponding elements of out, above.
-          new.nts[[i]][toRep] <- out
-        } # end of if statement for repeaters
-
-        ## update ancestral genotype with new.nts:
-        toto <- genomes[[tree$edge[i,1]]][toRepeat]
-        toto[snps.loci.unique[[i]]] <- new.nts[[i]]
-        genomes[[tree$edge[i,2]]][toRepeat] <- toto
-
-      }else{
-        ## if no mts occur on branch, set genotype of
-        ## downstream individual to be equal to ancestor's
-        genomes[[tree$edge[i,2]]][toRepeat] <- genomes[[tree$edge[i,1]]][toRepeat]
-      }
-    } # end of for loop selecting new nts at mutator loci
-
-
-    ## temporarily assemble non-associated loci into matrix:
-    temp.new <- do.call("rbind", genomes)
-
-    ## keep only rows containing terminal individuals:
-    temp.new <- temp.new[1:n.ind, ]
-
-    ##############################################################
-
-    temp <- temp.new
-
-    ######################################
-    ##### while loop CHECK here: #########
-    ######################################
-    ## CHECK IF ALL LOCI ARE POLYMORPHIC (|polyThres)
-
-    ## identify n.minor.allele required to meet polyThres:
-    polyThres <- 0.01
-    n.min <- n.ind*polyThres
-
-    ## make a list of any NON-polymorphic loci:
-    toRepeat.ori <- toRepeat
-    temp.toRepeat <- temp[, toRepeat.ori]
-
-
-    toRepeat <- list()
-    ## if temp.toRepeat is a true matrix:
-    if(!is.matrix(temp.toRepeat)){
-      if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
-        toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
-      }
-    }else{
-      if(ncol(temp.toRepeat) > 0){
-        for(i in 1:ncol(temp.toRepeat)){
-          if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
-            toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
+          subs.edges <- sample(c(1:length(tree$edge.length)),
+                               n.mt,
+                               replace=TRUE,
+                               prob=tree$edge.length)
+        }else{
+          if(!is.null(seed)){
+            seed.i <- seed.i+1
+            set.seed(seed.i)
           }
+          subs.edges <- sample(c(1:length(tree$edge.length)),
+                               n.mt,
+                               replace=FALSE,
+                               prob=tree$edge.length)
         }
-      }else{
+
+        ## TO DO: COULD REPLACE (all instances!!!) LATER WITH:
+        ## Get vector of FALSEs of length tree$edge.length:
+        #     null.vect <- rep(FALSE, length(tree$edge.length))
+        #     subs.edges <- replace(null.vect,
+        #                           sample(c(1:length(tree$edge.length)),
+        #                                  n.mt,
+        #                                  replace=FALSE,
+        #                                  prob=tree$edge.length), TRUE)
+
+
+        ## get nt for root at this locus:
+        root.nt <- gen.root[i]
+
+        ## get nt for each individual at this locus
+        temp[,i] <- .get.locus(subs.edges = subs.edges,
+                               root.nt = root.nt,
+                               tree = tree)[1:n.ind]
+
+      } # end FOR LOOP for NON-associated SNPs
+
+      ######################################
+      ##### while loop CHECK here: #########
+      ######################################
+      ## CHECK IF ALL LOCI ARE POLYMORPHIC (|polyThres)
+
+      ## identify n.minor.allele required to meet polyThres:
+      polyThres <- 0.01
+      n.min <- n.ind*polyThres
+
+      ## make a list of any NON-polymorphic loci:
+      toRepeat.ori <- toRepeat
+      temp.toRepeat <- temp[, toRepeat.ori]
+
+
+      toRepeat <- list()
+      ## if temp.toRepeat is a true matrix:
+      if(!is.matrix(temp.toRepeat)){
         if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
           toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
         }
+      }else{
+        if(ncol(temp.toRepeat) > 0){
+          for(i in 1:ncol(temp.toRepeat)){
+            if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
+              toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
+            }
+          }
+        }else{
+          if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
+            toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
+          }
+        }
       }
-    }
-    if(length(toRepeat) > 0){
-      toRepeat <- as.vector(unlist(toRepeat))
-    }
+      if(length(toRepeat) > 0){
+        toRepeat <- as.vector(unlist(toRepeat))
+      }
 
-    counter <- counter+1
-    print("COUNTER"); print(counter)
-    print("toRepeat"); print(length(toRepeat))
+      counter <- counter+1
+      print("COUNTER"); print(counter)
+      print("toRepeat"); print(length(toRepeat))
 
-
-  } # end NEW while loop...
-  #######################################
-  ### while loop ENDS here: #############
-  #######################################
-
-  colnames(temp) <- c(1:ncol(temp))
-
-  ######################################################################################################################################################################
-  ######################################################################################################################################################################
-
-  ######################################################################################################################################################################
-  ######################################################################################################################################################################
-
-  # # toRepeat <- 1:length(n.mts)
-  # # loci <- list()
-  #
-  # ######################################
-  # ## while loop STARTS here: ###########
-  # ######################################
-  # ## AGAIN--NEED TO DOUBLE CHECK: No problems with seed? #############
-  #
-  # counter <- 0
-  # if(!is.null(seed)) seed.i <- seed
-  # system.time(
-  # while(length(toRepeat) > 0){
-  #
-  # for(i in toRepeat){
-  #   ## get the lth element of n.mts to work with:
-  #   n.mt <- n.mts[i]
-  #
-  #   ## for each site, draw the branches to which
-  #   ## you will assign the mts for this site
-  #   ## (~ branch length):
-  #
-  #   if(n.mt > length(tree$edge.length)){
-  #     if(!is.null(seed)){
-  #       seed.i <- seed.i+1
-  #       set.seed(seed.i)
-  #     }
-  #     subs.edges <- sample(c(1:length(tree$edge.length)),
-  #                          n.mt,
-  #                          replace=TRUE,
-  #                          prob=tree$edge.length)
-  #   }else{
-  #     if(!is.null(seed)){
-  #       seed.i <- seed.i+1
-  #       set.seed(seed.i)
-  #     }
-  #     subs.edges <- sample(c(1:length(tree$edge.length)),
-  #                          n.mt,
-  #                          replace=FALSE,
-  #                          prob=tree$edge.length)
-  #   }
-  #
-  #   ## TO DO: COULD REPLACE (all instances!!!) LATER WITH:
-  #   ## Get vector of FALSEs of length tree$edge.length:
-  #   #     null.vect <- rep(FALSE, length(tree$edge.length))
-  #   #     subs.edges <- replace(null.vect,
-  #   #                           sample(c(1:length(tree$edge.length)),
-  #   #                                  n.mt,
-  #   #                                  replace=FALSE,
-  #   #                                  prob=tree$edge.length), TRUE)
-  #
-  #
-  #   ## get nt for root at this locus:
-  #   root.nt <- gen.root[i]
-  #
-  #   ## get nt for each individual at this locus
-  #   temp[,i] <- .get.locus(subs.edges = subs.edges,
-  #                           root.nt = root.nt,
-  #                           tree = tree)[1:n.ind]
-  #
-  # } # end FOR LOOP for NON-associated SNPs
-  #
-  # ######################################
-  # ##### while loop CHECK here: #########
-  # ######################################
-  # ## CHECK IF ALL LOCI ARE POLYMORPHIC (|polyThres)
-  #
-  # ## identify n.minor.allele required to meet polyThres:
-  # polyThres <- 0.01
-  # n.min <- n.ind*polyThres
-  #
-  # ## make a list of any NON-polymorphic loci:
-  # toRepeat.ori <- toRepeat
-  # temp.toRepeat <- temp[, toRepeat.ori]
-  #
-  #
-  # toRepeat <- list()
-  # ## if temp.toRepeat is a true matrix:
-  # if(!is.matrix(temp.toRepeat)){
-  #   if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
-  #     toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
-  #   }
-  # }else{
-  #   if(ncol(temp.toRepeat) > 0){
-  #     for(i in 1:ncol(temp.toRepeat)){
-  #       if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
-  #         toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
-  #       }
-  #     }
-  #   }else{
-  #     if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
-  #       toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
-  #     }
-  #   }
-  # }
-  # if(length(toRepeat) > 0){
-  #   toRepeat <- as.vector(unlist(toRepeat))
-  # }
-  #
-  # counter <- counter+1
-  # print("COUNTER"); print(counter)
-  # print("toRepeat"); print(length(toRepeat))
-  #
-  # } # end of while loop
-  # )
-  # # ######################################
-  # # ## while loop ENDS here: #############
-  # # ######################################
-  #
-  #
-  # ## GET ALL NON-UNIQUE SNPS COLUMNS: ##
-  #
-  # if(all.unique == TRUE){
-  #   temp.complete <- temp
-  # }else{
-  #   temp.complete <- temp[, index]
-  # }
+    } # end of while loop
+  )
+  ######################################
+  ## while loop ENDS here: #############
+  ######################################
 
 
+  ## GET ALL NON-UNIQUE SNPS COLUMNS: ##
+
+  if(all.unique == TRUE){
+    temp.complete <- temp
+  }else{
+    temp.complete <- temp[, index]
+  }
+
+  colnames(temp.complete) <- colnames(temp.ori)
+  temp <- temp.complete
 
 
 
@@ -851,7 +657,7 @@ snp.sim <- function(n.snps = 10000,
           } # end for loop
         }
       } # end for loop
-    } # end any assoc.prob != 100
+      } # end any assoc.prob != 100
   } # end modification | assoc.prob
 
 
@@ -881,9 +687,9 @@ snp.sim <- function(n.snps = 10000,
     }
 
     tree.reconstructed <- tree.reconstruct(dna[1:n.ind,],
-                                         method=reconstruct,
-                                         dist.dna.model=dist.dna.model,
-                                         plot=TRUE)
+                                           method=reconstruct,
+                                           dist.dna.model=dist.dna.model,
+                                           plot=TRUE)
   }
 
   ##################
@@ -994,10 +800,10 @@ snp.sim <- function(n.snps = 10000,
       }else{
         rownames(snps) <- 1:nrow(snps)
         warning("The length of tree$tip.label was not equal to nrow(snps) being simulated;
-              rownames(snps) have been set to 1:N and will not match tree$tip.label.")
+                rownames(snps) have been set to 1:N and will not match tree$tip.label.")
+      }
       }
     }
-  }
 
   ## generate column names:
   colnames(snps) <- 1:ncol(snps)
@@ -1096,7 +902,7 @@ snp.sim <- function(n.snps = 10000,
 
   return(out)
 
-} # end snp.sim
+  } # end snp.sim
 
 
 
@@ -1240,4 +1046,4 @@ snp.sim <- function(n.snps = 10000,
 
   return(locus)
 
-} # end .get.locus
+    } # end .get.locus

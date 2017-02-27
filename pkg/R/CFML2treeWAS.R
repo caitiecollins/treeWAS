@@ -96,12 +96,15 @@ CFML2treeWAS <- function(prefix){
   phen.ori <- phen
   phen <- as.character(phen)
 
-  ## unify invasive disease under one heading:
-  phen <- replace(phen, which(phen == "invasive (unspecified/other)"), "invasive")
-  phen <- replace(phen, which(phen == "meningitis and septicaemia"), "invasive")
-  phen <- replace(phen, which(phen == "meningitis"), "invasive")
-  phen <- replace(phen, which(phen == "septicaemia"), "invasive")
-  # table(phen)
+  ## CHECK if phen is disease...
+  if(any(phen %in% c("invasive (unspecified/other)", "meningitis and septicaemia", "meningitis", "septicaemia"))){
+    ## unify invasive disease under one heading:
+    phen <- replace(phen, which(phen == "invasive (unspecified/other)"), "invasive")
+    phen <- replace(phen, which(phen == "meningitis and septicaemia"), "invasive")
+    phen <- replace(phen, which(phen == "meningitis"), "invasive")
+    phen <- replace(phen, which(phen == "septicaemia"), "invasive")
+    # table(phen)
+  }
 
   ## re-add names before subsetting:
   if(is.null(names(phen))) names(phen) <- names(phen.ori)
@@ -185,8 +188,6 @@ CFML2treeWAS <- function(prefix){
 
 #####################################################################################################################################
 #####################################################################################################################################
-
-
 
 
 
