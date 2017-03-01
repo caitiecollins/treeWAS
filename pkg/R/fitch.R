@@ -36,7 +36,8 @@
 #' table(out)
 #' hist(out)
 #'
-#' @import phangorn
+#' @importFrom phangorn as.phyDat
+#' @importFrom phangorn fitch
 #'
 #' @export
 

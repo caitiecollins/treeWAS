@@ -35,7 +35,7 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' @import adegenet ape phangorn
+#' @import adegenet ape
 
 ########################################################################
 
@@ -379,7 +379,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import adegenet ape phangorn
+#' @import adegenet ape
 #' @importFrom Hmisc all.is.numeric
 #'
 #' @export

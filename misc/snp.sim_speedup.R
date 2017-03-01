@@ -34,6 +34,16 @@ set.args(list(n.snps = 10000,
               set = NULL,
               seed = 1))
 
+# rm(snps)
+# rm(phen)
+# rm(dat)
+
+object.size(tree) # 24200 bytes
+
+
+
+
+
 ## snp.sim ##
 ss <- snp.sim(n.snps = 10000,
               n.subs = n.subs,

@@ -30,7 +30,7 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import adegenet ape phangorn
+#' @import adegenet ape
 
 ########################################################################
 
@@ -47,9 +47,9 @@ fwd.snp.sim <- function(n.snps=10000, n.subs=1,
                         dist.dna.model="JC69",
                         seed=1){
 
-  require(adegenet)
-  require(ape)
-  require(phangorn)
+  # require(adegenet)
+  # require(ape)
+  # require(phangorn)
 
   ##################################
   ## GET MUTATIONS' branch & loci ##
@@ -387,10 +387,6 @@ fwd.snp.sim <- function(n.snps=10000, n.subs=1,
   ##########################################
   tree.reconstructed <- NULL
   if(reconstruct!=FALSE){
-    if(reconstruct==TRUE){
-      warning("reconstruct should be one of 'UPGMA', 'nj', 'ml'. Choosing 'UPGMA'.")
-    }
-
     tree.reconstructed <- tree.reconstruct(dna[1:n.ind],
                                            method=reconstruct,
                                            dist.dna.model=dist.dna.model,

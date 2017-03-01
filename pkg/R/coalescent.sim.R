@@ -119,7 +119,7 @@
 #' snps.assoc <- dat$snps.assoc
 #' tree <- dat$tree
 #' }
-#' @import adegenet ape phangorn
+#' @import adegenet ape
 
 ########################################################################
 

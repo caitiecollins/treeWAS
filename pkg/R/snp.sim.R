@@ -22,7 +22,7 @@
 #' @examples
 #' ## Example ##
 #'
-#' @import adegenet ape phangorn
+#' @import adegenet ape
 #' @importFrom Hmisc all.is.numeric
 
 ########################################################################
@@ -87,6 +87,7 @@ snp.sim <- function(n.snps = 10000,
   ##################################
   n.ind <- tree$Nnode+1
   gen.size <- n.snps
+  rm(n.snps)
   edges <- tree$edge
 
   if(!is.null(seed)) set.seed(seed)
@@ -255,6 +256,10 @@ snp.sim <- function(n.snps = 10000,
           n.mts[loci.selected] <- j
         }
       }
+      ## Remove unnecessary objects...
+      rm(dist)
+      rm(dist.prop)
+      rm(dist.sum)
       # } # end dist
   } # end fitPagel or dist
 
@@ -816,19 +821,19 @@ snp.sim <- function(n.snps = 10000,
   ## GET COMPLETE SNPS MATRIX ("snps"): ##
   ###########################################
 
+  ## Remove unnecessary objects...
+  rm(snps)
   ## Create snps matrix:
   snps <- temp
   ## Remove unnecessary objects...
   rm(temp)
 
+
   ## keep only rows containing terminal individuals:
   snps <- snps[1:n.ind, ]
 
-
-  ## CONVERT BACK TO CHARACTER: ##
-  snps <- as.character(snps)
-  snps <- replace(snps, which(snps == "TRUE"), "a")
-  snps <- replace(snps, which(snps == "FALSE"), "t")
+  ## clear memory
+  gc()
 
 
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
@@ -890,81 +895,76 @@ snp.sim <- function(n.snps = 10000,
   ## PLOTS & TREECONSTRUCTION ##
   ##############################
   if(heatmap == TRUE || reconstruct!=FALSE){
-    dna <- as.DNAbin(snps)
-    rownames(dna) <- c(1:nrow(snps))
-  }
 
-  #############
-  ## HEATMAP ##
-  #############
-  if(heatmap==TRUE){
-    heatmap.DNAbin(dna=dna,
-                   dist.dna.model=dist.dna.model)
-  }
+    ## CONVERT TO CHARACTER: ##
+    dna <- snps
+    dna <- replace(dna, which(dna == TRUE), "a")
+    dna <- replace(dna, which(dna == "FALSE"), "t")
 
-  ##########################################
-  ## PLOT 2: RECONSTRUCTING THE PHYLOGENY ##
-  ##########################################
-  tree.reconstructed <- NULL
-  if(reconstruct!=FALSE){
-    if(reconstruct==TRUE){
-      warning("reconstruct should be one of 'UPGMA', 'nj', 'ml'. Choosing 'UPGMA'.")
+    ## Get DNAbin object:
+    dna <- as.DNAbin(dna)
+    # rownames(dna) <- c(1:nrow(snps))
+
+
+    #############
+    ## HEATMAP ##
+    #############
+    if(heatmap==TRUE){
+      heatmap.DNAbin(dna=dna,
+                     dist.dna.model=dist.dna.model)
     }
 
-    tree.reconstructed <- tree.reconstruct(dna[1:n.ind,],
-                                         method=reconstruct,
-                                         dist.dna.model=dist.dna.model,
-                                         plot=TRUE)
-  }
+    ##########################################
+    ## PLOT 2: RECONSTRUCTING THE PHYLOGENY ##
+    ##########################################
+    tree.reconstructed <- NULL
+    if(reconstruct!=FALSE){
+      tree.reconstructed <- tree.reconstruct(dna, # [1:n.ind,]
+                                           method=reconstruct,
+                                           dist.dna.model=dist.dna.model,
+                                           plot=TRUE)
+    }
+
+    ## Remove unnecessary object:
+    rm(dna)
+
+  } # end heatmap, treeconstruction
 
   ##################
   ## CONVERT SNPS ##
   ##################
 
-  ## Convert from nts in snps (for all nodes) to binary SNPs (for terminal nodes only):
+  ## CONVERT TO NUMERIC: ##
+  ## Convert from logical to binary SNPs (for terminal nodes only):
+  snps <- replace(snps, which(snps == TRUE), 1)
 
   ## Keep only rows containing terminal individuals?:
   ## (NOTE -- Consider moving this to AFTER snps.assoc assoc.prob section!)
   # snps <- snps[1:n.ind, ]
-
-  ## working with snps in matrix form
-  # snps <- genomes
-
-  ## NO LONGER NEED THIS SECTION? ##
-  gen.size <- ncol(snps)
-
-  ## get snps as DNAbin
-  ploidy <- 1
-  snps.bin <- as.DNAbin(snps, ploidy=ploidy)
-  ## get snps as genind
-  #source("C:/Users/caitiecollins/adegenet/R/sequences.R")
-  snps.gen <- DNAbin2genind(snps.bin, polyThres=0.01)
-  ## get snps as binary matrix
-  snps <- snps.gen@tab
-
-  ## correct genind for ploidy:
-  snps <- snps[,seq(1, ncol(snps), 2)]
-
-
-  ## assign snps row and column names
-  ## (TEMPORARILY?? -- DO WE NEED To DO ThIS HERE??) ### ###### #############     #
-  rownames(snps) <- 1:nrow(snps)
-  colnames(snps) <- 1:ncol(snps)
+  #
+  # ## NO LONGER NEED THIS SECTION? ##
+  # gen.size <- ncol(snps)
+  #
+  ## get snps as DNAbin ## DON'T THINK WE NEED THIS ANYMORE...
+  # ploidy <- 1
+  # snps <- as.DNAbin(snps, ploidy=ploidy)
+  # ## get snps as genind
+  # #source("C:/Users/caitiecollins/adegenet/R/sequences.R")
+  # snps.gen <- DNAbin2genind(snps, polyThres=0.01)
+  # ## get snps as binary matrix
+  # snps <- snps.gen@tab
+  #
+  # ## correct genind for ploidy:
+  # snps <- snps[,seq(1, ncol(snps), 2)]
+  #
+  # ## assign snps row and column names
+  # ## (TEMPORARILY?? -- DO WE NEED To DO ThIS HERE??) ### ###### #############     #
+  # rownames(snps) <- 1:nrow(snps)
+  # colnames(snps) <- 1:ncol(snps)
 
 
+  ## Reassort snps.assoc to new columns:
   if(!is.null(snps.assoc)){
-
-    ## NO LONGER NEED THIS CHECK FOR POLYMORPH HERE:
-    ## identify any columns of snps.bin that
-    ## do NOT meet DNAbin2genind polyThres
-    ## /are NOT SNPs
-    #     x <- snps.bin
-    #     if(is.list(x)) x <- as.matrix(x)
-    #     if(is.null(colnames(x))) colnames(x) <- 1:ncol(x)
-    #
-    #     temp <- lapply(1:ncol(x), function(i)
-    #       .getFixed(x[,i], i)) # process all loci, return a list
-    #     fixed.loci <- which(temp==TRUE) ## identify loci that are NOT SNPs
 
     ## update snps.assoc to reflect true loci
     gen.size.final <- ncol(snps)

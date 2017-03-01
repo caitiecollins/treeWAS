@@ -22,7 +22,7 @@
 #' @examples
 #' ## Example ##
 #'
-#' @import adegenet ape phangorn
+#' @import adegenet ape
 #' @importFrom Hmisc all.is.numeric
 
 ########################################################################
@@ -977,10 +977,6 @@ snp.sim.Q <- function(n.snps = 10000,
       ##########################################
       tree.reconstructed <- NULL
       if(reconstruct!=FALSE){
-        if(reconstruct==TRUE){
-          warning("reconstruct should be one of 'UPGMA', 'nj', 'ml'. Choosing 'UPGMA'.")
-        }
-
         tree.reconstructed <- tree.reconstruct(dna[1:n.ind,],
                                                method=reconstruct,
                                                dist.dna.model=dist.dna.model,

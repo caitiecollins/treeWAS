@@ -14,7 +14,7 @@
 #'
 #' Longer proper discription of function...
 #'
-#' @param dna A binary matrix or DNAbin object containing genomes for (only)
+#' @param dna A matrix or DNAbin object containing genomes for (only)
 #'                the terminal nodes of the tree to be reconstructed.
 #'                Individuals should be in the rows and loci in the columns; rows and columns should be labelled.
 #' @param method A character string,
@@ -68,18 +68,33 @@ tree.reconstruct <- function(dna,
   ############
   ## DNA ##
   if(class(dna) != "DNAbin"){
-    # dna <- as.DNAbin(dna)
-    snps <- dna
-    sp <- as.character(snps)
-    sp <- replace(sp, which(sp == "0"), "a")
-    sp <- replace(sp, which(sp == "1"), "c")
-    sp <- matrix(sp, ncol=ncol(snps), nrow=nrow(snps))
-    rownames(sp) <- rownames(snps)
-    colnames(sp) <- colnames(snps)
+    # if(class(dna) == "genind"){
+    #   dna <- dna@tab ## might be problems w ploidy...
+    # }
+    if(is.matrix(dna)){
+      # dna <- as.DNAbin(dna)
+      sp <- matrix(as.character(dna), nrow=nrow(dna), ncol=ncol(dna))
+      rownames(sp) <- rownames(dna)
+      colnames(sp) <- colnames(dna)
 
-    dna <- as.DNAbin(sp)
-    rownames(dna) <- rownames(snps)
-    colnames(dna) <- colnames(snps)
+      ## Check/convert levels:
+      levs <- unique(as.vector(unlist(sp)))
+      nts <- c("a", "c", "g", "t")
+      if(length(levs[!is.na(levs)]) > 4){
+        stop("There must be no more than 4 unique values in dna, excluding NAs.")
+      }
+      if(!all(levs %in% nts)){
+        for(i in 1:length(levs)){
+          sp <- replace(sp, which(sp == levs[i]), nts[i])
+        } # end for loop
+      } # end levs conversion
+
+      dna <- as.DNAbin(sp)
+      rownames(dna) <- rownames(sp)
+      colnames(dna) <- colnames(sp)
+    }else{
+      stop("dna should be of class DNAbin or matrix")
+    }
   }
   ## TREE REC METHOD ##
   method <- tolower(method)

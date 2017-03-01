@@ -8,7 +8,6 @@ LazyData: true
 RoxygenNote: 5.0.1
 Depends: adegenet,
     ape,
-    phangorn,
     Hmisc
 Imports: ggplot2,
     beeswarm

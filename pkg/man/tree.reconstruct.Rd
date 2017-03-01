@@ -8,7 +8,7 @@ tree.reconstruct(dna, method = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*",
   "NJ*"), dist.dna.model = "JC69", plot = TRUE)
 }
 \arguments{
-\item{dna}{A binary matrix or DNAbin object containing genomes for (only)
+\item{dna}{A matrix or DNAbin object containing genomes for (only)
 the terminal nodes of the tree to be reconstructed.
 Individuals should be in the rows and loci in the columns; rows and columns should be labelled.}
 

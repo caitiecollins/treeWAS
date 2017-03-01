@@ -45,7 +45,7 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import adegenet phangorn
+#' @import adegenet
 
 ########################################################################
 

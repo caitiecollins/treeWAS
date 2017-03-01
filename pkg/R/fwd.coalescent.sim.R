@@ -102,7 +102,7 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import adegenet ape phangorn
+#' @import adegenet ape
 
 ########################################################################
 
@@ -121,9 +121,9 @@ fwd.coalescent.sim <- function(n.ind=100,
                                dist.dna.model="JC69",
                                seed=1){
   ## load packages:
-  require(adegenet)
-  require(ape)
-  require(phangorn)
+  # require(adegenet)
+  # require(ape)
+  # require(phangorn)
 
   if(length(which(c(plot, heatmap, reconstruct)==TRUE))==1){
     par(ask=FALSE)

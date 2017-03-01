@@ -259,7 +259,9 @@ asr <- function(var,
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import phangorn ape
+#' @import ape
+#' @importFrom phangorn as.phyDat
+#' @importFrom phangorn pace
 #'
 #' @export
 #'
