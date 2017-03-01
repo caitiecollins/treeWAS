@@ -94,7 +94,8 @@ snp.sim <- function(n.snps = 10000,
   ## Simulate genotype for root individual: ##
 
   ## For n.subs = n or = dist approaches:
-  gen.root <- sample(c("a", "c", "g", "t"), gen.size, replace=TRUE)
+  # gen.root <- sample(c("a", "c", "g", "t"), gen.size, replace=TRUE)
+  gen.root <- sample(c(TRUE, FALSE), gen.size, replace=TRUE)
 
   ## For ACE/Pagel-test approach: ##   ##   ##    <--    ##   Don't think we need this....
   #   if(is.matrix(n.subs)){
@@ -317,10 +318,10 @@ snp.sim <- function(n.snps = 10000,
 
   ## get the node names for all individuals (terminal and internal)
   all.inds <- sort(unique(as.vector(unlist(tree$edge))))
-  # we will store the output in a list called genomes:
-  genomes <- list()
+  # we will store the output in a list called snps:
+  snps <- list()
   ## we start w all inds having same genotype as root:
-  genomes[all.inds] <- rep(list(gen.root), length(all.inds))
+  snps[all.inds] <- rep(list(gen.root), length(all.inds))
 
   ## store replacement nts in list new.nts:
   new.nts <- list()
@@ -334,14 +335,19 @@ snp.sim <- function(n.snps = 10000,
   ## For Loop to get new nts ##
   #############################
   for(i in x){
-    ## for all genomes other than root, we mutate the
+    ## for all snps other than root, we mutate the
     ## genome of the node preceding it, according to snps.loci.
     ## Draw new nts for each locus selected for mutation:
     if(!.is.integer0(snps.loci.unique[[i]])){
+      # new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
+      #   selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+      #                                                  %in% snps[[tree$edge[i,1]]]
+      #                                                  [snps.loci.unique[[i]][e]])]))
       new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
-        selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                       %in% genomes[[tree$edge[i,1]]]
-                                                       [snps.loci.unique[[i]][e]])]))
+        selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
+                                                 %in% snps[[tree$edge[i,1]]]
+                                                 [snps.loci.unique[[i]][e]])]))
+
       ## if any loci are selected for multiple mutations
       ## within their given branch length:
       if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
@@ -357,12 +363,16 @@ snp.sim <- function(n.snps = 10000,
           foo[[j]] <- new.nts[[i]][toRepeat[j]]
           for(k in 1:n.reps[j]){
             if(k==1){
-              foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                                            %in% foo[[j]][1])])
+              # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+              #                                                               %in% foo[[j]][1])])
+              foo[[j]][k] <- selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
+                                                                    %in% foo[[j]][1])])
 
             }else{
-              foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                                            %in% foo[[j]][k-1])])
+              # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+              #                                                               %in% foo[[j]][k-1])])
+              foo[[j]][k] <- selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
+                                                                    %in% foo[[j]][k-1])])
             }
           }
           ## retain only the last nt selected
@@ -375,14 +385,14 @@ snp.sim <- function(n.snps = 10000,
       } # end of if statement for repeaters
 
       ## update ancestral genotype with new.nts:
-      temp <- genomes[[tree$edge[i,1]]]
+      temp <- snps[[tree$edge[i,1]]]
       temp[snps.loci.unique[[i]]] <- new.nts[[i]]
-      genomes[[tree$edge[i,2]]] <- temp
+      snps[[tree$edge[i,2]]] <- temp
 
     }else{
       ## if no mts occur on branch, set genotype of
       ## downstream individual to be equal to ancestor's
-      genomes[[tree$edge[i,2]]] <- genomes[[tree$edge[i,1]]]
+      snps[[tree$edge[i,2]]] <- snps[[tree$edge[i,1]]]
     }
   } # end of for loop selecting new nts at mutator loci
 
@@ -391,14 +401,16 @@ snp.sim <- function(n.snps = 10000,
   ####################################################
 
   ## temporarily assemble non-associated loci into matrix:
-  temp.ori <- do.call("rbind", genomes)
+  # temp.ori <- do.call("rbind", snps)
+  temp <- do.call("rbind", snps)
 
   ## keep only rows containing terminal individuals:
-  temp.ori <- temp.ori[1:n.ind, ]
+  # temp.ori <- temp.ori[1:n.ind, ]
+  temp <- temp[1:n.ind, ]
 
   ######################################################################################################################################################################
 
-  temp <- temp.ori
+  # temp <- temp.ori
 
   # #########################
   # ## Get UNIQUE snps.rec ##
@@ -506,12 +518,12 @@ snp.sim <- function(n.snps = 10000,
 
     ## get the node names for all individuals (terminal and internal)
     all.inds <- sort(unique(as.vector(unlist(tree$edge))))
-    # we will store the output in a list called genomes:
-    # genomes <- list()
+    # we will store the output in a list called snps:
+    # snps <- list()
     ## we start w all inds having same genotype as root:
-    # genomes[all.inds][toRepeat] <- rep(list(gen.root[toRepeat]), length(all.inds))
+    # snps[all.inds][toRepeat] <- rep(list(gen.root[toRepeat]), length(all.inds))
     for(i in 1:length(all.inds)){
-      genomes[[all.inds[i]]][toRepeat] <- gen.root[toRepeat]
+      snps[[all.inds[i]]][toRepeat] <- gen.root[toRepeat]
     }
 
     ## store replacement nts in list new.nts:
@@ -526,14 +538,19 @@ snp.sim <- function(n.snps = 10000,
     ## For Loop to get new nts ##
     #############################
     for(i in x){
-      ## for all genomes other than root, we mutate the
+      ## for all snps other than root, we mutate the
       ## genome of the node preceding it, according to snps.loci.
       ## Draw new nts for each locus selected for mutation:
       if(!.is.integer0(snps.loci.unique[[i]])){
+        # new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
+        #   selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+        #                                                  %in% snps[[tree$edge[i,1]]][toRepeat]
+        #                                                  [snps.loci.unique[[i]][e]])]))
         new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
-          selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                         %in% genomes[[tree$edge[i,1]]][toRepeat]
-                                                         [snps.loci.unique[[i]][e]])]))
+          selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
+                                                 %in% snps[[tree$edge[i,1]]][toRepeat]
+                                                 [snps.loci.unique[[i]][e]])]))
+
         ## if any loci are selected for multiple mutations
         ## within their given branch length:
         if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
@@ -549,12 +566,15 @@ snp.sim <- function(n.snps = 10000,
             foo[[j]] <- new.nts[[i]][toRep[j]]
             for(k in 1:n.reps[j]){
               if(k==1){
-                foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                                              %in% foo[[j]][1])])
-
+                # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+                #                                                               %in% foo[[j]][1])])
+                foo[[j]][k] <- selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
+                                                                      %in% foo[[j]][1])])
               }else{
-                foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                                              %in% foo[[j]][k-1])])
+                # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+                #                                                               %in% foo[[j]][k-1])])
+                foo[[j]][k] <- selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
+                                                                      %in% foo[[j]][k-1])])
               }
             }
             ## retain only the last nt selected
@@ -567,27 +587,28 @@ snp.sim <- function(n.snps = 10000,
         } # end of if statement for repeaters
 
         ## update ancestral genotype with new.nts:
-        toto <- genomes[[tree$edge[i,1]]][toRepeat]
+        toto <- snps[[tree$edge[i,1]]][toRepeat]
         toto[snps.loci.unique[[i]]] <- new.nts[[i]]
-        genomes[[tree$edge[i,2]]][toRepeat] <- toto
+        snps[[tree$edge[i,2]]][toRepeat] <- toto
 
       }else{
         ## if no mts occur on branch, set genotype of
         ## downstream individual to be equal to ancestor's
-        genomes[[tree$edge[i,2]]][toRepeat] <- genomes[[tree$edge[i,1]]][toRepeat]
+        snps[[tree$edge[i,2]]][toRepeat] <- snps[[tree$edge[i,1]]][toRepeat]
       }
     } # end of for loop selecting new nts at mutator loci
 
 
     ## temporarily assemble non-associated loci into matrix:
-    temp.new <- do.call("rbind", genomes)
+    # temp.new <- do.call("rbind", snps)
+    temp <- do.call("rbind", snps)
 
     ## keep only rows containing terminal individuals:
-    temp.new <- temp.new[1:n.ind, ]
+    # temp <- temp.new[1:n.ind, ]
+    temp <- temp[1:n.ind, ]
 
     ##############################################################
-
-    temp <- temp.new
+    # temp <- temp.new
 
     ######################################
     ##### while loop CHECK here: #########
@@ -792,13 +813,23 @@ snp.sim <- function(n.snps = 10000,
 
 
   ###########################################
-  ## GET COMPLETE SNPS MATRIX ("genomes"): ##
+  ## GET COMPLETE SNPS MATRIX ("snps"): ##
   ###########################################
 
-  ## Create genomes matrix:
-  genomes <- temp
+  ## Create snps matrix:
+  snps <- temp
+  ## Remove unnecessary objects...
+  rm(temp)
+
   ## keep only rows containing terminal individuals:
-  genomes <- genomes[1:n.ind, ]
+  snps <- snps[1:n.ind, ]
+
+
+  ## CONVERT BACK TO CHARACTER: ##
+  snps <- as.character(snps)
+  snps <- replace(snps, which(snps == "TRUE"), "a")
+  snps <- replace(snps, which(snps == "FALSE"), "t")
+
 
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
 
@@ -840,14 +871,14 @@ snp.sim <- function(n.snps = 10000,
         prob <- assoc.prob[i]
         ## only if the association is imperfect
         if(prob != 100){
-          ## draw genomes to change at snps.assoc[i]
-          n.toChange <- round(nrow(genomes)*(1 - (prob/100)))
-          toChange <- sample(c(1:nrow(genomes)), n.toChange)
+          ## draw snps to change at snps.assoc[i]
+          n.toChange <- round(nrow(snps)*(1 - (prob/100)))
+          toChange <- sample(c(1:nrow(snps)), n.toChange)
 
-          ## change those genomes at rows toChange, loci snps.assoc[i]
+          ## change those snps at rows toChange, loci snps.assoc[i]
           for(j in 1:length(toChange)){
-            genomes[toChange[j], snps.assoc[i]] <-
-              selectBiallelicSNP(genomes[toChange[j], snps.assoc[i]])
+            snps[toChange[j], snps.assoc[i]] <-
+              selectBiallelicSNP(snps[toChange[j], snps.assoc[i]])
           } # end for loop
         }
       } # end for loop
@@ -859,8 +890,8 @@ snp.sim <- function(n.snps = 10000,
   ## PLOTS & TREECONSTRUCTION ##
   ##############################
   if(heatmap == TRUE || reconstruct!=FALSE){
-    dna <- as.DNAbin(genomes)
-    rownames(dna) <- c(1:nrow(genomes))
+    dna <- as.DNAbin(snps)
+    rownames(dna) <- c(1:nrow(snps))
   }
 
   #############
@@ -890,14 +921,14 @@ snp.sim <- function(n.snps = 10000,
   ## CONVERT SNPS ##
   ##################
 
-  ## Convert from nts in genomes (for all nodes) to binary SNPs (for terminal nodes only):
+  ## Convert from nts in snps (for all nodes) to binary SNPs (for terminal nodes only):
 
   ## Keep only rows containing terminal individuals?:
   ## (NOTE -- Consider moving this to AFTER snps.assoc assoc.prob section!)
-  # genomes <- genomes[1:n.ind, ]
+  # snps <- snps[1:n.ind, ]
 
   ## working with snps in matrix form
-  snps <- genomes
+  # snps <- genomes
 
   ## NO LONGER NEED THIS SECTION? ##
   gen.size <- ncol(snps)

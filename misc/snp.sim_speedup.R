@@ -88,6 +88,40 @@ barplot(table(nm))
 
 
 
+#########################
+## STORAGE EFFICIENCY? ##
+#########################
+
+## CHARACTER: ##
+foo <- sample(c("a", "t"), 10000, replace=T)
+
+l.c <- as.list(rep(list(foo), 100))
+str(l.c)
+
+m.c <- matrix(rep(foo, 100), nrow=100)
+str(m.c)
+
+
+## NUMERIC: ##
+foo <- sample(c(0, 1), 10000, replace=T)
+
+l.n <- as.list(rep(list(foo), 100))
+str(l.n)
+
+m.n <- matrix(rep(foo, 100), nrow=100)
+str(m.n)
+
+
+## LOGICAL?: ##
+foo <- sample(c(FALSE, TRUE), 10000, replace=T)
+
+l.l <- as.list(rep(list(foo), 100))
+str(l.l)
+
+m.l <- matrix(rep(foo, 100), nrow=100)
+str(m.l)
+
+
 #
 
 
