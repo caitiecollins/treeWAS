@@ -894,6 +894,7 @@ snp.sim <- function(n.snps = 10000,
   ##############################
   ## PLOTS & TREECONSTRUCTION ##
   ##############################
+  tree.reconstructed <- NULL
   if(heatmap == TRUE || reconstruct!=FALSE){
 
     ## CONVERT TO CHARACTER: ##
@@ -917,7 +918,6 @@ snp.sim <- function(n.snps = 10000,
     ##########################################
     ## PLOT 2: RECONSTRUCTING THE PHYLOGENY ##
     ##########################################
-    tree.reconstructed <- NULL
     if(reconstruct!=FALSE){
       tree.reconstructed <- tree.reconstruct(dna, # [1:n.ind,]
                                            method=reconstruct,
