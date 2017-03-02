@@ -1,5 +1,81 @@
 
 
+#####################
+## cluster.treeWAS ##
+#####################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' (**Internal fn for running on cluster**)
+#'
+#' Run treeWAS on processed CFML output. To run on the CLIMB cluster.
+#'
+#' @param prefix A character string specifying the filename prefix of the dataset to be analysed.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+########################################################################
+
+#####################
+## cluster.treeWAS ##
+#####################
+
+# prefix <- "/home/caitiecollins/ClonalFrameML/src/pubMLST/Neisseria/B/Czech/WG/phylip/B_Czech_WG.fas.out"
+# prefix <- "B_Czech_WG.fas.out"
+
+cluster.treeWAS <- function(prefix){
+
+  ##########################################################################################################
+  ###############
+  ## GET DATA: ##
+  ###############
+  phen <- snps <- tree <- out <- NULL
+
+  phen <- get(load(sprintf('%s.phen_clean.Rdata', prefix)))
+  snps <- get(load(sprintf('%s.snps_clean.Rdata', prefix)))
+  tree <- get(load(sprintf('%s.tree_clean.Rdata', prefix)))
+
+
+  ##########################################################################################################
+  ## run treeWAS ##
+  #################
+  out <- treeWAS(snps = snps,
+                 phen = phen,
+                 tree =  tree,
+                 n.snps.sim = 10*ncol(snps),
+                 plot.tree = TRUE,
+                 filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix))
+
+  print("treeWAS done")
+
+  ##########################################################################################################
+  ## Save output ##
+  #################
+  save(out, file=sprintf('%s.treeWAS_out.Rdata', prefix))
+
+
+  output <- list("treeWAS.out" = out)
+
+  return(output)
+
+} # end cluster.treeWAS
+
+#####################################################################################################################################
+#####################################################################################################################################
+
+#####################################################################################################################################
+#####################################################################################################################################
+
+
+
+
+
+
 
 ##################
 ## CFML2treeWAS ##
