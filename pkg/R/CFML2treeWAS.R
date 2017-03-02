@@ -76,6 +76,8 @@ CFML2treeWAS <- function(prefix){
   save(tree, file=sprintf('%s.tree_ori.Rdata', prefix))
   save(dat, file=sprintf('%s.read.CFML_dat.Rdata', prefix))
 
+  rm(dat)
+
 
   ##########################################################################################################
   ## Data cleaning, subsetting ##
@@ -159,26 +161,27 @@ CFML2treeWAS <- function(prefix){
   ##########################################################################################################
   ## run treeWAS ##
   #################
-  out <- treeWAS(snps = snps,
-                 phen = phen,
-                 tree =  tree,
-                 n.snps.sim = 10*ncol(snps),
-                 plot.tree = TRUE,
-                 filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix))
+  # out <- treeWAS(snps = snps,
+  #                phen = phen,
+  #                tree =  tree,
+  #                n.snps.sim = 10*ncol(snps),
+  #                plot.tree = TRUE,
+  #                filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix))
 
 
 
   ##########################################################################################################
   ## Save output ##
   #################
-  save(out, file=sprintf('%s.treeWAS_out.Rdata', prefix))
+  # save(out, file=sprintf('%s.treeWAS_out.Rdata', prefix))
 
 
-  output <- list("treeWAS.out" = out,
-                 "snps" = snps,
+  output <- list("snps" = snps,
                  "phen" = phen,
-                 "tree" = tree,
-                 "read.CFML.dat" = dat)
+                 "tree" = tree) # "treeWAS.out" = out,
+
+  # "read.CFML.dat" = dat
+
   return(output)
 
 } # end CFML2treeWAS
