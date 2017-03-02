@@ -10,7 +10,7 @@ CFML2treeWAS(prefix)
 \item{prefix}{A character string specifying the filename prefix of the dataset to be analysed.}
 }
 \description{
-Convert CFML output to treeWAS output with one function. To run on the CLIMB cluster.
+Run treeWAS on processed CFML output. To run on the CLIMB cluster.
 }
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
