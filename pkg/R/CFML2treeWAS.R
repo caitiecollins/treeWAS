@@ -18,6 +18,8 @@
 #' @param prefix A character string specifying the filename prefix of the dataset to be analysed.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
+#' @importFrom data.table fread
 #' @export
 
 ########################################################################
@@ -45,7 +47,7 @@ PA.treeWAS <- function(prefix){
   ## GET P/A MATRIX: ##
   #####################
 
-  pa <- get(load(sprintf('%s.PA.txt', prefix)))
+  pa <- fread(sprintf('%s.PA.txt', prefix))
 
   ## convert to binary matrix:
   mat <- do.call(cbind, pa)
