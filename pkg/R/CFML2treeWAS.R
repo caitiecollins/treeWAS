@@ -1,5 +1,120 @@
 
 
+
+################
+## PA.treeWAS ##
+################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' (**Internal fn for running on cluster**)
+#'
+#' Run treeWAS on Presence/Absence data. To run on the CLIMB cluster.
+#'
+#' @param prefix A character string specifying the filename prefix of the dataset to be analysed.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+########################################################################
+
+#####################
+## cluster.treeWAS ##
+#####################
+
+# prefix <- "/home/caitiecollins/ClonalFrameML/src/pubMLST/Neisseria/B/Czech/WG/phylip/B_Czech_WG.fas.out"
+# prefix <- "B_Czech_WG.fas.out"
+
+PA.treeWAS <- function(prefix){
+
+  ##########################################################################################################
+  ###############
+  ## GET DATA: ##
+  ###############
+  phen <- snps <- tree <- out <- NULL
+
+  phen <- get(load(sprintf('%s.phen_clean.Rdata', prefix)))
+  tree <- get(load(sprintf('%s.tree_clean.Rdata', prefix)))
+
+  ##########################################################################################################
+  #####################
+  ## GET P/A MATRIX: ##
+  #####################
+
+  pa <- get(load(sprintf('%s.PA.txt', prefix)))
+
+  ## convert to binary matrix:
+  mat <- do.call(cbind, pa)
+  rownames(mat) <- mat[, "id"]
+  mat <- mat[, 2:ncol(mat)]
+
+  ## Match rownames to tree$tip.label
+  toKeep <- which(rownames(mat) %in% tree$tip.label)
+  ## Check that labels match
+  if(length(toKeep) != length(tree$tip.label)){
+    stop("Row names of the PA matrix do not match set of tree$tip.labels.")
+  }
+  ## Subset PA mat:
+  mat <- mat[toKeep,]
+
+  ## Re-code to binary:
+  mat.ori <- mat
+  ## Y/N coding:
+  mat <- replace(mat, which(mat == "Y"), "1")
+  mat <- replace(mat, which(mat == "N"), "0")
+  ## O/X coding:
+  mat <- replace(mat, which(mat == "O"), "1")
+  mat <- replace(mat, which(mat == "X"), "0")
+
+  pa <- matrix(as.numeric(mat), nrow=nrow(mat), ncol=ncol(mat))
+
+  rownames(pa) <- rownames(mat)
+  colnames(pa) <- colnames(mat)
+
+  ## SAVE:
+  save(pa, file="./pa_clean.Rdata")
+
+
+  ##########################################################################################################
+  ## run treeWAS ##
+  #################
+  out <- treeWAS(snps = pa,
+                 phen = phen,
+                 tree =  tree,
+                 n.snps.sim = 10*ncol(pa),
+                 plot.tree = TRUE,
+                 filename.plot = sprintf('%s.treeWAS_PA_plots.pdf', prefix))
+
+  print("treeWAS done")
+
+  ##########################################################################################################
+  ## Save output ##
+  #################
+  save(out, file=sprintf('%s.treeWAS_PA_out.Rdata', prefix))
+
+
+  output <- list("treeWAS.out" = out)
+
+  return(output)
+
+} # end PA.treeWAS
+
+#####################################################################################################################################
+#####################################################################################################################################
+
+#####################################################################################################################################
+#####################################################################################################################################
+
+
+
+
+
+
+
 #####################
 ## cluster.treeWAS ##
 #####################
