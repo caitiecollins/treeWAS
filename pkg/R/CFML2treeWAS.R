@@ -118,7 +118,7 @@ PA.treeWAS <- function(prefix){
 
 
 #####################
-## cluster.treeWAS ##
+## CFML2treeWAS #2 ##
 #####################
 
 ########################################################################
@@ -139,7 +139,7 @@ PA.treeWAS <- function(prefix){
 ########################################################################
 
 #####################
-## cluster.treeWAS ##
+## CFML2treeWAS #2 ##
 #####################
 
 # prefix <- "/home/caitiecollins/ClonalFrameML/src/pubMLST/Neisseria/B/Czech/WG/phylip/B_Czech_WG.fas.out"
@@ -161,12 +161,13 @@ CFML2treeWAS <- function(prefix){
   ##########################################################################################################
   ## run treeWAS ##
   #################
-  out <- treeWAS(snps = snps,
-                 phen = phen,
-                 tree =  tree,
-                 n.snps.sim = 10*ncol(snps),
-                 plot.tree = TRUE,
-                 filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix))
+  out <- treeWAS.temp(snps = snps,
+                     phen = phen,
+                     tree =  tree,
+                     n.snps.sim = 10*ncol(snps),
+                     plot.tree = TRUE,
+                     filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix),
+                     prefix = prefix)
 
   print("treeWAS done")
   print(out)
@@ -181,7 +182,7 @@ CFML2treeWAS <- function(prefix){
 
   return(output)
 
-} # end cluster.treeWAS
+} # end CFML2treeWAS #2 (cluster.treeWAS)
 
 #####################################################################################################################################
 #####################################################################################################################################
