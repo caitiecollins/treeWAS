@@ -164,7 +164,7 @@ CFML2treeWAS <- function(prefix){
   out <- treeWAS.temp(snps = snps,
                      phen = phen,
                      tree =  tree,
-                     n.snps.sim = 10*ncol(snps),
+                     n.snps.sim = 5*ncol(snps),
                      plot.tree = TRUE,
                      filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix),
                      prefix = prefix)
