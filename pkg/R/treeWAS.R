@@ -642,6 +642,33 @@ treeWAS <- function(snps,
   ## CHECK SNPS: ##
   #################
   ####################################################################
+  ## CHECK IF BINARY:
+  if(length(unique(as.vector(unlist(snps)))) != 2){
+    stop("snps must be a binary matrix")
+  }else{
+    ## Convert to numeric, binary:
+    if(!is.numeric(snps)){
+      na.before <- length(which(is.na(snps)))
+      if(!all.is.numeric(snps)){
+        r.noms <- rownames(snps)
+        c.noms <- colnames(snps)
+        snps <- matrix(as.numeric(as.factor(snps))-1, nrow=nrow(snps), ncol=ncol(snps))
+        rownames(snps) <- r.noms
+        colnames(snps) <- c.noms
+      }else{
+        r.noms <- rownames(snps)
+        c.noms <- colnames(snps)
+        snps <- matrix(as.numeric(as.character(snps)), nrow=nrow(snps), ncol=ncol(snps))
+        rownames(snps) <- r.noms
+        colnames(snps) <- c.noms
+      }
+      na.after <- length(which(is.na(snps)))
+      if(na.after > na.before){
+        stop("NAs created in converting snps to numeric.")
+      }
+    }
+  }
+  ####################################################################
   ## CHECK IF ALL POLYMORPHIC: (not necessary...)
   #   tab <- sapply(c(1:ncol(snps)), function(e) min(table(snps[,e]))/nrow(snps))
   #
@@ -868,6 +895,7 @@ treeWAS <- function(snps,
     ## check?
     # sum(n.subs) == ncol(snps) ## should be TRUE
     # }
+
   }else{
 
     ## INPUT n.subs ##
@@ -1006,16 +1034,16 @@ treeWAS <- function(snps,
   phen.ori <- phen
 
   ## (?!) DO WE NEED THIS or can we work w factors?
-  na.before <- length(which(is.na(phen)))
-  if(!is.numeric(phen)){
-    phen <- as.numeric(as.character(phen))
-    ## ensure ind names not lost
-    names(phen) <- names(phen.ori)
-  }
-  na.after <- length(which(is.na(phen)))
-  if(na.after > na.before){
-    stop("NAs created while converting phen to numeric.")
-  }
+  # na.before <- length(which(is.na(phen)))
+  # if(!is.numeric(phen)){
+  #   phen <- as.numeric(as.character(phen))
+  #   ## ensure ind names not lost
+  #   names(phen) <- names(phen.ori)
+  # }
+  # na.after <- length(which(is.na(phen)))
+  # if(na.after > na.before){
+  #   stop("NAs created while converting phen to numeric.")
+  # }
 
 
   ##############################################################################################

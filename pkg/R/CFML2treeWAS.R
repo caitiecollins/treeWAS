@@ -218,8 +218,7 @@ CFML2treeWAS.cont <- function(prefix){
                   snps.sim.reconstruction = "parsimony",
                   phen.reconstruction = "ml",
                   plot.tree = TRUE,
-                  filename.plot = sprintf('%s.treeWAS_cont_plots.pdf', prefix),
-                  prefix = prefix)
+                  filename.plot = sprintf('%s.treeWAS_cont_plots.pdf', prefix))
 
   print("treeWAS done")
   print(out)
@@ -421,8 +420,7 @@ CFML2treeWAS <- function(prefix){
                  tree =  tree,
                  n.snps.sim = 5*ncol(snps),
                  plot.tree = TRUE,
-                 filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix),
-                 prefix = prefix)
+                 filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix))
 
   print("treeWAS done")
   print(out)
