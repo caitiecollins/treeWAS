@@ -10,7 +10,8 @@ Depends: adegenet,
     ape,
     Hmisc
 Imports: ggplot2,
-    beeswarm
+    beeswarm,
+    phangorn
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr

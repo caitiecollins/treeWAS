@@ -121,10 +121,8 @@ get.sig.snps <- function(snps,
 
     ## CHECK: is index provided as well??
     if(is.null(snps.index)){
-      warning("if snps.unique is provided,
-              snps.index must also be provided to indicate
-              original mapping locations for all unique sites.
-              Ignoring unique snps provided; working with snps only.")
+      cat("If snps.unique is provided, snps.index must also be provided to indicate
+           original mapping locations for all unique sites. Ignoring unique snps provided; working with snps only.")
 
       ## repeat above steps (as if no snps.unique was provided):
       ## Check snps column names
@@ -194,10 +192,8 @@ get.sig.snps <- function(snps,
 
     ## CHECK: is index provided as well??
     if(is.null(snps.sim.index)){
-      warning("if snps.sim.unique is provided,
-              snps.sim.index must also be provided to indicate
-              original mapping locations for all unique sites.
-              Ignoring unique snps.sim provided; working with snps.sim only.")
+      cat("If snps.sim.unique is provided, snps.sim.index must also be provided to indicate
+            original mapping locations for all unique sites. Ignoring unique snps.sim provided; working with snps.sim only.")
 
       ## repeat above steps (as if no snps.unique was provided):
       snps.sim.ori <- snps.sim
@@ -231,20 +227,38 @@ get.sig.snps <- function(snps,
   #################
   ## convert phenotype to numeric:
   phen.ori <- phen
-  if(!is.numeric(phen)) phen <- as.numeric(phen)
-  ## for ease of interpretation,
-  ## if phen has 2 levels, 1 and 2,
-  ## make these 0 and 1:
-  if(length(unique(phen))!=2){
-    stop("This function is only designed for phenotypes with two levels.")
-  }else{
+
+  ## Check if phen is binary:
+  levs <- unique(as.vector(unlist(phen)))
+  levs <- levs[!is.na(levs)]
+  n.levs <- length(levs)
+  ## If binary, convert phen to 0/1:
+  if(n.levs == 2){
+    ## store ind names:
+    noms <- names(phen)
+    ## convert to 0/1:
+    phen <- as.numeric(as.factor(phen))
     if(length(phen[-c(which(phen==1), which(phen==2))])==0){
       phen <- replace(phen, which(phen==1), 0)
       phen <- replace(phen, which(phen==2), 1)
     }
+    ## ensure ind names not lost:
+    names(phen) <- noms
   }
-  ## ensure ind names not lost
-  names(phen) <- names(phen.ori)
+  # if(!is.numeric(phen)) phen <- as.numeric(phen)
+  # ## for ease of interpretation,
+  # ## if phen has 2 levels, 1 and 2,
+  # ## make these 0 and 1:
+  # if(length(unique(phen))!=2){
+  #   stop("This function is only designed for phenotypes with two levels.")
+  # }else{
+  #   if(length(phen[-c(which(phen==1), which(phen==2))])==0){
+  #     phen <- replace(phen, which(phen==1), 0)
+  #     phen <- replace(phen, which(phen==2), 1)
+  #   }
+  # }
+  # ## ensure ind names not lost
+  # names(phen) <- names(phen.ori)
 
 
   ######################

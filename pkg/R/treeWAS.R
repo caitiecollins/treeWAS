@@ -772,18 +772,36 @@ treeWAS <- function(snps,
 
     ## get tip.col:
     leafCol <- "black"
-    var <- as.character(phen)
+    if(all.is.numeric(phen)){
+      var <- as.numeric(as.character(phen))
+    }else{
+      var <- as.character(phen)
+    }
     levs <- unique(var)
     if(length(levs) == 2){
+      ## binary:
       myCol <- c("red", "blue")
     }else{
-      myCol <- funky(length(levs))
+      if(is.numeric(var)){
+        ## numeric:
+        # myCol <- seasun(length(levs))
+        myCol <- num2col(var, col.pal = seasun)
+      }else{
+        ## categorical...
+        myCol <- funky(length(levs))
+      }
     }
-    leafCol <- var
-    ## for loop
-    for(i in 1:length(levs)){
-      leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
-    } # end for loop
+
+    ## get leafCol from colour scheme:
+    if(is.numeric(var)){
+      leafCol <- myCol
+    }else{
+      leafCol <- var
+      ## for loop
+      for(i in 1:length(levs)){
+        leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
+      } # end for loop
+    }
 
     ## PLOT TREE:
     plot(tree, show.tip=T, tip.col=leafCol, align.tip.label=TRUE, cex=0.5)
@@ -986,27 +1004,36 @@ treeWAS <- function(snps,
   ## convert phenotype to numeric:
   ## NOTE--this is also necessary for returning results in step (5)!
   phen.ori <- phen
-  if(!is.numeric(phen)) phen <- as.numeric(phen)
-  ## for ease of interpretation,
-  ## if phen has 2 levels, 1 and 2,
-  ## make these 0 and 1:
-  if(length(unique(phen))!=2){
-    stop("This function is only designed for phenotypes with two levels.")
-  }else{
-    if(length(phen[-c(which(phen==1), which(phen==2))])==0){
-      phen <- replace(phen, which(phen==1), 0)
-      phen <- replace(phen, which(phen==2), 1)
-    }
+
+  ## (?!) DO WE NEED THIS or can we work w factors?
+  na.before <- length(which(is.na(phen)))
+  if(!is.numeric(phen)){
+    phen <- as.numeric(as.character(phen))
+    ## ensure ind names not lost
+    names(phen) <- names(phen.ori)
   }
-  ## ensure ind names not lost
-  names(phen) <- names(phen.ori)
+  na.after <- length(which(is.na(phen)))
+  if(na.after > na.before){
+    stop("NAs created while converting phen to numeric.")
+  }
+
 
   ##############################################################################################
-  ## Reconstruct ancestral SNPs & phen by parsimony/ML (for tests simultaneous & subsequent) ##
+  ## Reconstruct ancestral SNPs & phen by parsimony/ML (for tests simultaneous & subsequent)  ##
   ##############################################################################################
 
   ## Ensure we are only reconstructing ancestral states ONCE here, to be used in MULTIPLE tests later.
-  snps.REC <- snps.sim.REC <- phen.REC <- NULL
+  snps.REC <- snps.sim.REC <- phen.REC <- phen.rec.method <- levs <- NULL
+
+  ## CHECK for discrete vs. continuous:
+  ## NB: can only be binary or continuous at this point...
+  levs <- unique(as.vector(unlist(phen)))
+  n.levs <- length(levs[!is.na(levs)])
+  if(n.levs == 2){
+    phen.rec.method <- "discrete"
+  }else{
+    phen.rec.method <- "continuous"
+  }
 
   if(any(c("simultaneous", "subsequent") %in% test)){
 
@@ -1024,12 +1051,12 @@ treeWAS <- function(snps,
       if(nrow(snps.reconstruction) != (nrow(snps)+tree$Nnode)){
         warning("The number of rows in the provided snps.reconstruction is not equal to the
                                                             total number of nodes in the tree. Performing a new parsimonious reconstruction instead.")
-        snps.reconstruction <- "parsimony"
+        snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
       }
       if(ncol(snps.reconstruction) != ncol(snps)){
         warning("The number of columns in the provided snps.reconstruction is not equal to the number of
                                                             columns in the snps matrix. Performing a new parsimonious reconstruction instead.")
-        snps.reconstruction <- "parsimony"
+        snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
       }
     }
 
@@ -1060,8 +1087,9 @@ treeWAS <- function(snps,
       ## CHECK:
       if(length(phen.reconstruction) != (length(phen)+(tree$Nnode))){
         warning("The number of individuals in the provided phen.reconstruction is not equal to the
-                total number of nodes in the tree. Performing a new parsimonious reconstruction instead.")
-        phen.reconstruction <- "parsimony"
+                total number of nodes in the tree. Performing a new reconstruction instead.")
+        if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
+        if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
       }
     }
 
@@ -1070,7 +1098,7 @@ treeWAS <- function(snps,
       phen.rec <- phen.reconstruction
     }else{
       ## By PARSIMONY or ML: ##
-      phen.REC <- asr(var = phen, tree = tree, type = phen.reconstruction)
+      phen.REC <- asr(var = phen, tree = tree, type = phen.reconstruction, method = phen.rec.method)
       phen.rec <- phen.REC$var.rec
     }
 
@@ -1265,46 +1293,71 @@ treeWAS <- function(snps,
     if(length(sig.snps)==0) sig.snps <- sig.corrs <- NULL
 
     ###########
-    ## make a data.frame containing all relevant output for sig.snps
+    ## Make a data.frame containing all relevant output for sig.snps
     if(length(sig.snps) > 0){
 
       ## Get counts for n.sig.snps in each cell of the contingency table:
-      #     toKeep <- sapply(c(1:length(sig.snps)),
-      #                      function(e)
-      #                        which(dimnames(snps)[[2]] == sig.snps))
       toKeep <- sig.snps
       snps.toKeep <- snps[,toKeep]
 
-      ##
-      if(length(toKeep) > 1){
-        S1P1 <- sapply(c(1:ncol(snps.toKeep)),
-                       function(e)
-                         length(which(snps.toKeep[which(phen==1),e]==1)))
-        S0P0 <- sapply(c(1:ncol(snps.toKeep)),
-                       function(e)
-                         length(which(snps.toKeep[which(phen==0),e]==0)))
-        S1P0 <- sapply(c(1:ncol(snps.toKeep)),
-                       function(e)
-                         length(which(snps.toKeep[which(phen==0),e]==1)))
-        S0P1 <- sapply(c(1:ncol(snps.toKeep)),
-                       function(e)
-                         length(which(snps.toKeep[which(phen==1),e]==0)))
-      }else{
-        ## if only ONE sig snp (haploid) identified:
-        S1P1 <- length(which(snps.toKeep[which(phen==1)]==1))
-        S0P0 <- length(which(snps.toKeep[which(phen==0)]==0))
-        S1P0 <- length(which(snps.toKeep[which(phen==0)]==1))
-        S0P1 <- length(which(snps.toKeep[which(phen==1)]==0))
+      ## Only get S1P1 etc. if binary phen...
+      S1P1 <- S0P0 <- S1P0 <- S0P1 <- NA
+      levs <- unique(as.vector(unlist(phen)))
+      levs <- levs[!is.na(levs)]
+      n.levs <- length(levs)
 
-      }
+      if(n.levs == 2){
+
+        ## store ind names:
+        noms <- names(phen)
+        ## If binary, convert phen to 0/1:
+        phen <- as.numeric(as.factor(phen))
+        if(length(phen[-c(which(phen==1), which(phen==2))])==0){
+          phen <- replace(phen, which(phen==1), 0)
+          phen <- replace(phen, which(phen==2), 1)
+        }
+        ## ensure ind names not lost:
+        names(phen) <- noms
+
+        if(length(toKeep) > 1){
+          S1P1 <- sapply(c(1:ncol(snps.toKeep)),
+                         function(e)
+                           length(which(snps.toKeep[which(phen==1),e]==1)))
+          S0P0 <- sapply(c(1:ncol(snps.toKeep)),
+                         function(e)
+                           length(which(snps.toKeep[which(phen==0),e]==0)))
+          S1P0 <- sapply(c(1:ncol(snps.toKeep)),
+                         function(e)
+                           length(which(snps.toKeep[which(phen==0),e]==1)))
+          S0P1 <- sapply(c(1:ncol(snps.toKeep)),
+                         function(e)
+                           length(which(snps.toKeep[which(phen==1),e]==0)))
+        }else{
+          ## if only ONE sig snp (haploid) identified:
+          S1P1 <- length(which(snps.toKeep[which(phen==1)]==1))
+          S0P0 <- length(which(snps.toKeep[which(phen==0)]==0))
+          S1P0 <- length(which(snps.toKeep[which(phen==0)]==1))
+          S0P1 <- length(which(snps.toKeep[which(phen==1)]==0))
+
+        }
+        df <- data.frame(sig.snps,
+                         sig.p.vals,
+                         sig.corrs,
+                         S1P1, S0P0, S1P0, S0P1)
+        names(df) <- c("SNP.locus",
+                       "p.value",
+                       "Test.statistic",
+                       "S1P1", "S0P0", "S1P0", "S0P1")
+      } # end S1P1 etc.
+
+      ## If S1P1 etc. not valid (non-binary phen),
+      ## return df without these variables..
       df <- data.frame(sig.snps,
                        sig.p.vals,
-                       sig.corrs,
-                       S1P1, S0P0, S1P0, S0P1)
+                       sig.corrs)
       names(df) <- c("SNP.locus",
                      "p.value",
-                     "Test.statistic",
-                     "S1P1", "S0P0", "S1P0", "S0P1")
+                     "Test.statistic")
 
       ## NOTE: Could return sig.snps.names somewhere here
       ## in addition to sig.snps loci ####    ####    ####    ####

@@ -29,6 +29,7 @@
 #' @export
 #'
 #' @import ape
+#' @importFrom Hmisc all.is.numeric
 
 ########################################################################
 
@@ -52,12 +53,9 @@ asr <- function(var,
   if(length(type) > 1) type <- type[1]
   type <- tolower(type)
   if(type == "ace") type <- "ml"
-  if(!type %in% c("parsimony", "ml", "ace")) stop("type should be one of 'parsimony' or 'ML'.")
 
   if(length(method) > 1) method <- method[1]
   method <- tolower(method)
-  if(!method %in% c("discrete", "continuous")) warning("Only 'discrete' and 'continuous' are allowed as method argument.
-                                   Note that handling of non-binary categorical phenotypes has not yet been implemented.")
 
   #####################################################
   ## CHECK: If non-binary, use "ml" and "continuous" ##
@@ -65,9 +63,26 @@ asr <- function(var,
   levs <- unique(as.vector(unlist(var)))
   levs <- levs[!is.na(levs)]
   if(length(levs) != 2){
-    type <- "ml"
-    method <- "continuous"
-    warning("Variable is non-binary. Setting method to 'continuous' and type to 'ML'.")
+    ## If NON-BINARY: ##
+    if(type != "ml"){
+      type <- "ml"
+      cat("Variable is non-binary. Setting reconstruction type to 'ML'")
+    }
+
+    if(method != "continuous"){
+      method <- "continuous"
+      cat("Variable is non-binary. Setting reconstruction method to 'continuous'")
+    }
+  }else{
+    ## If BINARY: ##
+    if(!type %in% c("parsimony", "ml", "ace")){
+      type <- "parsimony"
+      cat("Reconstruction type must be one of 'parsimony' or 'ML'. Selecting 'parsimony' by default.")
+    }
+    if(!method %in% c("discrete", "continuous")){
+      method <- "discrete"
+      cat("Reconstruction method must be one of 'discrete' or 'continuous'. Selecting 'discrete' by default.")
+    }
   }
 
   #######################
@@ -116,6 +131,28 @@ asr <- function(var,
     ######################
     if(type == "ml"){
 
+      if(method == "continuous"){
+        # Check snps is numeric:
+        if(!is.numeric(snps)){
+          if(!all.is.numeric(snps)){
+            stop("For a continuous reconstruction, the matrix must be numeric.")
+          }else{
+            r.noms <- rownames(snps)
+            c.noms <- colnames(snps)
+            snps <- matrix(as.numeric(as.character(snps)), nrow=nrow(snps), ncol=ncol(snps))
+            rownames(snps) <- r.noms
+            colnames(snps) <- c.noms
+          }
+        }
+      }
+
+      ## Check for zero- or negative-length tree$edge.length:
+      ## (For now??) just replace w 0.0000000001
+      if(any(tree$edge.length <= 0)){
+        toReplace <- which(tree$edge.length <= 0)
+        tree$edge.length[toReplace] <- 1e-10
+      }
+
       snps.rec <- snps.ML <- list()
 
       for(i in 1:ncol(snps)){
@@ -128,7 +165,11 @@ asr <- function(var,
 
         ## get internal values (from ML output for variable i)
         snps.ML[[i]] <- ace(var, tree, type=method)
-        var.internal <- snps.ML[[i]]$lik.anc[,2]
+        if(method == "discrete"){
+          var.internal <- snps.ML[[i]]$lik.anc[,2]
+        }else{
+          var.internal <- snps.ML[[i]]$ace
+        }
 
         ## get reconstruction from terminal & internal values
         snps.rec[[i]] <- c(var.terminal, var.internal)
@@ -190,14 +231,37 @@ asr <- function(var,
     ## run ML on phen: ##
     ######################
     if(type == "ml"){
-      ## Do we need to check phen is numeric??
+
+      if(method == "continuous"){
+        ## Check phen is numeric:
+        if(!is.numeric(phen)){
+          if(!all.is.numeric(phen)){
+            stop("For a continuous reconstruction, the vector must be numeric.")
+          }else{
+            noms <- names(phen)
+            phen <- as.numeric(as.character(phen))
+            names(phen) <- noms
+          }
+        }
+      }
+
+      ## Check for zero- or negative-length tree$edge.length:
+      ## (For now??) just replace w 0.0000000001
+      if(any(tree$edge.length <= 0)){
+        toReplace <- which(tree$edge.length <= 0)
+        tree$edge.length[toReplace] <- 1e-10
+      }
 
       ## get terminal values
       phen.terminal <- phen
 
       ## get internal values (from ML output)
       phen.ML <- ace(phen, tree, type=method)
-      phen.internal <- phen.ML$lik.anc[,2]
+      if(method == "discrete"){
+        phen.internal <- phen.ML$lik.anc[,2]
+      }else{
+        phen.internal <- phen.ML$ace
+      }
 
       ## get reconstruction from terminal & internal values
       var.rec <- c(phen.terminal, phen.internal)
@@ -261,6 +325,7 @@ asr <- function(var,
 #'
 #' @import ape
 #' @importFrom phangorn as.phyDat
+#' @importFrom phangorn phyDat
 #' @importFrom phangorn pace
 #'
 #' @export

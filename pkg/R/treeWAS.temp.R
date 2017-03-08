@@ -781,18 +781,36 @@ treeWAS.temp <- function(snps,
 
     ## get tip.col:
     leafCol <- "black"
-    var <- as.character(phen)
+    if(all.is.numeric(phen)){
+      var <- as.numeric(as.character(phen))
+    }else{
+      var <- as.character(phen)
+    }
     levs <- unique(var)
     if(length(levs) == 2){
+      ## binary:
       myCol <- c("red", "blue")
     }else{
-      myCol <- funky(length(levs))
+      if(is.numeric(var)){
+        ## numeric:
+        # myCol <- seasun(length(levs))
+        myCol <- num2col(var, col.pal = seasun)
+      }else{
+        ## categorical...
+        myCol <- funky(length(levs))
+      }
     }
-    leafCol <- var
-    ## for loop
-    for(i in 1:length(levs)){
-      leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
-    } # end for loop
+
+    ## get leafCol from colour scheme:
+    if(is.numeric(var)){
+      leafCol <- myCol
+    }else{
+      leafCol <- var
+      ## for loop
+      for(i in 1:length(levs)){
+        leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
+      } # end for loop
+    }
 
     ## PLOT TREE:
     plot(tree, show.tip=T, tip.col=leafCol, align.tip.label=TRUE, cex=0.5)
@@ -997,20 +1015,33 @@ treeWAS.temp <- function(snps,
   ## convert phenotype to numeric:
   ## NOTE--this is also necessary for returning results in step (5)!
   phen.ori <- phen
-  if(!is.numeric(phen)) phen <- as.numeric(phen)
-  ## for ease of interpretation,
-  ## if phen has 2 levels, 1 and 2,
-  ## make these 0 and 1:
-  if(length(unique(phen))!=2){
-    stop("This function is only designed for phenotypes with two levels.")
-  }else{
-    if(length(phen[-c(which(phen==1), which(phen==2))])==0){
-      phen <- replace(phen, which(phen==1), 0)
-      phen <- replace(phen, which(phen==2), 1)
-    }
+
+  ## (?!) DO WE NEED THIS or can we work w factors?
+  na.before <- length(which(is.na(phen)))
+  if(!is.numeric(phen)){
+    phen <- as.numeric(as.character(phen))
+    ## ensure ind names not lost
+    names(phen) <- names(phen.ori)
   }
-  ## ensure ind names not lost
-  names(phen) <- names(phen.ori)
+  na.after <- length(which(is.na(phen)))
+  if(na.after > na.before){
+    stop("NAs created while converting phen to numeric.")
+  }
+
+  ## NO LONGER NECESSARY (?)
+  # ## for ease of interpretation,
+  # ## if phen has 2 levels, 1 and 2,
+  # ## make these 0 and 1:
+  # if(length(unique(phen))==2){
+  #   stop("This function is only designed for phenotypes with two levels.")
+  # }else{
+  #   if(length(phen[-c(which(phen==1), which(phen==2))])==0){
+  #     phen <- replace(phen, which(phen==1), 0)
+  #     phen <- replace(phen, which(phen==2), 1)
+  #   }
+  # }
+  # ## ensure ind names not lost
+  # names(phen) <- names(phen.ori)
 
   ##############################################################################################
   ## Reconstruct ancestral SNPs & phen by parsimony/ML (for tests simultaneous & subsequent) ##

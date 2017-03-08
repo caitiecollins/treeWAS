@@ -1,4 +1,254 @@
 
+##################
+## cont.treeWAS ##
+##################
+#
+# prefix <- "/home/caitiecollins/ClonalFrameML/src/pubMLST/Neisseria/B/penicillin_range/PA/B_penicillin_range_WG.fas.out"
+#
+# ## conert PA.txt to pa w steps in PAtreeWAS below...
+#
+# snps <- pa
+# phen.ori <- phen
+#
+# table(phen)
+#
+# # toReplace1 <- which(phen == "carrier")
+# # toReplace2 <- which(phen == "invasive")
+# toReplace1 <- which(phen == "intermediate")
+# toReplace2 <- which(phen == "susceptible")
+#
+# foo <- rep(NA, length(phen))
+#
+# foo[toReplace1] <- rnorm(length(toReplace1), mean = 20, sd=3)
+# foo[toReplace2] <- rnorm(length(toReplace2), mean = 80, sd=3)
+#
+# hist(foo, breaks=100, xlim=c(0,100))
+#
+# phen <- foo
+# names(phen) <- names(phen.ori)
+# save(phen, file=sprintf('%s.phen_cont_sample.Rdata', prefix))
+#
+# ##########################################################################################################
+# ## run treeWAS ##
+# #################
+# out <- treeWAS(snps = pa,
+#                phen = phen,
+#                tree =  tree,
+#                n.snps.sim = 5*ncol(pa), ### <--
+#                snps.reconstruction = "parsimony", ## (+) check w ML!
+#                snps.sim.reconstruction = "parsimony", ## (+) check w ML!
+#                phen.reconstruction = "ml",
+#                plot.tree = TRUE,
+#                filename.plot = sprintf('%s.treeWAS_cont_sample_plots.pdf', prefix))
+#
+#
+
+
+
+############################################################################################################
+
+#####################
+## PA.treeWAS.cont ##
+#####################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' (**Internal fn for running on cluster**)
+#'
+#' Run treeWAS on Presence/Absence data. To run on the CLIMB cluster.
+#'
+#' @param prefix A character string specifying the filename prefix of the dataset to be analysed.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
+#' @importFrom data.table fread
+#' @export
+
+########################################################################
+
+#####################
+## PA.treeWAS.cont ##
+#####################
+
+# prefix <- "/home/caitiecollins/ClonalFrameML/src/pubMLST/Neisseria/B/Czech/WG/phylip/B_Czech_WG.fas.out"
+# prefix <- "B_Czech_WG.fas.out"
+
+PA.treeWAS.cont <- function(prefix){
+
+  ##########################################################################################################
+  ###############
+  ## GET DATA: ##
+  ###############
+  phen <- snps <- tree <- out <- NULL
+
+  phen <- get(load(sprintf('%s.phen_cont_clean.Rdata', prefix)))
+  tree <- get(load(sprintf('%s.tree_clean.Rdata', prefix)))
+
+  ##########################################################################################################
+  #####################
+  ## GET P/A MATRIX: ##
+  #####################
+
+  pa <- fread(sprintf('%s.PA.txt', prefix))
+
+  ## convert to binary matrix:
+  mat <- do.call(cbind, pa)
+  rownames(mat) <- mat[, "id"]
+  mat <- mat[, 2:ncol(mat)]
+
+  ## Match rownames to tree$tip.label
+  toKeep <- which(rownames(mat) %in% tree$tip.label)
+  ## Check that labels match
+  if(length(toKeep) != length(tree$tip.label)){
+    stop("Row names of the PA matrix do not match set of tree$tip.labels.")
+  }
+  ## Subset PA mat:
+  mat <- mat[toKeep,]
+
+  ## Re-code to binary:
+  mat.ori <- mat
+  ## Y/N coding:
+  mat <- replace(mat, which(mat == "Y"), "1")
+  mat <- replace(mat, which(mat == "N"), "0")
+  ## O/X coding:
+  mat <- replace(mat, which(mat == "O"), "1")
+  mat <- replace(mat, which(mat == "X"), "0")
+
+  pa <- matrix(as.numeric(mat), nrow=nrow(mat), ncol=ncol(mat))
+
+  rownames(pa) <- rownames(mat)
+  colnames(pa) <- colnames(mat)
+
+  ## SAVE:
+  # save(pa, file="./pa_clean.Rdata")
+  save(pa, file=sprintf('%s.pa_clean.Rdata', prefix))
+
+
+  ##########################################################################################################
+  ## run treeWAS ##
+  #################
+  out <- treeWAS(snps = pa,
+                 phen = phen,
+                 tree =  tree,
+                 n.snps.sim = 10*ncol(pa),
+                 snps.reconstruction = "parsimony",
+                 snps.sim.reconstruction = "parsimony",
+                 phen.reconstruction = "ml",
+                 plot.tree = TRUE,
+                 filename.plot = sprintf('%s.treeWAS_PA_cont_plots.pdf', prefix))
+
+  print("treeWAS done")
+
+  ##########################################################################################################
+  ## Save output ##
+  #################
+  save(out, file=sprintf('%s.treeWAS_PA_cont_out.Rdata', prefix))
+
+
+  output <- list("treeWAS.out" = out)
+
+  return(output)
+
+} # end PA.treeWAS.cont
+
+#####################################################################################################################################
+#####################################################################################################################################
+
+#####################################################################################################################################
+#####################################################################################################################################
+
+
+
+
+##########################################################################################################
+
+#######################
+## CFML2treeWAS.cont ##
+#######################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' (**Internal fn for running on cluster**)
+#'
+#' Run treeWAS for a continuous phenotype on processed CFML output. To run on the CLIMB cluster.
+#'
+#' @param prefix A character string specifying the filename prefix of the dataset to be analysed.
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+########################################################################
+
+#######################
+## CFML2treeWAS.cont ##
+#######################
+
+# prefix <- "/home/caitiecollins/ClonalFrameML/src/pubMLST/Neisseria/B/Czech/WG/phylip/B_Czech_WG.fas.out"
+# prefix <- "B_Czech_WG.fas.out"
+
+CFML2treeWAS.cont <- function(prefix){
+
+  ##########################################################################################################
+  ###############
+  ## GET DATA: ##
+  ###############
+  phen <- snps <- tree <- out <- output <-  NULL
+
+  phen <- get(load(sprintf('%s.phen_cont_clean.Rdata', prefix)))
+  snps <- get(load(sprintf('%s.snps_clean.Rdata', prefix)))
+  tree <- get(load(sprintf('%s.tree_clean.Rdata', prefix)))
+
+
+  ##########################################################################################################
+  ## run treeWAS ##
+  #################
+  out <- treeWAS(snps = snps,
+                  phen = phen,
+                  tree =  tree,
+                  n.snps.sim = 10*ncol(snps),
+                  snps.reconstruction = "parsimony",
+                  snps.sim.reconstruction = "parsimony",
+                  phen.reconstruction = "ml",
+                  plot.tree = TRUE,
+                  filename.plot = sprintf('%s.treeWAS_cont_plots.pdf', prefix),
+                  prefix = prefix)
+
+  print("treeWAS done")
+  print(out)
+
+  ##########################################################################################################
+  ## Save output ##
+  #################
+  save(out, file=sprintf('%s.treeWAS_cont_out.Rdata', prefix))
+
+
+  output <- list("treeWAS.out" = out)
+
+  return(output)
+
+} # end CFML2treeWAS.cont
+
+#####################################################################################################################################
+#####################################################################################################################################
+
+#####################################################################################################################################
+#####################################################################################################################################
+
+
+
+
+
+
+
+
 
 
 ################
@@ -78,7 +328,8 @@ PA.treeWAS <- function(prefix){
   colnames(pa) <- colnames(mat)
 
   ## SAVE:
-  save(pa, file="./pa_clean.Rdata")
+  # save(pa, file="./pa_clean.Rdata")
+  save(pa, file=sprintf('%s.pa_clean.Rdata', prefix))
 
 
   ##########################################################################################################
@@ -161,13 +412,17 @@ CFML2treeWAS <- function(prefix){
   ##########################################################################################################
   ## run treeWAS ##
   #################
-  out <- treeWAS.temp(snps = snps,
-                     phen = phen,
-                     tree =  tree,
-                     n.snps.sim = 5*ncol(snps),
-                     plot.tree = TRUE,
-                     filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix),
-                     prefix = prefix)
+
+  ## NOTE: If you want to run w treeWAS.temp (ie. treeWAS w more info printed out)
+  ## NEED TO RE-MAKE treeWAS.temp STARTING w a FRESH NEW COPY of CURRENT treeWAS.
+
+  out <- treeWAS(snps = snps,
+                 phen = phen,
+                 tree =  tree,
+                 n.snps.sim = 5*ncol(snps),
+                 plot.tree = TRUE,
+                 filename.plot = sprintf('%s.treeWAS_plots.pdf', prefix),
+                 prefix = prefix)
 
   print("treeWAS done")
   print(out)
