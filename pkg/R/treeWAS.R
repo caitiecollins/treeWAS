@@ -782,6 +782,7 @@ treeWAS <- function(snps,
   #################
   ## Handle phen ##
   #################
+  phen.rec.method <- levs <- NULL
   ## convert phenotype to numeric:
   ## NOTE--this is also necessary for returning results in step (5)!
   phen.ori <- phen
@@ -1078,7 +1079,7 @@ treeWAS <- function(snps,
   ##############################################################################################
 
   ## Ensure we are only reconstructing ancestral states ONCE here, to be used in MULTIPLE tests later.
-  snps.REC <- snps.sim.REC <- phen.REC <- phen.rec.method <- levs <- NULL
+  snps.REC <- snps.sim.REC <- phen.REC <- NULL
 
   if(any(c("simultaneous", "subsequent") %in% test)){
 
