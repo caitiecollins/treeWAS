@@ -28,6 +28,7 @@
 #' @export
 #'
 #' @importFrom scales rescale
+#' @importFrom Hmisc all.is.numeric
 
 ########################################################################
 
@@ -62,11 +63,50 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   snps.rec.ori <- snps.rec
   snps.rec <- snps.rec.unique
 
+  ####################################################################
+  #####################
+  ## Handle phen.rec ##
+  #####################
+  ## convert phenotype to numeric:
+  phen.rec.ori <- phen.rec
+  ## Convert to numeric (required for assoc tests):
+  na.before <- length(which(is.na(phen.rec)))
+
+  ## NB: can only be binary or continuous at this point...
+  levs <- unique(as.vector(unlist(phen.rec)))
+  n.levs <- length(levs[!is.na(levs)])
+  if(n.levs == 2){
+    if(!is.numeric(phen.rec)){
+      if(all.is.numeric(phen.rec)){
+        phen.rec <- as.numeric(as.character(phen.rec))
+      }else{
+        phen.rec <- as.numeric(as.factor(phen.rec))
+      }
+    }
+  }else{
+    if(!is.numeric(phen.rec)){
+      if(all.is.numeric(phen.rec)){
+        phen.rec <- as.numeric(as.character(phen.rec))
+      }else{
+        stop("phen.rec has more than 2 levels but is not numeric (and therefore neither binary nor continuous).")
+      }
+    }
+  }
+  ## ensure ind names not lost
+  names(phen.rec) <- names(phen.rec.ori)
+
+  ## Check that no errors occurred in conversion:
+  na.after <- length(which(is.na(phen.rec)))
+  if(na.after > na.before){
+    stop("NAs created while converting phen.rec to numeric.")
+  }
+  ####################################################################
+
   ################################################
   ## RE-SCALE NON-BINARY VALUES (phen only ...) ##
   ################################################
   ## phen.rec (both Pa and Pd should be on same scale):
-  phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
+  if(n.levs > 2) phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
 
   ###############################
   ## GET DIFFS ACROSS BRANCHES ##

@@ -779,6 +779,49 @@ treeWAS <- function(snps,
   }
 
   ####################################################################
+  #################
+  ## Handle phen ##
+  #################
+  ## convert phenotype to numeric:
+  ## NOTE--this is also necessary for returning results in step (5)!
+  phen.ori <- phen
+
+  ## Convert to numeric (required for assoc tests):
+  na.before <- length(which(is.na(phen)))
+
+  ## CHECK for discrete vs. continuous:
+  ## NB: can only be binary or continuous at this point...
+  levs <- unique(as.vector(unlist(phen)))
+  n.levs <- length(levs[!is.na(levs)])
+  if(n.levs == 2){
+    phen.rec.method <- "discrete"
+    if(!is.numeric(phen)){
+      if(all.is.numeric(phen)){
+        phen <- as.numeric(as.character(phen))
+      }else{
+        phen <- as.numeric(as.factor(phen))
+      }
+    }
+  }else{
+    phen.rec.method <- "continuous"
+    if(!is.numeric(phen)){
+      if(all.is.numeric(phen)){
+        phen <- as.numeric(as.character(phen))
+      }else{
+        stop("phen has more than 2 levels but is not numeric (and therefore neither binary nor continuous).")
+      }
+    }
+  }
+  ## ensure ind names not lost
+  names(phen) <- names(phen.ori)
+
+  ## Check that no errors occurred in conversion:
+  na.after <- length(which(is.na(phen)))
+  if(na.after > na.before){
+    stop("NAs created while converting phen to numeric.")
+  }
+  ####################################################################
+
 
   ###################
   ## filename.plot ##
@@ -1026,24 +1069,8 @@ treeWAS <- function(snps,
   # barplot(n.subs.sim2, col=transp("blue", 0.5), names=c(1:length(n.subs.sim2)))
   # title("Homoplasy distribution \n (snps.sim)")
 
-  #################
-  ## Handle phen ##
-  #################
-  ## convert phenotype to numeric:
-  ## NOTE--this is also necessary for returning results in step (5)!
-  phen.ori <- phen
-
-  ## (?!) DO WE NEED THIS or can we work w factors?
-  # na.before <- length(which(is.na(phen)))
-  # if(!is.numeric(phen)){
-  #   phen <- as.numeric(as.character(phen))
-  #   ## ensure ind names not lost
-  #   names(phen) <- names(phen.ori)
-  # }
-  # na.after <- length(which(is.na(phen)))
-  # if(na.after > na.before){
-  #   stop("NAs created while converting phen to numeric.")
-  # }
+  ## Handle phen
+  ## (moved to initial checks)
 
 
   ##############################################################################################
@@ -1052,16 +1079,6 @@ treeWAS <- function(snps,
 
   ## Ensure we are only reconstructing ancestral states ONCE here, to be used in MULTIPLE tests later.
   snps.REC <- snps.sim.REC <- phen.REC <- phen.rec.method <- levs <- NULL
-
-  ## CHECK for discrete vs. continuous:
-  ## NB: can only be binary or continuous at this point...
-  levs <- unique(as.vector(unlist(phen)))
-  n.levs <- length(levs[!is.na(levs)])
-  if(n.levs == 2){
-    phen.rec.method <- "discrete"
-  }else{
-    phen.rec.method <- "continuous"
-  }
 
   if(any(c("simultaneous", "subsequent") %in% test)){
 
