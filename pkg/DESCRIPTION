@@ -11,7 +11,8 @@ Depends: adegenet,
     Hmisc
 Imports: ggplot2,
     beeswarm,
-    phangorn
+    phangorn,
+    scales
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
