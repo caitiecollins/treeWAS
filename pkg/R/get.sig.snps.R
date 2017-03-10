@@ -343,6 +343,8 @@ get.sig.snps <- function(snps,
     print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
   }
 
+  print(paste("Test flag #1 @", Sys.time()))
+
   ###################################
   ## HANDLE DUPLICATE SNPS COLUMNS ##
   ###################################
@@ -354,12 +356,16 @@ get.sig.snps <- function(snps,
     corr.dat <- corr.dat.complete
   }
 
+  print(paste("Test flag #2 @", Sys.time()))
+
   ## Expand corr.sim (if not all snps.sim columns unique):
   if(all.unique.sim == FALSE){
     corr.sim.complete <- corr.sim[snps.sim.index]
     names(corr.sim.complete) <- colnames(snps.sim.ori)
     corr.sim <- corr.sim.complete
   }
+
+  print(paste("Test flag #3 @", Sys.time()))
 
   ## quick look at corr.sim & corr.dat
   # hist(corr.sim, xlim=c(0,1))
@@ -396,6 +402,8 @@ get.sig.snps <- function(snps,
     if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=1-p.value)
   }
 
+  print(paste("Test flag #4 @", Sys.time()))
+  print(paste("Thresh =",thresh,"@", Sys.time()))
 
   if(p.value.correct == "fdr"){
     #########
@@ -416,6 +424,7 @@ get.sig.snps <- function(snps,
 
   } # end p.value.correct == "fdr"
 
+  print(paste("Test flag #5 @", Sys.time()))
 
   ##################################
   ## GET SIGNIFICANT CORRELATIONS ##
@@ -436,7 +445,7 @@ get.sig.snps <- function(snps,
     sig.p.vals <- p.vals[sig.snps]
   }
 
-
+  print(paste("Test flag #6 @", Sys.time()))
 
   ## 0 p.vals
   min.p <- paste("p-values listed as 0 are <",
@@ -459,6 +468,8 @@ get.sig.snps <- function(snps,
   sig.p.vals <- sig.p.vals[NWO]
   sig.snps.names <- sig.snps.names[NWO]
   gc()
+
+  print(paste("Test flag #7 @", Sys.time()))
 
   #################
   ## GET RESULTS ##
