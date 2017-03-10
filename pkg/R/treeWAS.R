@@ -1016,7 +1016,7 @@ treeWAS <- function(snps,
   gc()
 
 
-  print("treeWAS snps sim done.")
+  print(paste("treeWAS snps sim done @", Sys.time()))
 
 
   ################################################################
@@ -1190,7 +1190,7 @@ treeWAS <- function(snps,
             to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
   }
 
-  print("reconstructions done")
+  print(paste("Reconstructions completed @", Sys.time()))
 
   gc()
 
@@ -1231,7 +1231,7 @@ treeWAS <- function(snps,
   names(sig.list) <- test
   # str(sig.list)
 
-  print("get sig snps done.")
+  print(paste("ID of significant loci completed @", Sys.time()))
 
   ## DOUBLE CHECKING ##
   #   str(sig.list[[i]])

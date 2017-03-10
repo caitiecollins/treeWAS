@@ -91,7 +91,7 @@ get.sig.snps <- function(snps,
                          snps.sim.reconstruction,
                          phen.reconstruction){
 
-  print(paste("Running ", test, " test..."))
+  print(paste("Started running", test, "test @", Sys.time()))
 
   #################
   ## HANDLE SNPS ##
@@ -274,7 +274,7 @@ get.sig.snps <- function(snps,
     ########################################################
     corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test)
 
-    print(paste("Real data scores completed for ", test, " test."))
+    print(paste("Real data scores completed for", test, "test @", Sys.time()))
 
 
     #############################################################
@@ -282,7 +282,7 @@ get.sig.snps <- function(snps,
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test)
 
-    print(paste("Simulated data scores completed for ", test, " test."))
+    print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
 
   }else{
 
@@ -332,7 +332,7 @@ get.sig.snps <- function(snps,
     ########################################################
     corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
 
-    print(paste("Real data scores completed for ", test, " test."))
+    print(paste("Real data scores completed for", test, "test @", Sys.time()))
 
 
     #############################################################
@@ -340,7 +340,7 @@ get.sig.snps <- function(snps,
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
 
-    print(paste("Simulated data scores completed for ", test, " test."))
+    print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
   }
 
   ###################################
@@ -483,6 +483,8 @@ get.sig.snps <- function(snps,
                  "sig.corrs",
                  "sig.p.vals",
                  "min.p")
+
+  print(paste("Finished running", test, "test @", Sys.time()))
 
 
   return(out)
