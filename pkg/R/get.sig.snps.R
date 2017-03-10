@@ -91,6 +91,8 @@ get.sig.snps <- function(snps,
                          snps.sim.reconstruction,
                          phen.reconstruction){
 
+  print(paste("Running ", test, " test..."))
+
   #################
   ## HANDLE SNPS ##
   #################
@@ -272,11 +274,15 @@ get.sig.snps <- function(snps,
     ########################################################
     corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test)
 
+    print(paste("Real data scores completed for ", test, " test."))
+
 
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test)
+
+    print(paste("Simulated data scores completed for ", test, " test."))
 
   }else{
 
@@ -326,12 +332,15 @@ get.sig.snps <- function(snps,
     ########################################################
     corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
 
+    print(paste("Real data scores completed for ", test, " test."))
 
 
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+
+    print(paste("Simulated data scores completed for ", test, " test."))
   }
 
   ###################################
