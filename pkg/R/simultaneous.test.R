@@ -38,6 +38,8 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
 
   snps.rec <- snps.reconstruction
   phen.rec <- phen.reconstruction
+  rm(snps.reconstruction)
+  rm(phen.reconstruction)
 
   ## Always work with tree in pruningwise order:
   tree <- reorder.phylo(tree, order="pruningwise")
@@ -60,8 +62,9 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   }
 
   ## work w only unique snps:
-  snps.rec.ori <- snps.rec
+  colnoms <- colnames(snps.rec)
   snps.rec <- snps.rec.unique
+  rm(snps.rec.unique)
 
   ####################################################################
   #####################
@@ -130,7 +133,7 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
     score.complete <- score
   }else{
     score.complete <- score[index]
-    names(score.complete) <- colnames(snps.rec.ori)
+    names(score.complete) <- colnoms
   }
 
   score <- score.complete

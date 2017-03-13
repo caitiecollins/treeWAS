@@ -34,6 +34,8 @@ subsequent.test <- function(snps.reconstruction,
 
   snps.rec <- snps.reconstruction
   phen.rec <- phen.reconstruction
+  rm(snps.reconstruction)
+  rm(phen.reconstruction)
 
   ## Always work with tree in pruningwise order:
   tree <- reorder.phylo(tree, order="pruningwise")
@@ -56,8 +58,9 @@ subsequent.test <- function(snps.reconstruction,
   }
 
   ## work w only unique snps:
-  snps.rec.ori <- snps.rec
+  colnoms <- colnames(snps.rec)
   snps.rec <- snps.rec.unique
+  rm(snps.rec.unique)
 
   ####################################################################
   #####################
@@ -133,7 +136,7 @@ subsequent.test <- function(snps.reconstruction,
     score3.complete <- score3
   }else{
     score3.complete <- score3[index]
-    names(score3.complete) <- colnames(snps.rec.ori)
+    names(score3.complete) <- colnoms
   }
 
   score3 <- score3.complete

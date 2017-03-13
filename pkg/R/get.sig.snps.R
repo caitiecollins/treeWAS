@@ -1,7 +1,7 @@
 
-##################
-## get.sig.snps ##
-##################
+######################
+## get.assoc.scores ##
+######################
 
 ########################################################################
 
@@ -28,13 +28,6 @@
 #' @param n.tests An integer between 1 and 5 specifying the number of tests you are running on all loci,
 #' to be used in appropriately correcting for multiple testing.
 #' (i.e., the number of times you will be running the \code{get.sig.snps} function).
-#' @param p.value A single number specifying the p.value below which correlations are deemed to be 'significant'.
-#' @param p.value.correct Specify if/how to correct for multiple testing:
-#' either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
-#' the Bonferroni and False Discovery Rate corrections). By default, 'bonf' is selected
-#' @param p.value.by Specify how to determine the location of the p.value threshold:
-#' either 'count' or 'density' (indicating, respectively, that the p.value threshold should
-#' be determined by exact count or with the use of a density function).
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -77,22 +70,18 @@
 
 ########################################################################
 
-get.sig.snps <- function(snps,
-                         snps.unique = NULL,
-                         snps.index = NULL,
-                         snps.sim,
-                         snps.sim.unique = NULL,
-                         snps.sim.index = NULL,
-                         phen,
-                         tree,
-                         test = "terminal",
-                         n.tests = 1,
-                         p.value = 0.01,
-                         p.value.correct = "bonf",
-                         p.value.by = "count",
-                         snps.reconstruction,
-                         snps.sim.reconstruction,
-                         phen.reconstruction){
+get.assoc.scores <- function(snps,
+                             snps.unique = NULL,
+                             snps.index = NULL,
+                             snps.sim,
+                             snps.sim.unique = NULL,
+                             snps.sim.index = NULL,
+                             phen,
+                             tree,
+                             test = "terminal",
+                             snps.reconstruction,
+                             snps.sim.reconstruction,
+                             phen.reconstruction){
 
   print(paste("Started running", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @", Sys.time()))
 
@@ -375,18 +364,110 @@ get.sig.snps <- function(snps,
   # hist(corr.dat, xlim=c(0,1))
 
 
+  out <- list("corr.dat" = corr.dat,
+              "corr.sim" = corr.sim)
+
+  return(out)
+
+  } # end get.assoc.scores
+
+
+########################################################################
+
+
+
+##################
+## get.sig.snps ##
+##################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Get significant SNPs, according to a given test of association.
+#'
+#' Identify which SNPs are deemed to be significantly associated with a phenotype,
+#' according to a given test of association and p-value.
+#' (Serves as the treeWAS association testing function;
+#' runs the \code{assoc.test} function internally.)
+#'
+#' @param corr.dat A vector containing the association score values, for a given association test, for the real data.
+#' @param corr.sim A vector containing the association score values, for a given association test, for the simulated data.
+#' @param snps.names The column names of the original \code{snps} matrix from which the association score values
+#'                    in \code{corr.dat} were derived.
+#' @param test A character string or vector containing one or more of the following available tests of association:
+#' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
+#' (note that within treeWAS, the first three tests are run in a loop by default).
+#' See details for more information on what these tests do and when they may be appropriate.
+#' @param n.tests An integer between 1 and 5 specifying the number of tests you are running on all loci,
+#' to be used in appropriately correcting for multiple testing.
+#' (i.e., the number of times you will be running the \code{get.sig.snps} function).
+#' @param p.value A single number specifying the p.value below which correlations are deemed to be 'significant'.
+#' @param p.value.correct Specify if/how to correct for multiple testing:
+#' either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
+#' the Bonferroni and False Discovery Rate corrections). By default, 'bonf' is selected
+#' @param p.value.by Specify how to determine the location of the p.value threshold:
+#' either 'count' or 'density' (indicating, respectively, that the p.value threshold should
+#' be determined by exact count or with the use of a density function).
+#'
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @examples
+#'
+#' ## load data
+#' data(dist)
+#' str(dist)
+#'
+#' ## basic use of fn
+#'
+#' fn(arg1, arg2)
+#'
+#' #' ## more elaborate use of fn
+#' fn(arg1, arg2)
+#'
+#' @export
+#' @importFrom pryr mem_used
+#'
+
+
+
+##########
+## FDR: ##
+##########
+
+## NOTES: ##
+## FDR works by managing the number of FALSE discoveries, RELATIVE to the number of TOTAL discoveries.
+## Maintains Q = FALSE discoveries / TOTAL discoveries.
+## Eg. For Q = 0.05, both 5/100 and 50/1000 meet the criterion.
+## Hence, FDR is described as being both adaptive and scalable.
+
+## QUESTION! ##
+## HOW SHOULD WE HANDLE MULTIPLE TESTING CORRECTION WITH FDR WHEN RUNNING MULITPLE TESTS OF ASSOC??????
+## Eg. Bonf --> multiply divisor by 3
+## BUT--if we just run FDR p-value correction by multiplying the "n.tests" by n.tests,
+## would the result not be that we just increase the number of false positives accepted in each test?!
+## Could we pool the test results somehow??
+## Or is it OK to ignore the performance of multiple separate assoc tests when using FDR??
+
+########################################################################
+
+
+get.sig.snps <- function(corr.dat,
+                         corr.sim,
+                         snps.names, # = colnames(snps),
+                         test = "terminal",
+                         n.tests = 1,
+                         p.value = 0.01,
+                         p.value.correct = "bonf",
+                         p.value.by = "count"){
+
+
   ############################
   ## HANDLE P.VALUE OPTIONS ##
   ############################
-
-  out <- nom <- list()
-  corr.dat.ori <- corr.dat
-  corr.sim.ori <- corr.sim
-
-
-  ## n.snps.sim ##
-  corr.sim <- corr.sim.ori
-
+  out <- list()
 
   #####################
   ## p.value.correct ##
@@ -395,7 +476,6 @@ get.sig.snps <- function(snps,
     ##########
     ## bonf ##
     ##########
-
     p.value <- p.value/(length(corr.dat)*n.tests)
 
     ################
@@ -457,8 +537,7 @@ get.sig.snps <- function(snps,
   ## get list of those correlation values
   sig.corrs <- corr.dat[sig.snps]
   ## get the list of those SNPs (ie. their locus names)
-  # sig.snps <- dimnames(snps)[[2]][sig.snps]
-  sig.snps.names <- dimnames(snps.ori)[[2]][sig.snps]
+  sig.snps.names <- snps.names[sig.snps]
 
   ## re-order list of sig.snps and sig.corrs by value of sig.corr
   if(test=="fisher"){
@@ -479,14 +558,14 @@ get.sig.snps <- function(snps,
   #################
 
   out <- list(corr.dat,
-                   corr.sim,
-                   p.vals,
-                   thresh,
-                   sig.snps.names,
-                   sig.snps,
-                   sig.corrs,
-                   sig.p.vals,
-                   min.p)
+               corr.sim,
+               p.vals,
+               thresh,
+               sig.snps.names,
+               sig.snps,
+               sig.corrs,
+               sig.p.vals,
+               min.p)
 
   names(out) <- c("corr.dat",
                  "corr.sim",
@@ -576,13 +655,6 @@ assoc.test <- function(snps,
     corr.dat <- terminal.test(snps = snps, phen = phen)
     # ~ Correlation "SCORE" =
     # ((nS1P1 + nS0P0) - (nS1P0 + nS0P1) / (n.total))
-    ## must be calculated for each SNP individually...
-    #     corr.dat <- sapply(c(1:ncol(snps)), function(e)
-    #       (((length(which(snps[which(phen==1),e]==1)) +
-    #            length(which(snps[which(phen==0),e]==0)))
-    #         - (length(which(snps[which(phen==1),e]==0)) +
-    #              length(which(snps[which(phen==0),e]==1))))
-    #        / nrow(snps)))
   } # end test terminal
 
   #######################
@@ -616,95 +688,27 @@ assoc.test <- function(snps,
 #################
 ## .get.p.vals ##
 #################
-## NOTE: only used for FDR threshold calculation!
-## get a p-value associated with every value of corr.sim
+## get a p-value associated with every value of corr.sim/corr.dat given the distribution of corr.sim:
 
-.get.p.vals <- function(corr.sim, corr.dat=NULL, fisher.test=FALSE){
+.get.p.vals <- function(corr.sim, corr.dat=NULL, fisher.test = FALSE){
 
-  p.vals <- NULL
+  if(is.null(corr.sim)) stop("Cannot calculate p-values for null object.")
+  if(is.null(corr.dat)) corr.dat <- corr.sim
 
-  ###################
-  ## CORR.SIM ONLY ##
-  ###################
-  if(is.null(corr.dat)){
-    ## faster with table:
-    cs.tab <- table(corr.sim)
-    cs.fac <- factor(corr.sim)
+  # w cum dist fn(F) p-val (p) for a given value(T) is: p = 1 - F(T)
+  cum.dist <- ecdf(corr.sim)
 
-    p.vals.unique <- sapply(c(1:(length(cs.tab)-1)),
-                            function(e)
-                              sum(cs.tab[(e+1):length(cs.tab)])
-                            /sum(cs.tab))
-    ## need to add trailing 0 for max corr.sim:
-    p.vals.unique <- c(p.vals.unique, 0)
-
-    ## get the unique index that
-    ## each original corr.sim should map to:
-    map.to <- (as.integer(cs.fac) - 1)
-    map.to <- map.to[!is.na(map.to)]
-    if(length(map.to)) map.to <- map.to + 1
-
-    ## get p.vals for all corr.sim:
-    p.vals <- p.vals.unique[map.to]
-
+  if(fisher.test == FALSE){
+    ## For all but Fisher test, we care about how may null/simulated/chance values are GREATER than corr.dat[e]
+    p <- 1 - cum.dist(corr.dat)
   }else{
-
-    ###########################
-    ## CORR.DAT vs. CORR.SIM ##
-    ###########################
-    ## get table for corr.sim:
-    cs.tab <- table(corr.sim)
-
-    ## get table for corr.dat:
-    cd.tab <- table(corr.dat)
-    cd.fac <- factor(corr.dat)
-
-    # ## get all possible p.vals | corr.sim:
-    # p.vals.unique <- sapply(c(1:(length(cs.tab)-1)),
-    #                         function(e)
-    #                           sum(cs.tab[(e+1):length(cs.tab)])
-    #                         /sum(cs.tab))
-    # ## need to add trailing 0 for max corr.sim:
-    # p.vals.unique <- c(p.vals.unique, 0)
-
-    ######################################
-
-    ## get real p.vals using corr.dat for break points:
-    p.vals.dat <- list()
-
-
-    if(fisher.test == FALSE){
-      for(i in 1:length(cd.tab)){
-        tab.above <- which(as.numeric(names(cs.tab)) > as.numeric(names(cd.tab[i])))
-        if(!.is.integer0(tab.above)){
-          p.vals.dat[[i]] <- sum(cs.tab[tab.above])/sum(cs.tab)
-        }else{
-          p.vals.dat[[i]] <- 0
-        }
-      }
-    }else{
-      ## fisher.test == TRUE --> Reverse sign (> --> <) ##
-      for(i in 1:length(cd.tab)){
-        tab.below <- which(as.numeric(names(cs.tab)) < as.numeric(names(cd.tab[i])))
-        if(!.is.integer0(tab.below)){
-          p.vals.dat[[i]] <- sum(cs.tab[tab.below])/sum(cs.tab)
-        }else{
-          p.vals.dat[[i]] <- 0
-        }
-      }
-    }
-
-    p.vals.dat <- as.vector(unlist(p.vals.dat))
-
-    ## get the unique index that
-    ## each original corr.dat should map to:
-    map.to <- (as.integer(cd.fac) - 1)
-    map.to <- map.to[!is.na(map.to)]
-    if(length(map.to)) map.to <- map.to + 1
-
-    ## get p.vals for all corr.dat:
-    p.vals <- p.vals.dat[map.to]
+    ## Fisher test works w p-values itself.
+    ## So we care about how many values of the dist are SMALLER than corr.dat[e]
+    p <- cum.dist(corr.dat)
   }
 
-  return(p.vals)
-} # end .get.p.vals
+  return(p)
+}  # end .get.p.vals (NEW)
+
+
+

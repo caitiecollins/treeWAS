@@ -440,6 +440,7 @@ treeWAS <- function(snps,
                     tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
                     n.subs = NULL,
                     n.snps.sim = ncol(snps)*10,
+                    chunk.size = ncol(snps),
                     test = c("terminal", "simultaneous", "subsequent"),
                     snps.reconstruction = "parsimony",
                     snps.sim.reconstruction = "parsimony",
@@ -953,7 +954,7 @@ treeWAS <- function(snps,
   # title("Homoplasy distribution \n(treeWAS Fitch)")
 
   #####################################################
-  ## 1) Simulate multiple snps datasets to compare your
+  ## 1) Simulate multiple snps/ dataset to compare your
   ## real correlations w phen to  #####################
   #####################################################
 
@@ -1201,35 +1202,80 @@ treeWAS <- function(snps,
   ## to reduce computational time, but results are identified on the basis of all
   ## ORIGINAL snps & snps.sim columns inputted.
 
-  sig.list <- list()
+  assoc.scores <- list()
 
   # test <- c("terminal", "simultaneous", "subsequent")
   TEST <- as.list(test)
 
-  ## Run get.sig.snps fn once for each association test:
-  system.time( # 100 - 164 (why such a difference?)
+  ## Run get.assoc.scores for each assoc.test
+  ## Then run get.sig.snps (ONLY once ALL of corr.sim, corr.dat have been generated w get.assoc.scores (IFF running chunk-by-chunk!))
+  system.time(
     for(i in 1:length(TEST)){
-      sig.list[[i]] <- get.sig.snps(snps = snps,
-                                    snps.unique = snps.unique,
-                                    snps.index = snps.index,
-                                    snps.sim = snps.sim,
-                                    snps.sim.unique = snps.sim.unique,
-                                    snps.sim.index = snps.sim.index,
-                                    phen = phen,
-                                    tree = tree,
+      assoc.scores[[i]] <- get.assoc.scores(snps = snps,
+                                        snps.unique = snps.unique,
+                                        snps.index = snps.index,
+                                        snps.sim,
+                                        snps.sim.unique = snps.sim.unique,
+                                        snps.sim.index = snps.sim.index,
+                                        phen = phen,
+                                        tree = tree,
+                                        test = TEST[[i]],
+                                        snps.reconstruction = snps.rec,
+                                        snps.sim.reconstruction = snps.sim.rec,
+                                        phen.reconstruction = phen.rec)
+    }
+  )
+
+  #######################################################
+  ##### END LOOP HERE (for CHUNK-BY-CHUNK approach) #####
+  #######################################################
+
+  ## (COMBINE CHUNKS FIRST) ##
+
+  ## Get sig.snps for each assoc test using ALL values of corr.dat, corr.sim
+  sig.list <- list()
+
+  system.time(
+    for(i in 1:length(TEST)){
+      corr.dat <- assoc.scores[[i]]$corr.dat
+      corr.sim <- assoc.scores[[i]]$corr.sim
+
+      sig.list[[i]] <- get.sig.snps(corr.dat = corr.dat,
+                                    corr.sim = corr.sim,
+                                    snps.names = colnames(snps),
                                     test = TEST[[i]],
                                     n.tests = length(TEST),
                                     p.value = p.value,
                                     p.value.correct = p.value.correct,
-                                    p.value.by = p.value.by,
-                                    snps.reconstruction = snps.rec,
-                                    snps.sim.reconstruction = snps.sim.rec,
-                                    phen.reconstruction = phen.rec)
+                                    p.value.by = p.value.by)
     }
   )
 
   names(sig.list) <- test
-  # str(sig.list)
+
+  # ## Run get.sig.snps fn once for each association test:
+  # system.time( # 100 - 164 (why such a difference?)
+  #   for(i in 1:length(TEST)){
+  #     sig.list[[i]] <- get.sig.snps(snps = snps,
+  #                                   snps.unique = snps.unique,
+  #                                   snps.index = snps.index,
+  #                                   snps.sim = snps.sim,
+  #                                   snps.sim.unique = snps.sim.unique,
+  #                                   snps.sim.index = snps.sim.index,
+  #                                   phen = phen,
+  #                                   tree = tree,
+  #                                   test = TEST[[i]],
+  #                                   n.tests = length(TEST),
+  #                                   p.value = p.value,
+  #                                   p.value.correct = p.value.correct,
+  #                                   p.value.by = p.value.by,
+  #                                   snps.reconstruction = snps.rec,
+  #                                   snps.sim.reconstruction = snps.sim.rec,
+  #                                   phen.reconstruction = phen.rec)
+  #   }
+  # )
+  #
+  # names(sig.list) <- test
 
   print(paste("ID of significant loci completed @", Sys.time()))
 

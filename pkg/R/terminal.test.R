@@ -49,8 +49,9 @@ terminal.test <- function(snps,
   }
 
   ## work w only unique snps:
-  snps.ori <- snps
+  colnoms <- colnames(snps)
   snps <- snps.unique
+  rm(snps.unique)
 
   ####################################################################
   #################
@@ -124,7 +125,7 @@ terminal.test <- function(snps,
     score1.complete <- score1
   }else{
     score1.complete <- score1[index]
-    names(score1.complete) <- colnames(snps.ori)
+    names(score1.complete) <- colnoms
   }
 
   score1 <- score1.complete

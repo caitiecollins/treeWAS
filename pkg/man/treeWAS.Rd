@@ -5,14 +5,14 @@
 \title{Phylogenetic tree-based GWAS for microbes.}
 \usage{
 treeWAS(snps, phen, tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
-  n.subs = NULL, n.snps.sim = ncol(snps) * 10, test = c("terminal",
-  "simultaneous", "subsequent"), snps.reconstruction = "parsimony",
-  snps.sim.reconstruction = "parsimony", phen.reconstruction = "parsimony",
-  na.rm = TRUE, p.value = 0.01, p.value.correct = c("bonf", "fdr", FALSE),
-  p.value.by = c("count", "density"), dist.dna.model = "JC69",
-  plot.tree = FALSE, plot.manhattan = TRUE, plot.null.dist = TRUE,
-  plot.dist = FALSE, snps.assoc = NULL, filename.plot = NULL,
-  seed = NULL)
+  n.subs = NULL, n.snps.sim = ncol(snps) * 10, chunk.size = ncol(snps),
+  test = c("terminal", "simultaneous", "subsequent"),
+  snps.reconstruction = "parsimony", snps.sim.reconstruction = "parsimony",
+  phen.reconstruction = "parsimony", na.rm = TRUE, p.value = 0.01,
+  p.value.correct = c("bonf", "fdr", FALSE), p.value.by = c("count",
+  "density"), dist.dna.model = "JC69", plot.tree = FALSE,
+  plot.manhattan = TRUE, plot.null.dist = TRUE, plot.dist = FALSE,
+  snps.assoc = NULL, filename.plot = NULL, seed = NULL)
 }
 \arguments{
 \item{snps}{A matrix containing binary genetic data, with individuals in the rows
