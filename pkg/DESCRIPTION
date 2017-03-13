@@ -12,7 +12,8 @@ Depends: adegenet,
 Imports: ggplot2,
     beeswarm,
     phangorn,
-    scales
+    scales,
+    pryr
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr

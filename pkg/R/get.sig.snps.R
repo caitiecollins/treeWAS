@@ -52,6 +52,9 @@
 #' fn(arg1, arg2)
 #'
 #' @export
+#' @importFrom pryr mem_used
+#'
+
 
 
 ##########
@@ -91,7 +94,7 @@ get.sig.snps <- function(snps,
                          snps.sim.reconstruction,
                          phen.reconstruction){
 
-  print(paste("Started running", test, "test @", Sys.time()))
+  print(paste("Started running", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @", Sys.time()))
 
   #################
   ## HANDLE SNPS ##
@@ -274,7 +277,7 @@ get.sig.snps <- function(snps,
     ########################################################
     corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test)
 
-    print(paste("Real data scores completed for", test, "test @", Sys.time()))
+    print(paste("Real data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @", Sys.time()))
 
 
     #############################################################
@@ -282,7 +285,7 @@ get.sig.snps <- function(snps,
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test)
 
-    print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
+    print(paste("Simulated data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   }else{
 
@@ -332,7 +335,7 @@ get.sig.snps <- function(snps,
     ########################################################
     corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
 
-    print(paste("Real data scores completed for", test, "test @", Sys.time()))
+    print(paste("Real data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
 
     #############################################################
@@ -340,7 +343,7 @@ get.sig.snps <- function(snps,
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
 
-    print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
+    print(paste("Simulated data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
   }
 
   print(paste("Test flag #1 @", Sys.time()))
@@ -356,7 +359,7 @@ get.sig.snps <- function(snps,
     corr.dat <- corr.dat.complete
   }
 
-  print(paste("Test flag #2 @", Sys.time()))
+  print(paste("Test flag #2; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ## Expand corr.sim (if not all snps.sim columns unique):
   if(all.unique.sim == FALSE){
@@ -365,7 +368,7 @@ get.sig.snps <- function(snps,
     corr.sim <- corr.sim.complete
   }
 
-  print(paste("Test flag #3 @", Sys.time()))
+  print(paste("Test flag #3; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ## quick look at corr.sim & corr.dat
   # hist(corr.sim, xlim=c(0,1))
@@ -402,7 +405,7 @@ get.sig.snps <- function(snps,
     if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=1-p.value)
   }
 
-  print(paste("Test flag #4 @", Sys.time()))
+  print(paste("Test flag #4; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
   print(paste("Thresh =",thresh,"@", Sys.time()))
 
   if(p.value.correct == "fdr"){
@@ -424,7 +427,7 @@ get.sig.snps <- function(snps,
 
   } # end p.value.correct == "fdr"
 
-  print(paste("Test flag #5 @", Sys.time()))
+  print(paste("Test flag #5; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ##################################
   ## GET SIGNIFICANT CORRELATIONS ##
@@ -445,7 +448,7 @@ get.sig.snps <- function(snps,
     sig.p.vals <- p.vals[sig.snps]
   }
 
-  print(paste("Test flag #6 @", Sys.time()))
+  print(paste("Test flag #6; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ## 0 p.vals
   min.p <- paste("p-values listed as 0 are <",
@@ -469,7 +472,7 @@ get.sig.snps <- function(snps,
   sig.snps.names <- sig.snps.names[NWO]
   gc()
 
-  print(paste("Test flag #7 @", Sys.time()))
+  print(paste("Test flag #7; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   #################
   ## GET RESULTS ##
@@ -643,6 +646,7 @@ assoc.test <- function(snps,
 
     ## get p.vals for all corr.sim:
     p.vals <- p.vals.unique[map.to]
+
   }else{
 
     ###########################
@@ -655,13 +659,15 @@ assoc.test <- function(snps,
     cd.tab <- table(corr.dat)
     cd.fac <- factor(corr.dat)
 
-    ## get all possible p.vals | corr.sim:
-    p.vals.unique <- sapply(c(1:(length(cs.tab)-1)),
-                            function(e)
-                              sum(cs.tab[(e+1):length(cs.tab)])
-                            /sum(cs.tab))
-    ## need to add trailing 0 for max corr.sim:
-    p.vals.unique <- c(p.vals.unique, 0)
+    # ## get all possible p.vals | corr.sim:
+    # p.vals.unique <- sapply(c(1:(length(cs.tab)-1)),
+    #                         function(e)
+    #                           sum(cs.tab[(e+1):length(cs.tab)])
+    #                         /sum(cs.tab))
+    # ## need to add trailing 0 for max corr.sim:
+    # p.vals.unique <- c(p.vals.unique, 0)
+
+    ######################################
 
     ## get real p.vals using corr.dat for break points:
     p.vals.dat <- list()
