@@ -153,10 +153,11 @@ snp.sim <- function(n.snps = 10000,
     #####################
     ## NO DISTRIBUTION ##
     #####################
-
     ## if no distribution is inputted,
     ## use normal simulation procedure
     ## (ie. Poisson parameter 1):
+
+    warning("Using n.subs as Poisson parameter because input n.subs was of length 1 and had no names.")
 
     ## draw the number of mutations to occur at each site:
     if(!is.null(seed)) set.seed(seed)

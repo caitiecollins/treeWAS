@@ -745,8 +745,9 @@ treeWAS <- function(snps,
   #     snps.reconstruction <- get.binary.snps(snps.reconstruction)
   #   }
   ####################################################################
-
-  ## REORDER SNPS TO MATCH TREE$TIP.LABEL
+  ##########################################
+  ## REORDER SNPS TO MATCH TREE$TIP.LABEL ##
+  ##########################################
   if(!identical(as.character(rownames(snps)), as.character(tree$tip.label))){
     ord <- match(tree$tip.label, rownames(snps))
     snps <- snps[ord,]
@@ -771,8 +772,9 @@ treeWAS <- function(snps,
     }
 
   ####################################################################
-
+  ############################################################
   ## CHECK TREE: (set NEGATIVE branch lengths to zero (??)) ##
+  ############################################################
   toChange <- which(tree$edge.length < 0)
   if(length(toChange) > 0){
     tree$edge.length[toChange] <- 0
@@ -821,6 +823,32 @@ treeWAS <- function(snps,
   na.after <- length(which(is.na(phen)))
   if(na.after > na.before){
     stop("NAs created while converting phen to numeric.")
+  }
+  ####################################################################
+  #######################
+  ## Reconstruct phen: ##
+  #######################
+  phen.rec <- NULL
+  if(any(c("simultaneous", "subsequent") %in% test)){
+    ## If user-provided reconsruction:
+    if(length(phen.reconstruction) > 1){
+      ## CHECK:
+      if(length(phen.reconstruction) != (length(phen)+(tree$Nnode))){
+        warning("The number of individuals in the provided phen.reconstruction is not equal to the
+                  total number of nodes in the tree. Performing a new reconstruction instead.")
+        if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
+        if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
+      }
+    }
+
+    ## If not user-provided or checks failed, reconstruct ancestral states:
+    if(length(phen.reconstruction) > 1){
+      phen.rec <- phen.reconstruction
+    }else{
+      ## By PARSIMONY or ML: ##
+      phen.REC <- asr(var = phen, tree = tree, type = phen.reconstruction, method = phen.rec.method)
+      phen.rec <- phen.REC$var.rec
+    }
   }
   ####################################################################
 
@@ -945,13 +973,200 @@ treeWAS <- function(snps,
 
     ## INPUT n.subs ##
 
-    ## Assign names IF null:
+    ## Assign names if null:
     if(is.null(names(n.subs))) names(n.subs) <- 1:length(n.subs)
   }
 
   ## check:
   # barplot(n.subs, col=transp("blue", 0.5), names=c(1:length(n.subs)))
   # title("Homoplasy distribution \n(treeWAS Fitch)")
+
+
+  ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ####### BEFORE RUNNING CHUNK-BY-CHUNK TREEWAS ...    #######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+  #######################
+  ## Handle chunk.size ##
+  #######################
+
+  CHUNKS <- list()
+
+  if(is.null(chunk.size)) chunk.size <- ncol(snps)
+  if(chunk.size > ncol(snps)) chunk.size <- ncol(snps)
+  ## Put all loci in one chunk segment:
+  if(chunk.size == ncol(snps)){
+    CHUNKS[[1]] <- 1:ncol(snps)
+  }else{
+    ## get chunks:
+    chunks <- seq(1, ncol(snps), chunk.size)
+    ## handle last chunk:
+    if(chunks[length(chunks)] < ncol(snps)){
+      # chunks <- c(chunks, ncol(snps))
+      ## If last chunk too small (<= 10%(chunk.size)?), append to penultimate chunk:
+      if((ncol(snps) - chunks[length(chunks)]) <= chunk.size*0.1){
+        chunks <- chunks[1:(length(chunks)-1)]
+        chunks <- c(chunks, (ncol(snps)+1))
+      }else{
+        chunks <- c(chunks, (ncol(snps)+1))
+      }
+    }else{
+      chunks[length(chunks)] <- chunks[length(chunks)]+1
+    }
+    ## Make list of chunk segments:
+    for(i in 1:(length(chunks)-1)){
+      CHUNKS[[i]] <- chunks[i]:(chunks[(i+1)]-1)
+    }
+  }
+  ## check?
+  # for(i in 1:length(CHUNKS)) print(range(CHUNKS[[i]]))
+
+
+  #########################################
+  ## BEFORE RUNNING CHUNK-BY-CHUNK LOOP: ##
+  #########################################
+  ## Store "master" objects, by chunk: ##
+  ## - snps
+  ## - snps.rec (if present)
+  ## - n.subs --> CONVERT s.t. sum(n.subs) == ncol(snps) --> AND SEGREGATE into COLUMNS for each CHUNK
+
+  ## And make lists to store created objects: ##
+  ## - corr.dat (x n.tests)
+  ## - corr.sim (x n.tests)
+  ## - snps.sim
+  ## - snps.rec
+  ## - snps.sim.rec
+  CORR.DAT <- CORR.SIM <- SNPS.SIM <- SNPS.SIM.REC <- N.SNPS.SIM <- SNPS <- SNPS.REC <- N.SUBS <- list()
+
+  #############################
+  ## GET VALUES FOR CHUNK(S) ##
+  #############################
+
+  ##  One chunk only:
+  if(length(CHUNKS) == 1){
+
+    N.SUBS[[1]] <- n.subs
+    SNPS[[1]] <- snps
+    N.SNPS.SIM[[1]] <- n.snps.sim
+    if(length(snps.reconstruction) > 1){
+      SNPS.REC[[1]] <- snps.reconstruction
+    }else{
+      SNPS.REC[[1]] <- snps.reconstruction
+    }
+
+  }else{ # end no CHUNKS (one only)
+
+    ## if working w multiple CHUNKS
+
+    #################################################
+    ## CONVERT n.subs st sum(n.subs) == ncol(snps) ##
+    #################################################
+    dist <- n.subs
+    gen.size <- ncol(snps)
+
+    ## check for names first!
+    if(!is.null(names(dist))){
+      ## only modify if names are numeric
+      if(all.is.numeric(names(dist))){
+        noms <- as.numeric(names(dist))
+        aligned <- sapply(c(1:length(dist)), function(e) noms[e] == e)
+        ## if any names do not correspond to their index, add zeros where missing:
+        if(any(aligned == FALSE)){
+          dist.new <- rep(0, max(noms))
+          dist.new[noms] <- dist
+          names(dist.new) <- c(1:length(dist.new))
+          dist <- dist.new
+        }
+      }
+    } # end check for missing places
+
+    ## get dist.prop, a distribution containing the counts
+    ## of the number of SNPs to be simulated that will have
+    ## i many substitutions
+    dist.sum <- sum(dist)
+    dist.prop <- round((dist/dist.sum)*gen.size)
+    ## check that these counts sum to gen.size,
+    ## else add the remainder to the largest n.subs count
+    if(sum(dist.prop) != gen.size){
+      m <- which.max(dist.prop)
+      #m <- 1
+      if(sum(dist.prop) < gen.size){
+        dist.prop[m] <- dist.prop[m] + (gen.size - sum(dist.prop))
+      }
+      if(sum(dist.prop) > gen.size){
+        dist.prop[m] <- dist.prop[m] - (sum(dist.prop) - gen.size)
+      }
+    }
+    ## get rid of useless trailing 0s
+    while(dist.prop[length(dist.prop)] == 0){
+      dist.prop <- dist.prop[c(1:(length(dist.prop)-1))]
+    }
+    n.subs <- dist.prop
+
+    ## Remove unnecessary objects...
+    rm(dist)
+    rm(dist.prop)
+    rm(dist.sum)
+
+    ## Assign n.subs for each chunk:
+    n.subs.ori <- n.subs
+    c.lims <- N.SUBS <- list()
+    for(i in 1:length(CHUNKS)) c.lims[[i]] <- range(CHUNKS[[i]])
+
+    ## FOR LOOP to get n.subs segment for each chunk:
+    for(i in 1:length(CHUNKS)){
+      ## get chunk limits:
+      N <- c.lims[[i]][2] - (c.lims[[i]][1]-1)
+      start <- 1
+      end <- 1
+      n.chunk <- n.subs[start:end]
+      ## get levels of n.subs for this chunk:
+      counter <- 0
+      while(sum(n.chunk) < N){
+        counter <- counter+1
+        # print(counter)
+        n.chunk <- n.subs[start:(end+counter)]
+      } # end while loop
+      ## cut extra from last level:
+      if(sum(n.chunk) > N){
+        n.chunk[length(n.chunk)] <- n.chunk[length(n.chunk)] - (sum(n.chunk) - N)
+      }
+      ## upadte n.subs (remaining):
+      toRemove <- which(names(n.subs) %in% names(n.chunk))
+      n.subs[toRemove] <- n.subs[toRemove]  - n.chunk
+      N.SUBS[[i]] <- n.chunk
+    } # end for loop
+
+    ## get SNPS, SNPS.REC, N.SNPS.SIM ##
+    fac <- n.snps.sim/ncol(snps)
+    for(i in 1:length(CHUNKS)){
+      SNPS[[i]] <- snps[, CHUNKS[[i]]]
+      N.SNPS.SIM[[i]] <- ncol(SNPS[[i]])*fac
+      if(length(snps.reconstruction) > 1){
+        SNPS.REC[[i]] <- snps.reconstruction[, CHUNKS[[i]]]
+      }else{
+        SNPS.REC[[i]] <- snps.reconstruction
+      }
+    } # end for loop
+
+  } # end multiple CHUNKS
+
+
+
+  ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ###### FOR LOOP for CHUNK-BY-CHUNK TREEWAS STARTS HERE #####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+  for(i in 1:length(CHUNKS)){
+
+    snps <- SNPS[[i]]
+    n.snps.sim <- N.SNPS.SIM[[i]]
+    snps.reconstruction <- SNPS.REC[[i]]
+    n.subs <- N.SUBS[[i]]
 
   #####################################################
   ## 1) Simulate multiple snps/ dataset to compare your
@@ -1125,30 +1340,6 @@ treeWAS <- function(snps,
     # )
     snps.sim.rec <- snps.sim.REC$var.rec
 
-
-    #######################
-    ## Reconstruct phen: ##
-    #######################
-    ## If user-provided reconsruction:
-    if(length(phen.reconstruction) > 1){
-      ## CHECK:
-      if(length(phen.reconstruction) != (length(phen)+(tree$Nnode))){
-        warning("The number of individuals in the provided phen.reconstruction is not equal to the
-                total number of nodes in the tree. Performing a new reconstruction instead.")
-        if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
-        if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
-      }
-    }
-
-    ## If not user-provided or checks failed, reconstruct ancestral states:
-    if(length(phen.reconstruction) > 1){
-      phen.rec <- phen.reconstruction
-    }else{
-      ## By PARSIMONY or ML: ##
-      phen.REC <- asr(var = phen, tree = tree, type = phen.reconstruction, method = phen.rec.method)
-      phen.rec <- phen.REC$var.rec
-    }
-
   } # end reconstruction for tests 2 & 3
 
 
@@ -1202,16 +1393,16 @@ treeWAS <- function(snps,
   ## to reduce computational time, but results are identified on the basis of all
   ## ORIGINAL snps & snps.sim columns inputted.
 
-  assoc.scores <- list()
-
   # test <- c("terminal", "simultaneous", "subsequent")
   TEST <- as.list(test)
+  CORR.DAT[[i]] <- CORR.SIM[[i]] <- vector(mode="list", length=length(test))
+  names(CORR.DAT[[i]]) <- names(CORR.SIM[[i]]) <- test
 
   ## Run get.assoc.scores for each assoc.test
   ## Then run get.sig.snps (ONLY once ALL of corr.sim, corr.dat have been generated w get.assoc.scores (IFF running chunk-by-chunk!))
   system.time(
-    for(i in 1:length(TEST)){
-      assoc.scores[[i]] <- get.assoc.scores(snps = snps,
+    for(t in 1:length(TEST)){
+      assoc.scores <- get.assoc.scores(snps = snps,
                                         snps.unique = snps.unique,
                                         snps.index = snps.index,
                                         snps.sim,
@@ -1219,31 +1410,61 @@ treeWAS <- function(snps,
                                         snps.sim.index = snps.sim.index,
                                         phen = phen,
                                         tree = tree,
-                                        test = TEST[[i]],
+                                        test = TEST[[t]],
                                         snps.reconstruction = snps.rec,
                                         snps.sim.reconstruction = snps.sim.rec,
                                         phen.reconstruction = phen.rec)
-    }
+      ## STORE DATA FOR EACH TEST:
+      CORR.DAT[[i]][[t]] <- assoc.scores$corr.dat
+      CORR.SIM[[i]][[t]] <- assoc.scores$corr.sim
+      rm(assoc.scores)
+    } # end for (t) loop
   )
 
-  #######################################################
-  ##### END LOOP HERE (for CHUNK-BY-CHUNK approach) #####
-  #######################################################
+  ## STORE DATA CREATED FOR THIS CHUNK:
+  SNPS.SIM[[i]] <- snps.sim
+  SNPS.REC[[i]] <- snps.rec
+  SNPS.SIM.REC[[i]] <- snps.sim.rec
 
+  } # end for (i) loop (CHUNKS)
+  ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ####### END LOOP/OPTIONAL CHUNK-BY-CHUNK TREEWAS HERE ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+  ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+  ############################
   ## (COMBINE CHUNKS FIRST) ##
+  ############################
 
-  ## Get sig.snps for each assoc test using ALL values of corr.dat, corr.sim
+  ## Get corr.dat & corr.sim:
+  noms <- names(CORR.DAT[[1]])
+  CORR.DAT <- sapply(c(1:length(CORR.DAT)), function(e) unlist(sapply(CORR.DAT, "[[", e)), simplify=FALSE)
+  names(CORR.DAT) <- noms
+  CORR.SIM <- sapply(c(1:length(CORR.SIM)), function(e) unlist(sapply(CORR.SIM, "[[", e)), simplify=FALSE)
+  names(CORR.SIM) <- noms
+
+  ## Get snps, snps.sim, snps.rec, snps.sim.rec:
+  snps <- do.call(cbind, SNPS)
+  rm(SNPS)
+  snps.sim <- do.call(cbind, SNPS.SIM)
+  rm(SNPS.SIM)
+  snps.rec <- do.call(cbind, SNPS.REC)
+  rm(SNPS.REC)
+  snps.sim.rec <- do.call(cbind, SNPS.SIM.REC)
+  rm(SNPS.SIM.REC)
+
+  #######################################
+  ## Get sig.snps for ALL assoc.scores ##
+  #######################################
   sig.list <- list()
 
   system.time(
-    for(i in 1:length(TEST)){
-      corr.dat <- assoc.scores[[i]]$corr.dat
-      corr.sim <- assoc.scores[[i]]$corr.sim
-
-      sig.list[[i]] <- get.sig.snps(corr.dat = corr.dat,
-                                    corr.sim = corr.sim,
-                                    snps.names = colnames(snps),
-                                    test = TEST[[i]],
+    for(t in 1:length(TEST)){
+      sig.list[[t]] <- get.sig.snps(corr.dat = CORR.DAT[[t]],
+                                    corr.sim = CORR.SIM[[t]],
+                                    snps.names = colnames(SNPS),
+                                    test = TEST[[t]],
                                     n.tests = length(TEST),
                                     p.value = p.value,
                                     p.value.correct = p.value.correct,
@@ -1253,29 +1474,10 @@ treeWAS <- function(snps,
 
   names(sig.list) <- test
 
-  # ## Run get.sig.snps fn once for each association test:
-  # system.time( # 100 - 164 (why such a difference?)
-  #   for(i in 1:length(TEST)){
-  #     sig.list[[i]] <- get.sig.snps(snps = snps,
-  #                                   snps.unique = snps.unique,
-  #                                   snps.index = snps.index,
-  #                                   snps.sim = snps.sim,
-  #                                   snps.sim.unique = snps.sim.unique,
-  #                                   snps.sim.index = snps.sim.index,
-  #                                   phen = phen,
-  #                                   tree = tree,
-  #                                   test = TEST[[i]],
-  #                                   n.tests = length(TEST),
-  #                                   p.value = p.value,
-  #                                   p.value.correct = p.value.correct,
-  #                                   p.value.by = p.value.by,
-  #                                   snps.reconstruction = snps.rec,
-  #                                   snps.sim.reconstruction = snps.sim.rec,
-  #                                   phen.reconstruction = phen.rec)
-  #   }
-  # )
-  #
-  # names(sig.list) <- test
+  ## Remove unnecessary objects (already stored in sig.list):
+  rm(CORR.DAT)
+  rm(CORR.SIM)
+
 
   print(paste("ID of significant loci completed @", Sys.time()))
 

@@ -100,12 +100,11 @@ get.assoc.scores <- function(snps,
     ## Get UNIQUE snps + index
     snps.ori <- snps
     temp <- get.unique.matrix(snps, MARGIN=2)
-    snps.unique <- temp$unique.data
+    snps <- temp$unique.data
     snps.index <- temp$index
-    snps <- snps.unique
 
     ## record whether all snps are unique or not for later:
-    if(ncol(snps.unique) == ncol(snps.ori)){
+    if(ncol(snps) == ncol(snps.ori)){
       all.unique <- TRUE
     }else{
       all.unique <- FALSE
@@ -125,12 +124,11 @@ get.assoc.scores <- function(snps,
       ## Get UNIQUE snps + index
       snps.ori <- snps
       temp <- get.unique.matrix(snps, MARGIN=2)
-      snps.unique <- temp$unique.data
+      snps <- temp$unique.data
       snps.index <- temp$index
-      snps <- snps.unique
 
       ## record whether all snps are unique or not for later:
-      if(ncol(snps.unique) == ncol(snps.ori)){
+      if(ncol(snps) == ncol(snps.ori)){
         all.unique <- TRUE
       }else{
         all.unique <- FALSE
@@ -140,9 +138,10 @@ get.assoc.scores <- function(snps,
 
       snps.ori <- snps
       snps <- snps.unique
+      rm(snps.unique)
 
       ## record whether all snps are unique or not for later:
-      if(ncol(snps.unique) == ncol(snps.ori)){
+      if(ncol(snps) == ncol(snps.ori)){
         all.unique <- TRUE
       }else{
         all.unique <- FALSE
@@ -171,12 +170,11 @@ get.assoc.scores <- function(snps,
   if(is.null(snps.sim.unique)){
     snps.sim.ori <- snps.sim
     temp <- get.unique.matrix(snps.sim, MARGIN=2)
-    snps.sim.unique <- temp$unique.data
+    snps.sim <- temp$unique.data
     snps.sim.index <- temp$index
-    snps.sim <- snps.sim.unique
 
     ## record whether all snps are unique or not for later:
-    if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+    if(ncol(snps.sim) == ncol(snps.sim.ori)){
       all.unique.sim <- TRUE
     }else{
       all.unique.sim <- FALSE
@@ -192,12 +190,11 @@ get.assoc.scores <- function(snps,
       ## repeat above steps (as if no snps.unique was provided):
       snps.sim.ori <- snps.sim
       temp <- get.unique.matrix(snps.sim, MARGIN=2)
-      snps.sim.unique <- temp$unique.data
+      snps.sim <- temp$unique.data
       snps.sim.index <- temp$index
-      snps.sim <- snps.sim.unique
 
       ## record whether all snps are unique or not for later:
-      if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+      if(ncol(snps.sim) == ncol(snps.sim.ori)){
         all.unique.sim <- TRUE
       }else{
         all.unique.sim <- FALSE
@@ -206,15 +203,20 @@ get.assoc.scores <- function(snps,
 
       snps.sim.ori <- snps.sim
       snps.sim <- snps.sim.unique
+      rm(snps.sim.unique)
 
       ## record whether all snps are unique or not for later:
-      if(ncol(snps.sim.unique) == ncol(snps.sim.ori)){
+      if(ncol(snps.sim) == ncol(snps.sim.ori)){
         all.unique.sim <- TRUE
       }else{
         all.unique.sim <- FALSE
       }
     }
   }
+
+  ## store column names for later:
+  colnoms <- colnames(snps.ori)
+  colnoms.sim <- colnames(snps.sim.ori)
 
   #################
   ## HANDLE PHEN ##
@@ -291,7 +293,7 @@ get.assoc.scores <- function(snps,
 
     if(all.unique == FALSE){
       ## check if snsp.rec is already in UNIQUE form:
-      if(ncol(snps.reconstruction) != ncol(snps.unique)){
+      if(ncol(snps.reconstruction) != ncol(snps)){
         temp <- get.unique.matrix(snps.reconstruction, MARGIN=2)
         snps.reconstruction <- temp$unique.data
         snps.reconstruction.index <- temp$index
@@ -306,7 +308,8 @@ get.assoc.scores <- function(snps,
 
     if(all.unique.sim == FALSE){
       ## check if snsp.rec is already in UNIQUE form:
-      if(ncol(snps.reconstruction) != ncol(snps.unique)){
+      # if(ncol(snps.reconstruction) != ncol(snps.unique)){
+      if(ncol(snps.sim.reconstruction) != ncol(snps.sim)){
         temp <- get.unique.matrix(snps.sim.reconstruction, MARGIN=2)
         snps.sim.reconstruction <- temp$unique.data
         snps.sim.reconstruction.index <- temp$index
@@ -344,7 +347,7 @@ get.assoc.scores <- function(snps,
   ## Expand corr.dat (if not all snps columns unique):
   if(all.unique == FALSE){
     corr.dat.complete <- corr.dat[snps.index]
-    names(corr.dat.complete) <- colnames(snps.ori)
+    names(corr.dat.complete) <- colnoms
     corr.dat <- corr.dat.complete
   }
 
@@ -353,7 +356,7 @@ get.assoc.scores <- function(snps,
   ## Expand corr.sim (if not all snps.sim columns unique):
   if(all.unique.sim == FALSE){
     corr.sim.complete <- corr.sim[snps.sim.index]
-    names(corr.sim.complete) <- colnames(snps.sim.ori)
+    names(corr.sim.complete) <- colnoms.sim
     corr.sim <- corr.sim.complete
   }
 
