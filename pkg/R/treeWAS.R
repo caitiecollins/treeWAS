@@ -151,6 +151,10 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' @param n.snps.sim An integer specifying the number of loci to be simulated for estimating the null distribution
 #'                      (by default \code{10*ncol(snps)}). If memory errors arise during the analyis of a large dataset,
 #'                      it may be necesary to reduce \code{n.snps.sim} from a multiple of 10 to, for example, 5x the number of loci.
+#' @param chunk.size An integer indicating the number of \code{snps} loci to be analysed at one time. This provides a solution for
+#'                    machines with insufficient memory to analyse the dataset at hand.
+#'                    Note that smaller values of \code{chunk.size} will increase the computational time required
+#'                    (e.g., for \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).
 #' @param test A character string or vector containing one or more of the following available tests of association:
 #'              \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
 #'              By default, the first three tests are run (see details).
@@ -881,27 +885,38 @@ treeWAS <- function(snps,
     if(length(levs) == 2){
       ## binary:
       myCol <- c("red", "blue")
-    }else{
-      if(is.numeric(var)){
-        ## numeric:
-        # myCol <- seasun(length(levs))
-        myCol <- num2col(var, col.pal = seasun)
-      }else{
-        ## categorical...
-        myCol <- funky(length(levs))
-      }
-    }
-
-    ## get leafCol from colour scheme:
-    if(is.numeric(var)){
-      leafCol <- myCol
-    }else{
       leafCol <- var
       ## for loop
       for(i in 1:length(levs)){
         leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
       } # end for loop
+    }else{
+      if(is.numeric(var)){
+        ## numeric:
+        # myCol <- seasun(length(levs))
+        myCol <- num2col(var, col.pal = seasun)
+        leafCol <- myCol
+      }else{
+        ## categorical...
+        myCol <- funky(length(levs))
+        leafCol <- var
+        ## for loop
+        for(i in 1:length(levs)){
+          leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
+        } # end for loop
+      }
     }
+
+    # ## get leafCol from colour scheme:
+    # # if(is.numeric(var)){
+    # #   leafCol <- myCol ## only for num2col!!
+    # # }else{
+    #   leafCol <- var
+    #   ## for loop
+    #   for(i in 1:length(levs)){
+    #     leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
+    #   } # end for loop
+    # # }
 
     ## PLOT TREE:
     plot(tree, show.tip=T, tip.col=leafCol, align.tip.label=TRUE, cex=0.5)
@@ -1396,7 +1411,7 @@ treeWAS <- function(snps,
   # test <- c("terminal", "simultaneous", "subsequent")
   TEST <- as.list(test)
   CORR.DAT[[i]] <- CORR.SIM[[i]] <- vector(mode="list", length=length(test))
-  names(CORR.DAT[[i]]) <- names(CORR.SIM[[i]]) <- test
+  # names(CORR.DAT[[i]]) <- names(CORR.SIM[[i]]) <- test
 
   ## Run get.assoc.scores for each assoc.test
   ## Then run get.sig.snps (ONLY once ALL of corr.sim, corr.dat have been generated w get.assoc.scores (IFF running chunk-by-chunk!))
@@ -1439,10 +1454,10 @@ treeWAS <- function(snps,
 
   ## Get corr.dat & corr.sim:
   noms <- names(CORR.DAT[[1]])
-  CORR.DAT <- sapply(c(1:length(CORR.DAT)), function(e) unlist(sapply(CORR.DAT, "[[", e)), simplify=FALSE)
-  names(CORR.DAT) <- noms
-  CORR.SIM <- sapply(c(1:length(CORR.SIM)), function(e) unlist(sapply(CORR.SIM, "[[", e)), simplify=FALSE)
-  names(CORR.SIM) <- noms
+  CORR.DAT <- sapply(c(1:length(CORR.DAT[[1]])), function(e) unlist(sapply(CORR.DAT, "[", e)), simplify=FALSE)
+  names(CORR.DAT) <- test
+  CORR.SIM <- sapply(c(1:length(CORR.SIM[[1]])), function(e) unlist(sapply(CORR.SIM, "[", e)), simplify=FALSE)
+  names(CORR.SIM) <- test
 
   ## Get snps, snps.sim, snps.rec, snps.sim.rec:
   snps <- do.call(cbind, SNPS)
@@ -1463,7 +1478,7 @@ treeWAS <- function(snps,
     for(t in 1:length(TEST)){
       sig.list[[t]] <- get.sig.snps(corr.dat = CORR.DAT[[t]],
                                     corr.sim = CORR.SIM[[t]],
-                                    snps.names = colnames(SNPS),
+                                    snps.names = colnames(snps),
                                     test = TEST[[t]],
                                     n.tests = length(TEST),
                                     p.value = p.value,

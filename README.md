@@ -266,6 +266,7 @@ out <- treeWAS(snps,
                 tree = c("UPGMA", "nj", "ml"),
                 n.subs = NULL,
                 n.snps.sim = ncol(snps)*10,
+                chunk.size = ncol(snps),
                 test = c("terminal", "simultaneous", "subsequent"),
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
@@ -306,6 +307,9 @@ out <- treeWAS(snps,
 >  : An integer specifying the number of loci to be simulated for estimating the null distribution (by default 
 > `10*ncol(snps)`). Note that 10x is the recommended *minimum*: where possible (i.e., for datasets that are not very large),  
 > simulating *more* loci (e.g., `100*ncol(snps)`) may further improve results.
+
+> `chunk.size`
+>  : An integer indicating the number of \code{snps} loci to be analysed at one time. This provides a solution for machines with insufficient memory to analyse the  dataset at hand. Note that smaller values of \code{chunk.size} will increase the computational time required (e.g., for \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).
 
 > `test` 
 >  : A character string or vector containing one or more of the following available tests of association:
@@ -384,6 +388,7 @@ out <- treeWAS(snps = snps,
                 tree = tree,
                 n.subs = NULL,
                 n.snps.sim = ncol(snps)*10,
+                chunk.size = ncol(snps),
                 test = c("terminal", "simultaneous", "subsequent"),
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
@@ -403,12 +408,13 @@ out <- treeWAS(snps = snps,
 
 ```
 
+<!-- (chunk.size)
 For large datasets, if you find you are running into errors relating to `memory.size`, try these suggestions:
 
 1. Run `treeWAS` on a computer with more memory, if you have access to one. 
-<!-- Replace "more memory" with something more specific? -->
 1. Restart your computer, open R and run `treeWAS` before opening any other programs. 
 1. If necessary, gradually reduce the number of simulated loci (`n.snps.sim`), e.g., to `5*ncol(snps)`.
+-->
 
 <!-- ########################################################################################################## -->
 ## Interpreting Output
@@ -572,6 +578,7 @@ out <- treeWAS(snps = snps,
                 tree = tree,
                 n.subs = NULL,
                 n.snps.sim = ncol(snps)*10,
+                chunk.size = ncol(snps),
                 test = c("terminal", "simultaneous", "subsequent"),
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
