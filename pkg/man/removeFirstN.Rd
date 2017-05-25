@@ -18,4 +18,3 @@ removing the first N characters of each element.
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

@@ -137,4 +137,3 @@ tree <- dat$tree
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

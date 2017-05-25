@@ -21,4 +21,3 @@ Print the results of \code{treeWAS}, excluding longer data elements within the o
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

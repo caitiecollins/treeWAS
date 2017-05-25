@@ -9,7 +9,7 @@ plot.sig.snps(corr.dat, corr.sim, corr.sim.subset = NULL, sig.corrs, sig.snps,
   hist.col = rgb(0, 0, 1, 0.5), hist.subset.col = rgb(1, 0, 0, 0.5),
   thresh.col = "seasun", snps.assoc = NULL, snps.assoc.col = "red",
   bg = "lightgray", grid = TRUE, freq = FALSE, plot.null.dist = TRUE,
-  plot.dist = FALSE)
+  plot.dist = FALSE, ...)
 }
 \arguments{
 \item{arg}{Description.}
@@ -20,4 +20,3 @@ Longer proper discription of function...
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

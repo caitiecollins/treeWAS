@@ -38,4 +38,3 @@ to which each row or column in the original matrix corresponds.
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

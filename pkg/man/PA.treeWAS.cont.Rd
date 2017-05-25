@@ -15,4 +15,3 @@ Run treeWAS on Presence/Absence data. To run on the CLIMB cluster.
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

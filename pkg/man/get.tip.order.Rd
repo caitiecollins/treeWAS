@@ -29,4 +29,3 @@ fn(arg1, arg2)
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

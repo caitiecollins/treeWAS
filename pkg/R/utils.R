@@ -231,7 +231,7 @@ set.args <- function(args, envir=sys.frame(which=0L)){
 
 ## importFrom adegenet transp
 
-ggplot.bg <- function(bg=transp("lightgray", 0.5),
+ggplotbg <- function(bg=transp("lightgray", 0.5),
                       x.ax=FALSE, y.ax=FALSE, box=TRUE,
                       grid=TRUE, grid.col="white",
                       grid.nx=NULL, grid.ny=NULL, grid.lwd=1, grid.lty=1){
@@ -239,8 +239,9 @@ ggplot.bg <- function(bg=transp("lightgray", 0.5),
   ## get user plotting parameters:
   lim <- par("usr")
   rect(lim[1],  lim[3], lim[2], lim[4], col="white")
-  rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
+  # rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
   # rect(lim[1],  lim[3], lim[2], lim[4], col=bg, border=NA)
+  par(bg=bg)
 
   ## add axes back
   if(!is.null(x.ax)) x.ax
@@ -254,7 +255,9 @@ ggplot.bg <- function(bg=transp("lightgray", 0.5),
   if(box == TRUE) box()   ## and the plot frame
 
   return(NULL)
-} # end ggplot.bg
+} # end ggplotbg
+
+ggplot.bg <- ggplotbg
 
 ################################################################################
 

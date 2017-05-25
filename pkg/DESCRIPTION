@@ -5,7 +5,7 @@ Authors@R: person("Caitlin", "Collins", , "caitiecollins@gmail.com", role = c("a
 Description: Perform GWAS using phylogenetic trees to correct for population stratification.
 License: What license is it under?
 LazyData: true
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 Depends: adegenet,
     ape,
     Hmisc

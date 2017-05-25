@@ -1,6 +1,16 @@
 
 
 
+###################
+## TO DO (2017): ##
+###################
+
+## RETURN THE DIRECTIONAL SCORE VALUES AS WELL AS THE ABS VALUES (so users can tell the direction of associations)!
+## (+ consider: what if you found two significant results with opposite signs? Unlikely, but perhaps possible??)
+#################################################
+
+
+
 ## dependencies problems?ssh caitlin@131.251.130.191
 
 ## Hmisc new version requiring a non-existant version of pkg "survival"..
@@ -95,7 +105,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 
     }else{
 
-      print(length(res$SNP.locus))
+      print(nrow(res))
 
       cat("Significance threshold: \n")
       print(x[[i]]$sig.thresh)
@@ -484,11 +494,11 @@ treeWAS <- function(snps,
   if(is.character(tree)){
     tree <- tolower(tree)
     if(class(try(match.arg(arg = tree,
-                            choices = c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
-                            several.ok = FALSE), silent=TRUE)) == "try-error"){
+                           choices = c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
+                           several.ok = FALSE), silent=TRUE)) == "try-error"){
       tree <- "bionj"
       cat("If tree is not a phylo object, please specify one of the following reconstruction methods:
-              'UPGMA', 'NJ', 'BIONJ', ML', 'NJ*', 'BIONJ*'. Choosing 'BIONJ' by default.")
+          'UPGMA', 'NJ', 'BIONJ', ML', 'NJ*', 'BIONJ*'. Choosing 'BIONJ' by default.")
     }else{
       tree <- match.arg(arg = tree,
                         choices =  c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
@@ -500,16 +510,16 @@ treeWAS <- function(snps,
   ## P-VALUE CORRECT ##
   p.value.correct <- tolower(p.value.correct)
   p.value.correct <- match.arg(arg = p.value.correct,
-                              choices = c("bonf", "fdr", "false"),
-                              several.ok = FALSE)
+                               choices = c("bonf", "fdr", "false"),
+                               several.ok = FALSE)
   if(p.value.correct == "false") p.value.correct <- FALSE
 
 
   ## P-VALUE BY ##
   p.value.by <- tolower(p.value.by)
   p.value.by <- match.arg(arg = p.value.by,
-                               choices = c("count", "density"),
-                               several.ok = FALSE)
+                          choices = c("count", "density"),
+                          several.ok = FALSE)
 
   ########################
   ## HANDLE SNPS & PHEN ##
@@ -610,13 +620,13 @@ treeWAS <- function(snps,
   if(!all(rownames(snps) %in% tree$tip.label)) stop("Some elements of rownames(snps)
                                                     are absent from tree$tip.label.")
   if(!all(tree$tip.label %in% names(phen))) stop("Some elements of tree$tip.label
-                                                    are absent from names(phen).")
+                                                 are absent from names(phen).")
   if(!all(names(phen) %in% tree$tip.label)) stop("Some elements of names(phen)
-                                                    are absent from tree$tip.label.")
+                                                 are absent from tree$tip.label.")
   if(!all(names(phen) %in% rownames(snps))) stop("Some elements of names(phen)
-                                                    are absent from rownames(snps).")
+                                                 are absent from rownames(snps).")
   if(!all(rownames(snps) %in% names(phen))) stop("Some elements of rownames(snps)
-                                                    are absent from names(phen).")
+                                                 are absent from names(phen).")
   ####################################################################
   ################
   ## CHECK PHEN ##
@@ -630,16 +640,23 @@ treeWAS <- function(snps,
     ## remove individuals from phen:
     phen <- phen[-which(names(phen) %in% toRemove)]
     ## remove individuals from snps:
+    snps.ini <- snps
     snps <- snps[-which(rownames(snps) %in% toRemove), ]
-    ## (+ snps.reconstruction)
-    if(is.matrix(snps.reconstruction)){
-      ## in case snps.rec lacks rownames..
-      rem <- which(rownames(snps.reconstruction) %in% toRemove)
-      if(is.null(rem)) rem <- which(rownames(snps) %in% toRemove)
-      snps.reconstruction <- snps.reconstruction[-rem, ]
-    }
+
     ## remove individuals from tree:
     tree <- drop.tip(tree, tip = toRemove)
+
+    ## (+ snps.reconstruction)
+    if(is.matrix(snps.reconstruction)){
+      nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
+      nodes <- nodes[(nrow(snps)+1):length(nodes)]
+
+      toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
+      ## in case snps.rec lacks rownames..
+      if(is.null(toKeep)) toKeep <- which(rownames(snps.ini) %in% rownames(snps))
+      toKeep <- c(toKeep, nodes)
+      snps.reconstruction <- snps.reconstruction[toKeep, ]
+    }
   }
 
   ####################################################################
@@ -648,7 +665,7 @@ treeWAS <- function(snps,
   #################
   ####################################################################
   ## CHECK IF BINARY:
-  if(length(unique(as.vector(unlist(snps)))) != 2){
+  if(length(unique(as.vector(unlist(snps[!is.na(snps)])))) != 2){
     stop("snps must be a binary matrix")
   }else{
     ## Convert to numeric, binary:
@@ -690,35 +707,38 @@ treeWAS <- function(snps,
   #   }
 
   ####################################################################
-  ###############################################
+  ################################################
   ## CHECK IF ALL LOCI CONTAIN MINORITY OF NAs: ##
-  ###############################################
+  ################################################
   ## Columns:
   if(is.null(na.rm)) na.rm <- TRUE
   if(na.rm != FALSE){
-  NA.tab <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e]))))
+    NA.tab <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e]))))
 
-  ## What proportion of individuals w NAs is acceptable?
-  toRemove <- which(NA.tab > floor(nrow(snps)/2)) # Remove columns w > 50% of NAs
-  if(length(toRemove) > 0){
-    snps <- snps[, -toRemove]
+    ## What proportion of individuals w NAs is acceptable?
+    toRemove <- which(NA.tab > floor(nrow(snps)/2)) # Remove columns w > 50% of NAs
+    if(length(toRemove) > 0){
+      snps.ini <- snps
+      snps <- snps[, -toRemove]
 
-    ## (+ snps.reconstruction)
-    if(is.matrix(snps.reconstruction)){
-      snps.reconstruction <- snps.reconstruction[, -toRemove]
+      ## (+ snps.reconstruction)
+      if(is.matrix(snps.reconstruction)){
+        snps.reconstruction <- snps.reconstruction[, -toRemove]
+      }
     }
   }
-  }
 
+  ####################################################################
   #######################################################
   ## CHECK IF ANY INDIVIDUALS ARE 100% (or 75%??) NAS: ##
   #######################################################
   ## Rows:
-  # if(is.null(na.rm)) na.rm <- TRUE
-  # if(na.rm != FALSE){
+  if(is.null(na.rm)) na.rm <- TRUE
+  if(na.rm != FALSE){
     NA.tab <- sapply(c(1:nrow(snps)), function(e) length(which(is.na(snps[e,]))))
 
     ## What proportion of loci w NAs is acceptable?
+    # toRemove <- which(NA.tab > floor(nrow(snps)/2)) # Remove columns w > 50% of NAs
     # toRemove <- which(NA.tab > floor(ncol(snps)*0.75)) # Remove row w > 75% of NAs
     toRemove <- rownames(snps)[which(NA.tab == ncol(snps))] # Remove ENTIRELY missing rows...
 
@@ -726,20 +746,28 @@ treeWAS <- function(snps,
       ## print notice:
       cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
       ## remove individuals from snps:
+      snps.ini <- snps
       snps <- snps[-which(rownames(snps) %in% toRemove), ]
-      ## (+ snps.reconstruction)
-      if(is.matrix(snps.reconstruction)){
-        ## in case snps.rec lacks rownames..
-        rem <- which(rownames(snps.reconstruction) %in% toRemove)
-        if(is.null(rem)) rem <- which(rownames(snps) %in% toRemove)
-        snps.reconstruction <- snps.reconstruction[-rem, ]
-      }
+
       ## remove individuals from phen:
       phen <- phen[-which(names(phen) %in% toRemove)]
       ## remove individuals from tree:
       tree <- drop.tip(tree, tip = toRemove)
+
+      ## (+ snps.reconstruction)
+      if(is.matrix(snps.reconstruction)){
+        nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
+        nodes <- nodes[(nrow(snps)+1):length(nodes)]
+
+        toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
+        ## in case snps.rec lacks rownames..
+        if(is.null(toKeep)) toKeep <- which(rownames(snps.ini) %in% rownames(snps))
+        toKeep <- c(toKeep, nodes)
+        snps.reconstruction <- snps.reconstruction[toKeep, ]
+      }
+
     }
-  # }
+  }
   ####################################################################
   ## CHECK FOR NON-BINARY SNPS (?): ## DO THIS OUTSIDE OF THE treeWAS PIPELINE -- TOO MANY OPPORTUNITIES FOR ERRORS IF DONE AUTOMATICALLY.
   ## (This will only work if all snps colnames end in one of .a/.c/.g/.t)
@@ -758,9 +786,25 @@ treeWAS <- function(snps,
     ## check:
     if(!identical(as.character(rownames(snps)), as.character(tree$tip.label))){
       stop("Unable to rearrange snps such that rownames(snps)
-            match content and order of tree$tip.label.
-            Please check that these match.")
+           match content and order of tree$tip.label.
+           Please check that these match.")
     }
+    }
+
+  ## (+ snps.reconstruction)
+  if(is.matrix(snps.reconstruction)){
+    if(!identical(as.character(rownames(snps.reconstruction)), as.character(tree$tip.label))){
+      ord <- match(tree$tip.label, rownames(snps.reconstruction))
+      snps.reconstruction <- snps.reconstruction[ord,]
+      ## check:
+      if(!identical(as.character(rownames(snps.reconstruction)), as.character(tree$tip.label))){
+        stop("Unable to rearrange snps.reconstruction such that
+              rownames(snps.reconstruction)
+              match content and order of tree$tip.label.
+              Please check that these match.")
+      }
+    }
+
   }
 
   ## REORDER PHEN TO MATCH TREE$TIP.LABEL
@@ -839,7 +883,7 @@ treeWAS <- function(snps,
       ## CHECK:
       if(length(phen.reconstruction) != (length(phen)+(tree$Nnode))){
         warning("The number of individuals in the provided phen.reconstruction is not equal to the
-                  total number of nodes in the tree. Performing a new reconstruction instead.")
+                total number of nodes in the tree. Performing a new reconstruction instead.")
         if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
         if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
       }
@@ -1183,265 +1227,265 @@ treeWAS <- function(snps,
     snps.reconstruction <- SNPS.REC[[i]]
     n.subs <- N.SUBS[[i]]
 
-  #####################################################
-  ## 1) Simulate multiple snps/ dataset to compare your
-  ## real correlations w phen to  #####################
-  #####################################################
+    #####################################################
+    ## 1) Simulate multiple snps/ dataset to compare your
+    ## real correlations w phen to  #####################
+    #####################################################
 
-  ## check n.snps.sim:
-  if(is.null(n.snps.sim)){
-    n.snps.sim <- ncol(snps)*10
-  }else{
-    ## Update n.snps.sim to match the REAL ncol(snps) after checks...
-    if(n.snps != ncol(snps)){
-      if(n.snps.sim == n.snps){
-        n.snps.sim.ori <- n.snps.sim
-        n.snps.sim <- ncol(snps)
-        warning(paste("Note: Updating n.snps.sim to match the number of real loci after data cleaning.
-                  Input:", n.snps.sim.ori, " -->
-                      Updated:", n.snps.sim))
-      }else{
-        Nx <- c(2:200)
-        if(any(n.snps*Nx %in% n.snps.sim)){
+    ## check n.snps.sim:
+    if(is.null(n.snps.sim)){
+      n.snps.sim <- ncol(snps)*10
+    }else{
+      ## Update n.snps.sim to match the REAL ncol(snps) after checks...
+      if(n.snps != ncol(snps)){
+        if(n.snps.sim == n.snps){
           n.snps.sim.ori <- n.snps.sim
-          Nx <- Nx[which(Nx == (n.snps.sim/n.snps))]
-          n.snps.sim <- ncol(snps)*Nx
-          warning(paste("Note: Updating n.snps.sim to match ", Nx, "x the number of real loci after data cleaning.
-                  Input: ", n.snps.sim.ori, " -->
-                  Updated: ", n.snps.sim, sep=""))
-          ## TO DO: ##
-          ## If the user, for whatever reason, wanted to simulate the number they requested
-          ## (ie. matching the input n.snps (coincidentally?)), could either
-          ## (A) Add an argument like upate.n.snps.sim = FALSE,
-          ## (B) Tell them to do their own data cleaning exactly as I do but outside of/before running the treeWAS function.
-          ## (C) Fudge--tell them to add 1, eg. 10,000 --> 10,001?
+          n.snps.sim <- ncol(snps)
+          warning(paste("Note: Updating n.snps.sim to match the number of real loci after data cleaning.
+                        Input:", n.snps.sim.ori, " -->
+                        Updated:", n.snps.sim))
+        }else{
+          Nx <- c(2:200)
+          if(any(n.snps*Nx %in% n.snps.sim)){
+            n.snps.sim.ori <- n.snps.sim
+            Nx <- Nx[which(Nx == (n.snps.sim/n.snps))]
+            n.snps.sim <- ncol(snps)*Nx
+            warning(paste("Note: Updating n.snps.sim to match ", Nx, "x the number of real loci after data cleaning.
+                          Input: ", n.snps.sim.ori, " -->
+                          Updated: ", n.snps.sim, sep=""))
+            ## TO DO: ##
+            ## If the user, for whatever reason, wanted to simulate the number they requested
+            ## (ie. matching the input n.snps (coincidentally?)), could either
+            ## (A) Add an argument like upate.n.snps.sim = FALSE,
+            ## (B) Tell them to do their own data cleaning exactly as I do but outside of/before running the treeWAS function.
+            ## (C) Fudge--tell them to add 1, eg. 10,000 --> 10,001?
+          }
         }
       }
-    }
   }
-  out <- genomes <- snps.mat <- list()
+    out <- genomes <- snps.mat <- list()
 
-  ## SIMULATE A DATASET | your tree ##
-  if(!is.null(seed)) set.seed(seed)
-  out[[1]] <- snp.sim(n.snps = n.snps.sim,
-                      n.subs = n.subs,
-                      n.snps.assoc = 0,
-                      assoc.prob = 100,
-                      tree = tree,
-                      phen.loci = NULL,
-                      heatmap = FALSE,
-                      reconstruct = FALSE,
-                      dist.dna.model = dist.dna.model,
-                      row.names = rownames(snps),
-                      seed = seed)
+    ## SIMULATE A DATASET | your tree ##
+    if(!is.null(seed)) set.seed(seed)
+    out[[1]] <- snp.sim(n.snps = n.snps.sim,
+                        n.subs = n.subs,
+                        n.snps.assoc = 0,
+                        assoc.prob = 100,
+                        tree = tree,
+                        phen.loci = NULL,
+                        heatmap = FALSE,
+                        reconstruct = FALSE,
+                        dist.dna.model = dist.dna.model,
+                        row.names = rownames(snps),
+                        seed = seed)
 
-  genomes[[1]] <- out[[1]][[1]]
+    genomes[[1]] <- out[[1]][[1]]
 
-  ## Modify genomes/snps matrices
-  if(!is.null(genomes[[1]])){
-    snps.mat[[1]] <- genomes[[1]]
-  }else{
-    snps.mat[[1]] <- NULL
-  }
-
-  gc()
-
-
-  print(paste("treeWAS snps sim done @", Sys.time()))
-
-
-  ################################################################
-  ## 3) Get results:##############################################
-  #### Determine the phylogenetially correct p-values for SNPs | #
-  ##   null distributions of correlations from simulated data ####
-  #### Synthesize results output: List of all significant SNPs, ##
-  ##   their names/locations, their p-values for this phenotype ##
-  ################################################################
-
-  ##################################################
-  ## RUN CHECKS ONCE BEFORE get.sig.snps FOR LOOP ##
-  ##################################################
-
-  ## NOTE: These checks are repeated within the get.sig.snps fn
-  ## as an extra layer of safety/ in case users want to use it alone,
-  ## but it is more economical to run them once outside of the for loop..
-
-  ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
-
-  snps.unique <- snps.index <- snps.sim.unique <- snps.sim.index <- NULL
-
-  #################
-  ## Handle snps ##
-  #################
-  ## Check snps column names
-  if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
-
-  ################################
-  ## Handle snps.sim --> matrix ##
-  ################################
-  snps.sim <- snps.mat
-
-  ## Handle matrix/list input:
-  if(class(snps.sim) == "list"){
-    ## If list of length 1...
-    if(length(snps.sim) == 1){
-      ## keep matrix:
-      snps.sim <- snps.sim[[1]]
+    ## Modify genomes/snps matrices
+    if(!is.null(genomes[[1]])){
+      snps.mat[[1]] <- genomes[[1]]
     }else{
-      ## If list of multiple matrices...
-      ## merge all elements into one big matrix
-      ## by pasting columns together:
-      snps.sim <- do.call("cbind", snps.sim)
+      snps.mat[[1]] <- NULL
     }
-  }
 
-  ## check n.subs:
-  # n.subs.sim <- get.fitch.n.mts(snps.sim, tree=tree)
-  # n.subs.sim2 <- table(n.subs.sim)
-  # barplot(n.subs.sim2, col=transp("blue", 0.5), names=c(1:length(n.subs.sim2)))
-  # title("Homoplasy distribution \n (snps.sim)")
-
-  ## Handle phen
-  ## (moved to initial checks)
+    gc()
 
 
-  ##############################################################################################
-  ## Reconstruct ancestral SNPs & phen by parsimony/ML (for tests simultaneous & subsequent)  ##
-  ##############################################################################################
+    print(paste("treeWAS snps sim done @", Sys.time()))
 
-  ## Ensure we are only reconstructing ancestral states ONCE here, to be used in MULTIPLE tests later.
-  snps.REC <- snps.sim.REC <- phen.REC <- NULL
 
-  if(any(c("simultaneous", "subsequent") %in% test)){
+    ################################################################
+    ## 3) Get results:##############################################
+    #### Determine the phylogenetially correct p-values for SNPs | #
+    ##   null distributions of correlations from simulated data ####
+    #### Synthesize results output: List of all significant SNPs, ##
+    ##   their names/locations, their p-values for this phenotype ##
+    ################################################################
 
-    #######################
-    ## Reconstruct SNPs: ##
-    #######################
+    ##################################################
+    ## RUN CHECKS ONCE BEFORE get.sig.snps FOR LOOP ##
+    ##################################################
 
-    ## By PARSIMONY or ML: ##
-    ############################
-    ## Reconstruct REAL SNPs: ##
-    ############################
-    ## If user-provided reconsruction:
-    if(is.matrix(snps.reconstruction)){
-      ## CHECK:
-      if(nrow(snps.reconstruction) != (nrow(snps)+tree$Nnode)){
-        warning("The number of rows in the provided snps.reconstruction is not equal to the
-                                                            total number of nodes in the tree. Performing a new parsimonious reconstruction instead.")
-        snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
-      }
-      if(ncol(snps.reconstruction) != ncol(snps)){
-        warning("The number of columns in the provided snps.reconstruction is not equal to the number of
-                                                            columns in the snps matrix. Performing a new parsimonious reconstruction instead.")
-        snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
+    ## NOTE: These checks are repeated within the get.sig.snps fn
+    ## as an extra layer of safety/ in case users want to use it alone,
+    ## but it is more economical to run them once outside of the for loop..
+
+    ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+    snps.unique <- snps.index <- snps.sim.unique <- snps.sim.index <- NULL
+
+    #################
+    ## Handle snps ##
+    #################
+    ## Check snps column names
+    if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+
+    ################################
+    ## Handle snps.sim --> matrix ##
+    ################################
+    snps.sim <- snps.mat
+
+    ## Handle matrix/list input:
+    if(class(snps.sim) == "list"){
+      ## If list of length 1...
+      if(length(snps.sim) == 1){
+        ## keep matrix:
+        snps.sim <- snps.sim[[1]]
+      }else{
+        ## If list of multiple matrices...
+        ## merge all elements into one big matrix
+        ## by pasting columns together:
+        snps.sim <- do.call("cbind", snps.sim)
       }
     }
 
-    ## If not user-provided or checks failed, reconstruct ancestral states:
-    if(is.matrix(snps.reconstruction)){
-      snps.rec <- snps.reconstruction
-    }else{
-    # system.time( # 274
-      snps.REC <- asr(var = snps, tree = tree, type = snps.reconstruction)
-    # )
-    snps.rec <- snps.REC$var.rec
-    }
+    ## check n.subs:
+    # n.subs.sim <- get.fitch.n.mts(snps.sim, tree=tree)
+    # n.subs.sim2 <- table(n.subs.sim)
+    # barplot(n.subs.sim2, col=transp("blue", 0.5), names=c(1:length(n.subs.sim2)))
+    # title("Homoplasy distribution \n (snps.sim)")
 
-    #################################
-    ## Reconstruct SIMULATED SNPs: ##
-    #################################
-    # system.time(
+    ## Handle phen
+    ## (moved to initial checks)
+
+
+    ##############################################################################################
+    ## Reconstruct ancestral SNPs & phen by parsimony/ML (for tests simultaneous & subsequent)  ##
+    ##############################################################################################
+
+    ## Ensure we are only reconstructing ancestral states ONCE here, to be used in MULTIPLE tests later.
+    snps.REC <- snps.sim.REC <- phen.REC <- NULL
+
+    if(any(c("simultaneous", "subsequent") %in% test)){
+
+      #######################
+      ## Reconstruct SNPs: ##
+      #######################
+
+      ## By PARSIMONY or ML: ##
+      ############################
+      ## Reconstruct REAL SNPs: ##
+      ############################
+      ## If user-provided reconsruction:
+      if(is.matrix(snps.reconstruction)){
+        ## CHECK:
+        if(nrow(snps.reconstruction) != (nrow(snps)+tree$Nnode)){
+          warning("The number of rows in the provided snps.reconstruction is not equal to the
+                  total number of nodes in the tree. Performing a new parsimonious reconstruction instead.")
+          snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
+        }
+        if(ncol(snps.reconstruction) != ncol(snps)){
+          warning("The number of columns in the provided snps.reconstruction is not equal to the number of
+                  columns in the snps matrix. Performing a new parsimonious reconstruction instead.")
+          snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
+        }
+      }
+
+      ## If not user-provided or checks failed, reconstruct ancestral states:
+      if(is.matrix(snps.reconstruction)){
+        snps.rec <- snps.reconstruction
+      }else{
+        # system.time( # 274
+        snps.REC <- asr(var = snps, tree = tree, type = snps.reconstruction)
+        # )
+        snps.rec <- snps.REC$var.rec
+      }
+
+      #################################
+      ## Reconstruct SIMULATED SNPs: ##
+      #################################
+      # system.time(
       snps.sim.REC <- asr(var = snps.sim, tree = tree, type = snps.sim.reconstruction)
-    # )
-    snps.sim.rec <- snps.sim.REC$var.rec
+      # )
+      snps.sim.rec <- snps.sim.REC$var.rec
 
-  } # end reconstruction for tests 2 & 3
-
-
-  ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
+        } # end reconstruction for tests 2 & 3
 
 
-  ###########################
-  ## GET UNIQUE SNPS(.SIM) ##
-  ###########################
+    ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
 
-  ## Get UNIQUE snps + index
-  snps.complete <- snps
-  temp <- get.unique.matrix(snps, MARGIN=2)
-  snps.unique <- temp$unique.data
-  snps.index <- temp$index
 
-  ## Get UNIQUE snps.sim + index
-  snps.sim.complete <- snps.sim
-  temp <- get.unique.matrix(snps.sim, MARGIN=2)
-  snps.sim.unique <- temp$unique.data
-  snps.sim.index <- temp$index
+    ###########################
+    ## GET UNIQUE SNPS(.SIM) ##
+    ###########################
 
-  ## Get UNIQUE snps.reconstruction
-  snps.rec.complete <- snps.rec
-  temp <- get.unique.matrix(snps.rec, MARGIN=2)
-  snps.rec <- temp$unique.data
-  snps.rec.index <- temp$index
-  if(!identical(snps.rec.index, snps.index)){
-    warning("Careful-- snps and snps.rec should have the same index when reduced
-            to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-  }
+    ## Get UNIQUE snps + index
+    snps.complete <- snps
+    temp <- get.unique.matrix(snps, MARGIN=2)
+    snps.unique <- temp$unique.data
+    snps.index <- temp$index
 
-  ## Get UNIQUE snps.sim.reconstruction
-  snps.sim.rec.complete <- snps.sim.rec
-  temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
-  snps.sim.rec <- temp$unique.data
-  snps.sim.rec.index <- temp$index
-  if(!identical(snps.sim.rec.index, snps.sim.index)){
-    warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
-            to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-  }
+    ## Get UNIQUE snps.sim + index
+    snps.sim.complete <- snps.sim
+    temp <- get.unique.matrix(snps.sim, MARGIN=2)
+    snps.sim.unique <- temp$unique.data
+    snps.sim.index <- temp$index
 
-  print(paste("Reconstructions completed @", Sys.time()))
+    ## Get UNIQUE snps.reconstruction
+    snps.rec.complete <- snps.rec
+    temp <- get.unique.matrix(snps.rec, MARGIN=2)
+    snps.rec <- temp$unique.data
+    snps.rec.index <- temp$index
+    if(!identical(snps.rec.index, snps.index)){
+      warning("Careful-- snps and snps.rec should have the same index when reduced
+              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+    }
 
-  gc()
+    ## Get UNIQUE snps.sim.reconstruction
+    snps.sim.rec.complete <- snps.sim.rec
+    temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
+    snps.sim.rec <- temp$unique.data
+    snps.sim.rec.index <- temp$index
+    if(!identical(snps.sim.rec.index, snps.sim.index)){
+      warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
+              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+    }
 
-  #######################
-  ## identify sig.snps ##
-  #######################
-  ## Note: UNIQUE snps & snps.sim are identified WITHIN the get.sig.snps fn
-  ## to reduce computational time, but results are identified on the basis of all
-  ## ORIGINAL snps & snps.sim columns inputted.
+    print(paste("Reconstructions completed @", Sys.time()))
 
-  # test <- c("terminal", "simultaneous", "subsequent")
-  TEST <- as.list(test)
-  CORR.DAT[[i]] <- CORR.SIM[[i]] <- vector(mode="list", length=length(test))
-  # names(CORR.DAT[[i]]) <- names(CORR.SIM[[i]]) <- test
+    gc()
 
-  ## Run get.assoc.scores for each assoc.test
-  ## Then run get.sig.snps (ONLY once ALL of corr.sim, corr.dat have been generated w get.assoc.scores (IFF running chunk-by-chunk!))
-  system.time(
-    for(t in 1:length(TEST)){
-      assoc.scores <- get.assoc.scores(snps = snps,
-                                        snps.unique = snps.unique,
-                                        snps.index = snps.index,
-                                        snps.sim,
-                                        snps.sim.unique = snps.sim.unique,
-                                        snps.sim.index = snps.sim.index,
-                                        phen = phen,
-                                        tree = tree,
-                                        test = TEST[[t]],
-                                        snps.reconstruction = snps.rec,
-                                        snps.sim.reconstruction = snps.sim.rec,
-                                        phen.reconstruction = phen.rec)
-      ## STORE DATA FOR EACH TEST:
-      CORR.DAT[[i]][[t]] <- assoc.scores$corr.dat
-      CORR.SIM[[i]][[t]] <- assoc.scores$corr.sim
-      rm(assoc.scores)
-    } # end for (t) loop
-  )
+    #######################
+    ## identify sig.snps ##
+    #######################
+    ## Note: UNIQUE snps & snps.sim are identified WITHIN the get.sig.snps fn
+    ## to reduce computational time, but results are identified on the basis of all
+    ## ORIGINAL snps & snps.sim columns inputted.
 
-  ## STORE DATA CREATED FOR THIS CHUNK:
-  SNPS.SIM[[i]] <- snps.sim
-  SNPS.REC[[i]] <- snps.rec
-  SNPS.SIM.REC[[i]] <- snps.sim.rec
+    # test <- c("terminal", "simultaneous", "subsequent")
+    TEST <- as.list(test)
+    CORR.DAT[[i]] <- CORR.SIM[[i]] <- vector(mode="list", length=length(test))
+    # names(CORR.DAT[[i]]) <- names(CORR.SIM[[i]]) <- test
 
-  } # end for (i) loop (CHUNKS)
+    ## Run get.assoc.scores for each assoc.test
+    ## Then run get.sig.snps (ONLY once ALL of corr.sim, corr.dat have been generated w get.assoc.scores (IFF running chunk-by-chunk!))
+    system.time(
+      for(t in 1:length(TEST)){
+        assoc.scores <- get.assoc.scores(snps = snps,
+                                         snps.unique = snps.unique,
+                                         snps.index = snps.index,
+                                         snps.sim,
+                                         snps.sim.unique = snps.sim.unique,
+                                         snps.sim.index = snps.sim.index,
+                                         phen = phen,
+                                         tree = tree,
+                                         test = TEST[[t]],
+                                         snps.reconstruction = snps.rec,
+                                         snps.sim.reconstruction = snps.sim.rec,
+                                         phen.reconstruction = phen.rec)
+        ## STORE DATA FOR EACH TEST:
+        CORR.DAT[[i]][[t]] <- assoc.scores$corr.dat
+        CORR.SIM[[i]][[t]] <- assoc.scores$corr.sim
+        rm(assoc.scores)
+      } # end for (t) loop
+    )
+
+    ## STORE DATA CREATED FOR THIS CHUNK:
+    SNPS.SIM[[i]] <- snps.sim
+    SNPS.REC[[i]] <- snps.rec
+    SNPS.SIM.REC[[i]] <- snps.sim.rec
+
+    } # end for (i) loop (CHUNKS)
   ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ####### END LOOP/OPTIONAL CHUNK-BY-CHUNK TREEWAS HERE ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
@@ -1771,7 +1815,7 @@ treeWAS <- function(snps,
 
   return(results)
 
-} # end treeWAS
+  } # end treeWAS
 
 
 

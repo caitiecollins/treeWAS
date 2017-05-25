@@ -15,4 +15,3 @@ Convert CFML output to treeWAS output with one function. To run on the CLIMB clu
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

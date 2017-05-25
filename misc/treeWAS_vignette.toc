@@ -1,9 +1,0 @@
-\select@language {english}
-\select@language {english}
-\contentsline {section}{\numberline {0.1}Introduction}{2}{section.0.1}
-\contentsline {section}{\numberline {0.2}Data}{2}{section.0.2}
-\contentsline {subsection}{\numberline {0.2.1}Data pre-processing}{2}{subsection.0.2.1}
-\contentsline {section}{\numberline {0.3}Arguments}{2}{section.0.3}
-\contentsline {section}{\numberline {0.4}Running \textit {treeWAS}}{2}{section.0.4}
-\contentsline {section}{\numberline {0.5}Interpreting output}{2}{section.0.5}
-\contentsline {section}{\numberline {0.6}(Bug reporting)}{2}{section.0.6}

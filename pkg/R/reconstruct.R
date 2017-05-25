@@ -43,7 +43,7 @@ asr <- function(var,
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
   ## Trees must be rooted:
-  if(!is.rooted(tree)) tree <- midpoint(tree)
+  # if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ## get tree edges
   edges <- tree$edge
@@ -327,6 +327,7 @@ asr <- function(var,
 #' @importFrom phangorn as.phyDat
 #' @importFrom phangorn phyDat
 #' @importFrom phangorn pace
+#' @importFrom phangorn midpoint
 #'
 #' @export
 #'
@@ -339,7 +340,7 @@ get.ancestral.pars <- function(var, tree){
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
   ## Trees must be rooted:
-  if(!is.rooted(tree)) tree <- midpoint(tree)
+  # if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ord <- NULL
   edges <- tree$edge
@@ -451,6 +452,7 @@ get.ancestral.pars <- function(var, tree){
 
     ## assign rownames for all terminal and internal nodes
     rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):((nrow(snps)*2)-1)))
+    # rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):(tree$Nnode + nrow(snps))))
     colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
 
 
@@ -599,7 +601,7 @@ get.ancestral.pars <- function(var, tree){
     phen.rec <- do.call(cbind, rec[ord])
     phen.rec <- as.vector(phen.rec[, seq(2, ncol(phen.rec), 2)])
 
-    names(phen.rec) <- c(names(phen), c((length(phen)+1):((length(phen)*2)-1)))
+    names(phen.rec) <- c(names(phen), c((length(phen)+1):(tree$Nnode + length(phen))))
 
     ###########################################
     ## get LOCATIONS (branches) of phen subs ##

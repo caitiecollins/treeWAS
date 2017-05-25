@@ -1,4 +1,12 @@
 
+
+
+
+
+
+
+
+
 ####################
 ## manhattan.plot ##
 ####################
@@ -35,8 +43,9 @@
 #                ylab = "Terminal Correlation Score")
 
 manhattan.plot <- function(p.vals,
+                           x = c(1:length(p.vals)),
                            col = "funky",
-                           transp = 0.5,
+                           transp = 0.25,
                            sig.thresh = NULL,
                            thresh.col="red",
                            snps.assoc = NULL,
@@ -48,8 +57,8 @@ manhattan.plot <- function(p.vals,
 
   # require(adegenet) # transp, col.pal
 
-
   pval <- p.vals
+  if(is.null(x)) x <- c(1:length(p.vals))
 
   # Handle thresholds
   if(!is.null(sig.thresh)){
@@ -146,28 +155,34 @@ manhattan.plot <- function(p.vals,
     if(is.null(ylab)){
       ylab <- "Uncorrected -log10(p-value)"
     }
-    plot(log.pval,
+    plot(x = x,
+         y = log.pval,
          col = myCol,
          pch = 19,
          cex = 1,
-         main="Manhattan plot",
-         xlab="SNP loci",
+         # main="Manhattan plot",
+         xlab="genetic loci",
          ylab=ylab,
          cex.main=1,
+         cex.axis=1.1,
+         cex.lab=1.2,
          ylim=c(0,ymax))
 
   }else{
     if(is.null(ylab)){
       ylab <- "Uncorrected p-value"
     }
-    plot(log.pval,
+    plot(x = x,
+         y = log.pval,
          col = myCol,
          pch = 19,
          cex = 1,
-         main="Manhattan plot",
-         xlab="SNP loci",
+         # main="Manhattan plot",
+         xlab="genetic loci",
          ylab=ylab,
          cex.main=1,
+         cex.axis=1.1,
+         cex.lab=1.2,
          ylim=c(0,ymax))
   }
 
@@ -199,7 +214,8 @@ manhattan.plot <- function(p.vals,
     thresh <- thresh-(max(log.pval)*0.0005)
     ## draw threshold line on plot:
     # abline(h=thresh, col = thresh.col[i], lwd = 2)
-    lines(x=c(-400, length(log.pval+400)), y=c(thresh, thresh), col=thresh.col[i], lwd=2)
+    # lines(x=c(-400, length(log.pval+400)), y=c(thresh, thresh), col=thresh.col[i], lwd=2)
+    lines(x=c(-400, max(x)+400), y=c(thresh, thresh), col=thresh.col[i], lwd=2)
   } # end for loop plotting thresh lines
 
 } # end manhattan.plot
@@ -236,6 +252,7 @@ manhattan.plot <- function(p.vals,
 #           suggestiveline = F,
 #           genomewideline = F,
 #           chrlabs = c(1:20, "P", "Q"))
+
 
 
 
@@ -296,7 +313,8 @@ plot.sig.snps <- function(corr.dat,
                           grid=TRUE,
                           freq = FALSE,
                           plot.null.dist=TRUE,
-                          plot.dist=FALSE){
+                          plot.dist=FALSE,
+                          ...){
 
   ###############################################################################
   ## Add threshold(s) and SNP annotations to histogram of (null) distributions ##
@@ -311,7 +329,14 @@ plot.sig.snps <- function(corr.dat,
 
   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=TRUE)
 
-  h.null <- h.null.subset <- ymax <- xmax <- NULL
+  h.null <- h.null.subset <- ymax <- xmax <- y.lab <- NULL
+
+  if(freq == TRUE){
+    y.lab <- "Frequency"
+  }
+  if(freq == FALSE){
+    y.lab <- "Density"
+  }
 
   ##############################
   ## plot.null.dist ############
@@ -364,14 +389,19 @@ plot.sig.snps <- function(corr.dat,
       ## SNPs and phenotype: ##
       ## EXTENDING THE X-AXIS
       plot(h.null,
-           main=paste("Null distribution \n(", test, "score)"
-           # \n (with significant SNPs indicated)"
-                      , sep=" "),
+           main = NULL,
+           # main=paste("Null distribution \n(", test, "score)"
+           #            # \n (with significant SNPs indicated)"
+           #            , sep=" "),
            xlab=paste(test, "score", sep=" "),
+           ylab = y.lab,
            xlim=c(min(h.null$breaks), xmax),
            ylim=c(0, ymax),
            freq=freq,
-           col=hist.col)
+           col=hist.col,
+           cex.axis=1.1,
+           cex.lab=1.2)
+           # ...)
 
 
       ## Add grey background? ##
@@ -379,10 +409,10 @@ plot.sig.snps <- function(corr.dat,
         if(bg != "white"){
           lim <- par("usr")
           rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
-          # rect(lim[1],  lim[3], lim[2], lim[4], col=bg, border=NA)
+          # par(bg=bg)
 
-          axis(1) ## add axes back
-          axis(2)
+          # axis(1) ## add axes back
+          # axis(2)
 
           ## add grid:
           if(grid == TRUE){
@@ -393,10 +423,17 @@ plot.sig.snps <- function(corr.dat,
 
           ## Re-plot original plot:
           plot(h.null,
-               main=paste("Null distribution \n(", test, "score)"
-               # \n (with significant SNPs indicated)"
-                          , sep=" "),
-               xlab=paste(test, "score", sep=" "),
+               main = NULL,
+               # main=paste("Null distribution \n(", test, "score)"
+               #            # \n (with significant SNPs indicated)"
+               #            , sep=" "),
+               # xlab=paste(test, "score", sep=" "),
+               # ylab = y.lab,
+               xlab = NULL,
+               ylab = NULL,
+               xaxt = "n",
+               yaxt = "n",
+               cex.axis = 0,
                xlim=c(min(h.null$breaks), xmax),
                ylim=c(0, ymax),
                col=hist.col,
@@ -410,8 +447,14 @@ plot.sig.snps <- function(corr.dat,
       ## Overlay subset histogram:
       if(!is.null(h.null.subset)){
         plot(h.null.subset,
+             main = NULL,
              xlim=c(min(h.null$breaks), xmax),
              ylim=c(0, ymax),
+             xlab = NULL,
+             ylab = NULL,
+             xaxt = "n",
+             yaxt = "n",
+             cex.axis = 0,
              col=hist.subset.col,
              freq=freq,
              add=TRUE)
@@ -423,22 +466,30 @@ plot.sig.snps <- function(corr.dat,
       ## SNPs and phenotype: ##
       ## WITHOUT EXTENDING THE X-AXIS
       plot(h.null,
-           main=paste("Null distribution \n(", test, "score)"
-           # \n (with significant SNPs indicated)"
-                      , sep=" "),
-           xlab=paste(test, "score", sep=" "),
+           main = NULL,
+           # main=paste("Null distribution \n(", test, "score)"
+           #            # \n (with significant SNPs indicated)"
+           #            , sep=" "),
+           # xlab=paste(test, "score", sep=" "),
+           # ylab = y.lab,
+           xlab = NULL,
+           ylab = NULL,
+           xaxt = "n",
+           yaxt = "n",
            ylim=c(0, ymax),
            freq=freq,
-           col=hist.col)
+           col=hist.col,
+           ...)
 
       ## Add grey background? ##
       if(!is.null(bg)){
         if(bg != "white"){
           lim <- par("usr")
           rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
+          # par(bg=bg)
 
-          axis(1) ## add axes back
-          axis(2)
+          # axis(1) ## add axes back
+          # axis(2)
 
           ## add grid:
           if(grid == TRUE){
@@ -449,10 +500,17 @@ plot.sig.snps <- function(corr.dat,
 
           ## Re-plot original plot:
           plot(h.null,
-               main=paste("Null distribution \n(", test, "score)"
-                # \n (with significant SNPs indicated)"
-                          , sep=" "),
-               xlab=paste(test, "score", sep=" "),
+               main = NULL,
+               # main=paste("Null distribution \n(", test, "score)"
+               #            # \n (with significant SNPs indicated)"
+               #            , sep=" "),
+               # xlab=paste(test, "score", sep=" "),
+               # ylab = y.lab,
+               xlab = NULL,
+               ylab = NULL,
+               xaxt = "n",
+               yaxt = "n",
+               cex.axis = 0,
                ylim=c(0, ymax),
                col=hist.col,
                freq=freq,
@@ -464,6 +522,12 @@ plot.sig.snps <- function(corr.dat,
       ## Overlay subset histogram:
       if(!is.null(h.null.subset)){
         plot(h.null.subset,
+             main = NULL,
+             xlab = NULL,
+             ylab = NULL,
+             xaxt = "n",
+             yaxt = "n",
+             cex.axis = 0,
              xlim=c(min(h.null$breaks), max(h.null$breaks)),
              ylim=c(0, ymax),
              col=hist.subset.col,
@@ -537,14 +601,30 @@ plot.sig.snps <- function(corr.dat,
       myCol[which(sig.loc %in% snps.assoc)] <- snps.assoc.col
     }
 
+    ################################
+    # plot(h.null,
+    #      main = NULL,
+    #      # main=paste("Null distribution \n(", test, "score)"
+    #      #            # \n (with significant SNPs indicated)"
+    #      #            , sep=" "),
+    #      xlab=paste(test, "score", sep=" "),
+    #      ylab = y.lab,
+    #      xlim=c(min(h.null$breaks), xmax),
+    #      ylim=c(0, ymax),
+    #      freq=freq,
+    #      col=hist.col,
+    #      cex.axis=1.1,
+    #      cex.lab=1.2)
+    ##############################
 
     ## overlay/highlight sig.loc
     if(length(sig.loc) > 0){
       X <- corr.dat[sig.loc]
-      ymin <- max(yvals)/10 # 10%
-      ymax <- max(yvals) - max(yvals)/10 # 90%
 
+      ymin <- ymax/10 # 10%
+      ymax <- ymax - ymax/10 # 90%
       Y <- seq(ymin, ymax, length.out = length(X))
+      # Y <- c(seq(ymin, ymax, length.out = length(X)/2), seq(ymin, ymax, length.out = length(X)/2))
 
       ## ADD arrows pointing from each label to
       ## position on X-axis:
@@ -553,14 +633,14 @@ plot.sig.snps <- function(corr.dat,
              length=0.1, lwd=1)
       ## add annotation text labelling SNPs >
       ## threshold at their location on the x-axis:
-      text(x=X, y=Y, labels=sig.loc,
-           col=myCol, font=2, pos=4, cex=0.7)
+      text(x=X, y=Y, labels=sig.loc,  # sig.snps.names2,
+           col=myCol, font=1, pos=4, cex=1) # font=2 # cex=1
 
     }else{
       text(x=(max(h.null$breaks)*3/4),
-           y=(max(yvals)*3/4),
+           y=(max(yvals)*7/8),
            labels="no significant SNPs found",
-           col="red", font=2, pos=2, cex = 0.7)
+           col="red", font=2, pos=3, cex = 1)
     }
 
   } # end plot.null.dist
@@ -596,18 +676,21 @@ plot.sig.snps <- function(corr.dat,
                       # \n (with significant SNPs indicated)"
                       , sep=" "),
            xlab=paste(test, "score", sep=" "),
+           ylab = y.lab,
            xlim=c(min(h.null$breaks), xmax),
            freq=freq,
-           col=hist.col)
+           col=hist.col,
+           ...)
 
       ## Add grey background? ##
       if(!is.null(bg)){
         if(bg != "white"){
           lim <- par("usr")
           rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
+          # par(bg=bg)
 
-          axis(1) ## add axes back
-          axis(2)
+          # axis(1) ## add axes back
+          # axis(2)
 
           ## add grid:
           if(grid == TRUE){
@@ -619,9 +702,10 @@ plot.sig.snps <- function(corr.dat,
           ## Re-plot original plot:
           plot(h.null,
                main=paste("Real distribution of", test, "scores"
-                      # \n (with significant SNPs indicated)"
+                          # \n (with significant SNPs indicated)"
                           , sep=" "),
                xlab=paste(test, "score", sep=" "),
+               ylab = y.lab,
                xlim=c(min(h.null$breaks), xmax),
                col=hist.col,
                freq=freq,
@@ -639,17 +723,20 @@ plot.sig.snps <- function(corr.dat,
                       # \n (with significant SNPs indicated)"
                       , sep=" "),
            xlab=paste(test, "score", sep=" "),
+           ylab = y.lab,
            freq=freq,
-           col=hist.col)
+           col=hist.col,
+           ...)
 
       ## Add grey background? ##
       if(!is.null(bg)){
         if(bg != "white"){
           lim <- par("usr")
           rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
+          # par(bg=bg)
 
-          axis(1) ## add axes back
-          axis(2)
+          # axis(1) ## add axes back
+          # axis(2)
 
           ## add grid:
           if(grid == TRUE){
@@ -661,9 +748,10 @@ plot.sig.snps <- function(corr.dat,
           ## Re-plot original plot:
           plot(h.null,
                main=paste("Real distribution of", test, "scores"
-                      # \n (with significant SNPs indicated)"
+                          # \n (with significant SNPs indicated)"
                           , sep=" "),
                xlab=paste(test, "score", sep=" "),
+               ylab = y.lab,
                col=hist.col,
                freq=freq,
                add = TRUE)
@@ -743,13 +831,13 @@ plot.sig.snps <- function(corr.dat,
       ## add annotation text labelling SNPs >
       ## threshold at their location on the x-axis:
       text(x=X, y=Y, labels=sig.loc,
-           col=myCol, font=2, pos=4, cex = 0.7)
+           col=myCol, font=2, pos=4, cex = 1)
 
     }else{
       text(x=(max(h.null$breaks)*3/4),
            y=(max(yvals)*3/4),
            labels="no significant SNPs found",
-           col="red", font=2, pos=2, cex = 0.7)
+           col="red", font=2, pos=2, cex = 1)
     }
 
   } # end plot.dist == TRUE
@@ -758,9 +846,6 @@ plot.sig.snps <- function(corr.dat,
   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=FALSE)
 
 } # end plot.sig.snps
-
-
-
 
 
 
@@ -789,587 +874,503 @@ plot.sig.snps <- function(corr.dat,
 #' #' @import adegenet ape
 #'
 #' ########################################################################
+#' # res <- out$res
+#' # vals <- res$vals
+#' #
+#' # corr.dat <- vals$subsequent$corr.dat
+#' # corr.sim <- vals$subsequent$corr.sim
+#' #
+#' # sig.thresh <- as.vector(unlist(res$thresh))
+#' #
+#' # snps.assoc <- out$performance[[1]]
+#' # sig.corrs <- corr.dat[snps.assoc]
+#' # sig.snps <- snps.assoc
 #'
+#' plot.sig.snps <- function(corr.dat,
+#'                           corr.sim,
+#'                           corr.sim.subset = NULL,
+#'                           sig.corrs,
+#'                           sig.snps,
+#'                           sig.thresh = NULL,
+#'                           test = NULL,
+#'                           sig.snps.col = "blue",
+#'                           hist.col = rgb(0,0,1,0.5), # blue ## OR ## rgb(0.1,0.1,0.1,0.5) # darkgrey
+#'                           hist.subset.col = rgb(1,0,0,0.5), # red ## OR ## rgb(0.8,0.8,0.8,0.5) # lightgrey
+#'                           thresh.col="seasun",
+#'                           snps.assoc = NULL,
+#'                           snps.assoc.col = "red",
+#'                           bg = "lightgray",
+#'                           grid=TRUE,
+#'                           freq = FALSE,
+#'                           plot.null.dist=TRUE,
+#'                           plot.dist=FALSE){
 #'
-#' plot.sig.snps <- function(corr.dat, corr.sim,
-#'                           sig.corrs, sig.snps,
-#'                           sig.thresh, test,
-#'                           plot.null.dist=TRUE, plot.dist=FALSE){
+#'   ###############################################################################
+#'   ## Add threshold(s) and SNP annotations to histogram of (null) distributions ##
+#'   ###############################################################################
 #'
-#'   thresh <- sig.thresh
+#'   # thresh <- sig.thresh
+#'   if(!is.null(sig.thresh)){
+#'     if(class(sig.thresh) == "list") sig.thresh <- as.vector(unlist(sig.thresh))
+#'     sig.thresh.complete <- sig.thresh
+#'     sig.thresh <- unique(sig.thresh)
+#'   }
 #'
 #'   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=TRUE)
 #'
-#'   ## plot.null.dist #####################################
+#'   h.null <- h.null.subset <- ymax <- xmax <- NULL
 #'
-#'   ###################################################
-#'   ## Add SNP annotations to histogram of null dist ##
-#'   ###################################################
+#'   ##############################
+#'   ## plot.null.dist ############
+#'   ##############################
 #'
+#'   ###########################################################
+#'   ## plot (null) hist of corr's btw SIMULATED SNPs n phen: ##
+#'   ###########################################################
+#'   ## plot correlations btw simulated SNPs and phenotype:
 #'
-#'   ##############
-#'   ## TERMINAL ##
-#'   ##############
-#'   if(test=="terminal"){
-#'     ## plot.null.dist ##
+#'   if(plot.null.dist==TRUE){
 #'
-#'     ###########################################################
-#'     ## plot (null) hist of corr's btw SIMULATED SNPs n phen: ##
-#'     ###########################################################
-#'     ## plot correlations btw simulated SNPs and phenotype:
 #'     h.null <- hist(as.vector(unlist(corr.sim)), plot=FALSE)
 #'
-#'     ## get alternate (null dist) label heights:
-#'     X <- thresh
-#'     if(length(sig.corrs) > 0) X <- sig.corrs
-#'     Y.null <- runif(n=length(sig.snps), min=0.00001,
-#'                     max=max(h.null$counts))
+#'     ## add second (subset) histogram):
+#'     if(!is.null(corr.sim.subset)){
+#'       h.null.subset <- hist(as.vector(unlist(corr.sim.subset)), plot=FALSE)
+#'       ## if no subset col provided, choose 2:
+#'       if(is.null(hist.subset.col)){
+#'         # hist.col <- rgb(0,0,1,0.5) # blue
+#'         # hist.subset.col <- rgb(1,0,0,0.5) # red
+#'         # warning("No colour provided for subset:
+#'         #         Choosing primary and subset colours.")
+#'         hist.subset.col <- hist.col ## (makes more sense if expecting a SUBSET)
+#'       }
+#'     }
+#'
+#'     ## Get plot limits:
+#'     ## Get x-max:
+#'     xmax <- ceiling(max(corr.dat)+.35*max(corr.dat))
+#'     ## Get y-max (only really necessary when overlaying 2 hists):
+#'     if(freq == TRUE){
+#'       yvals <- h.null$counts
+#'       ymax <- ceiling(max(yvals)+(0.2*max(yvals)))
+#'       # if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+.05))
+#'       if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+(0.2*max(h.null.subset$counts))))
+#'     }else{
+#'       yvals <- h.null$density
+#'       ymax <- max(yvals)+(0.2*max(yvals))
+#'       # if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+0.005)
+#'       if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+(0.2*max(h.null.subset$density)))
+#'     }
+#'
+#'     ## if the true correlation value for SNP i is >
+#'     ## max bin, then extend the x-axis of the plot
+#'     ## to accommodate annotation:
+#'     if(xmax > max(h.null$breaks)){
+#'
+#'       ## plot histogram of correlations btw real
+#'       ## SNPs and phenotype: ##
+#'       ## EXTENDING THE X-AXIS
+#'       plot(h.null,
+#'            main=paste("Null distribution \n(", test, "score)"
+#'            # \n (with significant SNPs indicated)"
+#'                       , sep=" "),
+#'            xlab=paste(test, "score", sep=" "),
+#'            xlim=c(min(h.null$breaks), xmax),
+#'            ylim=c(0, ymax),
+#'            freq=freq,
+#'            col=hist.col)
 #'
 #'
-#'     if(plot.null.dist==TRUE){
-#'       ## if the true correlation value for SNP i is >
-#'       ## max bin, then extend the x-axis of the plot
-#'       ## to accommodate annotation:
-#'       if(max(X) > max(h.null$breaks)){
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of Terminal Correlation Scores
-#'              \n (with significant SNPs indicated)",
-#'              xlab="Terminal Correlation Score",
-#'              xlim=c(min(h.null$breaks), max(X)+.05))
-#'       }else{
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## WITHOUT EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of Terminal Correlation Scores
-#'              \n (with significant SNPs indicated)",
-#'              xlab="Terminal Correlation Score"
-#'         )
+#'       ## Add grey background? ##
+#'       if(!is.null(bg)){
+#'         if(bg != "white"){
+#'           lim <- par("usr")
+#'           rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
+#'           # rect(lim[1],  lim[3], lim[2], lim[4], col=bg, border=NA)
+#'
+#'           axis(1) ## add axes back
+#'           axis(2)
+#'
+#'           ## add grid:
+#'           if(grid == TRUE){
+#'             grid(col="white", lwd=1, lty=1)
+#'           }
+#'
+#'           box()   ## and the plot frame
+#'
+#'           ## Re-plot original plot:
+#'           plot(h.null,
+#'                main=paste("Null distribution \n(", test, "score)"
+#'                # \n (with significant SNPs indicated)"
+#'                           , sep=" "),
+#'                xlab=paste(test, "score", sep=" "),
+#'                xlim=c(min(h.null$breaks), xmax),
+#'                ylim=c(0, ymax),
+#'                col=hist.col,
+#'                freq=freq,
+#'                add = TRUE)
+#'
+#'         }
+#'       } # end background
+#'
+#'
+#'       ## Overlay subset histogram:
+#'       if(!is.null(h.null.subset)){
+#'         plot(h.null.subset,
+#'              xlim=c(min(h.null$breaks), xmax),
+#'              ylim=c(0, ymax),
+#'              col=hist.subset.col,
+#'              freq=freq,
+#'              add=TRUE)
 #'       }
 #'
-#'       ## ADD threshold line in red on x-axis where thresh hits...
-#'       abline(v=thresh, col="grey", lwd=2, lty=2)
-#'       ## label threshold line(?)
-#'       text(x=thresh, y=(max(h.null$counts)),
-#'            labels="significance threshold", pos=2,
-#'            col="grey", font=4)
-#'       if(length(sig.snps) > 0){
-#'         ## ADD arrows pointing from each label to
-#'         ## position on X-axis:
-#'         arrows(x0=X , y0=(Y.null-(min(Y.null)/50)) ,
-#'                x1=X , y1=0 , col="blue",
-#'                length=0.1, lwd=1)
-#'         ## add annotation text labelling SNPs >
-#'         ## threshold at their location on the x-axis:
-#'         text(x=X, y=Y.null, labels=sig.snps,
-#'              col="red", font=2, pos=2)
-#'       }else{
-#'         text(x=thresh, y=(max(h.null$counts)/4)*3,
-#'              labels="no significant SNPs found",
-#'              col="red", font=2, pos=2)
-#'       }
-#'     } # end plot.null.dist
-#'   } # end test Terminal
+#'     }else{
 #'
+#'       ## plot histogram of correlations btw real
+#'       ## SNPs and phenotype: ##
+#'       ## WITHOUT EXTENDING THE X-AXIS
+#'       plot(h.null,
+#'            main=paste("Null distribution \n(", test, "score)"
+#'            # \n (with significant SNPs indicated)"
+#'                       , sep=" "),
+#'            xlab=paste(test, "score", sep=" "),
+#'            ylim=c(0, ymax),
+#'            freq=freq,
+#'            col=hist.col)
 #'
-#'   ##################
-#'   ## SIMULTANEOUS ##
-#'   ##################
-#'   if(test=="simultaneous"){
-#'     ## plot.null.dist ##
+#'       ## Add grey background? ##
+#'       if(!is.null(bg)){
+#'         if(bg != "white"){
+#'           lim <- par("usr")
+#'           rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
 #'
-#'     ###########################################################
-#'     ## plot (null) hist of corr's btw SIMULATED SNPs n phen: ##
-#'     ###########################################################
-#'     ## plot correlations btw simulated SNPs and phenotype:
-#'     h.null <- hist(as.vector(unlist(corr.sim)), plot=FALSE)
+#'           axis(1) ## add axes back
+#'           axis(2)
 #'
-#'     ## get alternate (null dist) label heights:
-#'     X <- thresh
-#'     if(length(sig.corrs) > 0) X <- sig.corrs
-#'     Y.null <- runif(n=length(sig.snps), min=0.00001,
-#'                     max=max(h.null$counts))
+#'           ## add grid:
+#'           if(grid == TRUE){
+#'             grid(col="white", lwd=1, lty=1)
+#'           }
 #'
+#'           box()   ## and the plot frame
 #'
-#'     if(plot.null.dist==TRUE){
-#'       ## if the true correlation value for SNP i is >
-#'       ## max bin, then extend the x-axis of the plot
-#'       ## to accommodate annotation:
-#'       if(max(X) > max(h.null$breaks)){
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of Simultaneous Scores
-#'              \n (with significant SNPs indicated)",
-#'              xlab="Simultaneous Score",
-#'              xlim=c(min(h.null$breaks), max(X)+.05))
-#'       }else{
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## WITHOUT EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of Simultaneous Scores
-#'              \n (with significant SNPs indicated)",
-#'              xlab="Simultaneous Score"
-#'         )
+#'           ## Re-plot original plot:
+#'           plot(h.null,
+#'                main=paste("Null distribution \n(", test, "score)"
+#'                 # \n (with significant SNPs indicated)"
+#'                           , sep=" "),
+#'                xlab=paste(test, "score", sep=" "),
+#'                ylim=c(0, ymax),
+#'                col=hist.col,
+#'                freq=freq,
+#'                add = TRUE)
+#'
+#'         }
+#'       } # end background
+#'
+#'       ## Overlay subset histogram:
+#'       if(!is.null(h.null.subset)){
+#'         plot(h.null.subset,
+#'              xlim=c(min(h.null$breaks), max(h.null$breaks)),
+#'              ylim=c(0, ymax),
+#'              col=hist.subset.col,
+#'              freq=freq,
+#'              add=TRUE)
 #'       }
 #'
-#'       ## ADD threshold line in red on x-axis where thresh hits...
-#'       abline(v=thresh, col="grey", lwd=2, lty=2)
-#'       ## label threshold line(?)
-#'       text(x=thresh, y=(max(h.null$counts)),
-#'            labels="significance threshold", pos=2,
-#'            col="grey", font=4)
-#'       if(length(sig.snps) > 0){
-#'         ## ADD arrows pointing from each label to
-#'         ## position on X-axis:
-#'         arrows(x0=X , y0=(Y.null-(min(Y.null)/50)) ,
-#'                x1=X , y1=0 , col="blue",
-#'                length=0.1, lwd=1)
-#'         ## add annotation text labelling SNPs >
-#'         ## threshold at their location on the x-axis:
-#'         text(x=X, y=Y.null, labels=sig.snps,
-#'              col="red", font=2, pos=2)
+#'     }
+#'
+#'     ## Add box around periphery:
+#'     box()
+#'
+#'     #################
+#'     ## Add density curves?
+#'     # d <- density(dat1) # from=min(hist(dat1, plot=FALSE)$breaks) ## from=0
+#'     # ymax <- ceiling(max(d$y))
+#'     # # hist(dat, freq=F, xlim=c(0,1), ylim=c(0,ymax))
+#'     # # lines(d, col="red", lwd=2, xlim=c(0,1), ylim=c(0,ymax))
+#'     # polygon(d, col=transp("red", 0.25), border="red", lwd=2, xlim=c(0,1), ylim=c(0,ymax))
+#'     #################
+#'
+#'     ## get significance threshold(s)
+#'     ## get colour scheme
+#'     ## from colour palette?
+#'     col.pals <- c("bluepal", "redpal", "greenpal", "greypal",
+#'                   "flame", "azur",
+#'                   "seasun", "lightseasun", "deepseasun",
+#'                   "spectral", "wasp", "funky")
+#'     if(length(sig.thresh) > 0){
+#'
+#'       if(thresh.col %in% col.pals){
+#'         my.thresh.col <- eval(parse(text=paste(thresh.col, "(", length(sig.thresh), ")")))
 #'       }else{
-#'         text(x=thresh, y=(max(h.null$counts)/4)*3,
-#'              labels="no significant SNPs found",
-#'              col="red", font=2, pos=2)
+#'         my.thresh.col <- rep(thresh.col, length(sig.thresh))
 #'       }
-#'     } # end plot.null.dist
-#'   } # end test Simultaneous
+#'       thresh.col <- my.thresh.col
 #'
-#'   ################
-#'   ## SUBSEQUENT ##
-#'   ################
-#'   if(test=="subsequent"){
-#'     ## plot.null.dist ##
+#'       for(i in 1:length(sig.thresh)){
 #'
-#'     ###########################################################
-#'     ## plot (null) hist of corr's btw SIMULATED SNPs n phen: ##
-#'     ###########################################################
-#'     ## plot correlations btw simulated SNPs and phenotype:
-#'     h.null <- hist(as.vector(unlist(corr.sim)), plot=FALSE)
+#'         thresh <- sig.thresh[i]
 #'
-#'     ## get alternate (null dist) label heights:
-#'     X <- thresh
-#'     if(length(sig.corrs) > 0) X <- sig.corrs
-#'     Y.null <- runif(n=length(sig.snps), min=0.00001,
-#'                     max=max(h.null$counts))
+#'         ## move sig thresh below nearest points?
+#'         # thresh <- thresh-0.05
 #'
+#'         ## draw threshold line on plot:
+#'         # abline(v=thresh, col = my.thresh.col[i], lwd = 2)
+#'         lines(x=c(thresh, thresh), y=c(0, max(yvals)), col=thresh.col[i], lwd=2)
+#'       } # end for loop plotting thresh lines
+#'     }
+#'     #######
 #'
-#'     if(plot.null.dist==TRUE){
-#'       ## if the true correlation value for SNP i is >
-#'       ## max bin, then extend the x-axis of the plot
-#'       ## to accommodate annotation:
-#'       if(max(X) > max(h.null$breaks)){
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of Subsequent Scores
-#'              \n (with significant SNPs indicated)",
-#'              xlab="Subsequent Score",
-#'              xlim=c(min(h.null$breaks), max(X)+.05))
-#'       }else{
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## WITHOUT EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of Subsequent Scores
-#'              \n (with significant SNPs indicated)",
-#'              xlab="Subsequent Score"
-#'         )
-#'       }
+#'     ## get significant loci (incl. snps.assoc)
+#'     sig.loc <- NULL
+#'     if(!is.null(sig.snps)) sig.loc <- sig.snps
+#'     if(!is.null(snps.assoc)) sig.loc <- c(sig.loc, snps.assoc)
+#'     sig.loc <- unique(sig.loc)
 #'
-#'       ## ADD threshold line in red on x-axis where thresh hits...
-#'       abline(v=thresh, col="grey", lwd=2, lty=2)
-#'       ## label threshold line(?)
-#'       text(x=thresh, y=(max(h.null$counts)),
-#'            labels="significance threshold", pos=2,
-#'            col="grey", font=4)
-#'       if(length(sig.snps) > 0){
-#'         ## ADD arrows pointing from each label to
-#'         ## position on X-axis:
-#'         arrows(x0=X , y0=(Y.null-(min(Y.null)/50)) ,
-#'                x1=X , y1=0 , col="blue",
-#'                length=0.1, lwd=1)
-#'         ## add annotation text labelling SNPs >
-#'         ## threshold at their location on the x-axis:
-#'         text(x=X, y=Y.null, labels=sig.snps,
-#'              col="red", font=2, pos=2)
-#'       }else{
-#'         text(x=thresh, y=(max(h.null$counts)/4)*3,
-#'              labels="no significant SNPs found",
-#'              col="red", font=2, pos=2)
-#'       }
-#'     } # end plot.null.dist
-#'   } # end test Subsequent
+#'     # myCol <- rep("blue", length(sig.loc))
+#'
+#'     ## sig.snps.col
+#'     if(!is.null(sig.loc)){
+#'       ## get colour
+#'       if(is.null(sig.snps.col)) sig.snps.col <- "blue"
+#'       myCol <- rep(sig.snps.col, length(sig.loc))
+#'     }
+#'
+#'     ## snps.assoc.col
+#'     if(!is.null(snps.assoc)){
+#'       ## modify colour
+#'       if(is.null(snps.assoc.col)) snps.assoc.col <- "red"
+#'       myCol[which(sig.loc %in% snps.assoc)] <- snps.assoc.col
+#'     }
 #'
 #'
-#'   #################
-#'   ## CORRELATION ##
-#'   #################
-#'   if(test=="cor"){
-#'     ## plot.null.dist ##
+#'     ## overlay/highlight sig.loc
+#'     if(length(sig.loc) > 0){
+#'       X <- corr.dat[sig.loc]
+#'       ymin <- max(yvals)/10 # 10%
+#'       ymax <- max(yvals) - max(yvals)/10 # 90%
 #'
-#'     ###########################################################
-#'     ## plot (null) hist of corr's btw SIMULATED SNPs n phen: ##
-#'     ###########################################################
-#'     ## plot correlations btw simulated SNPs and phenotype:
-#'     h.null <- hist(as.vector(unlist(corr.sim)), plot=FALSE)
+#'       Y <- seq(ymin, ymax, length.out = length(X))
 #'
-#'     ## get alternate (null dist) label heights:
-#'     X <- thresh
-#'     if(length(sig.corrs) > 0) X <- sig.corrs
-#'     Y.null <- runif(n=length(sig.snps), min=0.00001,
-#'                     max=max(h.null$counts))
+#'       ## ADD arrows pointing from each label to
+#'       ## position on X-axis:
+#'       arrows(x0=X , y0=Y ,
+#'              x1=X , y1=0 , col=myCol,
+#'              length=0.1, lwd=1)
+#'       ## add annotation text labelling SNPs >
+#'       ## threshold at their location on the x-axis:
+#'       text(x=X, y=Y, labels=sig.loc,
+#'            col=myCol, font=2, pos=4, cex=0.7)
 #'
+#'     }else{
+#'       text(x=(max(h.null$breaks)*3/4),
+#'            y=(max(yvals)*3/4),
+#'            labels="no significant SNPs found",
+#'            col="red", font=2, pos=2, cex = 0.7)
+#'     }
 #'
-#'     if(plot.null.dist==TRUE){
-#'
-#'       ## if the true correlation value for SNP i is >
-#'       ## max bin, then extend the x-axis of the plot
-#'       ## to accommodate annotation:
-#'       if(max(X) > max(h.null$breaks)){
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of correlations
-#'              \n (with significant SNPs indicated)",
-#'              xlab="Correlation",
-#'              xlim=c(min(h.null$breaks), max(X)+.05))
-#'       }else{
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## WITHOUT EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of correlations
-#'              \n (with significant SNPs indicated)",
-#'              xlab="Correlation"
-#'         )
-#'       }
-#'
-#'       ## ADD threshold line in red on x-axis where thresh hits...
-#'       abline(v=thresh, col="grey", lwd=2, lty=2)
-#'       ## label threshold line(?)
-#'       text(x=thresh, y=(max(h.null$counts)),
-#'            labels="significance threshold", pos=2,
-#'            col="grey", font=4)
-#'       if(length(sig.snps) > 0){
-#'         ## ADD arrows pointing from each label to
-#'         ## position on X-axis:
-#'         arrows(x0=X , y0=(Y.null-(min(Y.null)/50)) ,
-#'                x1=X , y1=0 , col="blue", length=0.1, lwd=1)
-#'         ## add annotation text labelling SNPs >
-#'         ## threshold at their location on the x-axis:
-#'         text(x=X, y=Y.null, labels=sig.snps,
-#'              col="red", font=2)
-#'       }else{
-#'         text(x=thresh, y=(max(h.null$counts)/4)*3,
-#'              labels="no significant SNPs found",
-#'              col="red", font=2, pos=2)
-#'       }
-#'     } # end plot.null.dist
-#'     } # end test cor
+#'   } # end plot.null.dist
 #'
 #'
-#'   #########################
-#'   ## FISHER'S EXACT TEST ##
-#'   #########################
-#'   if(test=="fisher"){
-#'     ## plot.null.dist ##
-#'
-#'     ###########################################################
-#'     ## plot (null) hist of corr's btw SIMULATED SNPs n phen: ##
-#'     ###########################################################
-#'     ## plot correlations btw simulated SNPs and phenotype:
-#'     h.null <- hist(as.vector(unlist(corr.sim)), plot=FALSE)
-#'
-#'     ## get alternate (null dist) label heights:
-#'     X <- thresh
-#'     if(length(sig.corrs) > 0) X <- sig.corrs
-#'     Y.null <- runif(n=length(sig.snps), min=0.00001,
-#'                     max=max(h.null$counts))
-#'
-#'     if(plot.null.dist==TRUE){
-#'       ## if the true correlation value for SNP i is <
-#'       ## min bin, then extend the x-axis of the plot to
-#'       ## accommodate annotation:
-#'       if(min(X) < min(h.null$breaks)){
-#'         ## plot histogram of correlations btw real
-#'         ## SNPs and phenotype: ##
-#'         ## EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of Fisher's exact test p-values
-#'              \n (with significant SNPs indicated)",
-#'              xlab="p-value",
-#'              xlim=c((min(X)-.05), max(h.null$breaks)))
-#'       }else{
-#'         ## plot histogram of correlations btw real SNPs and phenotype: ##
-#'         ## WITHOUT EXTENDING THE X-AXIS
-#'         plot(h.null,
-#'              main="Null distribution of Fisher's exact test p-values
-#'              \n (with significant SNPs indicated)",
-#'              xlab="p-value"
-#'         )
-#'       }
-#'
-#'       ## ADD threshold line in red on x-axis where thresh hits...
-#'       abline(v=thresh, col="grey", lwd=2, lty=2)
-#'       ## label threshold line(?)
-#'       text(x=thresh, y=(max(h.null$counts)),
-#'            labels="significance threshold", pos=4,
-#'            col="grey", font=4)
-#'       ## only ask to draw arrows if sig snps exist
-#'       if(length(sig.snps) > 0){
-#'         ## ADD arrows pointing from each label to
-#'         ## position on X-axis:
-#'         arrows(x0=X , y0=(Y.null-(min(Y.null)/50)) ,
-#'                x1=X , y1=0 , col="blue", length=0.1, lwd=1)
-#'         ## add annotation text labelling SNPs >
-#'         ## threshold at their location on the x-axis:
-#'         text(x=X, y=Y.null, labels=sig.snps,
-#'              col="red", font=2, pos=4)
-#'       }else{
-#'         text(x=thresh, y=(max(h.null$counts)/4)*3,
-#'              labels="no significant SNPs found",
-#'              col="red", font=2, pos=4)
-#'       }
-#'     } # end plot.null.dist
-#'   } # end test fisher
 #'
 #'
+#'
+#'   ################################
 #'   ## plot.dist ###################
+#'   ################################
 #'
 #'   #################################################################
 #'   ## plot histogram of correlations btw real SNPs and phenotype: ##
 #'   #################################################################
 #'
-#'   ###########
-#'   ## SCORE ##
-#'   ###########
-#'   if(test=="score"){
-#'     ## plot.dist ##
+#'   if(plot.dist == TRUE){
 #'
-#'     #################################################################
-#'     ## plot histogram of correlations btw real SNPs and phenotype: ##
-#'     #################################################################
-#'     ## get histogram of correlations btw real SNPs and phenotype:
-#'     h <- hist(corr.dat, plot=FALSE)
-#'     ## get X and Y coords for labelling positions of all sig SNPs
-#'     X <- sig.corrs
-#'     ## get the number of sig SNPs in each bin of the histogram
-#'     ## counting correlations==upper limit of each bin
-#'     ## as falling within that bin...
-#'     sig.counts <- sapply(c(1:(length(h$breaks)-1)),
-#'                          function(e) length(X[which(X[which(X <=
-#'                                                               h$breaks[(e+1)])] > h$breaks[e])]))
-#'     ## keep only counts > 0
-#'     sig.counts <- sig.counts[which(sig.counts > 0)]
-#'     ## get label heights:
-#'     Y <- list()
-#'     ## get average height of labels
-#'     Y.avg <- max(h$counts)/4
-#'     ## for bins with > 1 sig SNP, adjust height
-#'     if(length(sig.counts)!=0){
-#'       for(i in 1:length(sig.counts)){
-#'         if(!.is.integer0(sig.counts[i])){
-#'           if(sig.counts[i]==1){
-#'             Y[[i]] <- Y.avg
-#'           }else{
-#'             ## divide up the space on the y-axis into
-#'             ## increments (adding 1 to the denomenator
-#'             ## s.t y-max not exceeded)
-#'             increment <- max(h$counts)/(sig.counts[i]+1)
-#'             Y[[i]] <- increment*c(1:sig.counts[i])
-#'           }
-#'         }
-#'       } # end for loop
-#'     }
-#'     Y <- as.vector(unlist(Y))
+#'     h.null <- hist(as.vector(unlist(corr.dat)), plot=FALSE)
 #'
-#'     if(plot.dist==TRUE){
+#'     xmax <- ceiling(max(corr.dat)+.05)
+#'     yvals <- h.null$counts
 #'
-#'       ## plot histogram of correlations btw real SNPs and phenotype: ##
-#'       plot(h, main="Distribution of SNP-trait correlations
-#'            \n (with significant SNPs indicated if present)")
-#'       ## ADD threshold line in red on x-axis where thresh hits...
-#'       abline(v=thresh, col="grey", lwd=2, lty=2)
-#'       ## label threshold line(?)
-#'       text(x=thresh, y=(max(h$counts)),
-#'            labels="significance threshold",
-#'            col="grey", pos=2, font=4)
-#'
-#'       ## Only ask to draw arrows if at least 1 significant SNP:
-#'       if(length(sig.snps) > 0){
-#'         ## ADD arrows pointing from each label to position on X-axis:
-#'         arrows(x0=X , y0=(Y-(max(h$counts)/50)) ,
-#'                x1=X , y1=0 ,
-#'                col="blue", length=0.1, lwd=1)
-#'         ## add annotation text labelling SNPs >
-#'         ## threshold at their location on the x-axis:
-#'         text(x=X, y=Y, labels=sig.snps,
-#'              col="red", font=2, pos=2)
-#'       }else{
-#'         text(x=thresh, y=(max(h$counts)/4)*3,
-#'              labels="no significant SNPs found",
-#'              col="red", font=2, pos=2)
-#'       }
-#'     } # end plot.dist
-#'   } # end test score
-#'
-#'   #################
-#'   ## CORRELATION ##
-#'   #################
-#'   if(test=="cor"){
-#'     ## plot.dist ##
-#'
-#'     #################################################################
-#'     ## plot histogram of correlations btw real SNPs and phenotype: ##
-#'     #################################################################
-#'     ## get histogram of correlations btw real SNPs and phenotype:
-#'     h <- hist(corr.dat, plot=FALSE)
-#'     ## get X and Y coords for labelling positions of all sig SNPs
-#'     X <- sig.corrs
-#'     ## get the number of sig SNPs in each bin of the histogram
-#'     ## counting correlations==upper limit of each bin as falling
-#'     ## within that bin...
-#'     sig.counts <- sapply(c(1:(length(h$breaks)-1)),
-#'                          function(e) length(X[which(X[which(X <=
-#'                                                               h$breaks[(e+1)])] > h$breaks[e])]))
-#'     ## keep only counts > 0
-#'     sig.counts <- sig.counts[which(sig.counts > 0)]
-#'     ## get label heights:
-#'     Y <- list()
-#'     ## get average height of labels
-#'     Y.avg <- max(h$counts)/4
-#'     ## for bins with > 1 sig SNP, adjust height
-#'     if(length(sig.counts)!=0){
-#'       for(i in 1:length(sig.counts)){
-#'         if(!.is.integer0(sig.counts[i])){
-#'           if(sig.counts[i]==1){
-#'             Y[[i]] <- Y.avg
-#'           }else{
-#'             ## divide up the space on the y-axis into
-#'             ## increments (adding 1 to the denomenator
-#'             ## s.t y-max not exceeded)
-#'             increment <- max(h$counts)/(sig.counts[i]+1)
-#'             Y[[i]] <- increment*c(1:sig.counts[i])
-#'           }
-#'         }
-#'       } # end for loop
-#'     }
-#'     Y <- as.vector(unlist(Y))
-#'
-#'     if(plot.dist==TRUE){
-#'
+#'     ## if the true correlation value for SNP i is >
+#'     ## max bin, then extend the x-axis of the plot
+#'     ## to accommodate annotation:
+#'     if(xmax > max(h.null$breaks)){
 #'       ## plot histogram of correlations btw real
 #'       ## SNPs and phenotype: ##
-#'       plot(h, main="Distribution of SNP-trait
-#'            correlations \n (with significant SNPs indicated if present)")
-#'       ## ADD threshold line in red on x-axis where thresh hits...
-#'       abline(v=thresh, col="grey", lwd=2, lty=2)
-#'       ## label threshold line(?)
-#'       text(x=thresh, y=(max(h$counts)),
-#'            labels="significance threshold",
-#'            col="grey", pos=2, font=4)
+#'       ## EXTENDING THE X-AXIS
+#'       plot(h.null,
+#'            main=paste("Real distribution of", test, "scores"
+#'                       # \n (with significant SNPs indicated)"
+#'                       , sep=" "),
+#'            xlab=paste(test, "score", sep=" "),
+#'            xlim=c(min(h.null$breaks), xmax),
+#'            freq=freq,
+#'            col=hist.col)
 #'
-#'       ## Only ask to draw arrows if at least 1 significant SNP:
-#'       if(length(sig.snps) > 0){
-#'         ## ADD arrows pointing from each
-#'         ## label to position on X-axis:
-#'         arrows(x0=X , y0=(Y-(max(h$counts)/50)) ,
-#'                x1=X , y1=0 , col="blue", length=0.1, lwd=1)
-#'         ## add annotation text labelling SNPs >
-#'         ## threshold at their location on the x-axis:
-#'         text(x=X, y=Y, labels=sig.snps, col="red", font=2)
-#'       }else{
-#'         text(x=thresh, y=(max(h$counts)/4)*3,
-#'              labels="no significant SNPs found",
-#'              col="red", font=2, pos=2)
-#'       }
-#'     } # end plot.dist
-#'   } # end test cor
+#'       ## Add grey background? ##
+#'       if(!is.null(bg)){
+#'         if(bg != "white"){
+#'           lim <- par("usr")
+#'           rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
 #'
+#'           axis(1) ## add axes back
+#'           axis(2)
 #'
-#'   #########################
-#'   ## FISHER'S EXACT TEST ##
-#'   #########################
-#'   if(test=="fisher"){
-#'     ## plot.dist ##
-#'
-#'     ############################################################
-#'     ## plot histogram of correlations btw real SNPs and phen: ##
-#'     ############################################################
-#'
-#'     ## get histogram of correlations btw real SNPs and phenotype:
-#'     h <- hist(corr.dat, plot=FALSE)
-#'     ## get X and Y coords for labelling positions of all sig SNPs
-#'     X <- thresh
-#'     if(length(sig.corrs) > 0) X <- sig.corrs
-#'     ## get the number of sig SNPs in each bin of the histogram
-#'     ## counting correlations==upper limit of each bin as
-#'     ## falling within that bin...
-#'     sig.counts <- sapply(c(1:(length(h$breaks)-1)),
-#'                          function(e) length(X[which(X[which(X <=
-#'                                                               h$breaks[(e+1)])] > h$breaks[e])]))
-#'     ## keep only counts > 0
-#'     sig.counts <- sig.counts[which(sig.counts > 0)]
-#'     ## get label heights:
-#'     Y <- list()
-#'     ## get average height of labels
-#'     Y.avg <- max(h$counts)/4
-#'     ## for bins with > 1 sig SNP, adjust height
-#'     if(length(sig.counts)!=0){
-#'       for(i in 1:length(sig.counts)){
-#'         if(!.is.integer0(sig.counts[i])){
-#'           if(sig.counts[i]==1){
-#'             Y[[i]] <- Y.avg
-#'           }else{
-#'             ## divide up the space on the y-axis into
-#'             ## increments (adding 1 to the denomenator s.t y-max not exceeded)
-#'             increment <- max(h$counts)/(sig.counts[i]+1)
-#'             Y[[i]] <- increment*c(1:sig.counts[i])
+#'           ## add grid:
+#'           if(grid == TRUE){
+#'             grid(col="white", lwd=1, lty=1)
 #'           }
+#'
+#'           box()   ## and the plot frame
+#'
+#'           ## Re-plot original plot:
+#'           plot(h.null,
+#'                main=paste("Real distribution of", test, "scores"
+#'                       # \n (with significant SNPs indicated)"
+#'                           , sep=" "),
+#'                xlab=paste(test, "score", sep=" "),
+#'                xlim=c(min(h.null$breaks), xmax),
+#'                col=hist.col,
+#'                freq=freq,
+#'                add = TRUE)
+#'
 #'         }
-#'       } # end for loop
+#'       } # end background
+#'
+#'     }else{
+#'       ## plot histogram of correlations btw real
+#'       ## SNPs and phenotype: ##
+#'       ## WITHOUT EXTENDING THE X-AXIS
+#'       plot(h.null,
+#'            main=paste("Real distribution of", test, "scores"
+#'                       # \n (with significant SNPs indicated)"
+#'                       , sep=" "),
+#'            xlab=paste(test, "score", sep=" "),
+#'            freq=freq,
+#'            col=hist.col)
+#'
+#'       ## Add grey background? ##
+#'       if(!is.null(bg)){
+#'         if(bg != "white"){
+#'           lim <- par("usr")
+#'           rect(lim[1],  lim[3], lim[2], lim[4], col=bg)
+#'
+#'           axis(1) ## add axes back
+#'           axis(2)
+#'
+#'           ## add grid:
+#'           if(grid == TRUE){
+#'             grid(col="white", lwd=1, lty=1)
+#'           }
+#'
+#'           box()   ## and the plot frame
+#'
+#'           ## Re-plot original plot:
+#'           plot(h.null,
+#'                main=paste("Real distribution of", test, "scores"
+#'                       # \n (with significant SNPs indicated)"
+#'                           , sep=" "),
+#'                xlab=paste(test, "score", sep=" "),
+#'                col=hist.col,
+#'                freq=freq,
+#'                add = TRUE)
+#'
+#'         }
+#'       } # end background
 #'     }
-#'     Y <- as.vector(unlist(Y))
 #'
-#'     if(plot.dist==TRUE){
+#'     ## Add box around periphery:
+#'     box()
 #'
-#'       ## plot histogram of correlations btw real SNPs and phenotype: ##
-#'       plot(h, main="Distribution of SNP-trait correlations
-#'            \n (with significant SNPs indicated if present)")
-#'       ## ADD threshold line in red on x-axis where thresh hits...
-#'       abline(v=thresh, col="grey", lwd=2, lty=2)
-#'       ## label threshold line(?)
-#'       text(x=thresh, y=(max(h$counts)),
-#'            labels="significance threshold",
-#'            col="grey", pos=4, font=4)
+#'     #################
 #'
-#'       ## Only ask to draw arrows if at least 1 significant SNP:
-#'       if(length(sig.snps) > 0){
-#'         ## ADD arrows pointing from each label to
-#'         ## position on X-axis:
-#'         arrows(x0=X , y0=(Y-(max(h$counts)/50)) ,
-#'                x1=X , y1=0 , col="blue", length=0.1, lwd=1)
-#'         ## add annotation text labelling SNPs > threshold at their location on the x-axis:
-#'         text(x=X, y=Y, labels=sig.snps,
-#'              col="red", font=2, pos=4)
-#'       }else{
-#'         text(x=thresh, y=(max(h$counts)/4)*3,
-#'              labels="no significant SNPs found",
-#'              col="red", font=2, pos=4)
-#'       }
-#'     } # end plot.dist
-#'   } # end test fisher
+#'     ## get significance threshold(s)
+#'     ## get colour scheme
+#'     ## from colour palette?
+#'     col.pals <- c("bluepal", "redpal", "greenpal", "greypal",
+#'                   "flame", "azur",
+#'                   "seasun", "lightseasun", "deepseasun",
+#'                   "spectral", "wasp", "funky")
+#'     if(thresh.col %in% col.pals){
+#'       my.thresh.col <- eval(parse(text=paste(thresh.col, "(", length(sig.thresh), ")")))
+#'     }else{
+#'       my.thresh.col <- rep(thresh.col, length(sig.thresh))
+#'     }
+#'
+#'     for(i in 1:length(sig.thresh)){
+#'
+#'       thresh <- sig.thresh[i]
+#'
+#'       ## move sig thresh below nearest points
+#'       # thresh <- thresh-0.05
+#'
+#'       ## draw threshold line on plot:
+#'       # abline(v=thresh, col = my.thresh.col[i], lwd = 2)
+#'       lines(x=c(thresh, thresh), y=c(0, max(yvals)), col=thresh.col[i], lwd=2)
+#'     } # end for loop plotting thresh lines
+#'
+#'     #######
+#'
+#'     ## get significant loci (incl. snps.assoc)
+#'     sig.loc <- NULL
+#'     if(!is.null(sig.snps)) sig.loc <- sig.snps
+#'     if(!is.null(snps.assoc)) sig.loc <- c(sig.loc, snps.assoc)
+#'     sig.loc <- unique(sig.loc)
+#'
+#'     # myCol <- rep("blue", length(sig.loc))
+#'
+#'     ## sig.snps.col
+#'     if(!is.null(sig.loc)){
+#'       ## get colour
+#'       if(is.null(sig.snps.col)) sig.snps.col <- "blue"
+#'       myCol <- rep(sig.snps.col, length(sig.loc))
+#'     }
+#'
+#'     ## snps.assoc.col
+#'     if(!is.null(snps.assoc)){
+#'       ## modify colour
+#'       if(is.null(snps.assoc.col)) snps.assoc.col <- "red"
+#'       myCol[which(sig.loc %in% snps.assoc)] <- snps.assoc.col
+#'     }
+#'
+#'
+#'     ## overlay/highlight sig.loc
+#'     if(length(sig.loc) > 0){
+#'       X <- corr.dat[sig.loc]
+#'       ymin <- max(yvals)/10 # 10%
+#'       ymax <- max(yvals) - max(yvals)/10 # 90%
+#'
+#'       Y <- seq(ymin, ymax, length.out = length(X))
+#'
+#'       ## ADD arrows pointing from each label to
+#'       ## position on X-axis:
+#'       arrows(x0=X , y0=Y ,
+#'              x1=X , y1=0 , col=myCol,
+#'              length=0.1, lwd=1)
+#'       ## add annotation text labelling SNPs >
+#'       ## threshold at their location on the x-axis:
+#'       text(x=X, y=Y, labels=sig.loc,
+#'            col=myCol, font=2, pos=4, cex = 0.7)
+#'
+#'     }else{
+#'       text(x=(max(h.null$breaks)*3/4),
+#'            y=(max(yvals)*3/4),
+#'            labels="no significant SNPs found",
+#'            col="red", font=2, pos=2, cex = 0.7)
+#'     }
+#'
+#'   } # end plot.dist == TRUE
+#'
 #'
 #'   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=FALSE)
 #'
 #' } # end plot.sig.snps
+
+
+
+
+
+
+
+
+

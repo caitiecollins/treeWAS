@@ -34,4 +34,3 @@ tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

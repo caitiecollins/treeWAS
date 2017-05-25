@@ -15,4 +15,3 @@ Run treeWAS for a continuous phenotype on processed CFML output. To run on the C
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

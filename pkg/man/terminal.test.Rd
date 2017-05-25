@@ -21,4 +21,3 @@ out <- terminal.test(snps, phen)
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

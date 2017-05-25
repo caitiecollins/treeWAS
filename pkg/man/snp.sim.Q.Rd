@@ -25,4 +25,3 @@ Longer proper discription of function...
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

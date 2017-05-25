@@ -33,6 +33,11 @@ specifying the method of phylogenetic reconstruction.}
 (by default \code{10*ncol(snps)}). If memory errors arise during the analyis of a large dataset,
 it may be necesary to reduce \code{n.snps.sim} from a multiple of 10 to, for example, 5x the number of loci.}
 
+\item{chunk.size}{An integer indicating the number of \code{snps} loci to be analysed at one time. This provides a solution for
+machines with insufficient memory to analyse the dataset at hand.
+Note that smaller values of \code{chunk.size} will increase the computational time required
+(e.g., for \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).}
+
 \item{test}{A character string or vector containing one or more of the following available tests of association:
 \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
 By default, the first three tests are run (see details).}
@@ -271,4 +276,3 @@ print(out)
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

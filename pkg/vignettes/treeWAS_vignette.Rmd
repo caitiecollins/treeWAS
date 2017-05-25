@@ -203,6 +203,7 @@ We will use the data stored within *treeWAS* as an example throughout this secti
 data(snps)
 data(phen)
 data(tree)
+data(snps.reconstruction)
 
 ## Examine data:
 ## genetic data
@@ -214,14 +215,23 @@ table(phen)
 
 ## tree
 str(tree)
+
+## genetic data reconstruction:
+str(snps.reconstruction)
 ```
+
+<!-- 
+data(snps.reconstruction)
+## reconstruction
+str(snps.reconstruction)
+--> 
 
 ```{r, eval=FALSE}
 ## Load colours:
 data(phen.plot.col)
 
 ## Plot tree showing phenotype:
-plot.phen(tree, phen.nodes=phen.plot.col$all.nodes)
+p <- plot.phen(tree, phen.nodes=phen.plot.col$all.nodes)
 ```
 
 ```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
@@ -288,11 +298,22 @@ Before running the `get.binary.snps` function, you can check the suffixes of the
 suffixes <- keepLastN(colnames(snps), n = 2)
 suffixes <- unique(suffixes)
 
-all(suffixes %in% c(".a", ".c", ".g", ".t")) 
-
-snps <- get.binary.snps(snps)
+if(all(suffixes %in% c(".a", ".c", ".g", ".t"))){
+  ## SNPs:
+  snps <- get.binary.snps(snps)
+  
+  ## ... Optional step (for snps.reconstruction, if present)
+  ## (Example only, if needed for user data)
+  if(is.matrix(snps.reconstruction)){
+    snps.reconstruction <- snps.reconstruction[, which(colnames(snps.reconstruction) %in% colnames(snps))]
+  }
+}
 ```
 
+<!-- 
+## get binary snps.rec:
+snps.reconstruction <- snps.reconstruction[, which(colnames(snps.reconstruction) %in% colnames(snps))]
+-->
 
 ### Missing data:
 <!-- ########################################################################################################## -->
@@ -306,19 +327,43 @@ Missing data in the rows is also permitted, but if any row is *entirely* missing
 (particularly if you require `treeWAS` to reconstruct a phylogeny).
 ```{r}
 NA.tab <- sapply(c(1:nrow(snps)), function(e) length(which(is.na(snps[e,]))))
-toRemove <- rownames(snps)[which(NA.tab == ncol(snps))]
+ix <- which(NA.tab == ncol(snps))
+if(length(ix) > 0){
+  toRemove <- rownames(snps)[ix]
 
-## Remove individuals from all elements...
-snps <- snps[-which(rownames(snps) %in% toRemove), ]
-phen <- phen[-which(names(phen) %in% toRemove)]
-
-## ... Including optional elements (if present):
-tree <- drop.tip(tree, tip = toRemove)
-snps.reconstruction <- snps.reconstruction[-which(rownames(snps.reconstruction) %in% toRemove), ]
+  ## Remove individuals from all elements...
+  snps <- snps[-which(rownames(snps) %in% toRemove), ]
+  phen <- phen[-which(names(phen) %in% toRemove)]
+  
+  ## ... Including optional elements (if present):
+  ## drop tips from tree:
+  tree <- drop.tip(tree, tip = toRemove)
+  
+  ## drop rows from snps.rec:
+  ## (Example only, if needed for user data)
+  if(is.matrix(snps.reconstruction)){
+    nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
+    nodes <- nodes[(nrow(snps)+1):length(nodes)]
+    toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
+    toKeep <- c(toKeep, nodes)
+    snps.reconstruction <- snps.reconstruction[toKeep, ]
+  }
+}
 ```
 
 
+<!-- 
+## drop rows from snps.rec:
+nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
+nodes <- nodes[(nrow(snps)+1):length(nodes)]
+toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
+toKeep <- c(toKeep, nodes)
+snps.reconstruction <- snps.reconstruction[toKeep, ]
+-->
+
+
 <!-- NOTE TO SELF: YOU MAY WANT TO SUGGEST THAT NON-POLYMORHPIC LOCI (ie WHOLE GENOMES) BE PROVIDED IF THE USER WANTS TO BUILD A TREE WITHIN TREEWAS. IF SO--NEED TO ADD MORE CHECKS TO REMOVE THESE LOCI AFTER THE TREE IS BUILT (AND ALSO ENSURE THAT THE SNPS.RECONSTRUCTION HAS THE APPROPRIATE COLUMNS TO MATCH N.POLYMORPHIC SITES.) -->
+
 
 <!-- ########################################################################################################## -->
 ## Arguments
@@ -331,7 +376,7 @@ The `treeWAS` function takes the following arguments:
 ## Don't run this:
 out <- treeWAS(snps,
                 phen,
-                tree = c("UPGMA", "nj", "ml"),
+                tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
                 n.subs = NULL,
                 n.snps.sim = ncol(snps)*10,
                 chunk.size = ncol(snps),
@@ -604,7 +649,7 @@ Each list element contains the following:
 
 ### Printing Output
 <!-- ########################################################################################################## -->
-Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified. Note that `print.treeWAS` is just the `print` function for an object of class `treeWAS`:
+Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified. Note that `print.treeWAS` is just the `print` function for an object of class `treeWAS`. 
 
 ```{r, eval=TRUE, echo=FALSE, include=FALSE}
 ## Example output:

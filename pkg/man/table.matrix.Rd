@@ -52,4 +52,3 @@ tab.out <- table.matrix(t(x))
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

@@ -35,4 +35,3 @@ hist(out)
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

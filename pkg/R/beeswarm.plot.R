@@ -67,12 +67,13 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                                      method="center", # swarm square hex center
                                      #priority="descending", ## ONLY for SWARM method...
                                      pwcol = eval(parse(text=x)),
-                                     #col = myCol, ## to set w funky colours (INSTEAD of pwcol = test)
+                                     # col = myCol, ## to set w funky colours (INSTEAD of pwcol = test)
                                      ylim = c(-0.002, 1.002), # otherwise ggplot can't plot ZERO values --> NAs
                                      las=2,
                                      cex=0.8,
                                      corral = "omit",
                                      do.plot = FALSE) # none gutter wrap omit
+
   # head(beeswarm)
 
   ######################################################

@@ -25,4 +25,3 @@ any arguments set with \code{set.args} will \emph{over-ride} any values currentl
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

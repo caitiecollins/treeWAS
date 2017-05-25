@@ -23,4 +23,3 @@ Note that the (row)names of \code{var} should match the tip.labels of \code{tree
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

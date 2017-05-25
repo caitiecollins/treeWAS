@@ -77,7 +77,7 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
   ## Note: plot.phen expects output from phen.sim as input, and phen.sim works w pruningwise trees...
   tree <- reorder.phylo(tree, order="pruningwise")
   ## Trees must be rooted:
-  if(!is.rooted(tree)) tree <- midpoint(tree)
+  # if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ## PLOT MARGINS: ##
   mar.ori <- par()$mar
@@ -91,6 +91,8 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
   ## Set plot margins:
   par(mar=mar.new)
 
+  if(is.null(main.title)) main.title <- FALSE
+
   #############################################################################
   ######################## PLOT phylo with PHEN ###############################
   #############################################################################
@@ -99,7 +101,11 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
   if(!is.null(phen.nodes) & !is.null(snp.nodes)) par(mfrow=c(1,2))
 
   ## get number of terminal nodes
-  n.ind <- tree$Nnode+1
+  if(!is.null(tree$tip.label)){
+    n.ind <- length(tree$tip.label)
+  }else{
+    n.ind <- tree$Nnode+1
+  }
 
   ## check if phen provided is for all nodes or only terminal nodes:
   if(length(phen.nodes) == (n.ind + tree$Nnode)){
@@ -109,6 +115,7 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
     nodeCol <- as.character(nodeCol)
     nodeCol <- replace(nodeCol, which(nodeCol %in% c("R", "B", "1")), "red")
     nodeCol <- replace(nodeCol, which(nodeCol %in% c("S", "A", "0")), "blue")
+    nodeCol <- replace(nodeCol, which(nodeCol %in% c("0.5")), "grey")
     nodeCol <- as.vector(unlist(nodeCol))
     ## get COLOR for LEAVES ONLY
     leafCol <- nodeCol[1:n.ind]
@@ -154,10 +161,14 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
 
         if(RTL == FALSE){
           # plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...) # edgeCol
-          plot(tree, show.tip=T, tip.col="white", edge.width=2, edge.color=edgeCol, ...) # edgeCol
+          plot(tree, show.tip=T, tip.col="white", edge.width=3, edge.color=edgeCol,...) # edge.width=3  #  no.margin=T
+          ## TEMP
+          # plot(tree, show.tip=T, tip.col="white", edge.width=3, edge.color=edgeCol, no.margin=T)
         }else{
           # plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction = "leftwards", ...) # edgeCol
-          plot(tree, show.tip=T, tip.col="white", edge.width=2, edge.color=edgeCol, direction = "leftwards", ...) # edgeCol
+          plot(tree, show.tip=T, tip.col="white", edge.width=3, edge.color=edgeCol, direction = "leftwards", ...) # edge.width=3  #  no.margin=T
+          ## TEMP
+          # plot(tree, show.tip=T, tip.col="white", edge.width=3, edge.color=edgeCol, direction = "leftwards", no.margin=TRUE, use.edge.length=FALSE) #
         }
         ## Add title?
         if(main.title == TRUE){
@@ -166,14 +177,20 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         }else{
           if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
         }
-        axisPhylo()
+        ## Add axis?
+        # axisPhylo()
+
         # edgelabels(text=paste("e", c(1:nrow(tree$edge)), sep="."),
                   # cex=0.5, font=2, bg=transp(edgeLabCol, 0.3), adj=c(1,1))
         if(RTL == FALSE){
-          tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.2, 0), col=leafCol, frame="none")
+          tiplabels(text=tree$tip.label, cex=0.55, adj=c(-0.5, 0), col=leafCol, frame="none")
+          ## TEMP
+          # tiplabels(text=tree$tip.label, cex=0.75, adj=c(-0.42, 0), col=leafCol, frame="none")
         }else{
-          ## if direction="leftwards"
-          tiplabels(text=tree$tip.label, cex=0.5, adj=c(1.2,0), col=leafCol, frame="none")
+          ## if RTL == TRUE (i.e., direction="leftwards"):
+          tiplabels(text=tree$tip.label, cex=0.55, adj=c(1.5,0), col=leafCol, frame="none")
+          ## TEMP
+          # tiplabels(text=tree$tip.label, cex=0.75, adj=c(1.42,0), col=leafCol, frame="none")
         }
 
         ## TEMP: (LTR)
@@ -273,7 +290,7 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
           #
           #           }else{
 
-            plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards") # edgeCol
+            plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, direction="leftwards", ...) # edgeCol
             ## Add title?
             if(main.title == TRUE){
               # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")

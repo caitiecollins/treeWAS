@@ -22,4 +22,3 @@ The \code{prefix} must be the prefix to three files ending in:
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

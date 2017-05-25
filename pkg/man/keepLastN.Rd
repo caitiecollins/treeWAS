@@ -18,4 +18,3 @@ removing all but the last N characters of each element.
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

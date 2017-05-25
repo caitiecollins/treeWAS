@@ -31,4 +31,3 @@ plot(tree)
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

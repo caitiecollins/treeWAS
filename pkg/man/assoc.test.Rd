@@ -23,4 +23,3 @@ Run one of five tests of association between each column of a SNPs matrix and a 
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

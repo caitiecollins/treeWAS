@@ -338,7 +338,7 @@ get.assoc.scores <- function(snps,
     print(paste("Simulated data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
   }
 
-  print(paste("Test flag #1 @", Sys.time()))
+  # print(paste("Test flag #1 @", Sys.time()))
 
   ###################################
   ## HANDLE DUPLICATE SNPS COLUMNS ##
@@ -351,7 +351,7 @@ get.assoc.scores <- function(snps,
     corr.dat <- corr.dat.complete
   }
 
-  print(paste("Test flag #2; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+  # print(paste("Test flag #2; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ## Expand corr.sim (if not all snps.sim columns unique):
   if(all.unique.sim == FALSE){
@@ -360,7 +360,7 @@ get.assoc.scores <- function(snps,
     corr.sim <- corr.sim.complete
   }
 
-  print(paste("Test flag #3; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+  # print(paste("Test flag #3; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ## quick look at corr.sim & corr.dat
   # hist(corr.sim, xlim=c(0,1))
@@ -488,8 +488,8 @@ get.sig.snps <- function(corr.dat,
     if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=1-p.value)
   }
 
-  print(paste("Test flag #4; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
-  print(paste("Thresh =",thresh,"@", Sys.time()))
+  # print(paste("Test flag #4; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+  # print(paste("Thresh =",thresh,"@", Sys.time()))
 
   if(p.value.correct == "fdr"){
     #########
@@ -510,7 +510,7 @@ get.sig.snps <- function(corr.dat,
 
   } # end p.value.correct == "fdr"
 
-  print(paste("Test flag #5; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+  # print(paste("Test flag #5; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ##################################
   ## GET SIGNIFICANT CORRELATIONS ##
@@ -531,7 +531,7 @@ get.sig.snps <- function(corr.dat,
     sig.p.vals <- p.vals[sig.snps]
   }
 
-  print(paste("Test flag #6; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+  # print(paste("Test flag #6; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ## 0 p.vals
   min.p <- paste("p-values listed as 0 are <",
@@ -554,7 +554,7 @@ get.sig.snps <- function(corr.dat,
   sig.snps.names <- sig.snps.names[NWO]
   gc()
 
-  print(paste("Test flag #7; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+  # print(paste("Test flag #7; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   #################
   ## GET RESULTS ##

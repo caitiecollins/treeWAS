@@ -31,4 +31,3 @@ plot.prob.phen(p=0.2, n.snps.assoc=10)
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-

@@ -29,4 +29,3 @@ for example, if you have deliberately duplicated unique columns
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }
-
