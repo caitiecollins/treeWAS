@@ -1,9 +1,9 @@
 Package: treeWAS
 Title: Run phylogenetic tree-based GWAS
-Version: 0.0.0.9000
+Version: 1.0
 Authors@R: person("Caitlin", "Collins", , "caitiecollins@gmail.com", role = c("aut", "cre"))
-Description: Perform GWAS using phylogenetic trees to correct for population stratification.
-License: What license is it under?
+Description: Perform microbial GWAS using phylogenetic trees to correct for population stratification and recombination.
+License: GPL (3)
 LazyData: true
 RoxygenNote: 6.0.1
 Depends: adegenet,
