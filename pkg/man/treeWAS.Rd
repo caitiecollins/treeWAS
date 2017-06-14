@@ -131,6 +131,12 @@ we recommend that this column be removed from the dataset.
 Note that the removal of majority-missing columns will be performed automatically within \code{treeWAS}.
 If, for some reason, you do not wish this to be the case, set the \code{na.rm} argument to \code{FALSE}.
 
+The phylogenetic tree, if provided by the user, should contain only the terminal nodes corresponding to the individuals under analysis.
+Any additional individuals, including the outgroup if not under analysis, should be removed prior to running \code{treeWAS}.
+As simulation of the null genetic data is performed along the tree, there is an additional formatting requirement for the tree,
+namely that the edge matrix contained in tree$edge must contain, in either the first or last row of its first (ancestral) column,
+the first internal node (that is, this node numbered: n.terminal + 1).
+
 
 \strong{Homoplasy Distribution}
 

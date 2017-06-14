@@ -182,7 +182,9 @@ To carry out a GWAS using *treeWAS*, the following data is **required**:
 The following **optional** elements can also be provided by the user or, alternatively, these can be generated automatically by the `treeWAS` function:
 
 > A phylogenetic tree
->   : An object of class `phylo` (from the *ape* package), containing a phylogenetic tree. Tip labels are required and must correspond to both the row labels of the genetic data matrix and the names of the phenotypic variable (again, the order does not matter). 
+>   : An object of class `phylo` (from the *ape* package), containing a phylogenetic tree. Tip labels are required and must correspond to both the row labels of the genetic data matrix and the names of the phenotypic variable. Any additional individuals, including the outgroup if not under analysis, should be removed prior to running *treeWAS*. The format of the edge matrix (tree$edge) should contain the first internal node (that is, the node numbered: n.terminal + 1) in either the first or last row of its first column. 
+
+
   
 > An ancestral state reconstruction of the genotype
 >   : A `matrix` containing a reconstruction of the ancestral states of all loci in the genetic dataset, at all internal nodes. This should include the original states at the terminal nodes and have the same number of columns as the input genetic data matrix. The number of rows should be equal to the total number of nodes in the tree, including the terminal nodes (in rows 1:N). It must have been reconstructed with either parsimony or ML (see `?treeWAS`) for consistency with the ancestral state reconstruction of the simulated genetic dataset that will be performed within *treeWAS*.
@@ -220,11 +222,7 @@ str(tree)
 str(snps.reconstruction)
 ```
 
-<!-- 
-data(snps.reconstruction)
-## reconstruction
-str(snps.reconstruction)
---> 
+
 
 ```{r, eval=FALSE}
 ## Load colours:
@@ -352,17 +350,17 @@ if(length(ix) > 0){
 ```
 
 
-<!-- 
-## drop rows from snps.rec:
-nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
-nodes <- nodes[(nrow(snps)+1):length(nodes)]
-toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
-toKeep <- c(toKeep, nodes)
-snps.reconstruction <- snps.reconstruction[toKeep, ]
--->
-
-
 <!-- NOTE TO SELF: YOU MAY WANT TO SUGGEST THAT NON-POLYMORHPIC LOCI (ie WHOLE GENOMES) BE PROVIDED IF THE USER WANTS TO BUILD A TREE WITHIN TREEWAS. IF SO--NEED TO ADD MORE CHECKS TO REMOVE THESE LOCI AFTER THE TREE IS BUILT (AND ALSO ENSURE THAT THE SNPS.RECONSTRUCTION HAS THE APPROPRIATE COLUMNS TO MATCH N.POLYMORPHIC SITES.) -->
+
+### Trees:
+<!-- ########################################################################################################## -->
+
+The phylogenetic tree, if provided by the user, should contain only the terminal nodes corresponding to the individuals under analysis.
+Any additional individuals, including the outgroup if not under analysis, should be removed prior to running *treeWAS*.
+As simulation of the null genetic data is performed along the tree, there is an additional formatting requirement for the tree,
+namely that the edge matrix contained in tree$edge must contain, in either the first or last row of its first (ancestral) column,
+the first internal node (that is, this node numbered: n.terminal + 1).
+
 
 
 <!-- ########################################################################################################## -->
