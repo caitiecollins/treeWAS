@@ -86,26 +86,13 @@ snp.sim.Q <- function(n.snps = 10000,
   if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ####################################################################
-  ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
-  ####################################################################
-
-  # if(coaltree == FALSE){
-  ## Simulation should start from the lowest internal node index (ie n.terminal+1):
-  if(unique(tree$edge[,1])[1] == (tree$Nnode+2)){
-    ## Simulate from top:bottom?
-    x <- 1:nrow(tree$edge)
-  }else{
-    ## Extra check:
-    if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] == (tree$Nnode+2)){
-      ## Simulate from bottom:top?
-      x <- rev(c(1:nrow(tree$edge)))
-    }else{
-      stop("This simulation procedure expects to find the root node/first internal node
-           (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
-           once the tree has been reordered to be in 'pruningwise' configuration.
-           This is NOT the case with your tree. Please check.")
-    }
-    }
+  ############################
+  ## Get Anc-Des EDGE ORDER ##
+  ############################
+  ## Get sequence from lowest ("root", Nterm+1) to highest ancestral node:
+  ix <- c(min(tree$edge[,1]):max(tree$edge[,1]))
+  ## Get for loop index of rows in tree$edge[,1], in pairs, from lowest to highest:
+  x <- as.vector(unlist(sapply(c(1:length(ix)), function(e) which(tree$edge[,1] == ix[e]))))
   ####################################################################
 
 
@@ -1254,26 +1241,13 @@ snp.sim.Q <- function(n.snps = 10000,
   if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ####################################################################
-  ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
-  ####################################################################
-
-  # if(coaltree == FALSE){
-  ## Simulation should start from the lowest internal node index (ie n.terminal+1):
-  if(unique(tree$edge[,1])[1] == (tree$Nnode+2)){
-    ## Simulate from top:bottom?
-    x <- 1:nrow(tree$edge)
-  }else{
-    ## Simulate from bottom:top?
-    x <- rev(c(1:nrow(tree$edge)))
-
-    ## Extra check:
-    if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] != (tree$Nnode+2)){
-      stop("This simulation procedure expects to find the root node/first internal node
-               (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
-               once the tree has been reordered to be in 'pruningwise' configuration.
-               This is NOT the case with your tree. Please check.")
-    }
-  }
+  ############################
+  ## Get Anc-Des EDGE ORDER ##
+  ############################
+  ## Get sequence from lowest ("root", Nterm+1) to highest ancestral node:
+  ix <- c(min(tree$edge[,1]):max(tree$edge[,1]))
+  ## Get for loop index of rows in tree$edge[,1], in pairs, from lowest to highest:
+  x <- as.vector(unlist(sapply(c(1:length(ix)), function(e) which(tree$edge[,1] == ix[e]))))
   ####################################################################
 
 

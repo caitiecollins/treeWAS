@@ -19,8 +19,6 @@
 # library(devtools)
 # install_version("Hmisc", version = "3.9-1", repos = "http://cran.us.r-project.org")
 
-## BUT -- how to rquire an older version in NAMESPACE???
-
 
 
 ###################
@@ -237,10 +235,11 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' If, for some reason, you do not wish this to be the case, set the \code{na.rm} argument to \code{FALSE}.
 #'
 #' The phylogenetic tree, if provided by the user, should contain only the terminal nodes corresponding to the individuals under analysis.
-#' Any additional individuals, including the outgroup if not under analysis, should be removed prior to running \code{treeWAS}.
+#' Any additional individuals, including the outgroup, if not under analysis should be removed prior to running \code{treeWAS}.
 #' As simulation of the null genetic data is performed along the tree, there is an additional formatting requirement for the tree,
 #' namely that the edge matrix contained in tree$edge must contain, in either the first or last row of its first (ancestral) column,
 #' the first internal node (that is, this node numbered: n.terminal + 1).
+#' The tree can be either rooted or unrooted.
 #'
 #'
 ###########################################################
@@ -580,27 +579,15 @@ treeWAS <- function(snps,
 
 
   ####################################################################
-  ## Check for COALESCENT or RTREE-TYPE ORDERING before SIMULATING: ##
+  ############################
+  ## Get Anc-Des EDGE ORDER ##
+  ############################
+  ## Get sequence from lowest ("root", Nterm+1) to highest ancestral node:
+  ix <- c(min(tree$edge[,1]):max(tree$edge[,1]))
+  ## Get for loop index of rows in tree$edge[,1], in pairs, from lowest to highest:
+  x <- as.vector(unlist(sapply(c(1:length(ix)), function(e) which(tree$edge[,1] == ix[e]))))
   ####################################################################
 
-  # if(coaltree == FALSE){
-  ## Simulation should start from the lowest internal node index (ie n.terminal+1):
-  if(unique(tree$edge[,1])[1] == (tree$Nnode+2)){
-    ## Simulate from top:bottom?
-    x <- 1:nrow(tree$edge)
-  }else{
-    ## Extra check:
-    if(unique(tree$edge[,1])[length(unique(tree$edge[,1]))] == (tree$Nnode+2)){
-      ## Simulate from bottom:top?
-      x <- rev(c(1:nrow(tree$edge)))
-    }else{
-      stop("This simulation procedure expects to find the root node/first internal node
-           (ie. n.terminal+1) in either the FIRST or LAST row of tree$edge[,1],
-           once the tree has been reordered to be in 'pruningwise' configuration.
-           This is NOT the case with your tree. Please check.")
-    }
-    }
-  ####################################################################
 
 
 
@@ -1261,7 +1248,7 @@ treeWAS <- function(snps,
                           Updated: ", n.snps.sim, sep=""))
             ## TO DO: ##
             ## If the user, for whatever reason, wanted to simulate the number they requested
-            ## (ie. matching the input n.snps (coincidentally?)), could either
+            ## (ie. matching the input n.snps), could either
             ## (A) Add an argument like upate.n.snps.sim = FALSE,
             ## (B) Tell them to do their own data cleaning exactly as I do but outside of/before running the treeWAS function.
             ## (C) Fudge--tell them to add 1, eg. 10,000 --> 10,001?
