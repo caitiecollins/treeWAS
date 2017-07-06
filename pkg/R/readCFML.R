@@ -26,6 +26,16 @@
 #' @details The \code{prefix} must be the prefix to three files ending in:
 #' (i) "labelled_tree.newick", (ii) "ML_sequence.fasta", (iii) "position_cross_reference.txt".
 #'
+#' @return read.CFML returns a list containing:
+#' (i) \code{tree}: The phylogenetic tree.
+#' (ii) \code{snps}: The binary genetic data matrix of polymorphic loci.
+#' (iii) \code{snps.rec}: The genetic data reconstruction matrix.
+#' (iv) \code{seqs}: The genetic data sequences (polymorphic loci only), a \code{DNAbin} object.
+#' (v) \code{index}: The index vector, indicating for each column in \code{seqs} the unique polymorphic column pattern to which it corresponds (0 = non-polymorphic).
+#' (vi) \code{n.subs}: The distribution of the number of substitutions per site.
+#' Note that all genetic data elements (ii - iv) are returned in expanded form; that is,
+#' they contain both unique and duplicate column patterns for all polymorphic loci as indicated in the \code{index} vector.
+#'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #' @examples
@@ -34,14 +44,14 @@
 
 ########################################################################
 
-## Not to be confused with the original readCFML fn (which returns only dist),
-## this is the NEW read.CFML...
-
 ## This function reads the output of CFML and returns a LIST containing:
-## the distribution of substitutions per site (dist),
 ## the phylogenetic tree, converted to be binary and post-ordered (tree),
-## the set of sequences containing no duplicate column patterns (seqs),
-## the index of all the original sequences in the set of unique sequence columns (mapping).
+## the snps matrix
+## the snps.rec matrix
+## the set of sequences containing duplicate column patterns (seqs),
+## the mapping index of all the original sequences in the set of unique sequence columns (index).
+## the distribution of substitutions per site (n.subs),
+
 
 read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 
@@ -67,14 +77,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
   ## Modify the edge matrix so that it uses the same indices as the fasta file
   labs <- labels(seqs)
   edges <- tree$edge
-  ## node.label causing problems (?!) ###
-  ## Not sure if order wrong, but think below is wrong bc., while tree$tip.lab is in order corresponding
-  ## correctly to edge mat, internal node labs are not
-  ## (Hyp-- edge mat expects internal nodes to be labelled in order, ie. 111 --> NODE_111 ??? ---> (BUT MAYBE NOT???!!!!!)).
   treelabs <- c(tree$tip.label, tree$node.label)
-  # treelabs <- tree$tip.label
-  # treelabs.ori <- treelabs
-  # edges.ori <- edges
 
   ## If treelabs not of length labs (eg tree$node.label is NULL), fill in remainder w labs from seqs??
   # if(length(treelabs) < length(labs))  treelabs <- c(treelabs, labs[c((length(treelabs)+1):length(labs))])
@@ -120,7 +123,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
       num[i] <- sum(mapping == i) # Only count biallelic sites
       n <- length(which(seqs[edges[, 1], i] != seqs[edges[, 2], i])) ## faster
       subs[i] <- subs[i]+n
-    } ## NOTE--if we're only counting biallelic sites for num, should do so for subs as well...
+    } ## NOTE--only counting biallelic sites for num, and for subs dist (below)...
   } # end for loop
   ) # end system.time
 
@@ -143,14 +146,8 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 
   ## NEW ##
 
-  ## Expand seqs with mapping/index (??):
-
-  ## (?) DOES IT MAKE MORE SENSE TO RETURN SEQS UN-EXPANDED, OR EXPANDED, ALONGSIDE INDEX?   ####   ####   ####   ####   ####   ####   <-------- (??)
-  ## --> Seems confusing to return snps expanded & seqs unexpanded w a different n.cols...
-  ## (though also seems confusing to return snps & seqs expanded w a "useless" index object...?)
-
+  ## Expand seqs with mapping/index:
   seqs <- seqs[,mapping]
-
 
   ## Convert DNAbin object:
   snps.rec <- DNAbin2genind(seqs, polyThres=0)
@@ -166,6 +163,11 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
   N <- nrow(snps.rec)-tree$Nnode
   toKeep <- 1:N
   snps <- snps.rec[toKeep, ]
+
+
+  ## NOTE: BOTH seqs and snps are being returned in EXPANDED form (POLYMORPHIC only).
+  ## This means that the returned index element is not needed for expansion, but instead
+  ## serves as a record of the expansion/duplication of polymorphic columns.
 
   out <- list(tree = tree,
               snps = snps,
@@ -194,90 +196,203 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 
 
 
-# ##############
-# ## readCFML ##
-# ##############
+
+
+
+
+############################################################################################################################################
+
+
+
+
+#######################
+## get.original.loci ##
+#######################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' \code{(read.CFML+)} Get original sequence positions of polymorphic loci.
+#'
+#' If you ran \code{read.CFML} on ClonalFrameML output before running \code{treeWAS},
+#' this function can be used to identify the original sequence positions of your polymorphic loci.
+#' E.g., If \code{treeWAS} identified loci "1417.a" and "2017.g" as significant, \code{get.original.loci}
+#' can identify corresponding sequence positions "1165743" and "1741392" and return
+#' flanking sequence segments.
+#'
+#' @param seqs A \code{DNAbin} object containing the original sequences
+#' input into ClonalFrameML (see details).
+#' @param dat An object containing the output of the \code{read.CFML} function.
+#' @param sig.snps.names A character vector containing the names of
+#' polymorphic loci whose original sequence positions you desire (see details).
+#' @param n.bp An integer specifying the desired length of the flanking
+#' sequence to be returned; by default, 50 (see details).
+#' @param suff.length An integer specifying the suffix length
+#' of \code{snps} elements; by default, 2 (see details).
+#' @param csv A logical indicating whether to save the results as a CSV file.
+#' @param csv.prefix An optional character vector specifying a directory and
+#' filename prefix for the CSV file (if \code{csv=TRUE}); default name/suffix, "sig_loci.csv".
+#' \emph{Please be careful: Any existing file of that name will be overwritten!}
+#' @param NA.thresh A number between 0 and 1 indicating the max allowable NA proportion for sequence fragments
+#' (if a sequence fragment from row 1 exceeds this threshold,
+#' a sufficiently complete sequence fragment will be sought in subsequent rows); by default, 0.2.
+#'
+#' @details \strong{seqs} must contain ClonalFrameML \emph{input*},
+#' which can be read in from fasta with \code{read.dna("FILENAME.fasta", format="fasta")}
+#' (*not the ClonalFrameML output file "ML_sequence.fasta" or the \code{seqs} element of \code{read.CFML} output).\cr\cr
+#' \strong{sig.snps.names} can contain any set of \code{colnames(snps)}, for example,
+#' the set of significant loci identified by \code{treeWAS} (\code{out$treeWAS.combined$treeWAS.combined}).\cr\cr
+#' \strong{n.bp} specifies the total length of flanking sequence
+#' (drawn from the first row of \code{seqs} only),
+#' half of which will be on either side of each locus in \code{sig.snps.names}.
+#' Each such sequence will be of total length \code{n.bp+1}, arranged (e.g., with \code{n.bp = 50}) as:\cr
+#' <---25bp---><locus.i><---25bp--->.\cr\cr
+#' \strong{suff.length} tells the \code{removeLastN} function how many characters are used to specify
+#' the allele in \code{sig.snps.names} and \code{colnames(snps)}. For names of the form:
+#' "1234.a", \code{suff.length = 2} (note that the decimal counts as a character).
+#' If \code{snps} names are purely numeric with no alleles indicated
+#' (i.e., they already match names in \code{seqs}), then set \code{suff.length = 0}.
+#'
+#' @return \code{get.original.loci} returns a list containing:
+#' \enumerate{
+#' \item \code{loci}: The original sequence positions for all polymorphic loci in \code{seqs}.
+#' \item \code{loci.sig}: The original sequence positions for all polymorphic loci in \code{sig.snps.names}.
+#' \item \code{seq.sig}: A list of length \code{sig.snps.names} containing sequence fragments of length \code{n.bp}.
+#' }
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+#' @examples
+#'
+#' @importFrom ape read.dna
+#' @importFrom utils write.csv
+
+########################################################################
+
+# ################################################
+# fasta <- "/home/caitiecollins/ClonalFrameML/src/pubMLST/Gono/Grad2014_WG.fas"
+# prefix <- "/home/caitiecollins/ClonalFrameML/src/pubMLST/Gono/Grad2014_WG.fas.out"
 #
-# ########################################################################
+# ## read in original fasta sequence:
+# seqs <- read.dna(fasta, format="fasta")
 #
-# ###################
-# ## DOCUMENTATION ##
-# ###################
+# ## load read.CFML_dat.Rdata
+# dat <- get(load(sprintf('%s.read.CFML_dat.Rdata', prefix)))
 #
-# #' Short one-phrase description.
-# #'
-# #' Longer proper discription of function...
-# #'
-# #' @param prefix A character string containing the prefix of all file names to be read in.
-# #'
-# #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-# #' @export
-# #' @examples
-# #'
-# #' ## load data
-# #' data(dist)
-# #' str(dist)
-# #'
-# #' ## basic use of fn
-# #' fn(arg1, arg2)
-# #'
-# #' #' ## more elaborate use of fn
-# #' fn(arg1, arg2)
-# #'
-# #' @import ape adegenet
+# ## get sig.snps.names:
+# out <- get(load("/home/caitiecollins/ClonalFrameML/src/pubMLST/Gono/CRO/Grad2014_WG.fas.out.treeWAS_out.Rdata"))
+# # out <- get(load("/home/caitiecollins/ClonalFrameML/src/pubMLST/Gono/CRO/Grad2014_WG.fas.out.treeWAS_PA_out.Rdata"))
+# sig.snps.names <- out$treeWAS.combined$treeWAS.combined
 #
-# ########################################################################
-#
-# ##############
-# ## readCFML ##
-# ##############
-#
-# ## ORIGINAL readCFML FN-- RETURNS DIST ONLY w barplot.
-# ## NOTE-- Use read.CFML (with a DOT) to get the LIST output!!
-#
-# ## This function reads the output of CFML and outputs the distribution of substitutions per site
-#
-# readCFML <- function(prefix, plot=TRUE) {
-#
-#   # require(ape)
-#   # require(adegenet)
-#
-#   tree<-read.tree(sprintf('%s.labelled_tree.newick',prefix))
-#   seqs<-read.dna(sprintf('%s.ML_sequence.fasta',prefix),format='fasta')
-#   mapping<-scan(sprintf('%s.position_cross_reference.txt',prefix),sep=',',quiet=T)
-#   l<-length(seqs[1,])
-#
-#   ## Check tree (violations cause problems, eg. in phen.sim)
-#   if(!is.binary.tree(tree)) tree <- multi2di(tree)
-#   if(!identical(tree, reorder.phylo(tree,"postorder"))) tree <- reorder.phylo(tree,"postorder")
-#
-#   ## Modify the edge matrix so that it uses the same indices as the fasta file
-#   labs<-labels(seqs)
-#   edges<-tree$edge
-#   treelabs<-c(tree$tip.label,tree$node.label)
-#   for (i in 1:nrow(edges)) for (j in 1:ncol(edges)) edges[i,j]=which(labs==treelabs[edges[i,j]])
-#
-#   ## Count substitutions for each site
-#   subs=rep(0,l) # Number of substitutitions for patterns
-#   num=rep(0,l) # Number of times a given pattern is used
-#   for (i in 1:l) {
-#     if (length(unique(seqs[,i]))==2) num[i]=sum(mapping==i) #Only count biallelic sites
-#     for (b in 1:nrow(edges)) if (seqs[edges[b,1],i]!=seqs[edges[b,2],i]) subs[i]=subs[i]+1
-#   }
-#
-#   ## Build distribution
-#   dist=rep(0,max(subs))
-#   for (i in 1:max(subs)) dist[i]=sum(num[which(subs==i)])
-#
-#   ## Plot distribution
-#   if(plot==TRUE){
-#     barplot(dist,
-#             main="Number of substitutions per site",
-#             names.arg=c(1:length(dist)),
-#             ylab="Frequency",
-#             col=transp("royalblue", alpha=0.5))
-#   }
-#
-#
-#   return(dist)
-# } # end (OLD) readCFML
+# foo <- get.original.loci(seqs, dat, sig.snps.names, n.bp=40, csv=T, csv.prefix="/home/caitiecollins/ClonalFrameML/src/pubMLST/Gono/CRO/Grad2014_CRO")
+################################################
+
+get.original.loci <- function(seqs, dat, sig.snps.names, n.bp = 50, suff.length = 2, csv = TRUE, csv.prefix = NULL, NA.thresh = 0.2){
+
+  ## Extract elements from read.CFML dat:
+  index <- dat$index
+  snps <- dat$snps
+
+  ## get ORIGINAL positions of snps.loci: ##
+  ## name index according to ORIGINAL indices:
+  inds <- index
+  names(inds) <- c(1:length(inds))
+  ## get POLYMORPHIC indices:
+  ix <- inds[which(inds != 0)]
+
+  ####    ####    ####    ####    ####
+  ## ENTER SNP.locus POSITION:
+  if(is.null(suff.length)) suff.length <- 0
+  # l.ori <- 1:ncol(snps)
+  l.ori <- removeLastN(colnames(snps), suff.length)
+  l.ori <- as.numeric(l.ori)
+
+  ## Identify sig.locus original name among polymorphic indices:
+  l <- as.numeric(names(ix[l.ori]))
+  # head(l, 20) # original positions
+  ## Check (should be no NAs):
+  if(length(which(is.na(l))) > 0){
+    warning("Oops, there should be no NAs in the set of original positions, but NAs have been generated.")
+  }
+
+  ## Get set of ORIGINAL POSITIONS (total or for sig.loci only if provided): ##
+  sig.snps <- sapply(c(1:length(sig.snps.names)), function(e) which(colnames(snps) == sig.snps.names[e]))
+  # sig.snps <- which(colnames(snps) %in% sig.snps.names)
+  l.sig <- l[sig.snps]
+  names(l.sig) <- paste(l[sig.snps], keepLastN(sig.snps.names, 2), sep="")
+
+
+  ###############################################################
+  ## get ALLELES of ORIGINAL position of sig.locus +/- n.bp/2: ##
+  ###############################################################
+  if(is.null(n.bp)) n.bp <- 50
+  bp.back <- floor(n.bp/2)
+  bp.fwd <- ceiling(n.bp/2)
+
+  ####################################
+  SEQ.l <- list()
+  miss <- c("-", " ", "", NA, "NA", "na", ".", "99")
+  for(i in 1:length(l.sig)){
+    ## get fragment start & end:
+    start <- l.sig[i]-bp.back
+    end <- l.sig[i]+bp.fwd
+
+    ## get row 1 sequence:
+    rowN <- 1
+    seq <- as.character(seqs[rowN, start:end])
+    ## check that proportion NAs is lower than threshold:
+    while((length(which(seq %in% miss)) > length(seq)*NA.thresh) & rowN < nrow(seqs)){
+      rowN <- rowN+1
+      seq.ori <- seq
+      seq <- as.character(seqs[rowN, start:end])
+      ## keep the more complete sequence:
+      if(length(which(seq %in% miss)) > length(which(seq.ori %in% miss))){
+        seq <- seq.ori
+      }
+    } # end while loop
+    if((length(which(seq %in% miss)) > length(seq)*NA.thresh)){
+      cat("Sequence fragment ", i, ": ", length(which(seq %in% miss))/length(seq), "% missing.", sep="")
+    }
+
+    ## Paste seq together:
+    SEQ <- toupper(seq)
+    SEQ <- paste0(SEQ, collapse = "")
+    SEQ.l[[i]] <- SEQ
+
+  } # end for loop
+  names(SEQ.l) <- l.sig
+  # SEQ.l[[1]]
+  ####################################
+
+  ## save loci as csv? ##
+  if(csv==TRUE){
+    df <- data.frame("SNP.locus" = sig.snps.names,
+                     "Original.position" = as.vector(unlist(l.sig)),
+                     "Original.locus" = as.vector(unlist(names(l.sig))),
+                     "Original.seq" = as.vector(unlist(SEQ.l)))
+
+    if(is.null(csv.prefix)){
+      write.csv(df, file='sig_loci.csv')
+    }else{
+      write.csv(df, file=sprintf('%s_sig_loci.csv', csv.prefix))
+    }
+  } # end csv
+
+
+  ## get OUTPUT (real positions (total & for sig.loci) & seqs (for sig.loci)): ##
+  foo <- list("loci" = l,
+              "loci.sig" = l.sig,
+              "seq.sig" = SEQ.l)
+
+  ## return output:
+  return(foo)
+
+} # end get.original.loci
+
+#################################################################################################################################
+
+
+
