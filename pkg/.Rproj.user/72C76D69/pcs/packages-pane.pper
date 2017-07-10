@@ -2,6 +2,6 @@
     "installOptions" : {
         "installDependencies" : true,
         "installFromRepository" : true,
-        "libraryPath" : "/home/caitiecollins/R/x86_64-pc-linux-gnu-library/3.3"
+        "libraryPath" : "/home/caitiecollins/R/x86_64-pc-linux-gnu-library/3.4"
     }
 }

@@ -15,5 +15,6 @@ Imports: ggplot2,
     scales,
     pryr
 Suggests: knitr,
-    rmarkdown
+    rmarkdown,
+    png
 VignetteBuilder: knitr

@@ -44,7 +44,8 @@ By default, the first three tests are run (see details).}
 
 \item{snps.reconstruction}{Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 for the ancestral state reconstruction of the genetic dataset,
-or a matrix containing this reconstruction if it has been performed elsewhere.}
+or a matrix containing this reconstruction if it has been performed elsewhere
+\emph{and} you provide the tree.}
 
 \item{snps.sim.reconstruction}{A character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 for the ancestral state reconstruction of the simulated null genetic dataset.}
