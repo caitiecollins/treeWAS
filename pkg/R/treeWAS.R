@@ -169,7 +169,8 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'
 #' @param snps.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the genetic dataset,
-#'                              or a matrix containing this reconstruction if it has been performed elsewhere.
+#'                              or a matrix containing this reconstruction if it has been performed elsewhere
+#'                              \emph{and} you provide the tree.
 #'
 #' @param snps.sim.reconstruction A character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                                  for the ancestral state reconstruction of the simulated null genetic dataset.
@@ -549,6 +550,26 @@ treeWAS <- function(snps,
 
   if(class(tree) == "character"){
 
+    ## Check Rows first: (mandatory) ##
+    NA.tab <- sapply(c(1:nrow(snps)), function(e) length(which(is.na(snps[e,]))))
+    ## Remove ENTIRELY missing rows...
+    toRemove <- rownames(snps)[which(NA.tab == ncol(snps))]
+    ## If there are any...
+    if(length(toRemove) > 0){
+      ## print notice:
+      cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
+      ## remove individuals from snps:
+      snps.ini <- snps
+      snps <- snps[-which(rownames(snps) %in% toRemove), ]
+      ## remove individuals from phen:
+      phen <- phen[-which(names(phen) %in% toRemove)]
+    } # end row NA check 1
+
+    ## Ensure snps.rec is NOT user-provided if tree not provided:
+    if(class(snps.reconstruction) != "character") snps.reconstruction <- "parsimony"
+
+    ## Reconstruct tree: ##
+    ## NOTE: Should really request WHOLE GENOMES here (add separate argument (seqs)) <------------- ##### TO DO #####
     tree <- tree.reconstruct(snps,
                              method = tree,
                              dist.dna.model = dist.dna.model,
@@ -705,9 +726,24 @@ treeWAS <- function(snps,
   ################################################
   ## Columns:
   if(is.null(na.rm)) na.rm <- TRUE
-  if(na.rm != FALSE){
-    NA.tab <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e]))))
 
+  ## Get number of NAs per column:
+  NA.tab <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e]))))
+
+  ## Remove any ENTIRELY missing columns
+  toRemove <- which(NA.tab > floor(nrow(snps)))
+  if(length(toRemove) > 0){
+    snps.ini <- snps
+    snps <- snps[, -toRemove]
+
+    ## (+ snps.reconstruction)
+    if(is.matrix(snps.reconstruction)){
+      snps.reconstruction <- snps.reconstruction[, -toRemove]
+    }
+  }
+
+  ## Unless user declined, remove columns missing >= 50%
+  if(na.rm != FALSE){
     ## What proportion of individuals w NAs is acceptable?
     toRemove <- which(NA.tab > floor(nrow(snps)/2)) # Remove columns w > 50% of NAs
     if(length(toRemove) > 0){
@@ -725,41 +761,36 @@ treeWAS <- function(snps,
   #######################################################
   ## CHECK IF ANY INDIVIDUALS ARE 100% (or 75%??) NAS: ##
   #######################################################
-  ## Rows:
-  if(is.null(na.rm)) na.rm <- TRUE
-  if(na.rm != FALSE){
-    NA.tab <- sapply(c(1:nrow(snps)), function(e) length(which(is.na(snps[e,]))))
+  ## Rows: (mandatory)
+  NA.tab <- sapply(c(1:nrow(snps)), function(e) length(which(is.na(snps[e,]))))
 
-    ## What proportion of loci w NAs is acceptable?
-    # toRemove <- which(NA.tab > floor(nrow(snps)/2)) # Remove columns w > 50% of NAs
-    # toRemove <- which(NA.tab > floor(ncol(snps)*0.75)) # Remove row w > 75% of NAs
-    toRemove <- rownames(snps)[which(NA.tab == ncol(snps))] # Remove ENTIRELY missing rows...
+  ## Remove any ENTIRELY missing rows...
+  toRemove <- rownames(snps)[which(NA.tab == ncol(snps))]
 
-    if(length(toRemove) > 0){
-      ## print notice:
-      cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
-      ## remove individuals from snps:
-      snps.ini <- snps
-      snps <- snps[-which(rownames(snps) %in% toRemove), ]
+  if(length(toRemove) > 0){
+    ## print notice:
+    cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
+    ## remove individuals from snps:
+    snps.ini <- snps
+    snps <- snps[-which(rownames(snps) %in% toRemove), ]
 
-      ## remove individuals from phen:
-      phen <- phen[-which(names(phen) %in% toRemove)]
-      ## remove individuals from tree:
-      tree <- drop.tip(tree, tip = toRemove)
+    ## remove individuals from phen:
+    phen <- phen[-which(names(phen) %in% toRemove)]
+    ## remove individuals from tree:
+    tree <- drop.tip(tree, tip = toRemove)
 
-      ## (+ snps.reconstruction)
-      if(is.matrix(snps.reconstruction)){
-        nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
-        nodes <- nodes[(nrow(snps)+1):length(nodes)]
+    ## (+ snps.reconstruction)
+    if(is.matrix(snps.reconstruction)){
+      nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
+      nodes <- nodes[(nrow(snps)+1):length(nodes)]
 
-        toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
-        ## in case snps.rec lacks rownames..
-        if(is.null(toKeep)) toKeep <- which(rownames(snps.ini) %in% rownames(snps))
-        toKeep <- c(toKeep, nodes)
-        snps.reconstruction <- snps.reconstruction[toKeep, ]
-      }
-
+      toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
+      ## in case snps.rec lacks rownames..
+      if(is.null(toKeep)) toKeep <- which(rownames(snps.ini) %in% rownames(snps))
+      toKeep <- c(toKeep, nodes)
+      snps.reconstruction <- snps.reconstruction[toKeep, ]
     }
+
   }
   ####################################################################
   ## CHECK FOR NON-BINARY SNPS (?): ## DO THIS OUTSIDE OF THE treeWAS PIPELINE -- TOO MANY OPPORTUNITIES FOR ERRORS IF DONE AUTOMATICALLY.
