@@ -1,9 +1,11 @@
+<!--
 ---
-output: 
-  html_document: 
+output:
+  html_document:
     keep_md: yes
 ---
 
+-->
 
 # *treeWAS*: A phylogenetic tree-based approach to genome-wide association studies in microbes
 

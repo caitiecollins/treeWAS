@@ -378,7 +378,7 @@ if(all(suffixes %in% c(".a", ".c", ".g", ".t"))){
 <!-- ########################################################################################################## -->
 Missing data is permitted (denoted by `NA` values only) in the genetic data matrix. 
 Any column that is entirely missing will be automatically removed within `treeWAS`. 
-Any column composed of 50% or more NAs will also be removed; however, 
+Any column composed of more than 75% NAs will also be removed; however, 
 if for some reason you do not wish this to be the case, set the argument `na.rm` to `FALSE`.
 
 
@@ -450,7 +450,7 @@ out <- treeWAS(snps,
 > simulating *more* loci (e.g., `100*ncol(snps)`) may further improve results.
 
 > `chunk.size`
->  : An integer indicating the number of \code{snps} loci to be analysed at one time. This provides a solution for machines with insufficient memory to analyse the  dataset at hand. Note that smaller values of \code{chunk.size} will increase the computational time required (e.g., for \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).
+>  : An integer indicating the number of `snps` loci to be analysed at one time. This provides a solution for machines with insufficient memory to analyse the  dataset at hand. Note that smaller values of `chunk.size` will increase the computational time required (e.g., for `chunk.size = ncol(snps)/2`, treeWAS will take twice as long to complete).
 
 > `test` 
 >  : A character string or vector containing one or more of the following available tests of association:
@@ -470,6 +470,9 @@ out <- treeWAS(snps,
 >  : Either a character string specifying `"parsimony"` (the default) or `"ML"` (maximum likelihood) for the
 > ancestral state reconstruction of the phenotypic variable, or a vector containing this reconstruction if it has been performed
 > elsewhere.
+
+> `na.rm` 
+>  : A logical indicating whether to remove `snps` columns if they contain more than 75% NAs (by default, `TRUE`). 
 
 > `p.value` 
 >  : A number specifying the base p-value to be set the threshold of significance (by default, `0.01`).

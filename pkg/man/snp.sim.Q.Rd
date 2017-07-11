@@ -2,7 +2,7 @@
 % Please edit documentation in R/snp.sim.Q.R
 \name{snp.sim.Q}
 \alias{snp.sim.Q}
-\title{Short one-phrase description.}
+\title{Aternative SNPs simulation fn.}
 \usage{
 snp.sim.Q(n.snps = 10000, n.subs = 1, snp.root = NULL,
   n.snps.assoc = 10, assoc.prob = 100, Q = matrix(c(2, 0.75, 0.75, 1, 3,
@@ -13,10 +13,10 @@ snp.sim.Q(n.snps = 10000, n.subs = 1, snp.root = NULL,
   grp.min = 0.25, row.names = NULL, set = 3, seed = 1)
 }
 \arguments{
-\item{snps}{description.}
+\item{n.snps}{An integer specifying the number of snps columns to be simulated.}
 }
 \description{
-Longer proper discription of function...
+NOT currently in use. Please use the regular snp.sim function to simulate genetic data.
 }
 \examples{
 ## Example ##

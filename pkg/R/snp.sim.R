@@ -86,27 +86,6 @@ snp.sim <- function(n.snps = 10000,
   # gen.root <- sample(c("a", "c", "g", "t"), gen.size, replace=TRUE)
   gen.root <- sample(c(TRUE, FALSE), gen.size, replace=TRUE)
 
-  ## For ACE/Pagel-test approach: ##   ##   ##    <--    ##   Don't think we need this....
-  #   if(is.matrix(n.subs)){
-  #   ## Input = either:
-  #   ## one state (chosen by directly selecting the more likely state), or
-  #   ## two likelihoods (taken from fit.iQ$lik.anc[1,] from w/in fitPagel).
-  #
-  #   ## One state:
-  #   if(!is.null(snp.root)){
-  #     if(length(snp.root) == 1){
-  #       ## select only root state --> different SNP sim method (???)
-  #       if(snp.root == 0) gen.root <- "a"
-  #       if(snp.root == 1) gen.root <- "t"
-  #
-  #       ## select root state & assign this state to all nodes,
-  #       ## to be changed later by a modifiction of the existing SNP sim method...
-  #       #if(snp.root == 0) gen.root <- rep("a", gen.size)
-  #       #if(snp.root == 1) gen.root <- rep("t", gen.size)
-  #     }
-  #   }
-  #   } #
-
   ## get the sum of all branch lengths in the tree:
   time.total <- sum(tree$edge.length)
 
@@ -277,25 +256,30 @@ snp.sim <- function(n.snps = 10000,
   ## you will assign the mts for this site
   ## (~ branch length):
 
+  l.edge <- length(tree$edge.length)
   ## Get vector of FALSEs of length tree$edge.length:
-  null.vect <- rep(FALSE, length(tree$edge.length))
+  null.vect <- rep(FALSE, l.edge)
 
 
-  if(max(n.mts) > length(tree$edge.length)){
+  ## TO DO: Memory inefficient step... Improve if possible?
+  if(max(n.mts) > l.edge){
     if(!is.null(seed)) set.seed(seed)
-    snps.loci <- sapply(c(1:length(n.mts)),
-                        function(e)
-                          replace(null.vect,
-                                  sample(c(1:length(tree$edge.length)),
-                                         n.mts[e],
-                                         replace=TRUE,
-                                         prob=tree$edge.length), TRUE))
+      for(e in 1:length(n.mts)){
+        repTF <- FALSE
+        if(n.mts[e] > l.edge) repTF <- TRUE
+        snps.loci[[e]] <- replace(null.vect, sample(c(1:l.edge),
+                                                    n.mts[e],
+                                                    replace=repTF,
+                                                    prob=tree$edge.length), TRUE)
+      }
+      snps.loci <- t(do.call(rbind, snps.loci))
+
   }else{
     if(!is.null(seed)) set.seed(seed)
     snps.loci <- sapply(c(1:length(n.mts)),
                         function(e)
                           replace(null.vect,
-                          sample(c(1:length(tree$edge.length)),
+                          sample(c(1:l.edge),
                                  n.mts[e],
                                  replace=FALSE,
                                  prob=tree$edge.length), TRUE))
@@ -337,10 +321,8 @@ snp.sim <- function(n.snps = 10000,
       #   selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
       #                                                  %in% snps[[tree$edge[i,1]]]
       #                                                  [snps.loci.unique[[i]][e]])]))
-      new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
-        selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
-                                                 %in% snps[[tree$edge[i,1]]]
-                                                 [snps.loci.unique[[i]][e]])]))
+      new.nts[[i]] <- !snps[[tree$edge[i,1]]][snps.loci.unique[[i]]]
+
 
       ## if any loci are selected for multiple mutations
       ## within their given branch length:
@@ -359,14 +341,12 @@ snp.sim <- function(n.snps = 10000,
             if(k==1){
               # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
               #                                                               %in% foo[[j]][1])])
-              foo[[j]][k] <- selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
-                                                                    %in% foo[[j]][1])])
+              foo[[j]][k] <- !foo[[j]][1]
 
             }else{
               # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
               #                                                               %in% foo[[j]][k-1])])
-              foo[[j]][k] <- selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
-                                                                    %in% foo[[j]][k-1])])
+              foo[[j]][k] <- !foo[[j]][k-1]
             }
           }
           ## retain only the last nt selected
@@ -404,38 +384,15 @@ snp.sim <- function(n.snps = 10000,
 
   ######################################################################################################################################################################
 
-  # temp <- temp.ori
-
-  # #########################
-  # ## Get UNIQUE snps.rec ##
-  # #########################
-  # temp <- get.unique.matrix(temp.ori, MARGIN=2)
-  # temp.unique <- temp$unique.data
-  # index <- temp$index
-  #
-  # if(ncol(temp.unique) == ncol(temp.ori)){
-  #   all.unique <- TRUE
-  # }else{
-  #   all.unique <- FALSE
-  # }
-  #
-  # ## work w only unique snps:
-  # temp <- temp.unique
-
   ## identify n.minor.allele required to meet polyThres:
   polyThres <- 0.01
   n.min <- n.ind*polyThres
 
   ## make a list of any NON-polymorphic loci:
-  toRepeat <- list()
-  for(i in 1:ncol(temp)){
-    if(any(table(temp[,i]) < n.min) | length(table(temp[,i])) == 1){
-      toRepeat[[length(toRepeat)+1]] <- i
-    }
-  }
-  if(length(toRepeat) > 0){
-    toRepeat <- as.vector(unlist(toRepeat))
-  }
+  csum <- colSums(temp)
+  toRepeat <- which(csum < n.min | csum > (nrow(temp) - n.min))
+
+
 
 
 
@@ -540,10 +497,7 @@ snp.sim <- function(n.snps = 10000,
         #   selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
         #                                                  %in% snps[[tree$edge[i,1]]][toRepeat]
         #                                                  [snps.loci.unique[[i]][e]])]))
-        new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
-          selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
-                                                 %in% snps[[tree$edge[i,1]]][toRepeat]
-                                                 [snps.loci.unique[[i]][e]])]))
+        new.nts[[i]] <- !snps[[tree$edge[i,1]]][toRepeat][snps.loci.unique[[i]]]
 
         ## if any loci are selected for multiple mutations
         ## within their given branch length:
@@ -562,13 +516,11 @@ snp.sim <- function(n.snps = 10000,
               if(k==1){
                 # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
                 #                                                               %in% foo[[j]][1])])
-                foo[[j]][k] <- selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
-                                                                      %in% foo[[j]][1])])
+                foo[[j]][k] <- !foo[[j]][1]
               }else{
                 # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
                 #                                                               %in% foo[[j]][k-1])])
-                foo[[j]][k] <- selectBiallelicSNP(c(TRUE, FALSE)[which(c(TRUE, FALSE)
-                                                                      %in% foo[[j]][k-1])])
+                foo[[j]][k] <- !foo[[j]][k-1]
               }
             }
             ## retain only the last nt selected
@@ -617,28 +569,28 @@ snp.sim <- function(n.snps = 10000,
     toRepeat.ori <- toRepeat
     temp.toRepeat <- temp[, toRepeat.ori]
 
-
-    toRepeat <- list()
-    ## if temp.toRepeat is a true matrix:
+    ## make a vector of any NON-polymorphic loci:
+    ## If ncol = 1:
     if(!is.matrix(temp.toRepeat)){
-      if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
-        toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
+      csum <- sum(temp.toRepeat)
+      if(csum < n.min | csum > (length(temp.toRepeat) - n.min)){
+        toRepeat <- toRepeat.ori
+      }else{
+        toRepeat <- NULL
       }
     }else{
+      ## if temp.toRepeat is a true matrix:
       if(ncol(temp.toRepeat) > 0){
-        for(i in 1:ncol(temp.toRepeat)){
-          if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
-            toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
-          }
-        }
+        csum <- colSums(temp.toRepeat)
+        toRepeat <- toRepeat.ori[which(csum < n.min | csum > (nrow(temp.toRepeat) - n.min))]
       }else{
-        if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
-          toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
+        csum <- sum(temp.toRepeat)
+        if(csum < n.min | csum > (length(temp.toRepeat) - n.min)){
+          toRepeat <- toRepeat.ori
+        }else{
+          toRepeat <- NULL
         }
       }
-    }
-    if(length(toRepeat) > 0){
-      toRepeat <- as.vector(unlist(toRepeat))
     }
 
     counter <- counter+1

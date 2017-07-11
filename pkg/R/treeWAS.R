@@ -177,7 +177,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' @param phen.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the phenotypic variable,
 #'                              or a vector containing this reconstruction if it has been performed elsewhere.
-#' @param na.rm A logical indicating whether columns in \code{snps} containing more than 50\% \code{NA}s
+#' @param na.rm A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 #'                should be removed at the outset (TRUE, the default) or not (FALSE).
 #'
 #' @param p.value A number specifying the base p-value to be set the threshold of significance (by default, \code{0.01}).
@@ -228,17 +228,13 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' for example, if you have deliberately duplicated columns without subsequently generating unique column names
 #' (e.g., by expanding unique columns according to an index returned by ClonalFrameML).
 #'
-#' Missing data is permitted (denoted by NA values only) in the genetic data matrix,
-#' but if more than 50% of any column is composed of NAs,
-#' we recommend that this column be removed from the dataset.
-#' Note that the removal of majority-missing columns will be performed automatically within \code{treeWAS}.
-#' If, for some reason, you do not wish this to be the case, set the \code{na.rm} argument to \code{FALSE}.
+#' Missing data is permitted (denoted by NA values only) in the genetic data matrix.
+#' However, any row or column that is entirely missing will be automatically removed within \code{treeWAS}.
+#' In addition, any column that is more than 75% NAs will be removed by default
+#' (though, if you do not wish this to be the case, you can set \code{na.rm} to \code{FALSE}).
 #'
 #' The phylogenetic tree, if provided by the user, should contain only the terminal nodes corresponding to the individuals under analysis.
 #' Any additional individuals, including the outgroup, if not under analysis should be removed prior to running \code{treeWAS}.
-#' As simulation of the null genetic data is performed along the tree, there is an additional formatting requirement for the tree,
-#' namely that the edge matrix contained in tree$edge must contain, in either the first or last row of its first (ancestral) column,
-#' the first internal node (that is, this node numbered: n.terminal + 1).
 #' The tree can be either rooted or unrooted.
 #'
 #'
@@ -247,7 +243,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'
 #' The homoplasy distribution contains the number of substitutions per site.
 #'
-#' If this information is not know, it will be reconstructed within \code{treeWAS} using Fitch's parsimony.
+#' If this information is not known, it will be reconstructed within \code{treeWAS} using Fitch's parsimony.
 #'
 #' If this information is known (i.e., it has been estimated elsewhere through a parsimonious reconstruction),
 #' it can be provided in the \code{n.subs} argument.
@@ -653,7 +649,7 @@ treeWAS <- function(snps,
     ## remove individuals from phen:
     phen <- phen[-which(names(phen) %in% toRemove)]
     ## remove individuals from snps:
-    snps.ini <- snps
+    snps.ini <- snps # need snps.ini below
     snps <- snps[-which(rownames(snps) %in% toRemove), ]
 
     ## remove individuals from tree:
@@ -720,43 +716,6 @@ treeWAS <- function(snps,
   #   }
 
   ####################################################################
-  ################################################
-  ## CHECK IF ALL LOCI CONTAIN MINORITY OF NAs: ##
-  ################################################
-  ## Columns:
-  if(is.null(na.rm)) na.rm <- TRUE
-
-  ## Get number of NAs per column:
-  NA.tab <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e]))))
-
-  ## Remove any ENTIRELY missing columns
-  toRemove <- which(NA.tab > floor(nrow(snps)))
-  if(length(toRemove) > 0){
-    snps.ini <- snps
-    snps <- snps[, -toRemove]
-
-    ## (+ snps.reconstruction)
-    if(is.matrix(snps.reconstruction)){
-      snps.reconstruction <- snps.reconstruction[, -toRemove]
-    }
-  }
-
-  ## Unless user declined, remove columns missing >= 50%
-  if(na.rm != FALSE){
-    ## What proportion of individuals w NAs is acceptable?
-    toRemove <- which(NA.tab > floor(nrow(snps)/2)) # Remove columns w > 50% of NAs
-    if(length(toRemove) > 0){
-      snps.ini <- snps
-      snps <- snps[, -toRemove]
-
-      ## (+ snps.reconstruction)
-      if(is.matrix(snps.reconstruction)){
-        snps.reconstruction <- snps.reconstruction[, -toRemove]
-      }
-    }
-  }
-
-  ####################################################################
   #######################################################
   ## CHECK IF ANY INDIVIDUALS ARE 100% (or 75%??) NAS: ##
   #######################################################
@@ -770,7 +729,7 @@ treeWAS <- function(snps,
     ## print notice:
     cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
     ## remove individuals from snps:
-    snps.ini <- snps
+    snps.ini <- snps # need snps.ini below
     snps <- snps[-which(rownames(snps) %in% toRemove), ]
 
     ## remove individuals from phen:
@@ -789,8 +748,46 @@ treeWAS <- function(snps,
       toKeep <- c(toKeep, nodes)
       snps.reconstruction <- snps.reconstruction[toKeep, ]
     }
-
+    rm(snps.ini)
   }
+
+  ####################################################################
+  ##########################################
+  ## CHECK IF ALL LOCI CONTAIN < 75% NAs: ##
+  ##########################################
+  ## Columns:
+  if(is.null(na.rm)) na.rm <- TRUE
+
+  ## Get number of NAs per column:
+  NA.tab <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e]))))
+
+  ## Remove any ENTIRELY missing columns
+  toRemove <- colnames(snps)[which(NA.tab == nrow(snps))]
+  if(length(toRemove) > 0){
+    snps <- snps[, -which(colnames(snps) %in% toRemove)]
+
+    ## (+ snps.reconstruction)
+    if(is.matrix(snps.reconstruction)){
+      snps.reconstruction <- snps.reconstruction[, -which(colnames(snps.reconstruction) %in% toRemove)]
+    }
+    ## + update NA.tab:
+    NA.tab <- NA.tab[-which(NA.tab == nrow(snps))]
+  }
+
+  ## Unless user declined, remove columns missing >= 75%
+  if(na.rm != FALSE){
+    ## What proportion of individuals w NAs is acceptable?
+    toRemove <- colnames(snps)[which(NA.tab > floor(nrow(snps)*(3/4)))] # Remove columns w > 75% of NAs
+    if(length(toRemove) > 0){
+      snps <- snps[, -which(colnames(snps) %in% toRemove)]
+
+      ## (+ snps.reconstruction)
+      if(is.matrix(snps.reconstruction)){
+        snps.reconstruction <- snps.reconstruction[, -which(colnames(snps.reconstruction) %in% toRemove)]
+      }
+    }
+  }
+
   ####################################################################
   ## CHECK FOR NON-BINARY SNPS (?): ## DO THIS OUTSIDE OF THE treeWAS PIPELINE -- TOO MANY OPPORTUNITIES FOR ERRORS IF DONE AUTOMATICALLY.
   ## (This will only work if all snps colnames end in one of .a/.c/.g/.t)
@@ -1264,18 +1261,24 @@ treeWAS <- function(snps,
         if(n.snps.sim == n.snps){
           n.snps.sim.ori <- n.snps.sim
           n.snps.sim <- ncol(snps)
-          warning(paste("Note: Updating n.snps.sim to match the number of real loci after data cleaning.
-                        Input:", n.snps.sim.ori, " -->
-                        Updated:", n.snps.sim))
+
+          ## Print update notice:
+          cat("Note: Updating n.snps.sim to match the number of real loci after data cleaning.
+          Input:", n.snps.sim.ori, " -->
+          Updated:", n.snps.sim, "\n")
+
         }else{
           Nx <- c(2:200)
-          if(any(n.snps*Nx %in% n.snps.sim)){
+          if(any(n.snps*Nx == n.snps.sim)){
             n.snps.sim.ori <- n.snps.sim
             Nx <- Nx[which(Nx == (n.snps.sim/n.snps))]
             n.snps.sim <- ncol(snps)*Nx
-            warning(paste("Note: Updating n.snps.sim to match ", Nx, "x the number of real loci after data cleaning.
-                          Input: ", n.snps.sim.ori, " -->
-                          Updated: ", n.snps.sim, sep=""))
+
+            ## Print update notice:
+            cat("Note: Updating n.snps.sim to match ", Nx, "x the number of real loci after data cleaning.
+            Input: ", n.snps.sim.ori, " -->
+            Updated: ", n.snps.sim, "\n", sep="")
+
             ## TO DO: ##
             ## If the user, for whatever reason, wanted to simulate the number they requested
             ## (ie. matching the input n.snps), could either

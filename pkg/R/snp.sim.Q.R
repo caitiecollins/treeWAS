@@ -1,4 +1,9 @@
 
+## WARNING:
+## SOME LINES OF SNP.SIM.Q.R HAVE FALLEN OUT OF DATE w SNP.SIM.R.
+## BEFORE USING SNP.SIM.Q, UPDATE (at least!):
+## sapply, add n.mts > l.edge check,
+## convert snps to logical, for loop (selectBiallelicSNP --> !l[[i]])
 
 #############
 ## snp.sim ##
@@ -10,11 +15,11 @@
 ## DOCUMENTATION ##
 ###################
 
-#' Short one-phrase description.
+#' Aternative SNPs simulation fn.
 #'
-#' Longer proper discription of function...
+#' NOT currently in use. Please use the regular snp.sim function to simulate genetic data.
 #'
-#' @param snps description.
+#' @param n.snps An integer specifying the number of snps columns to be simulated.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export

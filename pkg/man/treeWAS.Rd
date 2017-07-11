@@ -54,7 +54,7 @@ for the ancestral state reconstruction of the simulated null genetic dataset.}
 for the ancestral state reconstruction of the phenotypic variable,
 or a vector containing this reconstruction if it has been performed elsewhere.}
 
-\item{na.rm}{A logical indicating whether columns in \code{snps} containing more than 50\% \code{NA}s
+\item{na.rm}{A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 should be removed at the outset (TRUE, the default) or not (FALSE).}
 
 \item{p.value}{A number specifying the base p-value to be set the threshold of significance (by default, \code{0.01}).}
@@ -126,17 +126,13 @@ Please also be careful not to accidentally remove any purposeful duplications wi
 for example, if you have deliberately duplicated columns without subsequently generating unique column names
 (e.g., by expanding unique columns according to an index returned by ClonalFrameML).
 
-Missing data is permitted (denoted by NA values only) in the genetic data matrix,
-but if more than 50% of any column is composed of NAs,
-we recommend that this column be removed from the dataset.
-Note that the removal of majority-missing columns will be performed automatically within \code{treeWAS}.
-If, for some reason, you do not wish this to be the case, set the \code{na.rm} argument to \code{FALSE}.
+Missing data is permitted (denoted by NA values only) in the genetic data matrix.
+However, any row or column that is entirely missing will be automatically removed within \code{treeWAS}.
+In addition, any column that is more than 75% NAs will be removed by default
+(though, if you do not wish this to be the case, you can set \code{na.rm} to \code{FALSE}).
 
 The phylogenetic tree, if provided by the user, should contain only the terminal nodes corresponding to the individuals under analysis.
 Any additional individuals, including the outgroup, if not under analysis should be removed prior to running \code{treeWAS}.
-As simulation of the null genetic data is performed along the tree, there is an additional formatting requirement for the tree,
-namely that the edge matrix contained in tree$edge must contain, in either the first or last row of its first (ancestral) column,
-the first internal node (that is, this node numbered: n.terminal + 1).
 The tree can be either rooted or unrooted.
 
 
@@ -144,7 +140,7 @@ The tree can be either rooted or unrooted.
 
 The homoplasy distribution contains the number of substitutions per site.
 
-If this information is not know, it will be reconstructed within \code{treeWAS} using Fitch's parsimony.
+If this information is not known, it will be reconstructed within \code{treeWAS} using Fitch's parsimony.
 
 If this information is known (i.e., it has been estimated elsewhere through a parsimonious reconstruction),
 it can be provided in the \code{n.subs} argument.
