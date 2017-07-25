@@ -28,7 +28,6 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
 #' @examples
 #'
 #' ## basic use of fn
@@ -37,6 +36,7 @@
 #' ## plot output
 #' plot(tree)
 #'
+#' @export
 
 ########################################################################
 

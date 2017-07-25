@@ -4,10 +4,9 @@
 \alias{get.assoc.scores}
 \title{Get significant SNPs, according to a given test of association.}
 \usage{
-get.assoc.scores(snps, snps.unique = NULL, snps.index = NULL, snps.sim,
-  snps.sim.unique = NULL, snps.sim.index = NULL, phen, tree,
-  test = "terminal", snps.reconstruction, snps.sim.reconstruction,
-  phen.reconstruction)
+get.assoc.scores(snps, snps.sim, phen, tree, test = "terminal",
+  snps.reconstruction = NULL, snps.sim.reconstruction = NULL,
+  phen.reconstruction = NULL, unique.cols = FALSE)
 }
 \arguments{
 \item{snps}{A matrix containing the real snps.}

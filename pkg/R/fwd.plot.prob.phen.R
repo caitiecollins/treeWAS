@@ -22,7 +22,6 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
 #' @examples
 #'
 #' ## basic use of fn ##
@@ -31,6 +30,7 @@
 #' plot.prob.phen(p=0.5, n.snps.assoc=10)
 #' plot.prob.phen(p=0.2, n.snps.assoc=10)
 #'
+#' @export
 
 ########################################################################
 

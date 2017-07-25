@@ -250,10 +250,92 @@ grid.raster(img)
 
 
 
+
 ## Data Cleaning
 <!-- ########################################################################################################## -->
 
 Before running the `treeWAS` function, please ensure that your data is in the appropriate format.
+
+
+### Labels:
+<!-- ########################################################################################################## -->
+The genetic data matrix, phenotype, and phylogenetic tree (terminal nodes) 
+should all be labelled with corresponding sets of names for the individuals.
+ 
+Any individual that is not present in one or more of the genetic data matrix, 
+the phenotypic variable, and/or the phylogenetic tree must be removed. 
+
+```{r}
+## Check that labels are present:
+is.null(tree$tip.label)
+is.null(rownames(snps))
+is.null(names(phen))
+
+## Cross-check labels with each other:
+all(tree$tip.label %in% rownames(snps))
+all(rownames(snps) %in% tree$tip.label)
+all(tree$tip.label %in% names(phen))
+all(names(phen) %in% tree$tip.label)
+all(names(phen) %in% rownames(snps))
+all(rownames(snps) %in% names(phen))
+```
+
+The above checks are run within `treeWAS`, but it may be worthwhile to confirm for yourself that all labels are present and look correct.
+
+
+### Biallelic loci:
+<!-- ########################################################################################################## -->
+If, in the genetic data matrix, redundant columns are present for binary loci
+(ie. Denoting the state of the second allele as the inverse of the previous column), these should be removed.
+For loci with more than two alleles, all columns should be retained. 
+
+The removal of redundant binary columns can be done by hand; but, the function `get.binary.snps` may also be used. 
+This function requires column names to have a two-character suffix and unique locus identifiers. 
+The function expects the suffixes ".a", ".c", ".g", ".t" (e.g., "Locus_123243.a", "Locus_123243.g"), 
+though alternative two-character suffixes can be used (e.g., "Locus_123243_1", "Locus_123243_2") 
+by setting the argument `force = TRUE`. 
+
+Please also be careful not to accidentally remove any purposeful duplications with repeated names,
+for example, if you have deliberately duplicated columns 
+(e.g., by expanding unique columns according to an index returned by ClonalFrameML), 
+assign unique column names before removing unwanted columns.
+
+
+Before running the `get.binary.snps` function, you can check the suffixes of the genetic data matrix's column names using another small function in *treeWAS*, `keepLastN`, which allows you to keep the last N characters of a variable or vector:
+
+```{r}
+suffixes <- keepLastN(colnames(snps), n = 2)
+suffixes <- unique(suffixes)
+
+if(all(suffixes %in% c(".a", ".c", ".g", ".t"))){
+  ## SNPs:
+  snps <- get.binary.snps(snps)
+  
+  ## ... Optional step (for snps.reconstruction, if present)
+  ## (Example only, if needed for user data)
+  if(is.matrix(snps.reconstruction)){
+    snps.reconstruction <- snps.reconstruction[, which(colnames(snps.reconstruction) %in% colnames(snps))]
+  }
+}
+```
+
+
+### Missing data:
+<!-- ########################################################################################################## -->
+Missing data is permitted (denoted by `NA` values only) in the genetic data matrix. 
+Any column that is entirely missing will be automatically removed within `treeWAS`. 
+Any column composed of more than 75% NAs will also be removed; however, 
+if for some reason you do not wish this to be the case, set the argument `na.rm` to `FALSE`.
+
+<!-- NOTE TO SELF: YOU MAY WANT TO SUGGEST THAT NON-POLYMORHPIC LOCI (ie WHOLE GENOMES) BE PROVIDED IF THE USER WANTS TO BUILD A TREE WITHIN TREEWAS. IF SO--NEED TO ADD MORE CHECKS TO REMOVE THESE LOCI AFTER THE TREE IS BUILT (AND ALSO ENSURE THAT THE SNPS.RECONSTRUCTION HAS THE APPROPRIATE COLUMNS TO MATCH N.POLYMORPHIC SITES.) -->
+
+
+### Trees:
+<!-- ########################################################################################################## -->
+
+The phylogenetic tree, if provided by the user, should contain only the terminal nodes corresponding to the individuals under analysis.
+Any additional individuals, including the outgroup, if not under analysis should be removed prior to running *treeWAS*.
+The tree can be either rooted or unrooted.
 
 
 ### Continuous phenotypes:
@@ -311,85 +393,6 @@ If you choose not to transform the phenotype by rank,
 you may want to consider removing outliers if any are present, 
 as these may similarly distort the analysis of continuous phenotypes. 
 
-
-### Labels:
-<!-- ########################################################################################################## -->
-The genetic data matrix, phenotype, and phylogenetic tree (terminal nodes) 
-should all be labelled with corresponding sets of names for the individuals.
- 
-Any individual that is not present in one or more of the genetic data matrix, 
-the phenotypic variable, and/or the phylogenetic tree must be removed. 
-
-```{r}
-## Check that labels are present:
-is.null(tree$tip.label)
-is.null(rownames(snps))
-is.null(names(phen))
-
-## Cross-check labels with each other:
-all(tree$tip.label %in% rownames(snps))
-all(rownames(snps) %in% tree$tip.label)
-all(tree$tip.label %in% names(phen))
-all(names(phen) %in% tree$tip.label)
-all(names(phen) %in% rownames(snps))
-all(rownames(snps) %in% names(phen))
-```
-
-The above checks are run within `treeWAS`, but it may be worthwhile to confirm for yourself that all labels are present and look correct.
-
-### Biallelic loci:
-<!-- ########################################################################################################## -->
-If, in the genetic data matrix, redundant columns are present for binary loci
-(ie. Denoting the state of the second allele as the inverse of the previous column), these should be removed.
-For loci with more than two alleles, all columns should be retained. 
-
-The removal of redundant binary columns can be done by hand; but, the function `get.binary.snps` may also be used. 
-This function requires column names to have a two-character suffix and unique locus identifiers. 
-The function expects the suffixes ".a", ".c", ".g", ".t" (e.g., "Locus_123243.a", "Locus_123243.g"), 
-though alternative two-character suffixes can be used (e.g., "Locus_123243_1", "Locus_123243_2") 
-by setting the argument `force = TRUE`. 
-
-Please also be careful not to accidentally remove any purposeful duplications with repeated names,
-for example, if you have deliberately duplicated columns 
-(e.g., by expanding unique columns according to an index returned by ClonalFrameML), 
-assign unique column names before removing unwanted columns.
-
-
-Before running the `get.binary.snps` function, you can check the suffixes of the genetic data matrix's column names using another small function in *treeWAS*, `keepLastN`, which allows you to keep the last N characters of a variable or vector:
-
-```{r}
-suffixes <- keepLastN(colnames(snps), n = 2)
-suffixes <- unique(suffixes)
-
-if(all(suffixes %in% c(".a", ".c", ".g", ".t"))){
-  ## SNPs:
-  snps <- get.binary.snps(snps)
-  
-  ## ... Optional step (for snps.reconstruction, if present)
-  ## (Example only, if needed for user data)
-  if(is.matrix(snps.reconstruction)){
-    snps.reconstruction <- snps.reconstruction[, which(colnames(snps.reconstruction) %in% colnames(snps))]
-  }
-}
-```
-
-
-### Missing data:
-<!-- ########################################################################################################## -->
-Missing data is permitted (denoted by `NA` values only) in the genetic data matrix. 
-Any column that is entirely missing will be automatically removed within `treeWAS`. 
-Any column composed of more than 75% NAs will also be removed; however, 
-if for some reason you do not wish this to be the case, set the argument `na.rm` to `FALSE`.
-
-
-<!-- NOTE TO SELF: YOU MAY WANT TO SUGGEST THAT NON-POLYMORHPIC LOCI (ie WHOLE GENOMES) BE PROVIDED IF THE USER WANTS TO BUILD A TREE WITHIN TREEWAS. IF SO--NEED TO ADD MORE CHECKS TO REMOVE THESE LOCI AFTER THE TREE IS BUILT (AND ALSO ENSURE THAT THE SNPS.RECONSTRUCTION HAS THE APPROPRIATE COLUMNS TO MATCH N.POLYMORPHIC SITES.) -->
-
-### Trees:
-<!-- ########################################################################################################## -->
-
-The phylogenetic tree, if provided by the user, should contain only the terminal nodes corresponding to the individuals under analysis.
-Any additional individuals, including the outgroup, if not under analysis should be removed prior to running *treeWAS*.
-The tree can be either rooted or unrooted.
 
 
 

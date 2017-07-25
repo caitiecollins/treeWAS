@@ -28,7 +28,7 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #' @examples
 #'
 #' ## load data
@@ -41,9 +41,18 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import ape phangorn
+#' @import ape
+#' @importFrom phangorn as.phyDat
+#' @importFrom phangorn midpoint
+#' @importFrom phangorn optim.pml
+#' @importFrom phangorn pml
+#'
+#' @export
 
 ########################################################################
+# @import phangorn
+# @useDynLib phangorn as.phyDat midpoint optim.pml pml, .registration = TRUE
+# @useDynLib phangorn, .registration = TRUE
 
 ############
 ## TO DO: ##

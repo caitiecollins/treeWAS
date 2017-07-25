@@ -32,7 +32,7 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #' @examples
 #'
 #' ## load data
@@ -45,7 +45,8 @@
 #' #' ## more elaborate use of fn
 #' fn(arg1, arg2)
 #'
-#' @import adegenet
+#' @import adegenet ape
+#' @export
 
 ########################################################################
 
@@ -76,8 +77,6 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
   ## Always work w tree in pruningwise order..
   ## Note: plot.phen expects output from phen.sim as input, and phen.sim works w pruningwise trees...
   tree <- reorder.phylo(tree, order="pruningwise")
-  ## Trees must be rooted:
-  # if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ## PLOT MARGINS: ##
   mar.ori <- par()$mar

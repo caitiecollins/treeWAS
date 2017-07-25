@@ -19,7 +19,6 @@
 #' @param seed An optional integer controlling the pseudo-random process underlying the tree generation.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
 #' @examples
 #'
 #' ## basic use of fn
@@ -28,8 +27,13 @@
 #' ## plot output
 #' plot(tree)
 #'
+#' @import ape
+#' @importFrom phangorn midpoint
+#'
+#' @export
 
 ########################################################################
+#  @useDynLib phangorn, .registration = TRUE
 
 
 

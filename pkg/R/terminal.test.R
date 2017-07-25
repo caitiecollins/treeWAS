@@ -38,20 +38,20 @@ terminal.test <- function(snps,
   #########################
   ## Get UNIQUE snps.rec ##
   #########################
-  temp <- get.unique.matrix(snps, MARGIN=2)
-  snps.unique <- temp$unique.data
-  index <- temp$index
-
-  if(ncol(snps.unique) == ncol(snps)){
-    all.unique <- TRUE
-  }else{
-    all.unique <- FALSE
-  }
-
-  ## work w only unique snps:
-  colnoms <- colnames(snps)
-  snps <- snps.unique
-  rm(snps.unique)
+  # temp <- get.unique.matrix(snps, MARGIN=2)
+  # snps.unique <- temp$unique.data
+  # index <- temp$index
+  #
+  # if(ncol(snps.unique) == ncol(snps)){
+  #   all.unique <- TRUE
+  # }else{
+  #   all.unique <- FALSE
+  # }
+  #
+  # ## work w only unique snps:
+  # colnoms <- colnames(snps)
+  # snps <- snps.unique
+  # rm(snps.unique)
 
   ####################################################################
   #################
@@ -120,15 +120,15 @@ terminal.test <- function(snps,
   ## get values for duplicate snps columns: ##
   ############################################
 
-  ## get reconstruction for all original sites
-  if(all.unique == TRUE){
-    score1.complete <- score1
-  }else{
-    score1.complete <- score1[index]
-    names(score1.complete) <- colnoms
-  }
-
-  score1 <- score1.complete
+  # ## get reconstruction for all original sites
+  # if(all.unique == TRUE){
+  #   score1.complete <- score1
+  # }else{
+  #   score1.complete <- score1[index]
+  #   names(score1.complete) <- colnoms
+  # }
+  #
+  # score1 <- score1.complete
 
   return(score1)
 

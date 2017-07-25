@@ -36,7 +36,7 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #' @examples
 #'
 #' ## basic use of fn
@@ -45,9 +45,12 @@
 #' ## plot output
 #' plot(tree)
 #'
+#' @importFrom phangorn midpoint
+#'
+#' @export
 
 ########################################################################
-
+# @useDynLib phangorn, .registration = TRUE
 
 phen.sim <- function(tree,
                      n.subs = 15,

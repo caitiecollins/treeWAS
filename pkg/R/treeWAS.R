@@ -394,13 +394,14 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import adegenet ape
+#' @import adegenet ape phangorn
 #' @importFrom Hmisc all.is.numeric
+#' @importFrom phangorn midpoint
 #'
 #' @export
 
 ###################################################################################################################################
-
+# @useDynLib phangorn, .registration = TRUE
 
 
 #################
@@ -1248,7 +1249,7 @@ treeWAS <- function(snps,
     n.subs <- N.SUBS[[i]]
 
     #####################################################
-    ## 1) Simulate multiple snps/ dataset to compare your
+    ## 1) Simulate null genetic dataset to compare your #
     ## real correlations w phen to  #####################
     #####################################################
 
@@ -1314,7 +1315,7 @@ treeWAS <- function(snps,
       snps.mat[[1]] <- NULL
     }
 
-    gc()
+    # gc()
 
 
     print(paste("treeWAS snps sim done @", Sys.time()))
@@ -1375,6 +1376,22 @@ treeWAS <- function(snps,
     ## (moved to initial checks)
 
 
+    ###########################
+    ## GET UNIQUE SNPS(.SIM) ##
+    ###########################
+
+    ## Get UNIQUE snps + index
+    snps.complete <- snps
+    temp <- get.unique.matrix(snps, MARGIN=2)
+    snps <- temp$unique.data
+    snps.index <- temp$index
+
+    ## Get UNIQUE snps.sim + index
+    snps.sim.complete <- snps.sim
+    temp <- get.unique.matrix(snps.sim, MARGIN=2)
+    snps.sim <- temp$unique.data
+    snps.sim.index <- temp$index
+
     ##############################################################################################
     ## Reconstruct ancestral SNPs & phen by parsimony/ML (for tests simultaneous & subsequent)  ##
     ##############################################################################################
@@ -1410,9 +1427,18 @@ treeWAS <- function(snps,
       ## If not user-provided or checks failed, reconstruct ancestral states:
       if(is.matrix(snps.reconstruction)){
         snps.rec <- snps.reconstruction
+        ## Get UNIQUE snps.reconstruction
+        snps.rec.complete <- snps.rec
+        temp <- get.unique.matrix(snps.rec, MARGIN=2)
+        snps.rec <- temp$unique.data
+        snps.rec.index <- temp$index
+        if(!identical(snps.rec.index, snps.index)){
+          warning("Careful-- snps and snps.rec should have the same index when reduced
+              to their unique forms.") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+        }
       }else{
         # system.time( # 274
-        snps.REC <- asr(var = snps, tree = tree, type = snps.reconstruction)
+        snps.REC <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
         # )
         snps.rec <- snps.REC$var.rec
       }
@@ -1421,7 +1447,7 @@ treeWAS <- function(snps,
       ## Reconstruct SIMULATED SNPs: ##
       #################################
       # system.time(
-      snps.sim.REC <- asr(var = snps.sim, tree = tree, type = snps.sim.reconstruction)
+      snps.sim.REC <- asr(var = snps.sim, tree = tree, type = snps.sim.reconstruction, unique.cols = TRUE)
       # )
       snps.sim.rec <- snps.sim.REC$var.rec
 
@@ -1430,46 +1456,19 @@ treeWAS <- function(snps,
 
     ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
 
-
-    ###########################
-    ## GET UNIQUE SNPS(.SIM) ##
-    ###########################
-
-    ## Get UNIQUE snps + index
-    snps.complete <- snps
-    temp <- get.unique.matrix(snps, MARGIN=2)
-    snps.unique <- temp$unique.data
-    snps.index <- temp$index
-
-    ## Get UNIQUE snps.sim + index
-    snps.sim.complete <- snps.sim
-    temp <- get.unique.matrix(snps.sim, MARGIN=2)
-    snps.sim.unique <- temp$unique.data
-    snps.sim.index <- temp$index
-
-    ## Get UNIQUE snps.reconstruction
-    snps.rec.complete <- snps.rec
-    temp <- get.unique.matrix(snps.rec, MARGIN=2)
-    snps.rec <- temp$unique.data
-    snps.rec.index <- temp$index
-    if(!identical(snps.rec.index, snps.index)){
-      warning("Careful-- snps and snps.rec should have the same index when reduced
-              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-    }
-
-    ## Get UNIQUE snps.sim.reconstruction
-    snps.sim.rec.complete <- snps.sim.rec
-    temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
-    snps.sim.rec <- temp$unique.data
-    snps.sim.rec.index <- temp$index
-    if(!identical(snps.sim.rec.index, snps.sim.index)){
-      warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
-              to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-    }
+    # ## Get UNIQUE snps.sim.reconstruction
+    # snps.sim.rec.complete <- snps.sim.rec
+    # temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
+    # snps.sim.rec <- temp$unique.data
+    # snps.sim.rec.index <- temp$index
+    # if(!identical(snps.sim.rec.index, snps.sim.index)){
+    #   warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
+    #           to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+    # }
 
     print(paste("Reconstructions completed @", Sys.time()))
 
-    gc()
+    # gc()
 
     #######################
     ## identify sig.snps ##
@@ -1485,26 +1484,38 @@ treeWAS <- function(snps,
 
     ## Run get.assoc.scores for each assoc.test
     ## Then run get.sig.snps (ONLY once ALL of corr.sim, corr.dat have been generated w get.assoc.scores (IFF running chunk-by-chunk!))
-    system.time(
+    # system.time(
       for(t in 1:length(TEST)){
         assoc.scores <- get.assoc.scores(snps = snps,
-                                         snps.unique = snps.unique,
-                                         snps.index = snps.index,
                                          snps.sim,
-                                         snps.sim.unique = snps.sim.unique,
-                                         snps.sim.index = snps.sim.index,
                                          phen = phen,
                                          tree = tree,
                                          test = TEST[[t]],
                                          snps.reconstruction = snps.rec,
                                          snps.sim.reconstruction = snps.sim.rec,
-                                         phen.reconstruction = phen.rec)
+                                         phen.reconstruction = phen.rec,
+                                         unique.cols = TRUE)
+        ## EXPAND CORR.DAT & CORR.SIM:
+        cd <- assoc.scores$corr.dat
+        cs <- assoc.scores$corr.sim
+        cd <- cd[snps.index]
+        cs <- cs[snps.sim.index]
+        names(cd) <- colnames(snps.complete)
+        names(cs) <- colnames(snps.sim.complete)
+
         ## STORE DATA FOR EACH TEST:
-        CORR.DAT[[i]][[t]] <- assoc.scores$corr.dat
-        CORR.SIM[[i]][[t]] <- assoc.scores$corr.sim
+        CORR.DAT[[i]][[t]] <- cd
+        CORR.SIM[[i]][[t]] <- cs
         rm(assoc.scores)
       } # end for (t) loop
-    )
+    # )
+
+    ## EXPAND DATA BEFORE STORING FOR THIS CHUNK:
+    snps.sim <- snps.sim.complete
+    snps.rec <- snps.rec[,snps.index]
+    colnames(snps.rec) <- colnames(snps.complete)
+    snps.sim.rec <- snps.sim.rec[,snps.sim.index]
+    colnames(snps.sim.rec) <- colnames(snps.sim.complete)
 
     ## STORE DATA CREATED FOR THIS CHUNK:
     SNPS.SIM[[i]] <- snps.sim
@@ -1544,7 +1555,7 @@ treeWAS <- function(snps,
   #######################################
   sig.list <- list()
 
-  system.time(
+  # system.time(
     for(t in 1:length(TEST)){
       sig.list[[t]] <- get.sig.snps(corr.dat = CORR.DAT[[t]],
                                     corr.sim = CORR.SIM[[t]],
@@ -1555,7 +1566,7 @@ treeWAS <- function(snps,
                                     p.value.correct = p.value.correct,
                                     p.value.by = p.value.by)
     }
-  )
+  # )
 
   names(sig.list) <- test
 

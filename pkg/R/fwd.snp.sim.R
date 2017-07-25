@@ -17,7 +17,7 @@
 #' @param snps description.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #' @examples
 #'
 #' ## load data
@@ -31,6 +31,7 @@
 #' fn(arg1, arg2)
 #'
 #' @import adegenet ape
+#' @export
 
 ########################################################################
 

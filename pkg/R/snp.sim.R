@@ -14,18 +14,22 @@
 #'
 #' Longer proper discription of function...
 #'
-#' @param snps description.
+#' @param n.snps An integer specifying the number of genetic loci to be simulated.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #'
 #' @examples
 #' ## Example ##
 #'
 #' @import adegenet ape
 #' @importFrom Hmisc all.is.numeric
+#' @importFrom phangorn midpoint
+#'
+#' @export
 
 ########################################################################
+# @useDynLib phangorn, .registration = TRUE
 
 ## ARGUMENTS: ##
 
@@ -49,7 +53,6 @@ snp.sim <- function(n.snps = 10000,
 
   # require(adegenet)
   # require(ape)
-  # require(phangorn)
 
   ##################
   ## HANDLE TREE: ##
@@ -594,8 +597,8 @@ snp.sim <- function(n.snps = 10000,
     }
 
     counter <- counter+1
-    print("COUNTER"); print(counter)
-    print("toRepeat"); print(length(toRepeat))
+    # print("COUNTER"); print(counter)
+    # print("toRepeat"); print(length(toRepeat))
 
 
   } # end NEW while loop...
@@ -774,7 +777,7 @@ snp.sim <- function(n.snps = 10000,
   snps <- snps[1:n.ind, ]
 
   ## clear memory
-  gc()
+  # gc()
 
 
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####

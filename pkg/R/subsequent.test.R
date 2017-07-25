@@ -16,7 +16,7 @@
 #' @param tree A phylo object.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #' @examples
 #'
 #' ## basic use of fn
@@ -24,9 +24,12 @@
 #'
 #' @importFrom scales rescale
 #' @importFrom Hmisc all.is.numeric
-#'
+#' @importFrom phangorn midpoint
+#' @export
 
 ########################################################################
+# @useDynLib phangorn, .registration = TRUE
+
 
 subsequent.test <- function(snps.reconstruction,
                             phen.reconstruction,
@@ -47,20 +50,20 @@ subsequent.test <- function(snps.reconstruction,
   #########################
   ## Get UNIQUE snps.rec ##
   #########################
-  temp <- get.unique.matrix(snps.rec, MARGIN=2)
-  snps.rec.unique <- temp$unique.data
-  index <- temp$index
-
-  if(ncol(snps.rec.unique) == ncol(snps.rec)){
-    all.unique <- TRUE
-  }else{
-    all.unique <- FALSE
-  }
-
-  ## work w only unique snps:
-  colnoms <- colnames(snps.rec)
-  snps.rec <- snps.rec.unique
-  rm(snps.rec.unique)
+  # temp <- get.unique.matrix(snps.rec, MARGIN=2)
+  # snps.rec.unique <- temp$unique.data
+  # index <- temp$index
+  #
+  # if(ncol(snps.rec.unique) == ncol(snps.rec)){
+  #   all.unique <- TRUE
+  # }else{
+  #   all.unique <- FALSE
+  # }
+  #
+  # ## work w only unique snps:
+  # colnoms <- colnames(snps.rec)
+  # snps.rec <- snps.rec.unique
+  # rm(snps.rec.unique)
 
   ####################################################################
   #####################
@@ -131,15 +134,16 @@ subsequent.test <- function(snps.reconstruction,
   ## get values for duplicate snps.rec columns: ##
   ################################################
 
-  ## get reconstruction for all original sites
-  if(all.unique == TRUE){
-    score3.complete <- score3
-  }else{
-    score3.complete <- score3[index]
-    names(score3.complete) <- colnoms
-  }
 
-  score3 <- score3.complete
+  # ## get reconstruction for all original sites
+  # if(all.unique == TRUE){
+  #   score3.complete <- score3
+  # }else{
+  #   score3.complete <- score3[index]
+  #   names(score3.complete) <- colnoms
+  # }
+  #
+  # score3 <- score3.complete
 
   return(score3)
 

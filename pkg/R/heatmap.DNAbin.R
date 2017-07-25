@@ -21,7 +21,7 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #' @examples
 #'
 #' ## load data
@@ -35,9 +35,9 @@
 #' fn(arg1, arg2)
 #'
 #' @import ape
+#' @export
 
 ########################################################################
-
 
 heatmap.DNAbin <- function(dna, dist.dna.model="JC69"){
 

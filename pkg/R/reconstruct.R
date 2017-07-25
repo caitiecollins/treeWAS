@@ -23,6 +23,8 @@
 #' performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} function in package \emph{ape}).
 #' @param method A character string specifying the type of ASR method to implement (only used if
 #' \code{type} is set to "ML").
+#' @param unique.cols A logical indicating whether only unique column patterns are present in \code{var}, if \code{var} is a matrix
+#' (if so (TRUE), a time-consuming step can be skipped); by default, FALSE.
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -31,12 +33,14 @@
 #' @import ape
 #' @importFrom Hmisc all.is.numeric
 
+
 ########################################################################
 
 asr <- function(var,
                 tree,
                 type = c("parsimony", "ML", "ace"), ## keeping "ace", in case I missed any instances, though deprecated.
-                method = c("discrete", "continuous")){
+                method = c("discrete", "continuous"),
+                unique.cols = FALSE){
 
 
   ## HANDLE TREE: ##
@@ -92,24 +96,28 @@ asr <- function(var,
 
     snps <- var
 
-    ###############################
-    ## get unique SNPs patterns: ##
-    ###############################
-    temp <- get.unique.matrix(snps, MARGIN=2)
-    snps.unique <- temp$unique.data
-    index <- temp$index
-
-    if(ncol(snps.unique) == ncol(snps)){
+    if(unique.cols == TRUE){
       all.unique <- TRUE
     }else{
-      all.unique <- FALSE
+      ###############################
+      ## get unique SNPs patterns: ##
+      ###############################
+      temp <- get.unique.matrix(snps, MARGIN=2)
+      snps.unique <- temp$unique.data
+      index <- temp$index
+
+      if(ncol(snps.unique) == ncol(snps)){
+        all.unique <- TRUE
+      }else{
+        all.unique <- FALSE
+      }
+
+      ## work w only unique snps:
+      snps.ori <- snps
+      snps <- snps.unique
     }
 
-    ## work w only unique snps:
-    snps.ori <- snps
-    snps <- snps.unique
-
-    print("N snps.unique (reconstruction):"); print(ncol(snps.unique))
+    # print("N snps.unique (reconstruction):"); print(ncol(snps.unique))
 
     ############################
     ## run PARSIMONY on SNPs: ##
@@ -117,7 +125,7 @@ asr <- function(var,
     if(type == "parsimony"){
 
       ## run get.ancestral.pars
-      snps.pars <- get.ancestral.pars(var=snps, tree=tree)
+      snps.pars <- get.ancestral.pars(var=snps, tree=tree, unique.cols = TRUE)
 
       ## get elements of output
       snps.rec <- snps.pars$var.rec
@@ -177,7 +185,7 @@ asr <- function(var,
 
       ## bind columns of snps.rec together
       snps.rec <- do.call("cbind", snps.rec)
-      colnames(snps.rec) <- colnames(snps)#
+      colnames(snps.rec) <- colnames(snps)
 
     } # end ML
 
@@ -333,8 +341,10 @@ asr <- function(var,
 #'
 
 ########################################################################
+# @useDynLib phangorn, .registration = TRUE
+# @useDynLib phangorn, as.phyDat,  phyDat, pace, midpoint, .registration = TRUE
 
-get.ancestral.pars <- function(var, tree){
+get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
   ## HANDLE TREE: ##
   ## Always work with trees in "pruningwise" order:
@@ -353,22 +363,26 @@ get.ancestral.pars <- function(var, tree){
 
     snps <- var
 
-    ###############################
-    ## get unique SNPs patterns: ##
-    ###############################
-    temp <- get.unique.matrix(snps, MARGIN=2)
-    snps.unique <- temp$unique.data
-    index <- temp$index
-
-    if(ncol(snps.unique) == ncol(snps)){
+    if(unique.cols == TRUE){
       all.unique <- TRUE
     }else{
-      all.unique <- FALSE
-    }
+      ###############################
+      ## get unique SNPs patterns: ##
+      ###############################
+      temp <- get.unique.matrix(snps, MARGIN=2)
+      snps.unique <- temp$unique.data
+      index <- temp$index
 
-    ## work w only unique snps:
-    snps.ori <- snps
-    snps <- snps.unique
+      if(ncol(snps.unique) == ncol(snps)){
+        all.unique <- TRUE
+      }else{
+        all.unique <- FALSE
+      }
+
+      ## work w only unique snps:
+      snps.ori <- snps
+      snps <- snps.unique
+    }
 
     ##########################################
     ## get SNP states of all internal nodes ##
@@ -519,7 +533,8 @@ get.ancestral.pars <- function(var, tree){
     ############################################
 
     ## get reconstruction for all original sites
-    if(ncol(snps.ori) == ncol(snps.rec)){
+    # if(ncol(snps.ori) == ncol(snps.rec)){
+    if(all.unique == TRUE){
       snps.rec.complete <- snps.rec
     }else{
       snps.rec.complete <- snps.rec[, index]
@@ -529,7 +544,8 @@ get.ancestral.pars <- function(var, tree){
 
     ## get sub locations on branches for all original sites
     snps.subs.edges <- subs.edges
-    if(ncol(snps.ori) == ncol(snps.rec)){
+    # if(ncol(snps.ori) == ncol(snps.rec)){
+    if(all.unique == TRUE){
       snps.subs.edges.complete <- snps.subs.edges
     }else{
       snps.subs.edges.complete <- snps.subs.edges[index]

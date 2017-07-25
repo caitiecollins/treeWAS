@@ -4,7 +4,7 @@
 \alias{get.ancestral.pars}
 \title{Ancestral sequence reconstruction via parsimony}
 \usage{
-get.ancestral.pars(var, tree)
+get.ancestral.pars(var, tree, unique.cols = FALSE)
 }
 \arguments{
 \item{var}{A matrix or vector containing a variable whose state at ancestral nodes we want to infer.}

@@ -123,7 +123,6 @@ fwd.coalescent.sim <- function(n.ind=100,
   ## load packages:
   # require(adegenet)
   # require(ape)
-  # require(phangorn)
 
   if(length(which(c(plot, heatmap, reconstruct)==TRUE))==1){
     par(ask=FALSE)

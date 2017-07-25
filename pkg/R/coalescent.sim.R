@@ -82,7 +82,7 @@
 #' of the substitutions that occurred during simulation under perfect association.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #' @examples
 #' \dontrun{
 #' ## load example homoplasy distribution
@@ -120,8 +120,12 @@
 #' tree <- dat$tree
 #' }
 #' @import adegenet ape
+#' @importFrom phangorn midpoint
+#'
+#' @export
 
 ########################################################################
+#  @useDynLib phangorn, .registration = TRUE
 
 ############
 ## NOTES: ##
@@ -224,7 +228,6 @@ coalescent.sim <- function(n.ind = 100,
   ## load packages:
   # require(adegenet)
   # require(ape)
-  # require(phangorn)
 
   filename <- filename.plot
 

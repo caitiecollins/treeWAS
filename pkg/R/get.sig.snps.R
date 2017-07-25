@@ -71,152 +71,118 @@
 ########################################################################
 
 get.assoc.scores <- function(snps,
-                             snps.unique = NULL,
-                             snps.index = NULL,
                              snps.sim,
-                             snps.sim.unique = NULL,
-                             snps.sim.index = NULL,
                              phen,
                              tree,
                              test = "terminal",
-                             snps.reconstruction,
-                             snps.sim.reconstruction,
-                             phen.reconstruction){
+                             snps.reconstruction = NULL,
+                             snps.sim.reconstruction = NULL,
+                             phen.reconstruction = NULL,
+                             unique.cols = FALSE){
 
-  print(paste("Started running", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @", Sys.time()))
+  # print(paste("Started running", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @", Sys.time()))
+  print(paste("Started running", test, "test @", Sys.time()))
 
-  #################
-  ## HANDLE SNPS ##
-  #################
+  ########         ########         ########         ########         ########         ########         ########         ########
 
-  ##########
-  ## snps ##
-  ##########
+  #######################################
+  ## HANDLE INPUT (UNIQUE or EXPANDED) ##
+  #######################################
 
-  if(is.null(snps.unique)){
-    ## Check snps column names
-    if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
-
-    ## Get UNIQUE snps + index
-    snps.ori <- snps
-    temp <- get.unique.matrix(snps, MARGIN=2)
-    snps <- temp$unique.data
-    snps.index <- temp$index
-
-    ## record whether all snps are unique or not for later:
-    if(ncol(snps) == ncol(snps.ori)){
-      all.unique <- TRUE
-    }else{
-      all.unique <- FALSE
-    }
+  ####################
+  ## snps, snps.rec ##
+  ####################
+  if(unique.cols == TRUE){
+    all.unique <- TRUE
   }else{
-    ## If snps.unique provided as well as snps:
-
-    ## CHECK: is index provided as well??
-    if(is.null(snps.index)){
-      cat("If snps.unique is provided, snps.index must also be provided to indicate
-           original mapping locations for all unique sites. Ignoring unique snps provided; working with snps only.")
-
-      ## repeat above steps (as if no snps.unique was provided):
-      ## Check snps column names
-      if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
-
-      ## Get UNIQUE snps + index
-      snps.ori <- snps
+    #################################
+    ## get unique column patterns: ##
+    #################################
+    if(!test %in% c("simultaneous", "subsequent")){
+      ##########
+      ## snps ##
+      ##########
       temp <- get.unique.matrix(snps, MARGIN=2)
-      snps <- temp$unique.data
-      snps.index <- temp$index
+      snps.unique <- temp$unique.data
+      index <- temp$index
 
-      ## record whether all snps are unique or not for later:
-      if(ncol(snps) == ncol(snps.ori)){
+      if(ncol(snps.unique) == ncol(snps)){
         all.unique <- TRUE
       }else{
         all.unique <- FALSE
       }
 
-    }else{
-
+      ## work w only unique snps:
       snps.ori <- snps
       snps <- snps.unique
-      rm(snps.unique)
+    }else{
+      #########################
+      ## snps.reconstruction ##
+      #########################
+      temp <- get.unique.matrix(snps.reconstruction, MARGIN=2)
+      snps.reconstruction.unique <- temp$unique.data
+      index <- temp$index
 
-      ## record whether all snps are unique or not for later:
-      if(ncol(snps) == ncol(snps.ori)){
+      if(ncol(snps.reconstruction.unique) == ncol(snps.reconstruction)){
         all.unique <- TRUE
       }else{
         all.unique <- FALSE
       }
+
+      ## work w only unique snps:
+      snps.ori <- snps
+      snps <- snps.unique
     }
   }
 
-  ##############
-  ## snps.sim ##
-  ##############
-  ## Handle matrix/list input:
-  if(class(snps.sim) == "list"){
-    ## If list of length 1...
-    if(length(snps.sim) == 1){
-      ## keep matrix:
-      snps.sim <- snps.sim[[1]]
-    }else{
-      ## If list of multiple matrices...
-      ## merge all elements into one big matrix
-      ## by pasting columns together:
-      snps.sim <- do.call("cbind", snps.sim)
-    }
-  }
 
-  ## Get UNIQUE snps.sim + index
-  if(is.null(snps.sim.unique)){
-    snps.sim.ori <- snps.sim
-    temp <- get.unique.matrix(snps.sim, MARGIN=2)
-    snps.sim <- temp$unique.data
-    snps.sim.index <- temp$index
-
-    ## record whether all snps are unique or not for later:
-    if(ncol(snps.sim) == ncol(snps.sim.ori)){
-      all.unique.sim <- TRUE
-    }else{
-      all.unique.sim <- FALSE
-    }
+  ############################
+  ## snps.sim, snps.sim.rec ##
+  ############################
+  if(unique.cols == TRUE){
+    all.unique.sim <- TRUE
   }else{
-    ## If snps.sim.unique provided as well as snps:
-
-    ## CHECK: is index provided as well??
-    if(is.null(snps.sim.index)){
-      cat("If snps.sim.unique is provided, snps.sim.index must also be provided to indicate
-            original mapping locations for all unique sites. Ignoring unique snps.sim provided; working with snps.sim only.")
-
-      ## repeat above steps (as if no snps.unique was provided):
-      snps.sim.ori <- snps.sim
+    #################################
+    ## get unique column patterns: ##
+    #################################
+    if(!test %in% c("simultaneous", "subsequent")){
+      ##############
+      ## snps.sim ##
+      ##############
       temp <- get.unique.matrix(snps.sim, MARGIN=2)
-      snps.sim <- temp$unique.data
-      snps.sim.index <- temp$index
+      snps.sim.unique <- temp$unique.data
+      index.sim <- temp$index
 
-      ## record whether all snps are unique or not for later:
-      if(ncol(snps.sim) == ncol(snps.sim.ori)){
+      if(ncol(snps.sim.unique) == ncol(snps.sim)){
         all.unique.sim <- TRUE
       }else{
         all.unique.sim <- FALSE
       }
-    }else{
 
+      ## work w only unique snps:
       snps.sim.ori <- snps.sim
       snps.sim <- snps.sim.unique
-      rm(snps.sim.unique)
+    }else{
+      #############################
+      ## snps.sim.reconstruction ##
+      #############################
+      temp <- get.unique.matrix(snps.sim.reconstruction, MARGIN=2)
+      snps.sim.reconstruction.unique <- temp$unique.data
+      index.sim <- temp$index
 
-      ## record whether all snps are unique or not for later:
-      if(ncol(snps.sim) == ncol(snps.sim.ori)){
+      if(ncol(snps.sim.reconstruction.unique) == ncol(snps.sim.reconstruction)){
         all.unique.sim <- TRUE
       }else{
         all.unique.sim <- FALSE
       }
+
+      ## work w only unique snps:
+      snps.sim.reconstruction.ori <- snps.sim.reconstruction
+      snps.sim.reconstruction <- snps.sim.reconstruction.unique
     }
   }
 
-  ## store column names for later:
-  colnoms <- colnames(snps.ori)
-  colnoms.sim <- colnames(snps.sim.ori)
+  ########         ########         ########         ########         ########         ########         ########         ########
 
   #################
   ## HANDLE PHEN ##
@@ -256,6 +222,8 @@ get.assoc.scores <- function(snps,
   # ## ensure ind names not lost
   # names(phen) <- names(phen.ori)
 
+  ########         ########         ########         ########         ########         ########         ########         ########
+  ###############################################################################################################################
 
   ######################
   ## ASSOCIATION TEST ##
@@ -268,7 +236,7 @@ get.assoc.scores <- function(snps,
     ########################################################
     corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test)
 
-    print(paste("Real data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @", Sys.time()))
+    print(paste("Real data scores completed for", test, "test @", Sys.time()))
 
 
     #############################################################
@@ -276,7 +244,7 @@ get.assoc.scores <- function(snps,
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test)
 
-    print(paste("Simulated data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+    print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
 
   }else{
 
@@ -285,49 +253,12 @@ get.assoc.scores <- function(snps,
     #####################################
     ## (run w/ RECONSTRUCTIONS) ##
 
-    ############################
-    ## HANDLE RECONSTRUCTIONS ##
-    ############################
-
-    ## NOTE: If snps(.sim) are UNIQUE but snps(.sim).reconstruction are NOT, test will give INCORRECT OUTPUT!!!
-
-    if(all.unique == FALSE){
-      ## check if snsp.rec is already in UNIQUE form:
-      if(ncol(snps.reconstruction) != ncol(snps)){
-        temp <- get.unique.matrix(snps.reconstruction, MARGIN=2)
-        snps.reconstruction <- temp$unique.data
-        snps.reconstruction.index <- temp$index
-        if(!identical(snps.reconstruction.index, snps.index)){
-          warning("Careful-- snps and snps.reconstruction should have the same index when reduced
-                  to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-        }
-        }else{
-          snps.reconstruction.index <- snps.index
-      }
-    }
-
-    if(all.unique.sim == FALSE){
-      ## check if snsp.rec is already in UNIQUE form:
-      # if(ncol(snps.reconstruction) != ncol(snps.unique)){
-      if(ncol(snps.sim.reconstruction) != ncol(snps.sim)){
-        temp <- get.unique.matrix(snps.sim.reconstruction, MARGIN=2)
-        snps.sim.reconstruction <- temp$unique.data
-        snps.sim.reconstruction.index <- temp$index
-        if(!identical(snps.sim.reconstruction.index, snps.sim.index)){
-          warning("Careful-- snps.sim and snps.sim.reconstruction should have the same index when reduced
-                  to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-        }
-        }else{
-          snps.sim.reconstruction.index <- snps.sim.index
-      }
-    }
-
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
     corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
 
-    print(paste("Real data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+    print(paste("Real data scores completed for", test, "test @", Sys.time()))
 
 
     #############################################################
@@ -335,10 +266,8 @@ get.assoc.scores <- function(snps,
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
 
-    print(paste("Simulated data scores completed for", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
+    print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
   }
-
-  # print(paste("Test flag #1 @", Sys.time()))
 
   ###################################
   ## HANDLE DUPLICATE SNPS COLUMNS ##
@@ -346,21 +275,17 @@ get.assoc.scores <- function(snps,
 
   ## Expand corr.dat (if not all snps columns unique):
   if(all.unique == FALSE){
-    corr.dat.complete <- corr.dat[snps.index]
+    corr.dat.complete <- corr.dat[index]
     names(corr.dat.complete) <- colnoms
     corr.dat <- corr.dat.complete
   }
 
-  # print(paste("Test flag #2; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
-
   ## Expand corr.sim (if not all snps.sim columns unique):
   if(all.unique.sim == FALSE){
-    corr.sim.complete <- corr.sim[snps.sim.index]
+    corr.sim.complete <- corr.sim[index.sim]
     names(corr.sim.complete) <- colnoms.sim
     corr.sim <- corr.sim.complete
   }
-
-  # print(paste("Test flag #3; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 
   ## quick look at corr.sim & corr.dat
   # hist(corr.sim, xlim=c(0,1))
@@ -552,7 +477,7 @@ get.sig.snps <- function(corr.dat,
   sig.corrs <- sig.corrs[NWO]
   sig.p.vals <- sig.p.vals[NWO]
   sig.snps.names <- sig.snps.names[NWO]
-  gc()
+  # gc()
 
   # print(paste("Test flag #7; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
 

@@ -25,12 +25,16 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @export
+#'
 #'
 #' @importFrom scales rescale
 #' @importFrom Hmisc all.is.numeric
+#' @importFrom phangorn midpoint
+#'
+#' @export
 
 ########################################################################
+# @useDynLib phangorn, .registration = TRUE
 
 simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim.REC matrix ## NOTE: subs.edges no longer required for any version of this test.
                               phen.reconstruction,
@@ -51,20 +55,20 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   #########################
   ## Get UNIQUE snps.rec ##
   #########################
-  temp <- get.unique.matrix(snps.rec, MARGIN=2)
-  snps.rec.unique <- temp$unique.data
-  index <- temp$index
-
-  if(ncol(snps.rec.unique) == ncol(snps.rec)){
-    all.unique <- TRUE
-  }else{
-    all.unique <- FALSE
-  }
-
-  ## work w only unique snps:
-  colnoms <- colnames(snps.rec)
-  snps.rec <- snps.rec.unique
-  rm(snps.rec.unique)
+  # temp <- get.unique.matrix(snps.rec, MARGIN=2)
+  # snps.rec.unique <- temp$unique.data
+  # index <- temp$index
+  #
+  # if(ncol(snps.rec.unique) == ncol(snps.rec)){
+  #   all.unique <- TRUE
+  # }else{
+  #   all.unique <- FALSE
+  # }
+  #
+  # ## work w only unique snps:
+  # colnoms <- colnames(snps.rec)
+  # snps.rec <- snps.rec.unique
+  # rm(snps.rec.unique)
 
   ####################################################################
   #####################
@@ -128,15 +132,15 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   ## get values for duplicate snps.rec columns: ##
   ################################################
 
-  ## get reconstruction for all original sites
-  if(all.unique == TRUE){
-    score.complete <- score
-  }else{
-    score.complete <- score[index]
-    names(score.complete) <- colnoms
-  }
-
-  score <- score.complete
+  # ## get reconstruction for all original sites
+  # if(all.unique == TRUE){
+  #   score.complete <- score
+  # }else{
+  #   score.complete <- score[index]
+  #   names(score.complete) <- colnoms
+  # }
+  #
+  # score <- score.complete
 
   return(score)
 

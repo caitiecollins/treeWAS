@@ -36,12 +36,14 @@
 #' table(out)
 #' hist(out)
 #'
-#' @importFrom phangorn as.phyDat
 #' @importFrom phangorn fitch
+#' @importFrom phangorn as.phyDat
 #'
 #' @export
 
 ########################################################################
+# @useDynLib phangorn, .registration = TRUE
+
 
 get.fitch.n.mts <- function(snps, tree){
 
