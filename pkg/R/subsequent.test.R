@@ -47,24 +47,6 @@ subsequent.test <- function(snps.reconstruction,
   ## get tree edges:
   edges <- tree$edge
 
-  #########################
-  ## Get UNIQUE snps.rec ##
-  #########################
-  # temp <- get.unique.matrix(snps.rec, MARGIN=2)
-  # snps.rec.unique <- temp$unique.data
-  # index <- temp$index
-  #
-  # if(ncol(snps.rec.unique) == ncol(snps.rec)){
-  #   all.unique <- TRUE
-  # }else{
-  #   all.unique <- FALSE
-  # }
-  #
-  # ## work w only unique snps:
-  # colnoms <- colnames(snps.rec)
-  # snps.rec <- snps.rec.unique
-  # rm(snps.rec.unique)
-
   ####################################################################
   #####################
   ## Handle phen.rec ##
@@ -108,7 +90,8 @@ subsequent.test <- function(snps.reconstruction,
   ## RE-SCALE NON-BINARY VALUES (phen only ...) ##
   ################################################
   ## phen.rec (both Pa and Pd should be on same scale):
-  if(n.levs > 2) phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
+  # if(n.levs > 2)
+  phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
 
   ###############################
   ## GET SCORE ACROSS BRANCHES ##
@@ -127,23 +110,18 @@ subsequent.test <- function(snps.reconstruction,
   ## ORIGINAL AND NEW INTEGRAL-BASED SCORE3 (without edge length):
   score3 <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
 
-  score3 <- abs(colSums(score3, na.rm=TRUE))
+  ## Return with sign:
+  score3 <- colSums(score3, na.rm=TRUE)
+  # score3 <- abs(score3)
   names(score3) <- colnames(snps.rec)
 
-  ################################################
-  ## get values for duplicate snps.rec columns: ##
-  ################################################
-
-
-  # ## get reconstruction for all original sites
-  # if(all.unique == TRUE){
-  #   score3.complete <- score3
-  # }else{
-  #   score3.complete <- score3[index]
-  #   names(score3.complete) <- colnoms
-  # }
+  ## Return with and without sign?
+  # score3.sign <- colSums(score3, na.rm=TRUE)
+  # score3 <- abs(score3.sign)
+  # names(score3) <- names(score3.sign) <- colnames(snps.rec)
   #
-  # score3 <- score3.complete
+  # score3 <- list("score3" = score3,
+  #                "score3.sign" = score3.sign)
 
   return(score3)
 

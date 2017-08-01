@@ -10,7 +10,7 @@ treeWAS(snps, phen, tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
   snps.reconstruction = "parsimony", snps.sim.reconstruction = "parsimony",
   phen.reconstruction = "parsimony", na.rm = TRUE, p.value = 0.01,
   p.value.correct = c("bonf", "fdr", FALSE), p.value.by = c("count",
-  "density"), dist.dna.model = "JC69", plot.tree = FALSE,
+  "density"), dist.dna.model = "JC69", plot.tree = TRUE,
   plot.manhattan = TRUE, plot.null.dist = TRUE, plot.dist = FALSE,
   snps.assoc = NULL, filename.plot = NULL, seed = NULL)
 }
@@ -72,7 +72,7 @@ calculating the genetic distance between individual genomes,
 only used if \code{tree} is a character string (see ?dist.dna).}
 
 \item{plot.tree}{A logical indicating whether to generate a plot of the phylogenetic tree
-(\code{TRUE}) or not (\code{FALSE}, the default).}
+(\code{TRUE}, the default) or not (\code{FALSE}).}
 
 \item{plot.manhattan}{A logical indicating whether to generate a manhattan plot for each association score
 (\code{TRUE}, the default) or not (\code{FALSE}).}
@@ -93,8 +93,102 @@ saving any plots produced; else \code{NULL}.}
 for identical repeat runs of the function; else \code{NULL}.}
 }
 \value{
-A list is returned as the output of \code{treeWAS} containing the data used within it,
-and results including information about significant loci identified, if any.
+The output of `treeWAS` contains the set of significant loci identified
+as well as all relevant information used by or generated within \code{treeWAS}.
+To examine the significant findings alone, we recommend using the \code{print} function.
+
+The \code{treeWAS} function returns a list object, which takes on the following general structure:
+
+\describe{
+    \item{\strong{$treeWAS.combined}}{
+    The first element is a list of length two containing the identities of significant findings:
+
+    \itemize{
+          \item{\code{$treeWAS.combined}
+          The pooled set of significant loci identified by any association score.}
+
+          \item{\code{$treeWAS}
+          A list with the sets of significant loci identified by each association score individually.}
+          }
+          }
+
+
+    \item{\strong{$[SCORE]}}{
+    There are list elements for each association score, containing the original score values
+     for each locus and additional information for significant loci.
+     By default, there will be three such \code{$[SCORE]}-type elements called
+     \code{$terminal}, \code{$simultaneous}, and \code{$subsequent},
+     each of which will have the following elements:
+
+     \itemize{
+          \item{\code{$corr.dat}
+          The association score values for loci in the empirical genetic dataset.}
+
+          \item{\code{$corr.sim}
+          The association score values for loci in the simulated genetic dataset.}
+
+          \item{\code{$p.vals}
+          The p-values associated with the loci in the empirical genetic dataset for this association score.}
+
+          \item{\code{$sig.thresh}
+          The significance threshold for this association score.}
+
+          \item{\code{$sig.snps}
+          A data frame describing the genetic loci identified as significant.
+          The last four columns will only be present if the data is binary, in which case they will
+          contain the cell counts of a 2x2 table of genotypic and phenotypic states for each significant locus.
+          \itemize{
+          \item{\code{row.names}: The column names of significant loci.}
+          \item{\code{$SNP.locus}: The column positions of significant loci in \code{dat$snps} (see below).}
+          \item{\code{$p.value}: The p-values for significant loci.}
+          \item{\code{$score}: The association score values for significant loci.}
+          \item{\code{$G1P1}: N.individuals with genotype = 1 and phenotype = 1 at this locus.}
+          \item{\code{$G0P0}: N.individuals with genotype = 0 and phenotype = 0 at this locus.}
+          \item{\code{$G1P0}: N.individuals with genotype = 1 and phenotype = 0 at this locus.}
+          \item{\code{$G0P1}: N.individuals with genotype = 0 and phenotype = 1 at this locus.}
+          }
+          }
+
+          \item{\code{$min.p.value}
+          The minimum p-value. P-values listed as zero can only truly be defined as below this value.}
+          }
+          }
+
+
+    \item{\strong{$dat}}{
+    The final element contains all of the data either used by or generated within \code{treeWAS}.
+    Objects that were provided as inputs to the \code{treeWAS} function will be returned here
+    in the form in which they were analysed (i.e., after data cleaning within \code{treeWAS}).
+
+    \itemize{
+          \item{\code{$snps}
+          The empirical genetic data matrix.}
+
+          \item{\code{$snps.reconstruction}
+          The ancestral state reconstruction of the empirical genetic data matrix.}
+
+          \item{\code{$snps.sim}
+          The simulated genetic data matrix.}
+
+          \item{\code{$snps.sim.reconstruction}
+          The ancestral state reconstruction of the simulated genetic data matrix.}
+
+          \item{\code{$phen}
+          The phenotypic variable.}
+
+          \item{\code{$phen.reconstruction}
+          The ancestral state reconstruction of the phenotype.}
+
+          \item{\code{$tree}
+          The phylogenetic tree.}
+
+          \item{\code{$n.subs}
+          The homoplasy distribution. Each element represents a number of substitutions (from 1 to \code{length(n.subs)})
+          and contains the number of loci that have been inferred to undergo that many substitutions.}
+          }
+          }
+
+          }
 }
 \description{
 This function implements a phylogenetic approach to genome-wide association studies

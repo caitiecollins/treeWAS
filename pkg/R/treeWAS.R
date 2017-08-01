@@ -4,11 +4,6 @@
 ## TO DO (2017): ##
 ###################
 
-## RETURN THE DIRECTIONAL SCORE VALUES AS WELL AS THE ABS VALUES (so users can tell the direction of associations)!
-## (+ consider: what if you found two significant results with opposite signs? Unlikely, but perhaps possible??)
-#################################################
-
-
 
 ## dependencies problems?ssh caitlin@131.251.130.191
 
@@ -191,7 +186,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'                          calculating the genetic distance between individual genomes,
 #'                          only used if \code{tree} is a character string (see ?dist.dna).
 #' @param plot.tree A logical indicating whether to generate a plot of the phylogenetic tree
-#'                    (\code{TRUE}) or not (\code{FALSE}, the default).
+#'                    (\code{TRUE}, the default) or not (\code{FALSE}).
 #' @param plot.manhattan A logical indicating whether to generate a manhattan plot for each association score
 #'                         (\code{TRUE}, the default) or not (\code{FALSE}).
 #' @param plot.null.dist A logical indicating whether to plot the null distribution of association score statistics
@@ -319,8 +314,102 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'
 ###########################################################
 #'
-#' @return A list is returned as the output of \code{treeWAS} containing the data used within it,
-#' and results including information about significant loci identified, if any.
+#' @return The output of `treeWAS` contains the set of significant loci identified
+#' as well as all relevant information used by or generated within \code{treeWAS}.
+#' To examine the significant findings alone, we recommend using the \code{print} function.
+#'
+#' The \code{treeWAS} function returns a list object, which takes on the following general structure:
+#'
+#' \describe{
+#'     \item{\strong{$treeWAS.combined}}{
+#'     The first element is a list of length two containing the identities of significant findings:
+#'
+#'     \itemize{
+#'           \item{\code{$treeWAS.combined}
+#'           The pooled set of significant loci identified by any association score.}
+#'
+#'           \item{\code{$treeWAS}
+#'           A list with the sets of significant loci identified by each association score individually.}
+#'           }
+#'           }
+#'
+#'
+#'     \item{\strong{$[SCORE]}}{
+#'     There are list elements for each association score, containing the original score values
+#'      for each locus and additional information for significant loci.
+#'      By default, there will be three such \code{$[SCORE]}-type elements called
+#'      \code{$terminal}, \code{$simultaneous}, and \code{$subsequent},
+#'      each of which will have the following elements:
+#'
+#'      \itemize{
+#'           \item{\code{$corr.dat}
+#'           The association score values for loci in the empirical genetic dataset.}
+#'
+#'           \item{\code{$corr.sim}
+#'           The association score values for loci in the simulated genetic dataset.}
+#'
+#'           \item{\code{$p.vals}
+#'           The p-values associated with the loci in the empirical genetic dataset for this association score.}
+#'
+#'           \item{\code{$sig.thresh}
+#'           The significance threshold for this association score.}
+#'
+#'           \item{\code{$sig.snps}
+#'           A data frame describing the genetic loci identified as significant.
+#'           The last four columns will only be present if the data is binary, in which case they will
+#'           contain the cell counts of a 2x2 table of genotypic and phenotypic states for each significant locus.
+#'           \itemize{
+#'           \item{\code{row.names}: The column names of significant loci.}
+#'           \item{\code{$SNP.locus}: The column positions of significant loci in \code{dat$snps} (see below).}
+#'           \item{\code{$p.value}: The p-values for significant loci.}
+#'           \item{\code{$score}: The association score values for significant loci.}
+#'           \item{\code{$G1P1}: N.individuals with genotype = 1 and phenotype = 1 at this locus.}
+#'           \item{\code{$G0P0}: N.individuals with genotype = 0 and phenotype = 0 at this locus.}
+#'           \item{\code{$G1P0}: N.individuals with genotype = 1 and phenotype = 0 at this locus.}
+#'           \item{\code{$G0P1}: N.individuals with genotype = 0 and phenotype = 1 at this locus.}
+#'           }
+#'           }
+#'
+#'           \item{\code{$min.p.value}
+#'           The minimum p-value. P-values listed as zero can only truly be defined as below this value.}
+#'           }
+#'           }
+#'
+#'
+#'     \item{\strong{$dat}}{
+#'     The final element contains all of the data either used by or generated within \code{treeWAS}.
+#'     Objects that were provided as inputs to the \code{treeWAS} function will be returned here
+#'     in the form in which they were analysed (i.e., after data cleaning within \code{treeWAS}).
+#'
+#'     \itemize{
+#'           \item{\code{$snps}
+#'           The empirical genetic data matrix.}
+#'
+#'           \item{\code{$snps.reconstruction}
+#'           The ancestral state reconstruction of the empirical genetic data matrix.}
+#'
+#'           \item{\code{$snps.sim}
+#'           The simulated genetic data matrix.}
+#'
+#'           \item{\code{$snps.sim.reconstruction}
+#'           The ancestral state reconstruction of the simulated genetic data matrix.}
+#'
+#'           \item{\code{$phen}
+#'           The phenotypic variable.}
+#'
+#'           \item{\code{$phen.reconstruction}
+#'           The ancestral state reconstruction of the phenotype.}
+#'
+#'           \item{\code{$tree}
+#'           The phylogenetic tree.}
+#'
+#'           \item{\code{$n.subs}
+#'           The homoplasy distribution. Each element represents a number of substitutions (from 1 to \code{length(n.subs)})
+#'           and contains the number of loci that have been inferred to undergo that many substitutions.}
+#'           }
+#'           }
+#'
+#'           }
 #'
 #'
 #'
@@ -397,58 +486,12 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' @import adegenet ape phangorn
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
+#' @importFrom scales rescale
 #'
 #' @export
 
 ###################################################################################################################################
 # @useDynLib phangorn, .registration = TRUE
-
-
-#################
-## PARAMETERS: ##
-#################
-
-# n.subs <- NULL
-# dist.dna.model <- "JC69"
-# plot.tree <- FALSE
-# test <- c("terminal", "simultaneous", "subsequent")
-# p.value <- 0.001
-# p.value.correct <- "fdr"
-# p.value.by <- "count"
-# n.snps.sim <- ncol(snps)*10
-# n.reps <- 1
-# plot.manhattan <- TRUE
-# plot.null.dist <- TRUE
-# plot.dist <- FALSE
-# snps.reconstruction <- "parsimony"
-# snps.sim.reconstruction <- "parsimony"
-# phen.reconstruction <- "parsimony"
-
-
-##############
-## EXAMPLE: ##
-##############
-
-# foo  <- treeWAS(snps,
-#                 phen,
-#                 tree = tree,
-#                 n.subs = NULL,
-#                 n.snps.sim = ncol(snps)*10,
-#                 test = c("terminal", "simultaneous", "subsequent"),
-#                 p.value = 0.01,
-#                 p.value.correct = "bonf",
-#                 p.value.by = "count",
-#                 dist.dna.model = "JC69",
-#                 plot.tree = FALSE,
-#                 plot.manhattan = TRUE,
-#                 plot.null.dist = TRUE,
-#                 plot.dist = FALSE,
-#                 snps.assoc = NULL, # for (manhattan) plot
-#                 snps.reconstruction = "parsimony",
-#                 phen.reconstruction = "parsimony",
-#                 filename.plot = NULL,
-#                 seed = NULL)
-
 
 
 treeWAS <- function(snps,
@@ -466,7 +509,7 @@ treeWAS <- function(snps,
                     p.value.correct = c("bonf", "fdr", FALSE),
                     p.value.by = c("count", "density"),
                     dist.dna.model = "JC69",
-                    plot.tree = FALSE,
+                    plot.tree = TRUE,
                     plot.manhattan = TRUE,
                     plot.null.dist = TRUE,
                     plot.dist = FALSE,
@@ -1577,30 +1620,6 @@ treeWAS <- function(snps,
 
   print(paste("ID of significant loci completed @", Sys.time()))
 
-  ## DOUBLE CHECKING ##
-  #   str(sig.list[[i]])
-  #   sig.list[[i]]$sig.snps
-  #   sig.list[[i]]$sig.corrs
-  #   ## plot
-  # hist(sig.list[[i]][[1]]$corr.sim)
-  # hist(sig.list[[i]][[1]]$corr.dat)
-
-  # sig.list[[2]][[1]]$corr.dat[snps.assoc]
-  # sig.list[[3]][[1]]$corr.dat[snps.assoc]
-
-  ## BUG CHECKING ##
-  ## get.sig.snps
-  #     snps <-  snps
-  #     snps.sim <- snps.sim
-  #     phen <- phen
-  #     tree <- tree
-  #     test <- "simultaneous"
-  #     p.value <- p.value
-  #     p.value.correct <- p.value.correct
-  #     p.value.by <- p.value.by
-  #     snps.reconstruction <- snps.rec
-  #     snps.sim.reconstruction <- snps.sim.rec
-  #     phen.reconstruction <- phen.rec
 
   #################
   ## GET RESULTS ##
@@ -1608,7 +1627,8 @@ treeWAS <- function(snps,
 
   ## set margins for plotting:
   par.mar.ori <- par()$mar
-  par(mar=c(5, 2, 4, 1)+0.1)
+  # par(mar=c(5, 2, 4, 1)+0.1)
+  par(mar=c(5, 4, 4, 1)+0.1)
 
   RES <- list()
 
@@ -1631,12 +1651,12 @@ treeWAS <- function(snps,
 
     ########################################
 
-    ##########################
-    ## NEW: MANHATTAN PLOT! ##
-    ##########################
+    ############################
+    ## 4) (A) MANHATTAN PLOT! ##
+    ############################
     if(plot.manhattan == TRUE){
 
-      manhattan.plot(p.vals = corr.dat,
+      manhattan.plot(p.vals = abs(corr.dat),
                      col = "funky",
                      transp = 0.25,
                      sig.thresh = sig.thresh,
@@ -1647,39 +1667,64 @@ treeWAS <- function(snps,
                      min.p = NULL,
                      log10=FALSE,
                      ylab=paste(TEST[[i]], "score", sep=" "))
-      title(paste("\n \n (", TEST[[i]], "score)"), cex.main=0.9)
+      ## Add subtitle:
+      title(paste("\n \n(", TEST[[i]], "score)"), cex.main=0.9)
     } # end plot manhattan
 
 
-    ##################################
-    ## 4) (A) Plot the distribution ##
-    ##################################
+    ####################################
+    ## 4) (B,C) Plot the distribution ##
+    ####################################
 
-    ## Generate one histogram per test:
-    plot.sig.snps(corr.dat = corr.dat,
-                  corr.sim = corr.sim,
-                  corr.sim.subset = NULL,
-                  sig.corrs = corr.dat[sig.snps],
-                  sig.snps = sig.snps.names,
-                  sig.thresh = sig.thresh,
-                  test = TEST[[i]],
-                  sig.snps.col = "black",
-                  hist.col = rgb(0,0,1,0.5),
-                  hist.subset.col = rgb(1,0,0,0.5),
-                  thresh.col = "red",
-                  snps.assoc = NULL,
-                  snps.assoc.col = "blue",
-                  bg = "lightgrey",
-                  grid = TRUE,
-                  freq = FALSE,
-                  plot.null.dist = TRUE,
-                  plot.dist = FALSE)
+    if(plot.null.dist == TRUE){
+      ## Generate one histogram per test:
+      plot.sig.snps(corr.dat = abs(corr.dat),
+                    corr.sim = abs(corr.sim),
+                    corr.sim.subset = NULL,
+                    sig.corrs = abs(corr.dat[sig.snps]),
+                    sig.snps = sig.snps.names,
+                    sig.thresh = sig.thresh,
+                    test = TEST[[i]],
+                    sig.snps.col = "black",
+                    hist.col = rgb(0,0,1,0.5),
+                    hist.subset.col = rgb(1,0,0,0.5),
+                    thresh.col = "red",
+                    snps.assoc = NULL,
+                    snps.assoc.col = "blue",
+                    bg = "lightgrey",
+                    grid = TRUE,
+                    freq = FALSE,
+                    plot.null.dist = TRUE,
+                    plot.dist = FALSE)
+    } # end plot.null.dist
+
+    if(plot.dist == TRUE){
+      ## Generate one histogram per test:
+      plot.sig.snps(corr.dat = abs(corr.dat),
+                    corr.sim = abs(corr.sim),
+                    corr.sim.subset = NULL,
+                    sig.corrs = abs(corr.dat[sig.snps]),
+                    sig.snps = sig.snps.names,
+                    sig.thresh = sig.thresh,
+                    test = TEST[[i]],
+                    sig.snps.col = "black",
+                    hist.col = rgb(0,0,1,0.5),
+                    hist.subset.col = rgb(1,0,0,0.5),
+                    thresh.col = "red",
+                    snps.assoc = NULL,
+                    snps.assoc.col = "blue",
+                    bg = "lightgrey",
+                    grid = TRUE,
+                    freq = FALSE,
+                    plot.null.dist = FALSE,
+                    plot.dist = TRUE)
+    } # end plot.dist
 
 
     ########################################
     ## 5) Return results list ##############
     ########################################
-
+    phen.curr <- phen # store current phen for output
     if(length(sig.snps)==0) sig.snps <- sig.corrs <- NULL
 
     ###########
@@ -1690,8 +1735,8 @@ treeWAS <- function(snps,
       toKeep <- sig.snps
       snps.toKeep <- snps[,toKeep]
 
-      ## Only get S1P1 etc. if binary phen...
-      S1P1 <- S0P0 <- S1P0 <- S0P1 <- NA
+      ## Only get G1P1 etc. if binary phen...
+      G1P1 <- G0P0 <- G1P0 <- G0P1 <- NA
       levs <- unique(as.vector(unlist(phen)))
       levs <- levs[!is.na(levs)]
       n.levs <- length(levs)
@@ -1702,55 +1747,56 @@ treeWAS <- function(snps,
         noms <- names(phen)
         ## If binary, convert phen to 0/1:
         phen <- as.numeric(as.factor(phen))
-        if(length(phen[-c(which(phen==1), which(phen==2))])==0){
-          phen <- replace(phen, which(phen==1), 0)
-          phen <- replace(phen, which(phen==2), 1)
-        }
+        phen <- rescale(phen, to=c(0,1))
+        # if(length(phen[-c(which(phen==1), which(phen==2))])==0){
+        #   phen <- replace(phen, which(phen==1), 0)
+        #   phen <- replace(phen, which(phen==2), 1)
+        # }
         ## ensure ind names not lost:
         names(phen) <- noms
 
         if(length(toKeep) > 1){
-          S1P1 <- sapply(c(1:ncol(snps.toKeep)),
+          G1P1 <- sapply(c(1:ncol(snps.toKeep)),
                          function(e)
                            length(which(snps.toKeep[which(phen==1),e]==1)))
-          S0P0 <- sapply(c(1:ncol(snps.toKeep)),
+          G0P0 <- sapply(c(1:ncol(snps.toKeep)),
                          function(e)
                            length(which(snps.toKeep[which(phen==0),e]==0)))
-          S1P0 <- sapply(c(1:ncol(snps.toKeep)),
+          G1P0 <- sapply(c(1:ncol(snps.toKeep)),
                          function(e)
                            length(which(snps.toKeep[which(phen==0),e]==1)))
-          S0P1 <- sapply(c(1:ncol(snps.toKeep)),
+          G0P1 <- sapply(c(1:ncol(snps.toKeep)),
                          function(e)
                            length(which(snps.toKeep[which(phen==1),e]==0)))
         }else{
           ## if only ONE sig snp (haploid) identified:
-          S1P1 <- length(which(snps.toKeep[which(phen==1)]==1))
-          S0P0 <- length(which(snps.toKeep[which(phen==0)]==0))
-          S1P0 <- length(which(snps.toKeep[which(phen==0)]==1))
-          S0P1 <- length(which(snps.toKeep[which(phen==1)]==0))
+          G1P1 <- length(which(snps.toKeep[which(phen==1)]==1))
+          G0P0 <- length(which(snps.toKeep[which(phen==0)]==0))
+          G1P0 <- length(which(snps.toKeep[which(phen==0)]==1))
+          G0P1 <- length(which(snps.toKeep[which(phen==1)]==0))
 
         }
         df <- data.frame(sig.snps,
                          sig.p.vals,
                          sig.corrs,
-                         S1P1, S0P0, S1P0, S0P1)
+                         G1P1, G0P0, G1P0, G0P1)
         names(df) <- c("SNP.locus",
                        "p.value",
-                       "Test.statistic",
-                       "S1P1", "S0P0", "S1P0", "S0P1")
-      } # end S1P1 etc.
+                       "score",
+                       "G1P1", "G0P0", "G1P0", "G0P1")
+      }else{ # end G1P1 etc.
 
-      ## If S1P1 etc. not valid (non-binary phen),
+      ## If G1P1 etc. not valid (non-binary phen),
       ## return df without these variables..
       df <- data.frame(sig.snps,
                        sig.p.vals,
                        sig.corrs)
       names(df) <- c("SNP.locus",
                      "p.value",
-                     "Test.statistic")
+                     "score")
 
-      ## NOTE: Could return sig.snps.names somewhere here
-      ## in addition to sig.snps loci ####    ####    ####    ####
+      ## NOTE: Could return sig.snps.names as column rather than rownames..? ####   (??)   ####
+      }
 
     }else{
       df <- "No significant SNPs found."
@@ -1830,6 +1876,7 @@ treeWAS <- function(snps,
   RES[[1]] <- SNP.loci
   RES[(2:(length(RES.ORI)+1))] <- RES.ORI
 
+  phen <- phen.curr
 
   ## Also return data (in the form we were working with):
   dat <- list("snps" = snps,

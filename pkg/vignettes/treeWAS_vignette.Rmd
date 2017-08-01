@@ -420,7 +420,7 @@ out <- treeWAS(snps,
                 p.value.correct = c("bonf", "fdr", FALSE),
                 p.value.by = c("count", "density"),
                 dist.dna.model = "JC69",
-                plot.tree = FALSE,
+                plot.tree = TRUE,
                 plot.manhattan = TRUE,
                 plot.null.dist = TRUE,
                 plot.dist = FALSE,
@@ -493,7 +493,7 @@ out <- treeWAS(snps,
 > the genetic distance between individual genomes, only used if `tree` is a character string (see ?dist.dna).
 
 > `plot.tree` 
->  : A logical indicating whether to generate a plot of the phylogenetic tree (`TRUE`) or not (`FALSE`, the default).
+>  : A logical indicating whether to generate a plot of the phylogenetic tree (`TRUE`, the default) or not (`FALSE`).
 
 > `plot.manhattan` 
 >  : A logical indicating whether to generate a manhattan plot for each association score (`TRUE`, the default) or
@@ -526,7 +526,7 @@ out <- treeWAS(snps,
 ## Running treeWAS
 <!-- ########################################################################################################## -->
 
-Running `treeWAS` takes only one function. It should finish within a couple of minutes, depending on the size of the dataset. 
+Running `treeWAS` takes only one function. It should finish within a few minutes, depending on the size of the dataset. 
 
 
 ```{r, eval=FALSE, results='asis'}
@@ -546,7 +546,7 @@ out <- treeWAS(snps = snps,
                 p.value.correct = "bonf",
                 p.value.by = "count",
                 dist.dna.model = "JC69",
-                plot.tree = FALSE,
+                plot.tree = TRUE,
                 plot.manhattan = TRUE,
                 plot.null.dist = TRUE,
                 plot.dist = FALSE,
@@ -570,10 +570,23 @@ For large datasets, if you find you are running into errors relating to `memory.
 
 ### Plots
 <!-- ########################################################################################################## -->
+
+If `plot.tree` is set to `TRUE`, the tree will be plotted, with the terminal phenotype indicated by tip colour. 
 If `plot.null.dist` is set to `TRUE`, the null distributions and findings will be plotted for each association score. 
-If `plot.dist` is `TRUE`, a distribution of the values will be plotted for each association score. 
+If `plot.dist` is `TRUE`, a distribution of the empirical association score values will be plotted for each association score. 
 And if `plot.manhattan` is set to `TRUE`, a manhattan plot will show the values for each each association score, 
 with a threshold delineating the significant findings from the insignificant. 
+
+&nbsp;
+
+By default, `plot.tree` is set to `TRUE`. 
+
+```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
+library(png)
+library(grid)
+img <- readPNG("figs/plot_tree.png")
+grid.raster(img)
+```
 
 &nbsp;
 
@@ -654,37 +667,11 @@ grid.raster(img)
 ```
 
 
-### Output Returned
-<!-- ########################################################################################################## -->
-The `treeWAS` function returns a list containing one element comprising the complete pooled set of findings, 
-as well as one element for each of the association scores applied (by default, three). 
-
-&nbsp;
-
-Each list element contains the following:
-
-> `corr.dat`
->  : The association score values associated with the loci in the real genetic dataset.
-
-> `corr.sim`
->  : The association score values associated with the loci in the simulated null dataset.
-
-> `p.vals`
->  : The p-values associated with the loci in the real genetic dataset for this association score.
-
-> `sig.thresh`
->  : The threshold of significance. 
-
-> `sig.snps`
->  : A data frame describing the genetic loci identified as significant.
-
-> `min.p.value`
->  : The minimum p-value. P-values listed as zero can only truly be defined as below this value.
-
 
 ### Printing Output
 <!-- ########################################################################################################## -->
-Because `treeWAS` returns a large volume of data, it is recommended that the `print.treeWAS` function is used to examine the set of results identified. Note that `print.treeWAS` is just the `print` function for an object of class `treeWAS`. 
+In the example above, the output of the `treeWAS` function was assigned to an object called `out`. It is a *large* object. 
+As such, we recommend that the `print.treeWAS` function be used to examine the set of results identified (NB: `print.treeWAS` is just the `print` function for an object of class `treeWAS`): 
 
 ```{r, eval=TRUE, echo=FALSE, include=FALSE}
 ## Example output:
@@ -695,8 +682,83 @@ class(out) # treeWAS
 
 ```{r, eval=TRUE}
 print(out, sort.by.p=FALSE)
-
 ```
+
+
+
+### Output Returned
+<!-- ########################################################################################################## -->
+The output of `treeWAS` contains the set of significant loci identified as well as all relevant information used by or generated within `treeWAS`. 
+The `treeWAS` function returns a list object (in our example, called `out`), which takes on the following general structure (run `str(out)` to examine the structure of our example output):
+
+&nbsp;
+
+**$treeWAS.combined**, the first element, is a list of length two containing the identities of significant findings:
+
+> `$treeWAS.combined`
+>  : The pooled set of significant loci identified by any association score.
+
+> `$treeWAS`
+>  : A list with the sets of significant loci identified by each association score individually. 
+
+&nbsp;
+
+**\$[SCORE]**, list elements for each association score, contain the original score values for each locus and additional information for significant loci. By default, there will be three such `$[SCORE]`-type elements called `$terminal`, `$simultaneous`, and `$subsequent`, each of which will have the following elements:
+
+> `$corr.dat`
+>  : The association score values for loci in the empirical genetic dataset.
+
+> `$corr.sim`
+>  : The association score values for loci in the simulated genetic dataset.
+
+> `$p.vals`
+>  : The p-values associated with the loci in the empirical genetic dataset for this association score.
+
+> `$sig.thresh`
+>  : The significance threshold for this association score. 
+
+> `$sig.snps`
+>  : A data frame describing the genetic loci identified as significant. The last four columns will only be present if the data is binary, in which case they will contain the cell counts of a 2x2 table of genotypic and phenotypic states for each significant locus.
+>  : `row.names`: The column names of significant loci. 
+>  : `$SNP.locus`: The column positions of significant loci in `dat$snps` (see below).
+>  : `$p.value`: The p-values for significant loci.
+>  : `$score`: The association score values for significant loci.
+>  : `$G1P1`: The number of individuals with genotype = 1 and phenotype = 1 at this locus.
+>  : `$G0P0`: The number of individuals with genotype = 0 and phenotype = 0 at this locus. 
+>  : `$G1P0`: The number of individuals with genotype = 1 and phenotype = 0 at this locus. 
+>  : `$G0P1`: The number of individuals with genotype = 0 and phenotype = 1 at this locus. 
+
+> `$min.p.value`
+>  : The minimum p-value. P-values listed as zero can only truly be defined as below this value.
+
+&nbsp;
+
+**$dat**, the final element, contains all of the data either used by or generated within `treeWAS`. 
+Objects that were provided as inputs to the `treeWAS` function will be returned here in the form in which they were analysed (i.e., after data cleaning within `treeWAS`).
+
+> `$snps`
+>  : The empirical genetic data matrix. 
+
+> `$snps.reconstruction`
+>  : The ancestral state reconstruction of the empirical genetic data matrix.
+
+> `$snps.sim`
+>  : The simulated genetic data matrix.
+
+> `$snps.sim.reconstruction`
+>  : The ancestral state reconstruction of the simulated genetic data matrix.
+
+> `$phen`
+>  : The phenotypic variable.
+
+> `$phen.reconstruction`
+>  : The ancestral state reconstruction of the phenotype.
+
+> `$tree`
+>  : The phylogenetic tree.
+
+> `$n.subs`
+>  : The homoplasy distribution. Each element represents a number of substitutions (from 1 to `length(n.subs)`) and contains the number of loci that have been inferred to undergo that many substitutions. 
 
 
 ***
@@ -828,7 +890,7 @@ out <- treeWAS(snps = snps,
                 p.value.correct = "bonf",
                 p.value.by = "count",
                 dist.dna.model = "JC69",
-                plot.tree = FALSE,
+                plot.tree = TRUE,
                 plot.manhattan = TRUE,
                 plot.null.dist = TRUE,
                 plot.dist = FALSE,

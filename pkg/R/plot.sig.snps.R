@@ -160,7 +160,7 @@ manhattan.plot <- function(p.vals,
          col = myCol,
          pch = 19,
          cex = 1,
-         # main="Manhattan plot",
+         main="Manhattan plot",
          xlab="genetic loci",
          ylab=ylab,
          cex.main=1,
@@ -177,7 +177,7 @@ manhattan.plot <- function(p.vals,
          col = myCol,
          pch = 19,
          cex = 1,
-         # main="Manhattan plot",
+         main="Manhattan plot",
          xlab="genetic loci",
          ylab=ylab,
          cex.main=1,
@@ -316,6 +316,10 @@ plot.sig.snps <- function(corr.dat,
                           plot.dist=FALSE,
                           ...){
 
+  ## Use Abs Vals (?)
+  # corr.dat <- abs(corr.dat)
+  # corr.sim <- abs(corr.sim)
+
   ###############################################################################
   ## Add threshold(s) and SNP annotations to histogram of (null) distributions ##
   ###############################################################################
@@ -367,7 +371,7 @@ plot.sig.snps <- function(corr.dat,
     ## Get plot limits:
     ## Get x-max:
     xmax <- ceiling(max(corr.dat)+.35*max(corr.dat))
-    ## Get y-max (only really necessary when overlaying 2 hists):
+    ## Get y-max (for overlaying hists, sig.thresh, sig.loci):
     if(freq == TRUE){
       yvals <- h.null$counts
       ymax <- ceiling(max(yvals)+(0.2*max(yvals)))
@@ -390,9 +394,6 @@ plot.sig.snps <- function(corr.dat,
       ## EXTENDING THE X-AXIS
       plot(h.null,
            main = NULL,
-           # main=paste("Null distribution \n(", test, "score)"
-           #            # \n (with significant SNPs indicated)"
-           #            , sep=" "),
            xlab=paste(test, "score", sep=" "),
            ylab = y.lab,
            xlim=c(min(h.null$breaks), xmax),
@@ -424,11 +425,6 @@ plot.sig.snps <- function(corr.dat,
           ## Re-plot original plot:
           plot(h.null,
                main = NULL,
-               # main=paste("Null distribution \n(", test, "score)"
-               #            # \n (with significant SNPs indicated)"
-               #            , sep=" "),
-               # xlab=paste(test, "score", sep=" "),
-               # ylab = y.lab,
                xlab = NULL,
                ylab = NULL,
                xaxt = "n",
@@ -467,13 +463,8 @@ plot.sig.snps <- function(corr.dat,
       ## WITHOUT EXTENDING THE X-AXIS
       plot(h.null,
            main = NULL,
-           # main=paste("Null distribution \n(", test, "score)"
-           #            # \n (with significant SNPs indicated)"
-           #            , sep=" "),
-           # xlab=paste(test, "score", sep=" "),
-           # ylab = y.lab,
-           xlab = NULL,
-           ylab = NULL,
+           xlab=paste(test, "score", sep=" "),
+           ylab = y.lab,
            xaxt = "n",
            yaxt = "n",
            ylim=c(0, ymax),
@@ -501,11 +492,6 @@ plot.sig.snps <- function(corr.dat,
           ## Re-plot original plot:
           plot(h.null,
                main = NULL,
-               # main=paste("Null distribution \n(", test, "score)"
-               #            # \n (with significant SNPs indicated)"
-               #            , sep=" "),
-               # xlab=paste(test, "score", sep=" "),
-               # ylab = y.lab,
                xlab = NULL,
                ylab = NULL,
                xaxt = "n",
@@ -604,9 +590,6 @@ plot.sig.snps <- function(corr.dat,
     ################################
     # plot(h.null,
     #      main = NULL,
-    #      # main=paste("Null distribution \n(", test, "score)"
-    #      #            # \n (with significant SNPs indicated)"
-    #      #            , sep=" "),
     #      xlab=paste(test, "score", sep=" "),
     #      ylab = y.lab,
     #      xlim=c(min(h.null$breaks), xmax),
@@ -640,11 +623,22 @@ plot.sig.snps <- function(corr.dat,
       text(x=(max(h.null$breaks)*3/4),
            y=(max(yvals)*7/8),
            labels="no significant SNPs found",
-           col="red", font=2, pos=3, cex = 1)
+           col="red", font=3, pos=3, cex = 1)
+    }
+
+
+    ## Add plot title:
+    if(!is.null(test)){
+      title(paste("Null distribution \n(", test, "score)"
+                 # \n (with significant SNPs indicated)"
+                 , sep=" "))
+    }else{
+      title(paste("Null distribution \n"
+                  # \n (with significant SNPs indicated)"
+                  , sep=" "))
     }
 
   } # end plot.null.dist
-
 
 
 
@@ -661,8 +655,18 @@ plot.sig.snps <- function(corr.dat,
 
     h.null <- hist(as.vector(unlist(corr.dat)), plot=FALSE)
 
-    xmax <- ceiling(max(corr.dat)+.05)
-    yvals <- h.null$counts
+    xmax <- ceiling(max(corr.dat)+.35*max(corr.dat))
+    ## Get y-max (for overlaying hists, sig.thresh, sig.loci):
+    if(freq == TRUE){
+      yvals <- h.null$counts
+      ymax <- ceiling(max(yvals)+(0.2*max(yvals)))
+      if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+(0.2*max(h.null.subset$counts))))
+    }else{
+      yvals <- h.null$density
+      ymax <- max(yvals)+(0.2*max(yvals))
+      if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+(0.2*max(h.null.subset$density)))
+    }
+
 
     ## if the true correlation value for SNP i is >
     ## max bin, then extend the x-axis of the plot
@@ -672,15 +676,13 @@ plot.sig.snps <- function(corr.dat,
       ## SNPs and phenotype: ##
       ## EXTENDING THE X-AXIS
       plot(h.null,
-           main=paste("Real distribution of", test, "scores"
-                      # \n (with significant SNPs indicated)"
-                      , sep=" "),
+           main = NULL,
            xlab=paste(test, "score", sep=" "),
            ylab = y.lab,
            xlim=c(min(h.null$breaks), xmax),
            freq=freq,
-           col=hist.col,
-           ...)
+           col=hist.col)
+           # ,...)
 
       ## Add grey background? ##
       if(!is.null(bg)){
@@ -701,11 +703,9 @@ plot.sig.snps <- function(corr.dat,
 
           ## Re-plot original plot:
           plot(h.null,
-               main=paste("Real distribution of", test, "scores"
-                          # \n (with significant SNPs indicated)"
-                          , sep=" "),
-               xlab=paste(test, "score", sep=" "),
-               ylab = y.lab,
+               main = NULL,
+               xlab = NULL,
+               ylab = NULL,
                xlim=c(min(h.null$breaks), xmax),
                col=hist.col,
                freq=freq,
@@ -719,14 +719,12 @@ plot.sig.snps <- function(corr.dat,
       ## SNPs and phenotype: ##
       ## WITHOUT EXTENDING THE X-AXIS
       plot(h.null,
-           main=paste("Real distribution of", test, "scores"
-                      # \n (with significant SNPs indicated)"
-                      , sep=" "),
+           main = NULL,
            xlab=paste(test, "score", sep=" "),
            ylab = y.lab,
            freq=freq,
-           col=hist.col,
-           ...)
+           col=hist.col)
+           # ,...)
 
       ## Add grey background? ##
       if(!is.null(bg)){
@@ -747,11 +745,9 @@ plot.sig.snps <- function(corr.dat,
 
           ## Re-plot original plot:
           plot(h.null,
-               main=paste("Real distribution of", test, "scores"
-                          # \n (with significant SNPs indicated)"
-                          , sep=" "),
-               xlab=paste(test, "score", sep=" "),
-               ylab = y.lab,
+               main = NULL,
+               xlab = NULL,
+               ylab = NULL,
                col=hist.col,
                freq=freq,
                add = TRUE)
@@ -831,13 +827,25 @@ plot.sig.snps <- function(corr.dat,
       ## add annotation text labelling SNPs >
       ## threshold at their location on the x-axis:
       text(x=X, y=Y, labels=sig.loc,
-           col=myCol, font=2, pos=4, cex = 1)
+           col=myCol, font=1, pos=4, cex = 1)
 
     }else{
       text(x=(max(h.null$breaks)*3/4),
            y=(max(yvals)*3/4),
            labels="no significant SNPs found",
-           col="red", font=2, pos=2, cex = 1)
+           col="red", font=3, pos=3, cex = 1)
+    }
+
+
+    ## Add plot title:
+    if(!is.null(test)){
+      title(paste("Empirical distribution \n(", test, "score)"
+                  # \n (with significant SNPs indicated)"
+                  , sep=" "))
+    }else{
+      title(paste("Empirical distribution \n"
+                  # \n (with significant SNPs indicated)"
+                  , sep=" "))
     }
 
   } # end plot.dist == TRUE

@@ -34,25 +34,6 @@
 terminal.test <- function(snps,
                           phen){
 
-
-  #########################
-  ## Get UNIQUE snps.rec ##
-  #########################
-  # temp <- get.unique.matrix(snps, MARGIN=2)
-  # snps.unique <- temp$unique.data
-  # index <- temp$index
-  #
-  # if(ncol(snps.unique) == ncol(snps)){
-  #   all.unique <- TRUE
-  # }else{
-  #   all.unique <- FALSE
-  # }
-  #
-  # ## work w only unique snps:
-  # colnoms <- colnames(snps)
-  # snps <- snps.unique
-  # rm(snps.unique)
-
   ####################################################################
   #################
   ## Handle phen ##
@@ -103,7 +84,8 @@ terminal.test <- function(snps,
   ## RE-SCALE NON-BINARY VALUES (phen only (?)) ##
   ################################################
   Pd.ori <- Pd
-  if(n.levs > 2) Pd <- rescale(Pd, to=c(0,1))  ## require(plotrix) OR require(scales)
+  # if(n.levs > 2)
+  Pd <- rescale(Pd, to=c(0,1))  ## require(scales)
 
   #################################################################     #####
   #############
@@ -113,22 +95,18 @@ terminal.test <- function(snps,
 
   score1 <- (Pd*Sd - (1 - Pd)*Sd - Pd*(1 - Sd) + (1 - Pd)*(1 - Sd))  ## CALCULATE SCORE 1 EQUATION
 
-  score1 <- abs((colSums(score1, na.rm=TRUE)/length(Pd)))
+  ## Return with sign:
+  score1 <- colSums(score1, na.rm=TRUE)/length(Pd)
+  # score1 <- abs(score1)
   names(score1) <- colnames(snps)
 
-  ############################################
-  ## get values for duplicate snps columns: ##
-  ############################################
-
-  # ## get reconstruction for all original sites
-  # if(all.unique == TRUE){
-  #   score1.complete <- score1
-  # }else{
-  #   score1.complete <- score1[index]
-  #   names(score1.complete) <- colnoms
-  # }
+  ## Return with and without sign?
+  # score1.sign <- colSums(score1, na.rm=TRUE)/length(Pd)
+  # score1 <- abs(score1.sign)
+  # names(score1) <- names(score1.sign) <- colnames(snps)
   #
-  # score1 <- score1.complete
+  # score1 <- list("score1" = score1,
+  #               "score1.sign" = score1.sign)
 
   return(score1)
 

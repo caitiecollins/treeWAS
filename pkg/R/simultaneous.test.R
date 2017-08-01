@@ -52,24 +52,6 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   ## Get tree edges:
   edges <- tree$edge
 
-  #########################
-  ## Get UNIQUE snps.rec ##
-  #########################
-  # temp <- get.unique.matrix(snps.rec, MARGIN=2)
-  # snps.rec.unique <- temp$unique.data
-  # index <- temp$index
-  #
-  # if(ncol(snps.rec.unique) == ncol(snps.rec)){
-  #   all.unique <- TRUE
-  # }else{
-  #   all.unique <- FALSE
-  # }
-  #
-  # ## work w only unique snps:
-  # colnoms <- colnames(snps.rec)
-  # snps.rec <- snps.rec.unique
-  # rm(snps.rec.unique)
-
   ####################################################################
   #####################
   ## Handle phen.rec ##
@@ -113,7 +95,8 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   ## RE-SCALE NON-BINARY VALUES (phen only ...) ##
   ################################################
   ## phen.rec (both Pa and Pd should be on same scale):
-  if(n.levs > 2) phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
+  # if(n.levs > 2)
+  phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
 
   ###############################
   ## GET DIFFS ACROSS BRANCHES ##
@@ -126,23 +109,21 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   phen.diffs <- phen.rec[edges[,1]] - phen.rec[edges[,2]]
 
   sp.diffs <- snps.diffs * phen.diffs
-  score <- abs(colSums(sp.diffs, na.rm=TRUE))
 
-  ################################################
-  ## get values for duplicate snps.rec columns: ##
-  ################################################
+  ## Return with sign:
+  score2 <- colSums(sp.diffs, na.rm=TRUE)
+  # score2 <- abs(score2)
+  names(score2) <- colnames(snps.rec)
 
-  # ## get reconstruction for all original sites
-  # if(all.unique == TRUE){
-  #   score.complete <- score
-  # }else{
-  #   score.complete <- score[index]
-  #   names(score.complete) <- colnoms
-  # }
+  ## Return with and without sign?
+  # score2.sign <- colSums(sp.diffs, na.rm=TRUE)
+  # score2 <- abs(score2.sign)
+  # names(score2) <- names(score2.sign) <- colnames(snps.rec)
   #
-  # score <- score.complete
+  # score2 <- list("score2" = score2,
+  #                "score2.sign" = score2.sign)
 
-  return(score)
+  return(score2)
 
 } # end simultaneous.test
 

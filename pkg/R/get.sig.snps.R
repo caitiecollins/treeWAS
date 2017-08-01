@@ -391,6 +391,10 @@ get.sig.snps <- function(corr.dat,
                          p.value.correct = "bonf",
                          p.value.by = "count"){
 
+  ## Use ABS Vals:
+  # corr.dat <- abs(corr.dat)
+  # corr.sim <- abs(corr.sim)
+
 
   ############################
   ## HANDLE P.VALUE OPTIONS ##
@@ -409,8 +413,8 @@ get.sig.snps <- function(corr.dat,
     ################
     ## p.value.by ##
     ################
-    if(p.value.by == "count") thresh <- quantile(corr.sim, probs=1-p.value)
-    if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=1-p.value)
+    if(p.value.by == "count") thresh <- quantile(abs(corr.sim), probs=1-p.value)
+    if(p.value.by == "density") thresh <- quantile(density(abs(corr.sim))$x, probs=1-p.value)
   }
 
   # print(paste("Test flag #4; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
@@ -420,7 +424,7 @@ get.sig.snps <- function(corr.dat,
     #########
     ## fdr ##
     #########
-    p.vals <- .get.p.vals(corr.sim,
+    p.vals <- .get.p.vals(abs(corr.sim),
                           corr.dat = NULL,
                           fisher.test = TRUE)
     p.vals <- sort(p.vals, decreasing=TRUE)
@@ -430,8 +434,8 @@ get.sig.snps <- function(corr.dat,
     ################
     ## p.value.by ##
     ################
-    if(p.value.by == "count") thresh <- quantile(corr.sim, probs=p.thresh)
-    if(p.value.by == "density") thresh <- quantile(density(corr.sim)$x, probs=p.thresh)
+    if(p.value.by == "count") thresh <- quantile(abs(corr.sim), probs=p.thresh)
+    if(p.value.by == "density") thresh <- quantile(density(abs(corr.sim))$x, probs=p.thresh)
 
   } # end p.value.correct == "fdr"
 
@@ -442,16 +446,16 @@ get.sig.snps <- function(corr.dat,
   ##################################
   if(test=="fisher"){
     ## Identify (real) SNPs w correlations > thresh:
-    sig.snps <- which(corr.dat < thresh)
-    p.vals <- .get.p.vals(corr.sim = corr.sim,
-                          corr.dat = corr.dat,
+    sig.snps <- which(abs(corr.dat) < thresh)
+    p.vals <- .get.p.vals(corr.sim = abs(corr.sim),
+                          corr.dat = abs(corr.dat),
                           fisher.test = TRUE)
     sig.p.vals <- p.vals[sig.snps]
   }else{
     ## Identify (real) SNPs w correlations > thresh:
-    sig.snps <- which(corr.dat > thresh)
-    p.vals <- .get.p.vals(corr.sim = corr.sim,
-                          corr.dat = corr.dat,
+    sig.snps <- which(abs(corr.dat) > thresh)
+    p.vals <- .get.p.vals(corr.sim = abs(corr.sim),
+                          corr.dat = abs(corr.dat),
                           fisher.test = FALSE)
     sig.p.vals <- p.vals[sig.snps]
   }
@@ -469,9 +473,9 @@ get.sig.snps <- function(corr.dat,
 
   ## re-order list of sig.snps and sig.corrs by value of sig.corr
   if(test=="fisher"){
-    NWO <- order(sig.corrs, decreasing=FALSE)
+    NWO <- order(abs(sig.corrs), decreasing=FALSE)
   }else{
-    NWO <- order(sig.corrs, decreasing=TRUE)
+    NWO <- order(abs(sig.corrs), decreasing=TRUE)
   }
   sig.snps <- sig.snps[NWO]
   sig.corrs <- sig.corrs[NWO]
@@ -600,11 +604,8 @@ assoc.test <- function(snps,
   } # end test subsequent
 
 
-
-  ## USE ABSOLUTE VALUE
-  # if(test != "subsequent"){
-    corr.dat <- abs(corr.dat)
-  # }
+  ## USE ABSOLUTE VALUE?
+  # corr.dat <- abs(corr.dat)
 
   return(corr.dat)
 } # end assoc.test
@@ -622,6 +623,10 @@ assoc.test <- function(snps,
 
   if(is.null(corr.sim)) stop("Cannot calculate p-values for null object.")
   if(is.null(corr.dat)) corr.dat <- corr.sim
+
+  ## Use ABS Vals:
+  corr.dat <- abs(corr.dat)
+  corr.sim <- abs(corr.sim)
 
   # w cum dist fn(F) p-val (p) for a given value(T) is: p = 1 - F(T)
   cum.dist <- ecdf(corr.sim)
