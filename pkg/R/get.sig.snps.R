@@ -569,13 +569,18 @@ assoc.test <- function(snps,
   } # end test cor
 
   #########################
-  ## FISHER'S EXACT TEST ##
+  ## FISHER'S EXACT TEST ## (** SLOW! **)
   #########################
   if(test=="fisher"){
-    corr.dat <- sapply(c(1:ncol(snps)),
-                       function(e) fisher.test(snps[,e],
-                                               y=phen, alternative="two.sided")$p.value)
-    ## two.sided bc we want to know if inds w
+    ## (!) Consider using tryCatch to avoid stupid (unpredictable?)
+    ## workspace (FEXACT, LDSTP) error? (soln: arg workspace=2e6 (slow)).
+    ## Using as.factor prevents errors w 1-level factors.
+    # if(class(tryCatch(
+      corr.dat <- sapply(c(1:ncol(snps)),
+                       function(e) fisher.test(as.factor(snps[,e]),
+                                               y=as.factor(phen),
+                                               alternative="two.sided")$p.value)
+      # , silent=TRUE)) == "try-error") print(1)
     ## the phen have EITHER more 1s or 0s
   } # end test fisher
 

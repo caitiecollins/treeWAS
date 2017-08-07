@@ -4,6 +4,6 @@ build-last-outputs="[{\"output\":\"==> R CMD INSTALL --no-multiarch --with-keep.
 compile_pdf_state="{\"errors\":[],\"output\":\"\",\"running\":false,\"tab_visible\":false,\"target_file\":\"\"}"
 console_procs="[]"
 files.monitored-path=""
-find-in-files-state="{\"handle\":\"\",\"input\":\"\",\"path\":\"\",\"regex\":true,\"results\":{\"file\":[],\"line\":[],\"lineValue\":[],\"matchOff\":[],\"matchOn\":[]},\"running\":false}"
+find-in-files-state="{\"handle\":\"\",\"input\":\"\",\"path\":\"\",\"regex\":false,\"results\":{\"file\":[],\"line\":[],\"lineValue\":[],\"matchOff\":[],\"matchOn\":[]},\"running\":false}"
 imageDirtyState="1"
 saveActionState="0"

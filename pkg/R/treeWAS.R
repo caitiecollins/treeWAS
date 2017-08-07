@@ -769,6 +769,13 @@ treeWAS <- function(snps,
   ## Remove any ENTIRELY missing rows...
   toRemove <- rownames(snps)[which(NA.tab == ncol(snps))]
 
+  ## Remove any NON-POLYMORPHIC rows? (i.e., entirely 1 or 0)
+  # rs <- rowSums(snps, na.rm=TRUE)
+  # # toRemove2 <- rownames(snps)[which(rs %in% c(0, ncol(snps)))]
+  # l <- rep(ncol(snps), nrow(snps)) - NA.tab
+  # toRemove2 <- rownames(snps)[which(rs == 0 | rs == l)]
+  # toRemove <- c(toRemove, toRemove2)
+
   if(length(toRemove) > 0){
     ## print notice:
     cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
@@ -807,6 +814,13 @@ treeWAS <- function(snps,
 
   ## Remove any ENTIRELY missing columns
   toRemove <- colnames(snps)[which(NA.tab == nrow(snps))]
+
+  ## Remove any NON-POLYMORPHIC columns? (i.e., entirely 1 or 0, -NAs)
+  # cs <- colSums(snps, na.rm=TRUE)
+  # l <- rep(nrow(snps), ncol(snps)) - NA.tab
+  # toRemove2 <- colnames(snps)[which(cs == 0 | cs == l)]
+  # toRemove <- c(toRemove, toRemove2)
+
   if(length(toRemove) > 0){
     snps <- snps[, -which(colnames(snps) %in% toRemove)]
 
@@ -958,8 +972,7 @@ treeWAS <- function(snps,
       phen.rec <- phen.reconstruction
     }else{
       ## By PARSIMONY or ML: ##
-      phen.REC <- asr(var = phen, tree = tree, type = phen.reconstruction, method = phen.rec.method)
-      phen.rec <- phen.REC$var.rec
+      phen.rec <- asr(var = phen, tree = tree, type = phen.reconstruction, method = phen.rec.method)
     }
   }
   ####################################################################
@@ -1015,17 +1028,6 @@ treeWAS <- function(snps,
       }
     }
 
-    # ## get leafCol from colour scheme:
-    # # if(is.numeric(var)){
-    # #   leafCol <- myCol ## only for num2col!!
-    # # }else{
-    #   leafCol <- var
-    #   ## for loop
-    #   for(i in 1:length(levs)){
-    #     leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
-    #   } # end for loop
-    # # }
-
     ## PLOT TREE:
     plot(tree, show.tip=T, tip.col=leafCol, align.tip.label=TRUE, cex=0.5)
     title("Phylogenetic tree")
@@ -1036,6 +1038,7 @@ treeWAS <- function(snps,
   } # end plot.tree
 
 
+  ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
   ###################
   ## HANDLE N.SUBS ##
@@ -1050,32 +1053,6 @@ treeWAS <- function(snps,
     ## if n.subs is NULL ##
     ## we compute the distribution of the n.subs-per-site
     ## using the Fitch parsimony score calculation fns from phangorn.
-
-
-    ###########
-    ## TO DO ##   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
-    ###########
-
-    ## if either test 2 or test 3 will be run with parsimonious/user-provided reconstruction,
-    ## get n.subs from this to avoid duplication..?
-    #     if(any(c("simultaneous", "subsequent") %in% test) & snps.reconstruction != "ml"){
-    #
-    #       ## run get.ancestral.pars
-    #       snps.pars <- get.ancestral.pars(var=snps, tree=tree)
-    #
-    #       ## get elements of output
-    #       snps.rec <- snps.pars$var.rec
-    #       snps.subs.edges <- snps.pars$subs.edges
-    #
-    #       ## CHECK--Compare costs:
-    #       cost1 <- get.fitch.n.mts(snps=snps, tree=tree)
-    #       cost2 <- sapply(c(1:length(snps.subs.edges)), function(e) length(snps.subs.edges[[e]][["total"]]))
-    #       table(cost1)
-    #       table(cost2) ## longer tail...
-    #
-    #     }else{
-
-    ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
     ## get parsimomy cost for each SNP locus using fitch:
     n.subs <- get.fitch.n.mts(snps=snps, tree=tree)
@@ -1440,7 +1417,7 @@ treeWAS <- function(snps,
     ##############################################################################################
 
     ## Ensure we are only reconstructing ancestral states ONCE here, to be used in MULTIPLE tests later.
-    snps.REC <- snps.sim.REC <- phen.REC <- NULL
+    snps.REC <- snps.sim.REC <- NULL
 
     if(any(c("simultaneous", "subsequent") %in% test)){
 
@@ -1481,18 +1458,16 @@ treeWAS <- function(snps,
         }
       }else{
         # system.time( # 274
-        snps.REC <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
+        snps.rec <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
         # )
-        snps.rec <- snps.REC$var.rec
       }
 
       #################################
       ## Reconstruct SIMULATED SNPs: ##
       #################################
       # system.time(
-      snps.sim.REC <- asr(var = snps.sim, tree = tree, type = snps.sim.reconstruction, unique.cols = TRUE)
+      snps.sim.rec <- asr(var = snps.sim, tree = tree, type = snps.sim.reconstruction, unique.cols = TRUE)
       # )
-      snps.sim.rec <- snps.sim.REC$var.rec
 
         } # end reconstruction for tests 2 & 3
 

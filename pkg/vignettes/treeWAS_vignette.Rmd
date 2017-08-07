@@ -344,6 +344,9 @@ The tree can be either rooted or unrooted.
 If you are working with a continuous phenotype, it is important to first examine the distribution of the phenotype. 
 
 ```{r, eval=FALSE}
+## Load eg. variable: 
+data(phen.cont)
+
 ## Examine phen distribution:
 hist(phen.cont)
 ```

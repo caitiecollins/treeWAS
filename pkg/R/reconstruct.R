@@ -32,13 +32,14 @@
 #'
 #' @import ape
 #' @importFrom Hmisc all.is.numeric
+#' @importFrom phytools anc.ML
 
 
 ########################################################################
 
 asr <- function(var,
                 tree,
-                type = c("parsimony", "ML", "ace"), ## keeping "ace", in case I missed any instances, though deprecated.
+                type = c("parsimony", "ML", "ace"), ## keeping "ace", deprecated.
                 method = c("discrete", "continuous"),
                 unique.cols = FALSE){
 
@@ -125,11 +126,7 @@ asr <- function(var,
     if(type == "parsimony"){
 
       ## run get.ancestral.pars
-      snps.pars <- get.ancestral.pars(var=snps, tree=tree, unique.cols = TRUE)
-
-      ## get elements of output
-      snps.rec <- snps.pars$var.rec
-      snps.subs.edges <- snps.pars$subs.edges
+      snps.rec <- get.ancestral.pars(var=snps, tree=tree, unique.cols = TRUE)
 
     } # end parsimony
 
@@ -142,7 +139,7 @@ asr <- function(var,
       if(method == "continuous"){
         # Check snps is numeric:
         if(!is.numeric(snps)){
-          if(!all.is.numeric(snps)){
+          if(!all.is.numeric(snps[!is.na(snps)])){
             stop("For a continuous reconstruction, the matrix must be numeric.")
           }else{
             r.noms <- rownames(snps)
@@ -161,31 +158,152 @@ asr <- function(var,
         tree$edge.length[toReplace] <- 1e-10
       }
 
-      snps.rec <- snps.ML <- list()
+      ## Check if MISSING DATA in snps: ##
+      na.var <- FALSE
+      ## If ANY snps column contains NAs, we change rec fn
+      ## for continuous recs for ALL columns (for consistency's sake).
+      if(any(is.na(as.vector(unlist(snps))))) na.var <- TRUE
 
-      for(i in 1:ncol(snps)){
 
-        ## get variable i
-        var <- snps[,i]
+      ## With MISSING DATA & CONTINUOUS ML rec, use anc.ML: ##
+      if(na.var == TRUE & method == "continuous"){
 
-        ## get terminal values
-        var.terminal <- var
+        ######### (** SLOW! **) ##########
+        ## MISSING & Continuous ML rec: ##
+        ##################################
 
-        ## get internal values (from ML output for variable i)
-        snps.ML[[i]] <- ace(var, tree, type=method)
-        if(method == "discrete"){
-          var.internal <- snps.ML[[i]]$lik.anc[,2]
-        }else{
+        snps.rec <- snps.ML <- list()
+
+        for(i in 1:ncol(snps)){
+
+          ## get variable i
+          var <- snps[,i]
+
+          ## get terminal values
+          var.terminal <- var
+
+          ## With MISSING DATA in any columns: ##
+          ## Continuous ML rec: ##
+          ## get internal values (when (any) var contains NAs):
+          var <- var[!is.na(var)]
+          snps.ML[[i]] <- anc.ML(tree, var) ## require(phytools)
           var.internal <- snps.ML[[i]]$ace
+
+          ## get reconstruction from terminal & internal values
+          snps.rec[[i]] <- c(var.terminal, var.internal)
+        } # end for loop
+
+        ## bind columns of snps.rec together
+        snps.rec <- do.call("cbind", snps.rec)
+        colnames(snps.rec) <- colnames(snps)
+
+      }else{
+
+        ##############################################
+        ## NO MISSING DATA (or MISSING & DISCRETE): ##
+        ##############################################
+
+        ## Assign colnames if NULL:
+        if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+
+        ## get levels (ie. 0, 1)
+        # snps.levels <- sort(unique(as.vector(snps)))
+        snps.levels <- sort(unique(as.vector(snps)), na.last = TRUE)
+        ## returns only unique patterns...
+        snps.phyDat <- as.phyDat(as.matrix(snps),
+                                 type="USER", levels=snps.levels)
+        ## get index of all original snps columns to map to unique pattern
+        index.phyDat <- attr(snps.phyDat, "index")
+
+        ## ML discrete reconstruction:
+        ## Step 1:
+        fit <- pml(tree, snps.phyDat)
+        ## (Step 2 below -- if binary, get probs; if not, get states...)
+        # rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
+        # rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
+
+        ###########################################
+        ## convert reconstruction back to snps.. ##
+        ###########################################
+        ## each of the n.ind elements of rec is a matrix w n.snps rows and either:
+        ## 2 columns, for the 2 binary SNP states, or
+        ## 4 columns, each for the 4 nts possible (acgt)
+
+        ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
+        l <- max(tree$edge[,2])
+        ord <- 1:l
+        # ## Get order:
+        # ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
+        # ## First, check to ensure all row.names(snps) are matched in tree$tip.label
+        # if(all(row.names(snps) %in% tree$tip.label)){
+        #   ord <- match(tree$tip.label, rownames(snps))
+        # }else{
+        #   ord <- 1:length(rownames(snps))
+        #   warning("rownames(snps) and tree$tip.label contain different labels.
+        #           Careful-- we proceed by assuming snps rows and tree tips are labelled in the same order!")
+        # }
+        # ## Want rec (list) to be in order of tree$tip.label
+        # ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
+        # # l <- length(rec)
+        # l <- max(tree$edge[,2])
+        # ord <- c(ord, c(nrow(snps)+1):l)
+
+        ## Binary:
+        if(length(snps.levels[!is.na(snps.levels)]) == 2){
+
+          ## ML discrete reconstruction:
+          ## Step 2 (Binary --> get probs):
+          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
+
+          ## If NAs are present, replace column 1 0s with NA values
+          ## whenever column 3 (NA) has a 1 in it:
+          if(any(is.na(snps.levels))){
+            na.col <- which(is.na(snps.levels))
+            for(i in 1:length(rec)){
+              foo <- rec[[i]]
+              toReplace <- which(foo[,na.col] == 1)
+              if(length(toReplace) > 0){
+                foo[toReplace,1] <- NA
+                foo[toReplace,2] <- NA
+              }
+              rec[[i]] <- foo
+            } # end for loop
+          }
+          ## Bind list into matrix:
+          snps.rec <- do.call(cbind, rec[ord])
+          snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))])
+
+        }else{
+
+          ## Non-Binary (discrete):
+
+          ## ML discrete reconstruction:
+          ## Step 2 (Non-binary --> get states):
+          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
+
+          ## Print warning notice:
+          cat("Reconstructing non-binary genetic data matrix.")
+
+          ## Bind list & reorder elements:
+          snps.rec <- do.call(rbind, rec[ord])
+
+        } # end non-binary
+
+        ## assign rownames for all terminal and internal nodes
+        rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):max(tree$edge[,2])))
+        # rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):(tree$Nnode + nrow(snps))))
+        colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
+
+
+        ## Handle index.phyDat! ##
+        ## get reconstruction for all pre-phyDat sites
+        if(ncol(snps) != ncol(snps.rec)){
+          snps.rec.complete <- snps.rec[, index.phyDat]
+          rownames(snps.rec.complete) <- rownames(snps.rec)
+          colnames(snps.rec.complete) <- 1:ncol(snps.rec.complete)
+          snps.rec <- snps.rec.complete
         }
-
-        ## get reconstruction from terminal & internal values
-        snps.rec[[i]] <- c(var.terminal, var.internal)
-      }
-
-      ## bind columns of snps.rec together
-      snps.rec <- do.call("cbind", snps.rec)
-      colnames(snps.rec) <- colnames(snps)
+      } # end No missing (or missing & discrete)
 
     } # end ML
 
@@ -203,16 +321,6 @@ asr <- function(var,
       colnames(var.rec) <- colnames(snps.ori)
     }
 
-    ## get sub locations on branches for all original sites
-    if(type == "parsimony"){
-      if(all.unique == TRUE){
-        subs.edges <- snps.subs.edges
-      }else{
-        subs.edges <- snps.subs.edges[index]
-      }
-    }
-
-
 
   }else{ # end matrix (snps)   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
@@ -226,11 +334,7 @@ asr <- function(var,
     ############################
     if(type == "parsimony"){
       ## run get.ancestral.pars
-      phen.pars <- get.ancestral.pars(var=phen, tree=tree)
-
-      ## get elements of output
-      var.rec <- phen.pars$var.rec
-      subs.edges <- phen.pars$subs.edges
+      var.rec <- get.ancestral.pars(var=phen, tree=tree)
 
     } # end parsimony
 
@@ -282,13 +386,7 @@ asr <- function(var,
   ################
   ## GET OUTPUT ##
   ################
-  if(type == "parsimony"){
-    output <- list("var.rec" = var.rec,
-                   "subs.edges" = subs.edges)
-  }else{
-    ## NOTE that ML does NOT return subs.edges...
-    output <- list("var.rec" = var.rec)
-  }
+  output <- var.rec
 
   ## return output
   return(output)
@@ -299,8 +397,44 @@ asr <- function(var,
 
 
 
-
-
+## ** TOO SLOW ** ##
+# ## Either NO missing data or MISSING & Continuous ML rec: ##
+#
+# snps.rec <- snps.ML <- list()
+#
+# system.time(
+#   for(i in 1:ncol(snps)){
+#
+#     ## get variable i
+#     var <- snps[,i]
+#
+#     ## get terminal values
+#     var.terminal <- var
+#
+#     ## With MISSING DATA in any columns: ##
+#     if(na.var == TRUE & method == "continuous"){
+#       ## Continuous ML rec: ##
+#       ## get internal values (when (any) var contains NAs):
+#       var <- var[!is.na(var)]
+#       snps.ML[[i]] <- anc.ML(tree, var) ## require(phytools)
+#       var.internal <- snps.ML[[i]]$ace
+#     }else{
+#       ## With NO missing data: ##
+#       ## Continuous or Discrete ML rec: ##
+#       ## get internal values (from ML output for variable i)
+#       snps.ML[[i]] <- ace(var, tree, type=method)
+#       if(method == "continuous") var.internal <- snps.ML[[i]]$ace
+#       if(method == "discrete") var.internal <- snps.ML[[i]]$lik.anc[,2]
+#     }
+#
+#     ## get reconstruction from terminal & internal values
+#     snps.rec[[i]] <- c(var.terminal, var.internal)
+#   } # end for loop
+# )
+#
+# ## bind columns of snps.rec together
+# snps.rec <- do.call("cbind", snps.rec)
+# colnames(snps.rec) <- colnames(snps)
 
 
 
@@ -416,11 +550,15 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     index.phyDat <- attr(snps.phyDat, "index")
 
     ## pace == ancestral.pars
-    pa.ACCTRAN <- pace(tree, snps.phyDat, type="ACCTRAN")
+    rec <- pa.ACCTRAN <- pace(tree, snps.phyDat, type="ACCTRAN")
 
     ## NOTE: pace  --> diff resuls w MPR vs. ACCTRAN
-    # pa.MPR <- pace(tree, snps.phyDat, type="MPR")
+    # rec <- pa.MPR <- pace(tree, snps.phyDat, type="MPR")
     #diffs <- sapply(c(1:length(pa.ACCTRAN)), function(e) identical(pa.MPR[[e]], pa.ACCTRAN[[e]]))
+
+    ## ML discrete alternative:
+    # fit <- pml(tree, snps.phyDat)
+    # rec.ml <- ancestral.pml(fit, type = "ml")
 
     ###########################################
     ## convert reconstruction back to snps.. ##
@@ -429,43 +567,81 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     ## 2 columns, for the 2 binary SNP states, or
     ## 4 columns, each for the 4 nts possible (acgt)
 
-    # rec <- pa.MPR
-    rec <- pa.ACCTRAN
+    ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
+    ord <- 1:length(rec)
+    # ## Get order:
+    # ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
+    # ## First, check to ensure all row.names(snps) are matched in tree$tip.label
+    # if(all(row.names(snps) %in% tree$tip.label)){
+    #   ord <- match(tree$tip.label, rownames(snps))
+    # }else{
+    #   ord <- 1:length(rownames(snps))
+    #   warning("rownames(snps) and tree$tip.label contain different labels.
+    #             Careful-- we proceed by assuming snps rows and tree tips are labelled in the same order!")
+    # }
+    # ## Want rec (list) to be in order of tree$tip.label
+    # ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
+    # ord <- c(ord, c(nrow(snps)+1):length(rec))
 
-    # REC <- rec
+    ## Binary:
+    if(length(snps.levels[!is.na(snps.levels)]) == 2){
 
-    ## If NAs are present, replace column 1 0s with NA values
-    ## whenever column 3 (NA) has a 1 in it:
-    if(any(is.na(snps.levels))){
-      na.col <- which(is.na(snps.levels))
-      for(i in 1:length(rec)){
-        foo <- rec[[i]]
-        toReplace <- which(foo[,na.col] == 1)
-        if(length(toReplace) > 0){
-          foo[toReplace,1] <- NA
-          foo[toReplace,2] <- NA
-        }
-        rec[[i]] <- foo
-      } # end for loop
-    }
+      ## If NAs are present, replace column 1 0s with NA values
+      ## whenever column 3 (NA) has a 1 in it:
+      if(any(is.na(snps.levels))){
+        na.col <- which(is.na(snps.levels))
+        for(i in 1:length(rec)){
+          foo <- rec[[i]]
+          toReplace <- which(foo[,na.col] == 1)
+          if(length(toReplace) > 0){
+            foo[toReplace,1] <- NA
+            foo[toReplace,2] <- NA
+          }
+          rec[[i]] <- foo
+        } # end for loop
+      }
 
-    ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
-    ## First, check to ensure all row.names(snps) are matched in tree$tip.label
-    if(all(row.names(snps) %in% tree$tip.label)){
-      ord <- match(tree$tip.label, rownames(snps))
+      snps.rec <- do.call(cbind, rec[ord])
+      snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))])
+
     }else{
-      ord <- 1:length(rownames(snps))
-      warning("rownames(snps) and tree$tip.label contain different labels.
-              Careful-- we proceed by assuming snps rows and tree tips are labelled in the same order!")
-    }
-    ## Want rec (list) to be in order of tree$tip.label
-    ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
-    ord <- c(ord, c(nrow(snps)+1):length(rec))
-    snps.rec <- do.call(cbind, rec[ord])
-    snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))])
+
+      ## Non-Binary (discrete):
+
+      ## Print warning notice:
+      cat("Reconstructing non-binary genetic data matrix.")
+
+      ## Reorder elements:
+      rec <- rec[ord]
+
+      ## For each row, get values:
+      snps.rec <- list()
+      for(i in 1:length(rec)){
+        ## Get reconstruction for this row for all sites:
+        mat <- rec[i][[1]]
+        ## Replace non-binary (uncertain) values w NA:
+        mat <- replace(mat, which(!mat %in% c(0,1)), NA)
+        ## Convert to logical:
+        sr <- matrix(as.logical(mat), nrow=nrow(mat), ncol=ncol(mat))
+        ## Replace any row containing NAs to ONE NA:
+        toReplace <- which(is.na(rowSums(sr, na.rm = FALSE)))
+        sr[toReplace,] <- FALSE
+        sr[toReplace, 1] <- NA
+        ## Get values:
+        foo <- rep(snps.levels, nrow(sr))
+        ## Append to list:
+        snps.rec[[i]] <- foo[t(sr)]
+      } # end for loop
+
+      ## Bind list into matrix:
+      snps.rec <- do.call(rbind, snps.rec)
+
+    } # end non-binary
+
+
 
     ## assign rownames for all terminal and internal nodes
-    rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):((nrow(snps)*2)-1)))
+    rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):max(tree$edge[,2])))
     # rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):(tree$Nnode + nrow(snps))))
     colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
 
@@ -478,55 +654,6 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
       colnames(snps.rec.complete) <- 1:ncol(snps.rec.complete)
       snps.rec <- snps.rec.complete
     }
-
-
-
-
-
-
-    ###########################################
-    ## get LOCATIONS (branches) of snps subs ##
-    ###########################################
-    subs.edges <- rep(list(NULL), ncol(snps.rec))
-
-    subs.logical <- matrix(snps.rec[edges[, 1], ] == snps.rec[edges[, 2], ], nrow=nrow(edges), byrow=F)
-
-    ## get states of anc and dec:
-    df.anc <- snps.rec[edges[, 1], ]
-    # df.dec <- snps.rec[edges[, 2], ]
-
-
-    ## get indices of all edges containing a substitution
-    for(i in 1:ncol(snps.rec)){
-      subs.total <- which(subs.logical[, i] == FALSE)
-
-      ## get indices of all edges w a positive sub (0 --> 1)
-      subs.pos <- subs.total[which(subs.total %in% which(df.anc[,i] == 0))]
-      ## get indices of all edges w a negative sub (1 --> 0)
-      subs.neg <- subs.total[which(subs.total %in% which(df.anc[,i] == 1))]
-
-      ## get output list
-      subs.edges[[i]] <- rep(list(NULL), 3)
-      names(subs.edges[[i]]) <- c("total", "pos", "neg")
-      if(length(subs.total) > 0) subs.edges[[i]][["total"]] <- subs.total
-      if(length(subs.pos) > 0) subs.edges[[i]][["pos"]] <- subs.pos
-      if(length(subs.neg) > 0) subs.edges[[i]][["neg"]] <- subs.neg
-    }
-
-    ####################
-    ## PLOT to CHECK? ##
-    ####################
-    ## for SNP1, does it identify the correct/reasonable branches?
-    #     edgeCol <- rep("black", nrow(edges))
-    #     edgeCol <- replace(edgeCol, subs.edges[[1]][["total"]], "green")
-    #
-    #     ## plot the i'th character's reconstruction on the tree:
-    #     #require(adegenet)
-    #     plotAnc(tree, pa.ACCTRAN, i=1,
-    #             col=transp(c("red", "royalblue"), 0.75),
-    #             cex.pie=0.1, pos=NULL,
-    #             edge.color=edgeCol, edge.width=2, use.edge.length=FALSE, type="c")
-
 
     ############################################
     ## get values for duplicate snps columns: ##
@@ -542,39 +669,9 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
       colnames(snps.rec.complete) <- colnames(snps.ori)
     }
 
-    ## get sub locations on branches for all original sites
-    snps.subs.edges <- subs.edges
-    # if(ncol(snps.ori) == ncol(snps.rec)){
-    if(all.unique == TRUE){
-      snps.subs.edges.complete <- snps.subs.edges
-    }else{
-      snps.subs.edges.complete <- snps.subs.edges[index]
-    }
+    ## Get Output:
+    out <- snps.rec.complete
 
-
-    ################
-    ## Get output ##
-    ################
-
-    ## CHECK-- compare cost from fitch and pace: ##
-    ###########
-    ## get n.subs per site by fitch:
-    # cost <- get.fitch.n.mts(snps, tree)
-
-    ## get n.subs per site by pace:
-    # cost2 <- sapply(c(1:length(snps.subs.edges.complete)),
-    # function(e) length(snps.subs.edges.complete[[e]][["total"]]))
-
-    ## NOTE: cost2 differs somewhat noticeably from original fitch cost
-    ## (ie. parsimony shifts distribution toward 1/reduces the weight of the upper tail...)
-    ## WHY? Which should we use to get n.subs????????????????????????????????????????????????????????????
-
-    ## Get final output list:
-    var.rec <- snps.rec.complete
-    subs.edges <- snps.subs.edges.complete
-
-    out <- list("var.rec" = var.rec,
-                "subs.edges" = subs.edges)
 
   }else{ # end matrix (snps) parsimony
 
@@ -612,60 +709,61 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     ## pace == ancestral.pars
     rec <- phen.pa.ACCTRAN <- pace(tree, phen.phyDat, type="ACCTRAN")
 
+    ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
+    ord <- 1:length(rec)
+    # ## NOTE: pace works with phen in the order of tree$tip.label
+    # ## First, check to ensure all names(phen) are matched in tree$tip.label
+    # if(all(names(phen) %in% tree$tip.label)){
+    #   ord <- match(tree$tip.label, names(phen))
+    # }else{
+    #   ord <- 1:length(names(phen))
+    #   warning("names(phen) and tree$tip.label contain different labels.
+    #           Careful-- we proceed by assuming phen and tree tips are labelled in the same order!")
+    # }
+    # ## Want rec (list) to be in order of tree$tip.label
+    # ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
+    # ord <- c(ord, c(length(phen)+1):length(rec))
+    #
+    ## get order if null:
+    # if(is.null(ord)) ord <- 1:length(rec)
+
+
     ## get reconstruction:
-    if(is.null(ord)) ord <- 1:length(rec)
-    phen.rec <- do.call(cbind, rec[ord])
-    phen.rec <- as.vector(phen.rec[, seq(2, ncol(phen.rec), 2)])
+
+    ## Binary:
+    if(length(phen.levels) == 2){
+      ## Combine in order:
+      phen.rec <- do.call(cbind, rec[ord])
+      ## Remove redundant column:
+      phen.rec <- as.vector(phen.rec[, seq(2, ncol(phen.rec), 2)])
+    }else{
+
+      ## Non-Binary (discrete):
+      ## Get values:
+      phen.rec <- do.call(rbind, rec)
+      phen.rec <- phen.rec[ord,]
+
+      ## Replace non-binary (uncertain) values w NA:
+      phen.rec <- replace(phen.rec, which(!phen.rec %in% c(0,1)), NA)
+      ## Convert to logical matrix:
+      pr <- as.logical(phen.rec)
+      pr <- matrix(pr, nrow=nrow(phen.rec), ncol=ncol(phen.rec))
+      # Replace any row containing NAs to ONE NA:
+      toReplace <- which(is.na(rowSums(pr, na.rm = FALSE)))
+      pr[toReplace,] <- FALSE
+      pr[toReplace, 1] <- NA
+
+      ## Get values:
+      levs <- attr(rec, "levels")
+      foo <- rep(levs, nrow(pr))
+      phen.rec <- foo[t(pr)]
+
+    } # end non-binary
 
     names(phen.rec) <- c(names(phen), c((length(phen)+1):(tree$Nnode + length(phen))))
 
-    ###########################################
-    ## get LOCATIONS (branches) of phen subs ##
-    ###########################################
-
-    ## make empty output list
-    phen.subs.edges <- rep(list(NULL), 3)
-    names(phen.subs.edges) <- c("total", "pos", "neg")
-
-    ## identify if subs occur on each branch:
-    phen.subs.logical <- phen.rec[edges[, 1]] == phen.rec[edges[, 2]]
-    names(phen.subs.logical) <- 1:nrow(edges) ## WHY DID IT AUTOMATICALLY LABEL THE ROWS IN REVERSE ORDER (199:101) ?????
-    ## get indices of all edges containing a substitution
-    phen.subs.total <- which(phen.subs.logical == FALSE)
-    ## get df of states of ancestor and descendants nodes on these edges
-    df <- data.frame(phen.rec[edges[phen.subs.total,1]], phen.rec[edges[phen.subs.total,2]])
-    names(df) <- c("anc", "dec")
-    ## get indices of all edges w a positive sub (0 --> 1)
-    phen.subs.pos <- phen.subs.total[which(df$anc==0)]
-    ## get indices of all edges w a negative sub (1 --> 0)
-    phen.subs.neg <- phen.subs.total[which(df$anc==1)]
-
-    ## get output list
-    if(length(phen.subs.total) > 0) phen.subs.edges[["total"]] <- phen.subs.total
-    if(length(phen.subs.pos) > 0) phen.subs.edges[["pos"]] <- phen.subs.pos
-    if(length(phen.subs.neg) > 0) phen.subs.edges[["neg"]] <- phen.subs.neg
-
-    ####################
-    ## PLOT to CHECK? ##
-    ####################
-    ## for SNP1, does it identify the correct/reasonable branches?
-    #     edgeCol <- rep("black", nrow(edges))
-    #     edgeCol <- replace(edgeCol, phen.subs.edges[["total"]], "green")
-    #
-    #     ## plot the i'th character's reconstruction on the tree:
-    #     #require(adegenet)
-    #     plotAnc(tree, phen.pa.ACCTRAN, i=1,
-    #             col=transp(c("red", "royalblue"), 0.75),
-    #             cex.pie=0.1, pos=NULL,
-    #             edge.color=edgeCol, edge.width=2, use.edge.length=FALSE, type="c")
-
-    ################
-    ## Get output ##
-    ################
-    var.rec <- phen.rec
-    subs.edges <- phen.subs.edges
-    out <- list("var.rec" = var.rec,
-                "subs.edges" = subs.edges)
+    ## Get Output
+    out <- phen.rec
 
   } # end vector (phen) parsimony
 
@@ -675,3 +773,146 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
 
 
+
+
+
+
+
+
+
+
+
+##############################################################################
+#
+# ###################
+# ## OLD SNPS CODE ##
+# ###################
+#
+# ###########################################
+# ## get LOCATIONS (branches) of snps subs ##
+# ###########################################
+# subs.edges <- rep(list(NULL), ncol(snps.rec))
+#
+# subs.logical <- matrix(snps.rec[edges[, 1], ] == snps.rec[edges[, 2], ], nrow=nrow(edges), byrow=F)
+#
+# ## get states of anc and dec:
+# df.anc <- snps.rec[edges[, 1], ]
+# # df.dec <- snps.rec[edges[, 2], ]
+#
+#
+# ## get indices of all edges containing a substitution
+# for(i in 1:ncol(snps.rec)){
+#   subs.total <- which(subs.logical[, i] == FALSE)
+#
+#   ## get indices of all edges w a positive sub (0 --> 1)
+#   subs.pos <- subs.total[which(subs.total %in% which(df.anc[,i] == 0))]
+#   ## get indices of all edges w a negative sub (1 --> 0)
+#   subs.neg <- subs.total[which(subs.total %in% which(df.anc[,i] == 1))]
+#
+#   ## get output list
+#   subs.edges[[i]] <- rep(list(NULL), 3)
+#   names(subs.edges[[i]]) <- c("total", "pos", "neg")
+#   if(length(subs.total) > 0) subs.edges[[i]][["total"]] <- subs.total
+#   if(length(subs.pos) > 0) subs.edges[[i]][["pos"]] <- subs.pos
+#   if(length(subs.neg) > 0) subs.edges[[i]][["neg"]] <- subs.neg
+# }
+#
+# ####################
+# ## PLOT to CHECK? ##
+# ####################
+# ## for SNP1, does it identify the correct/reasonable branches?
+# #     edgeCol <- rep("black", nrow(edges))
+# #     edgeCol <- replace(edgeCol, subs.edges[[1]][["total"]], "green")
+# #
+# #     ## plot the i'th character's reconstruction on the tree:
+# #     #require(adegenet)
+# #     plotAnc(tree, pa.ACCTRAN, i=1,
+# #             col=transp(c("red", "royalblue"), 0.75),
+# #             cex.pie=0.1, pos=NULL,
+# #             edge.color=edgeCol, edge.width=2, use.edge.length=FALSE, type="c")
+# ################
+# ## Get output ##
+# ################
+#
+# ## CHECK-- compare cost from fitch and pace: ##
+# ###########
+# ## get n.subs per site by fitch:
+# # cost <- get.fitch.n.mts(snps, tree)
+#
+# ## get n.subs per site by pace:
+# # cost2 <- sapply(c(1:length(snps.subs.edges.complete)),
+# # function(e) length(snps.subs.edges.complete[[e]][["total"]]))
+#
+# ## NOTE: cost2 differs somewhat noticeably from original fitch cost
+# ## (ie. parsimony shifts distribution toward 1/reduces the weight of the upper tail...)
+# ## WHY? Which should we use to get n.subs????????????????????????????????????????????????????????????
+#
+# ## get sub locations on branches for all original sites
+# snps.subs.edges <- subs.edges
+# # if(ncol(snps.ori) == ncol(snps.rec)){
+# if(all.unique == TRUE){
+#   snps.subs.edges.complete <- snps.subs.edges
+# }else{
+#   snps.subs.edges.complete <- snps.subs.edges[index]
+# }
+# ## Get final output list:
+# var.rec <- snps.rec.complete
+# subs.edges <- snps.subs.edges.complete
+#
+# out <- list("var.rec" = var.rec,
+#             "subs.edges" = subs.edges)
+##############################################################################
+#
+# ###################
+# ## OLD PHEN CODE ##
+# ###################
+#
+# ###########################################
+# ## get LOCATIONS (branches) of phen subs ##
+# ###########################################
+#
+# ## make empty output list
+# phen.subs.edges <- rep(list(NULL), 3)
+# names(phen.subs.edges) <- c("total", "pos", "neg")
+#
+# ## identify if subs occur on each branch:
+# phen.subs.logical <- phen.rec[edges[, 1]] == phen.rec[edges[, 2]]
+# names(phen.subs.logical) <- 1:nrow(edges) ## WHY DID IT AUTOMATICALLY LABEL THE ROWS IN REVERSE ORDER (199:101) ?????
+# ## get indices of all edges containing a substitution
+# phen.subs.total <- which(phen.subs.logical == FALSE)
+# ## get df of states of ancestor and descendants nodes on these edges
+# df <- data.frame(phen.rec[edges[phen.subs.total,1]], phen.rec[edges[phen.subs.total,2]])
+# names(df) <- c("anc", "dec")
+# ## get indices of all edges w a positive sub (0 --> 1)
+# phen.subs.pos <- phen.subs.total[which(df$anc==0)]
+# ## get indices of all edges w a negative sub (1 --> 0)
+# phen.subs.neg <- phen.subs.total[which(df$anc==1)]
+#
+# ## get output list
+# if(length(phen.subs.total) > 0) phen.subs.edges[["total"]] <- phen.subs.total
+# if(length(phen.subs.pos) > 0) phen.subs.edges[["pos"]] <- phen.subs.pos
+# if(length(phen.subs.neg) > 0) phen.subs.edges[["neg"]] <- phen.subs.neg
+#
+# ####################
+# ## PLOT to CHECK? ##
+# ####################
+# ## for SNP1, does it identify the correct/reasonable branches?
+# #     edgeCol <- rep("black", nrow(edges))
+# #     edgeCol <- replace(edgeCol, phen.subs.edges[["total"]], "green")
+# #
+# #     ## plot the i'th character's reconstruction on the tree:
+# #     #require(adegenet)
+# #     plotAnc(tree, phen.pa.ACCTRAN, i=1,
+# #             col=transp(c("red", "royalblue"), 0.75),
+# #             cex.pie=0.1, pos=NULL,
+# #             edge.color=edgeCol, edge.width=2, use.edge.length=FALSE, type="c")
+#
+#
+# ################
+# ## Get output ##
+# ################
+# var.rec <- phen.rec
+# subs.edges <- phen.subs.edges
+# out <- list("var.rec" = var.rec,
+#             "subs.edges" = subs.edges)
+#
