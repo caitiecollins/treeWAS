@@ -68,7 +68,7 @@ snp.sim <- function(n.snps = 10000,
   ############################
   ## Get sequence from lowest ("root", Nterm+1) to highest ancestral node:
   ix <- c(min(tree$edge[,1]):max(tree$edge[,1]))
-  ## Get for loop index of rows in tree$edge[,1], in pairs, from lowest to highest:
+  ## Get for loop index of rows in tree$edge[,1], in pairs (if binary tree), from lowest to highest:
   x <- as.vector(unlist(sapply(c(1:length(ix)), function(e) which(tree$edge[,1] == ix[e]))))
   ####################################################################
 
@@ -76,7 +76,7 @@ snp.sim <- function(n.snps = 10000,
   ##################################
   ## GET MUTATIONS' branch & loci ##
   ##################################
-  n.ind <- tree$Nnode+1
+  n.ind <- min(tree$edge[,1])-1 # tree$Nnode+1
   gen.size <- n.snps
   rm(n.snps)
   edges <- tree$edge
@@ -611,130 +611,6 @@ snp.sim <- function(n.snps = 10000,
   ######################################################################################################################################################################
   ######################################################################################################################################################################
 
-  ######################################################################################################################################################################
-  ######################################################################################################################################################################
-
-  # # toRepeat <- 1:length(n.mts)
-  # # loci <- list()
-  #
-  # ######################################
-  # ## while loop STARTS here: ###########
-  # ######################################
-  # ## AGAIN--NEED TO DOUBLE CHECK: No problems with seed? #############
-  #
-  # counter <- 0
-  # if(!is.null(seed)) seed.i <- seed
-  # system.time(
-  # while(length(toRepeat) > 0){
-  #
-  # for(i in toRepeat){
-  #   ## get the lth element of n.mts to work with:
-  #   n.mt <- n.mts[i]
-  #
-  #   ## for each site, draw the branches to which
-  #   ## you will assign the mts for this site
-  #   ## (~ branch length):
-  #
-  #   if(n.mt > length(tree$edge.length)){
-  #     if(!is.null(seed)){
-  #       seed.i <- seed.i+1
-  #       set.seed(seed.i)
-  #     }
-  #     subs.edges <- sample(c(1:length(tree$edge.length)),
-  #                          n.mt,
-  #                          replace=TRUE,
-  #                          prob=tree$edge.length)
-  #   }else{
-  #     if(!is.null(seed)){
-  #       seed.i <- seed.i+1
-  #       set.seed(seed.i)
-  #     }
-  #     subs.edges <- sample(c(1:length(tree$edge.length)),
-  #                          n.mt,
-  #                          replace=FALSE,
-  #                          prob=tree$edge.length)
-  #   }
-  #
-  #   ## TO DO: COULD REPLACE (all instances!!!) LATER WITH:
-  #   ## Get vector of FALSEs of length tree$edge.length:
-  #   #     null.vect <- rep(FALSE, length(tree$edge.length))
-  #   #     subs.edges <- replace(null.vect,
-  #   #                           sample(c(1:length(tree$edge.length)),
-  #   #                                  n.mt,
-  #   #                                  replace=FALSE,
-  #   #                                  prob=tree$edge.length), TRUE)
-  #
-  #
-  #   ## get nt for root at this locus:
-  #   root.nt <- gen.root[i]
-  #
-  #   ## get nt for each individual at this locus
-  #   temp[,i] <- .get.locus(subs.edges = subs.edges,
-  #                           root.nt = root.nt,
-  #                           tree = tree)[1:n.ind]
-  #
-  # } # end FOR LOOP for NON-associated SNPs
-  #
-  # ######################################
-  # ##### while loop CHECK here: #########
-  # ######################################
-  # ## CHECK IF ALL LOCI ARE POLYMORPHIC (|polyThres)
-  #
-  # ## identify n.minor.allele required to meet polyThres:
-  # polyThres <- 0.01
-  # n.min <- n.ind*polyThres
-  #
-  # ## make a list of any NON-polymorphic loci:
-  # toRepeat.ori <- toRepeat
-  # temp.toRepeat <- temp[, toRepeat.ori]
-  #
-  #
-  # toRepeat <- list()
-  # ## if temp.toRepeat is a true matrix:
-  # if(!is.matrix(temp.toRepeat)){
-  #   if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
-  #     toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
-  #   }
-  # }else{
-  #   if(ncol(temp.toRepeat) > 0){
-  #     for(i in 1:ncol(temp.toRepeat)){
-  #       if(any(table(temp.toRepeat[,i]) < n.min) | length(table(temp.toRepeat[,i])) == 1){
-  #         toRepeat[[length(toRepeat)+1]] <- toRepeat.ori[i]
-  #       }
-  #     }
-  #   }else{
-  #     if(any(table(temp.toRepeat) < n.min) | length(table(temp.toRepeat)) == 1){
-  #       toRepeat[[length(toRepeat)+1]] <- toRepeat.ori
-  #     }
-  #   }
-  # }
-  # if(length(toRepeat) > 0){
-  #   toRepeat <- as.vector(unlist(toRepeat))
-  # }
-  #
-  # counter <- counter+1
-  # print("COUNTER"); print(counter)
-  # print("toRepeat"); print(length(toRepeat))
-  #
-  # } # end of while loop
-  # )
-  # # ######################################
-  # # ## while loop ENDS here: #############
-  # # ######################################
-  #
-  #
-  # ## GET ALL NON-UNIQUE SNPS COLUMNS: ##
-  #
-  # if(all.unique == TRUE){
-  #   temp.complete <- temp
-  # }else{
-  #   temp.complete <- temp[, index]
-  # }
-
-
-
-
-
 
   #########################
   ## GET ASSOCIATED SNPS ##
@@ -881,31 +757,6 @@ snp.sim <- function(n.snps = 10000,
   ## CONVERT TO NUMERIC: ##
   ## Convert from logical to binary SNPs (for terminal nodes only):
   snps <- replace(snps, which(snps == TRUE), 1)
-
-  ## Keep only rows containing terminal individuals?:
-  ## (NOTE -- Consider moving this to AFTER snps.assoc assoc.prob section!)
-  # snps <- snps[1:n.ind, ]
-  #
-  # ## NO LONGER NEED THIS SECTION? ##
-  # gen.size <- ncol(snps)
-  #
-  ## get snps as DNAbin ## DON'T THINK WE NEED THIS ANYMORE...
-  # ploidy <- 1
-  # snps <- as.DNAbin(snps, ploidy=ploidy)
-  # ## get snps as genind
-  # #source("C:/Users/caitiecollins/adegenet/R/sequences.R")
-  # snps.gen <- DNAbin2genind(snps, polyThres=0.01)
-  # ## get snps as binary matrix
-  # snps <- snps.gen@tab
-  #
-  # ## correct genind for ploidy:
-  # snps <- snps[,seq(1, ncol(snps), 2)]
-  #
-  # ## assign snps row and column names
-  # ## (TEMPORARILY?? -- DO WE NEED To DO ThIS HERE??) ### ###### #############     #
-  # rownames(snps) <- 1:nrow(snps)
-  # colnames(snps) <- 1:ncol(snps)
-
 
   ## Reassort snps.assoc to new columns:
   if(!is.null(snps.assoc)){

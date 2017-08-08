@@ -569,6 +569,7 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
     ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
     ord <- 1:length(rec)
+
     # ## Get order:
     # ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
     # ## First, check to ensure all row.names(snps) are matched in tree$tip.label

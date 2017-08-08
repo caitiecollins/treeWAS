@@ -107,7 +107,7 @@ snp.sim.Q <- function(n.snps = 10000,
   ##################################
   ## GET MUTATIONS' branch & loci ##
   ##################################
-  n.ind <- tree$Nnode+1
+  n.ind <- min(tree$edge[,1])-1 # tree$Nnode+1
   gen.size <- n.snps
   edges <- tree$edge
 
