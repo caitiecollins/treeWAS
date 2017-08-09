@@ -29,12 +29,12 @@
 #'
 #' @importFrom scales rescale
 #' @importFrom Hmisc all.is.numeric
-#' @importFrom phangorn midpoint
 #'
 #' @export
 
 ########################################################################
 # @useDynLib phangorn, .registration = TRUE
+# @importFrom phangorn midpoint
 
 simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim.REC matrix ## NOTE: subs.edges no longer required for any version of this test.
                               phen.reconstruction,
@@ -48,7 +48,7 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   ## Always work with tree in pruningwise order:
   tree <- reorder.phylo(tree, order="pruningwise")
   ## Trees must be rooted:
-  if(!is.rooted(tree)) tree <- midpoint(tree)
+  # if(!is.rooted(tree)) tree <- midpoint(tree) # require(phangorn)
   ## Get tree edges:
   edges <- tree$edge
 

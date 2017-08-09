@@ -24,12 +24,11 @@
 #'
 #' @importFrom scales rescale
 #' @importFrom Hmisc all.is.numeric
-#' @importFrom phangorn midpoint
 #' @export
 
 ########################################################################
 # @useDynLib phangorn, .registration = TRUE
-
+# @importFrom phangorn midpoint
 
 subsequent.test <- function(snps.reconstruction,
                             phen.reconstruction,
@@ -43,7 +42,7 @@ subsequent.test <- function(snps.reconstruction,
   ## Always work with tree in pruningwise order:
   tree <- reorder.phylo(tree, order="pruningwise")
   ## Trees must be rooted:
-  if(!is.rooted(tree)) tree <- midpoint(tree)
+  # if(!is.rooted(tree)) tree <- midpoint(tree) # require(phangorn)
   ## get tree edges:
   edges <- tree$edge
 

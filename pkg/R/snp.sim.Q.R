@@ -91,7 +91,7 @@ snp.sim.Q <- function(n.snps = 10000,
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
   ## Trees must be rooted:
-  if(!is.rooted(tree)) tree <- midpoint(tree)
+  # if(!is.rooted(tree)) tree <- midpoint(tree)
 
   ####################################################################
   ############################

@@ -689,7 +689,7 @@ treeWAS <- function(snps,
   if(any(is.na(phen))){
     toRemove <- names(which(is.na(phen)))
     warning(c("The phenotypic variable for individual(s) ", toRemove, " is missing.
-              Removing these individuals from the analysis."))
+              Removing these individuals from the analysis.\n"))
     ## remove individuals from phen:
     phen <- phen[-which(names(phen) %in% toRemove)]
     ## remove individuals from snps:
@@ -961,7 +961,7 @@ treeWAS <- function(snps,
       ## CHECK:
       if(length(phen.reconstruction) != (length(phen)+(tree$Nnode))){
         warning("The number of individuals in the provided phen.reconstruction is not equal to the
-                total number of nodes in the tree. Performing a new reconstruction instead.")
+                total number of nodes in the tree. Performing a new reconstruction instead.\n")
         if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
         if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
       }
@@ -1434,12 +1434,12 @@ treeWAS <- function(snps,
         ## CHECK:
         if(nrow(snps.reconstruction) != (nrow(snps)+tree$Nnode)){
           warning("The number of rows in the provided snps.reconstruction is not equal to the
-                  total number of nodes in the tree. Performing a new parsimonious reconstruction instead.")
+                  total number of nodes in the tree. Performing a new parsimonious reconstruction instead.\n")
           snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
         }
         if(ncol(snps.reconstruction) != ncol(snps)){
           warning("The number of columns in the provided snps.reconstruction is not equal to the number of
-                  columns in the snps matrix. Performing a new parsimonious reconstruction instead.")
+                  columns in the snps matrix. Performing a new parsimonious reconstruction instead.\n")
           snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
         }
       }
@@ -1454,7 +1454,7 @@ treeWAS <- function(snps,
         snps.rec.index <- temp$index
         if(!identical(snps.rec.index, snps.index)){
           warning("Careful-- snps and snps.rec should have the same index when reduced
-              to their unique forms.") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+              to their unique forms.\n") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
         }
       }else{
         # system.time( # 274
