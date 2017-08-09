@@ -62,39 +62,25 @@ asr <- function(var,
   if(length(method) > 1) method <- method[1]
   method <- tolower(method)
 
-  #####################################################
-  ## CHECK: If non-binary, use "ml" and "continuous" ##
-  #####################################################
-  levs <- unique(as.vector(unlist(var)))
-  levs <- levs[!is.na(levs)]
-  if(length(levs) != 2){
-    ## If NON-BINARY: ##
-    if(type != "ml"){
-      type <- "ml"
-      cat("Variable is non-binary. Setting reconstruction type to 'ML'")
-    }
-
-    if(method != "continuous"){
-      method <- "continuous"
-      cat("Variable is non-binary. Setting reconstruction method to 'continuous'")
-    }
-  }else{
-    ## If BINARY: ##
-    if(!type %in% c("parsimony", "ml", "ace")){
-      type <- "parsimony"
-      cat("Reconstruction type must be one of 'parsimony' or 'ML'. Selecting 'parsimony' by default.")
-    }
-    if(!method %in% c("discrete", "continuous")){
-      method <- "discrete"
-      cat("Reconstruction method must be one of 'discrete' or 'continuous'. Selecting 'discrete' by default.")
-    }
-  }
-
   #######################
   ## MATRIX (eg. SNPs) ##
   #######################
   if(is.matrix(var)){
 
+    #################
+    ## CHECK ARGS: ##
+    #################
+    ## BINARY (assumed for snps): ##
+    if(!type %in% c("parsimony", "ml", "ace")){
+      type <- "parsimony"
+      cat("Reconstruction type must be one of 'parsimony' or 'ML'. Selecting 'parsimony' by default.\n")
+    }
+    if(!method %in% c("discrete", "continuous")){
+      method <- "discrete"
+      cat("Reconstruction method must be one of 'discrete' or 'continuous'. Selecting 'discrete' by default.\n")
+    }
+
+    ## Assign var to snps:
     snps <- var
 
     if(unique.cols == TRUE){
@@ -140,7 +126,7 @@ asr <- function(var,
         # Check snps is numeric:
         if(!is.numeric(snps)){
           if(!all.is.numeric(snps[!is.na(snps)])){
-            stop("For a continuous reconstruction, the matrix must be numeric.")
+            stop("For a continuous reconstruction, the matrix must be numeric.\n")
           }else{
             r.noms <- rownames(snps)
             c.noms <- colnames(snps)
@@ -165,8 +151,8 @@ asr <- function(var,
       if(any(is.na(as.vector(unlist(snps))))) na.var <- TRUE
 
 
-      ## With MISSING DATA & CONTINUOUS ML rec, use anc.ML: ##
-      if(na.var == TRUE & method == "continuous"){
+      ## With CONTINUOUS ML rec, use anc.ML: ##
+      if(method == "continuous"){
 
         ######### (** SLOW! **) ##########
         ## MISSING & Continuous ML rec: ##
@@ -199,9 +185,9 @@ asr <- function(var,
 
       }else{
 
-        ##############################################
-        ## NO MISSING DATA (or MISSING & DISCRETE): ##
-        ##############################################
+        ###############
+        ## DISCRETE: ##
+        ###############
 
         ## Assign colnames if NULL:
         if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
@@ -232,21 +218,6 @@ asr <- function(var,
         ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
         l <- max(tree$edge[,2])
         ord <- 1:l
-        # ## Get order:
-        # ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
-        # ## First, check to ensure all row.names(snps) are matched in tree$tip.label
-        # if(all(row.names(snps) %in% tree$tip.label)){
-        #   ord <- match(tree$tip.label, rownames(snps))
-        # }else{
-        #   ord <- 1:length(rownames(snps))
-        #   warning("rownames(snps) and tree$tip.label contain different labels.
-        #           Careful-- we proceed by assuming snps rows and tree tips are labelled in the same order!")
-        # }
-        # ## Want rec (list) to be in order of tree$tip.label
-        # ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
-        # # l <- length(rec)
-        # l <- max(tree$edge[,2])
-        # ord <- c(ord, c(nrow(snps)+1):l)
 
         ## Binary:
         if(length(snps.levels[!is.na(snps.levels)]) == 2){
@@ -282,7 +253,7 @@ asr <- function(var,
           rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
 
           ## Print warning notice:
-          cat("Reconstructing non-binary genetic data matrix.")
+          cat("Reconstructing non-binary genetic data matrix.\n")
 
           ## Bind list & reorder elements:
           snps.rec <- do.call(rbind, rec[ord])
@@ -303,7 +274,7 @@ asr <- function(var,
           colnames(snps.rec.complete) <- 1:ncol(snps.rec.complete)
           snps.rec <- snps.rec.complete
         }
-      } # end No missing (or missing & discrete)
+      } # end Discrete ML
 
     } # end ML
 
@@ -327,6 +298,52 @@ asr <- function(var,
     #######################
     ## VECTOR (eg. phen) ##
     #######################
+
+    #################
+    ## CHECK ARGS: ##
+    #################
+    levs <- unique(as.vector(unlist(var)))
+    levs <- levs[!is.na(levs)]
+    ## BINARY: ##
+    if(length(levs) == 2){
+      ## Choose parsimony if none:
+      if(!type %in% c("parsimony", "ml")){
+        type <- "parsimony"
+        cat("Reconstruction type must be one of 'parsimony' or 'ML'. Selecting 'parsimony' by default.\n")
+      }
+      if(type == "ml"){
+        if(!method %in% c("discrete", "continuous")){
+          method <- "discrete"
+        }
+      }
+    }else{
+      ## DISCRETE or CONTINUOUS: ##
+      if(!type %in% c("parsimony", "ml")){
+        type <- "ml"
+        cat("Reconstruction type must be one of 'parsimony' or 'ML'. Selecting 'ML' by default.\n")
+      }
+      if(!method %in% c("discrete", "continuous")){
+        if(type == "ml"){
+          method <- "continuous"
+          cat("Reconstruction method must be one of 'discrete' or 'continuous'. Selecting 'continuous' by default.\n")
+        }
+      }
+      if(method == "continuous"){
+        type <- "ml"
+        cat("Reconstruction type must be 'ML' when variable is 'continuous'. Setting type to 'ML'.\n")
+      }
+
+      ## Parsimony NOT available if >75% unique:
+      if(length(levs)/length(var) > 0.75){
+        if(type == "parsimony"){
+          type <- "ml"
+          cat("Parsimony not available for variables > 75% unique. Setting reconstruction type to 'ML'.\n")
+        }
+      }
+    } # end checks
+
+
+    ## Assign var to phen:
     phen <- var
 
     ############################
@@ -334,7 +351,7 @@ asr <- function(var,
     ############################
     if(type == "parsimony"){
       ## run get.ancestral.pars
-      var.rec <- get.ancestral.pars(var=phen, tree=tree)
+      phen.rec <- get.ancestral.pars(var=phen, tree=tree)
 
     } # end parsimony
 
@@ -348,7 +365,7 @@ asr <- function(var,
         ## Check phen is numeric:
         if(!is.numeric(phen)){
           if(!all.is.numeric(phen)){
-            stop("For a continuous reconstruction, the vector must be numeric.")
+            stop("For a continuous reconstruction, phen must be numeric.\n")
           }else{
             noms <- names(phen)
             phen <- as.numeric(as.character(phen))
@@ -368,17 +385,107 @@ asr <- function(var,
       phen.terminal <- phen
 
       ## get internal values (from ML output)
-      phen.ML <- ace(phen, tree, type=method)
-      if(method == "discrete"){
-        phen.internal <- phen.ML$lik.anc[,2]
-      }else{
-        phen.internal <- phen.ML$ace
+      if(is.rooted(tree) & is.binary.tree(tree)){
+        phen.ML <- ace(phen, tree, type=method)
+        if(method == "discrete"){
+          phen.internal <- phen.ML$lik.anc[,2]
+        }else{
+          phen.internal <- phen.ML$ace
+        }
+
+        ## get reconstruction from terminal & internal values
+        phen.rec <- c(phen.terminal, phen.internal)
+
+      }else{ # end ML for rooted & binary trees
+
+        ## ML for unrooted or non-binary trees: ##
+
+        ## DISCRETE: ##
+        if(method == "discrete"){
+
+          ## get levels (ie. 0, 1)
+          phen.levels <- sort(unique(phen), na.last = TRUE)
+          ## returns only unique patterns...
+          phen.phyDat <- as.phyDat(as.matrix(phen),
+                                   type="USER", levels=phen.levels)
+          ## get index of all original snps columns to map to unique pattern
+          index.phyDat <- attr(phen.phyDat, "index")
+
+          ## ML discrete reconstruction:
+          ## Step 1:
+          fit <- pml(tree, phen.phyDat)
+
+          ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
+          l <- max(tree$edge[,2])
+          ord <- 1:l
+
+          ## Binary:
+          if(length(phen.levels[!is.na(phen.levels)]) == 2){
+
+            ## ML discrete reconstruction:
+            ## Step 2 (Binary --> get probs):
+            rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
+
+            ## If NAs are present, replace column 1 0s with NA values
+            ## whenever column 3 (NA) has a 1 in it:
+            if(any(is.na(phen.levels))){
+              na.col <- which(is.na(phen.levels))
+              for(i in 1:length(rec)){
+                foo <- rec[[i]]
+                toReplace <- which(foo[,na.col] == 1)
+                if(length(toReplace) > 0){
+                  foo[toReplace,1] <- NA
+                  foo[toReplace,2] <- NA
+                }
+                rec[[i]] <- foo
+              } # end for loop
+            }
+            ## Bind list into matrix:
+            phen.rec <- do.call(cbind, rec[ord])
+            phen.rec <- as.vector(t(phen.rec[, seq(2, ncol(phen.rec), length(phen.levels))]))
+
+          }else{
+
+            ## Non-Binary (discrete):
+
+            ## ML discrete reconstruction:
+            ## Step 2 (Non-binary --> get states):
+            rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
+
+            ## Bind list & reorder elements:
+            phen.rec <- do.call(rbind, rec[ord])
+
+            ## replace level #s w levels:
+            phen.rec <- attr(rec, "levels")[phen.rec]
+
+          } # end non-binary
+
+          ## assign rownames for all terminal and internal nodes
+          names(phen.rec) <- c(names(phen), c((length(phen)+1):max(tree$edge[,2])))
+
+        }else{
+
+          ## CONTINUOUS: ##
+
+          ## get terminal values
+          var.terminal <- var
+
+          ## With MISSING DATA in any columns: ##
+          ## Continuous ML rec: ##
+          ## get internal values (when (any) var contains NAs):
+          var <- var[!is.na(var)]
+          phen.ML <- anc.ML(tree, var) ## require(phytools)
+          var.internal <- phen.ML$ace
+
+          ## get reconstruction from terminal & internal values
+          phen.rec <- c(var.terminal, var.internal)
+        }
+
       }
 
-      ## get reconstruction from terminal & internal values
-      var.rec <- c(phen.terminal, phen.internal)
-
     } # end ML
+
+    var.rec <- phen.rec
 
   } # end vector (phen)   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
@@ -396,45 +503,6 @@ asr <- function(var,
 
 
 
-
-## ** TOO SLOW ** ##
-# ## Either NO missing data or MISSING & Continuous ML rec: ##
-#
-# snps.rec <- snps.ML <- list()
-#
-# system.time(
-#   for(i in 1:ncol(snps)){
-#
-#     ## get variable i
-#     var <- snps[,i]
-#
-#     ## get terminal values
-#     var.terminal <- var
-#
-#     ## With MISSING DATA in any columns: ##
-#     if(na.var == TRUE & method == "continuous"){
-#       ## Continuous ML rec: ##
-#       ## get internal values (when (any) var contains NAs):
-#       var <- var[!is.na(var)]
-#       snps.ML[[i]] <- anc.ML(tree, var) ## require(phytools)
-#       var.internal <- snps.ML[[i]]$ace
-#     }else{
-#       ## With NO missing data: ##
-#       ## Continuous or Discrete ML rec: ##
-#       ## get internal values (from ML output for variable i)
-#       snps.ML[[i]] <- ace(var, tree, type=method)
-#       if(method == "continuous") var.internal <- snps.ML[[i]]$ace
-#       if(method == "discrete") var.internal <- snps.ML[[i]]$lik.anc[,2]
-#     }
-#
-#     ## get reconstruction from terminal & internal values
-#     snps.rec[[i]] <- c(var.terminal, var.internal)
-#   } # end for loop
-# )
-#
-# ## bind columns of snps.rec together
-# snps.rec <- do.call("cbind", snps.rec)
-# colnames(snps.rec) <- colnames(snps)
 
 
 
@@ -570,20 +638,6 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
     ord <- 1:length(rec)
 
-    # ## Get order:
-    # ## NOTE: pace works with terminal SNPs in the order they appear in tree$tip.label
-    # ## First, check to ensure all row.names(snps) are matched in tree$tip.label
-    # if(all(row.names(snps) %in% tree$tip.label)){
-    #   ord <- match(tree$tip.label, rownames(snps))
-    # }else{
-    #   ord <- 1:length(rownames(snps))
-    #   warning("rownames(snps) and tree$tip.label contain different labels.
-    #             Careful-- we proceed by assuming snps rows and tree tips are labelled in the same order!")
-    # }
-    # ## Want rec (list) to be in order of tree$tip.label
-    # ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
-    # ord <- c(ord, c(nrow(snps)+1):length(rec))
-
     ## Binary:
     if(length(snps.levels[!is.na(snps.levels)]) == 2){
 
@@ -610,7 +664,7 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
       ## Non-Binary (discrete):
 
       ## Print warning notice:
-      cat("Reconstructing non-binary genetic data matrix.")
+      cat("Reconstructing non-binary genetic data matrix.\n")
 
       ## Reorder elements:
       rec <- rec[ord]
@@ -692,7 +746,15 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     #############
 
     phen.ori <- phen
-    phen <- as.numeric(as.factor(phen))
+    ## Make phen numeric:
+    if(!is.numeric(phen)){
+      if(all.is.numeric(phen)){
+        phen <- as.numeric(as.character(phen))
+      }else{
+        phen <- as.numeric(as.factor(phen))
+        warning("Trying to reconstruct a non-numeric phen.")
+      }
+    }
     names(phen) <- names(phen.ori)
 
     ## as.phyDat requires names...
@@ -712,22 +774,6 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
     ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
     ord <- 1:length(rec)
-    # ## NOTE: pace works with phen in the order of tree$tip.label
-    # ## First, check to ensure all names(phen) are matched in tree$tip.label
-    # if(all(names(phen) %in% tree$tip.label)){
-    #   ord <- match(tree$tip.label, names(phen))
-    # }else{
-    #   ord <- 1:length(names(phen))
-    #   warning("names(phen) and tree$tip.label contain different labels.
-    #           Careful-- we proceed by assuming phen and tree tips are labelled in the same order!")
-    # }
-    # ## Want rec (list) to be in order of tree$tip.label
-    # ## eg. if tree$tip.label[1] is "31", ord[1] should be 31 (assuming rownames(snps) are 1:nrow)
-    # ord <- c(ord, c(length(phen)+1):length(rec))
-    #
-    ## get order if null:
-    # if(is.null(ord)) ord <- 1:length(rec)
-
 
     ## get reconstruction:
 

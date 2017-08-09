@@ -8,11 +8,12 @@ treeWAS(snps, phen, tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
   n.subs = NULL, n.snps.sim = ncol(snps) * 10, chunk.size = ncol(snps),
   test = c("terminal", "simultaneous", "subsequent"),
   snps.reconstruction = "parsimony", snps.sim.reconstruction = "parsimony",
-  phen.reconstruction = "parsimony", na.rm = TRUE, p.value = 0.01,
-  p.value.correct = c("bonf", "fdr", FALSE), p.value.by = c("count",
-  "density"), dist.dna.model = "JC69", plot.tree = TRUE,
-  plot.manhattan = TRUE, plot.null.dist = TRUE, plot.dist = FALSE,
-  snps.assoc = NULL, filename.plot = NULL, seed = NULL)
+  phen.reconstruction = "parsimony", phen.type = NULL, na.rm = TRUE,
+  p.value = 0.01, p.value.correct = c("bonf", "fdr", FALSE),
+  p.value.by = c("count", "density"), dist.dna.model = "JC69",
+  plot.tree = TRUE, plot.manhattan = TRUE, plot.null.dist = TRUE,
+  plot.dist = FALSE, snps.assoc = NULL, filename.plot = NULL,
+  seed = NULL)
 }
 \arguments{
 \item{snps}{A matrix containing binary genetic data, with individuals in the rows
@@ -53,6 +54,12 @@ for the ancestral state reconstruction of the simulated null genetic dataset.}
 \item{phen.reconstruction}{Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 for the ancestral state reconstruction of the phenotypic variable,
 or a vector containing this reconstruction if it has been performed elsewhere.}
+
+\item{phen.type}{An optional character string specifying whether the ancestral state reconstruction
+of the phenotypic variable, if performed via ML, should treat the phenotype
+as either \code{"discrete"} or \code{"continuous"}. By default,
+\code{phen.type} is \code{NULL}, in which case ML reconstructions will be "discrete" for any
+phenotypes that are less than 25\% unique and "continuous" for phenotype more than 25\% unique.}
 
 \item{na.rm}{A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 should be removed at the outset (TRUE, the default) or not (FALSE).}
@@ -351,6 +358,7 @@ out <- treeWAS(snps = snps,
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
                 phen.reconstruction = "parsimony",
+                phen.type = NULL,
                 p.value = 0.01,
                 p.value.correct = "bonf",
                 p.value.by = "count",

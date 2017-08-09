@@ -172,6 +172,11 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' @param phen.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the phenotypic variable,
 #'                              or a vector containing this reconstruction if it has been performed elsewhere.
+#' @param phen.type An optional character string specifying whether the ancestral state reconstruction
+#'                  of the phenotypic variable, if performed via ML, should treat the phenotype
+#'                  as either \code{"discrete"} or \code{"continuous"}. By default,
+#'                  \code{phen.type} is \code{NULL}, in which case ML reconstructions will be "discrete" for any
+#'                  phenotypes that are less than 25\% unique and "continuous" for phenotype more than 25\% unique.
 #' @param na.rm A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 #'                should be removed at the outset (TRUE, the default) or not (FALSE).
 #'
@@ -461,6 +466,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'                 snps.reconstruction = "parsimony",
 #'                 snps.sim.reconstruction = "parsimony",
 #'                 phen.reconstruction = "parsimony",
+#'                 phen.type = NULL,
 #'                 p.value = 0.01,
 #'                 p.value.correct = "bonf",
 #'                 p.value.by = "count",
@@ -504,6 +510,7 @@ treeWAS <- function(snps,
                     snps.reconstruction = "parsimony",
                     snps.sim.reconstruction = "parsimony",
                     phen.reconstruction = "parsimony",
+                    phen.type = NULL,
                     na.rm = TRUE,
                     p.value = 0.01,
                     p.value.correct = c("bonf", "fdr", FALSE),
@@ -543,7 +550,7 @@ treeWAS <- function(snps,
                            several.ok = FALSE), silent=TRUE)) == "try-error"){
       tree <- "bionj"
       cat("If tree is not a phylo object, please specify one of the following reconstruction methods:
-          'UPGMA', 'NJ', 'BIONJ', ML', 'NJ*', 'BIONJ*'. Choosing 'BIONJ' by default.")
+          'UPGMA', 'NJ', 'BIONJ', ML', 'NJ*', 'BIONJ*'. Choosing 'BIONJ' by default.\n")
     }else{
       tree <- match.arg(arg = tree,
                         choices =  c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
@@ -596,7 +603,7 @@ treeWAS <- function(snps,
     ## If there are any...
     if(length(toRemove) > 0){
       ## print notice:
-      cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
+      cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).\n", sep=" ")
       ## remove individuals from snps:
       snps.ini <- snps
       snps <- snps[-which(rownames(snps) %in% toRemove), ]
@@ -778,7 +785,7 @@ treeWAS <- function(snps,
 
   if(length(toRemove) > 0){
     ## print notice:
-    cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).", sep=" ")
+    cat("Removing", length(toRemove), "missing individual(s); only NAs in row(s).\n", sep=" ")
     ## remove individuals from snps:
     snps.ini <- snps # need snps.ini below
     snps <- snps[-which(rownames(snps) %in% toRemove), ]
@@ -904,7 +911,7 @@ treeWAS <- function(snps,
   toChange <- which(tree$edge.length < 0)
   if(length(toChange) > 0){
     tree$edge.length[toChange] <- 0
-    cat("Setting", length(toChange), "negative branch lengths to zero.", sep=" ")
+    cat("Setting", length(toChange), "negative branch lengths to zero.\n", sep=" ")
   }
 
   ####################################################################
@@ -923,8 +930,9 @@ treeWAS <- function(snps,
   ## NB: can only be binary or continuous at this point...
   levs <- unique(as.vector(unlist(phen)))
   n.levs <- length(levs[!is.na(levs)])
+  ## BINARY: ##
   if(n.levs == 2){
-    phen.rec.method <- "discrete"
+    ## Convert phen to numeric:
     if(!is.numeric(phen)){
       if(all.is.numeric(phen)){
         phen <- as.numeric(as.character(phen))
@@ -932,8 +940,17 @@ treeWAS <- function(snps,
         phen <- as.numeric(as.factor(phen))
       }
     }
+    ## Set phen.rec.method: ##
+    phen.rec.method <- "discrete"
+    if(!is.null(phen.type)){
+      if(phen.type == "continuous"){
+        phen.rec.method <- "continuous"
+        warning("phen is binary. Are you sure phen.type is 'continuous'?")
+      }
+    } # end phen.type (binary)
   }else{
-    phen.rec.method <- "continuous"
+    ## DISCRETE or CONTINUOUS: ##
+    ## Convert phen to numeric:
     if(!is.numeric(phen)){
       if(all.is.numeric(phen)){
         phen <- as.numeric(as.character(phen))
@@ -941,6 +958,24 @@ treeWAS <- function(snps,
         stop("phen has more than 2 levels but is not numeric (and therefore neither binary nor continuous).")
       }
     }
+    ## Set phen.rec.method: ##
+    phen.rec.method <- "continuous"
+    ## Get proportion unique:
+    prop.u <- length(unique(phen))/length(phen)
+    if(is.null(phen.type)){
+      ## If <= 25% unique --> discrete; else --> continuous
+      if(prop.u <= 0.25){
+        phen.rec.method <- "discrete"
+        cat("Performing *discrete* reconstruction bc. phen is < 25% (", round(prop.u, 2)*100, "%) unique (see phen.type for options).\n", sep="")
+      }
+    }else{
+      if(phen.type == "discrete"){
+        phen.rec.method <- "discrete"
+        if(prop.u > 0.5){
+          cat("Performing *discrete* reconstruction, although phen is ", round(prop.u, 2)*100, "% unique: Are you sure phen.type is 'discrete'?", sep="")
+        }
+      }
+    } # end phen.type (discrete/continuous)
   }
   ## ensure ind names not lost
   names(phen) <- names(phen.ori)

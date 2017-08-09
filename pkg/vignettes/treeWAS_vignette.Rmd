@@ -418,6 +418,7 @@ out <- treeWAS(snps,
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
                 phen.reconstruction = "parsimony",
+                phen.type = NULL,
                 na.rm = TRUE,
                 p.value = 0.01,
                 p.value.correct = c("bonf", "fdr", FALSE),
@@ -476,6 +477,12 @@ out <- treeWAS(snps,
 >  : Either a character string specifying `"parsimony"` (the default) or `"ML"` (maximum likelihood) for the
 > ancestral state reconstruction of the phenotypic variable, or a vector containing this reconstruction if it has been performed
 > elsewhere.
+
+> `phen.type` 
+>  : An optional character string specifying whether the ancestral state reconstruction of the phenotypic variable, 
+> if performed via ML, should treat the phenotype as either `"discrete"` or `"continuous"`. 
+> By default, `phen.type` is `NULL`, in which case ML reconstructions will be `"discrete"` 
+> for any phenotypes that are less than 25% unique and `"continuous"` for phenotype more than 25% unique. 
 
 > `na.rm` 
 >  : A logical indicating whether to remove `snps` columns if they contain more than 75% NAs (by default, `TRUE`). 
@@ -544,6 +551,7 @@ out <- treeWAS(snps = snps,
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
                 phen.reconstruction = "parsimony",
+                phen.type = NULL,
                 na.rm = TRUE,
                 p.value = 0.01,
                 p.value.correct = "bonf",
@@ -888,6 +896,7 @@ out <- treeWAS(snps = snps,
                 snps.reconstruction = "parsimony",  ## (optional input: snps.rec)
                 snps.sim.reconstruction = "parsimony",
                 phen.reconstruction = "parsimony",
+                phen.type = NULL,
                 na.rm = TRUE,
                 p.value = 0.01,
                 p.value.correct = "bonf",
