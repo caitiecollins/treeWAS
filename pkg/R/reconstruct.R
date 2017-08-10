@@ -385,7 +385,7 @@ asr <- function(var,
       phen.terminal <- phen
 
       ## get internal values (from ML output)
-      if(is.rooted(tree) & is.binary.tree(tree)){
+      if(is.rooted(tree) & is.binary.tree(tree) & length(levs) == 2){
         phen.ML <- ace(phen, tree, type=method)
         if(method == "discrete"){
           phen.internal <- phen.ML$lik.anc[,2]
