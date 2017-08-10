@@ -481,8 +481,7 @@ out <- treeWAS(snps,
 > `phen.type` 
 >  : An optional character string specifying whether the ancestral state reconstruction of the phenotypic variable, 
 > if performed via ML, should treat the phenotype as either `"discrete"` or `"continuous"`. 
-> By default, `phen.type` is `NULL`, in which case ML reconstructions will be `"discrete"` 
-> for any phenotypes that are less than 25% unique and `"continuous"` for phenotype more than 25% unique. 
+> By default, `phen.type` is `NULL`, in which case ML reconstructions will be `"continuous"` for any non-binary phenotypes.
 
 > `na.rm` 
 >  : A logical indicating whether to remove `snps` columns if they contain more than 75% NAs (by default, `TRUE`). 

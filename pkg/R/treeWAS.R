@@ -175,8 +175,8 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' @param phen.type An optional character string specifying whether the ancestral state reconstruction
 #'                  of the phenotypic variable, if performed via ML, should treat the phenotype
 #'                  as either \code{"discrete"} or \code{"continuous"}. By default,
-#'                  \code{phen.type} is \code{NULL}, in which case ML reconstructions will be "discrete" for any
-#'                  phenotypes that are less than 25\% unique and "continuous" for phenotype more than 25\% unique.
+#'                  \code{phen.type} is \code{NULL}, in which case ML reconstructions will be "continuous" for any
+#'                  non-binary phenotypes.
 #' @param na.rm A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 #'                should be removed at the outset (TRUE, the default) or not (FALSE).
 #'
@@ -962,13 +962,7 @@ treeWAS <- function(snps,
     phen.rec.method <- "continuous"
     ## Get proportion unique:
     prop.u <- length(unique(phen))/length(phen)
-    if(is.null(phen.type)){
-      ## If <= 25% unique --> discrete; else --> continuous
-      if(prop.u <= 0.25){
-        phen.rec.method <- "discrete"
-        cat("Performing *discrete* reconstruction bc. phen is < 25% (", round(prop.u, 2)*100, "%) unique (see phen.type for options).\n", sep="")
-      }
-    }else{
+    if(!is.null(phen.type)){
       if(phen.type == "discrete"){
         phen.rec.method <- "discrete"
         if(prop.u > 0.5){

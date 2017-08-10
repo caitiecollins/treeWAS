@@ -58,8 +58,8 @@ or a vector containing this reconstruction if it has been performed elsewhere.}
 \item{phen.type}{An optional character string specifying whether the ancestral state reconstruction
 of the phenotypic variable, if performed via ML, should treat the phenotype
 as either \code{"discrete"} or \code{"continuous"}. By default,
-\code{phen.type} is \code{NULL}, in which case ML reconstructions will be "discrete" for any
-phenotypes that are less than 25\% unique and "continuous" for phenotype more than 25\% unique.}
+\code{phen.type} is \code{NULL}, in which case ML reconstructions will be "continuous" for any
+non-binary phenotypes.}
 
 \item{na.rm}{A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 should be removed at the outset (TRUE, the default) or not (FALSE).}
