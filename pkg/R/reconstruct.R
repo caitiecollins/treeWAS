@@ -260,21 +260,25 @@ asr <- function(var,
 
         } # end non-binary
 
-        ## assign rownames for all terminal and internal nodes
-        rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):max(tree$edge[,2])))
-        # rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):(tree$Nnode + nrow(snps))))
-        colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
-
-
-        ## Handle index.phyDat! ##
-        ## get reconstruction for all pre-phyDat sites
-        if(ncol(snps) != ncol(snps.rec)){
-          snps.rec.complete <- snps.rec[, index.phyDat]
-          rownames(snps.rec.complete) <- rownames(snps.rec)
-          colnames(snps.rec.complete) <- 1:ncol(snps.rec.complete)
-          snps.rec <- snps.rec.complete
-        }
       } # end Discrete ML
+
+      ## assign rownames for all terminal and internal nodes
+      if(is.null(tree$node.label)){
+        rownames(snps.rec) <- c(tree$tip.label, c((nrow(snps)+1):max(tree$edge[,2])))
+      }else{
+        rownames(snps.rec) <- c(tree$tip.label, tree$node.label)
+      }
+      colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
+
+
+      ## Handle index.phyDat! ##
+      ## get reconstruction for all pre-phyDat sites
+      if(ncol(snps) != ncol(snps.rec)){
+        snps.rec.complete <- snps.rec[, index.phyDat]
+        rownames(snps.rec.complete) <- rownames(snps.rec)
+        colnames(snps.rec.complete) <- 1:ncol(snps.rec.complete)
+        snps.rec <- snps.rec.complete
+      }
 
     } # end ML
 
@@ -460,9 +464,6 @@ asr <- function(var,
 
           } # end non-binary
 
-          ## assign rownames for all terminal and internal nodes
-          names(phen.rec) <- c(names(phen), c((length(phen)+1):max(tree$edge[,2])))
-
         }else{
 
           ## CONTINUOUS: ##
@@ -484,6 +485,13 @@ asr <- function(var,
       }
 
     } # end ML
+
+    ## assign rownames for all terminal and internal nodes
+    if(is.null(tree$node.label)){
+      names(phen.rec) <- c(tree$tip.label,  c((length(phen)+1):max(tree$edge[,2])))
+    }else{
+      names(phen.rec) <- c(tree$tip.label, tree$node.label)
+    }
 
     var.rec <- phen.rec
 
@@ -696,8 +704,11 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
 
     ## assign rownames for all terminal and internal nodes
-    rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):max(tree$edge[,2])))
-    # rownames(snps.rec) <- c(rownames(snps), c((nrow(snps)+1):(tree$Nnode + nrow(snps))))
+    if(is.null(tree$node.label)){
+      rownames(snps.rec) <- c(tree$tip.label, c((nrow(snps)+1):max(tree$edge[,2])))
+    }else{
+      rownames(snps.rec) <- c(tree$tip.label, tree$node.label)
+    }
     colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
 
 
@@ -807,7 +818,11 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
     } # end non-binary
 
-    names(phen.rec) <- c(names(phen), c((length(phen)+1):(tree$Nnode + length(phen))))
+    if(is.null(tree$node.label)){
+      names(phen.rec) <- c(tree$tip.label,  c((length(phen)+1):max(tree$edge[,2])))
+    }else{
+      names(phen.rec) <- c(tree$tip.label, tree$node.label)
+    }
 
     ## Get Output
     out <- phen.rec

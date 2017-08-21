@@ -110,11 +110,42 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
   if(length(phen.nodes) == (n.ind + tree$Nnode)){
 
     ## get COLOR for NODES
-    nodeCol <- as.vector(phen.nodes)
-    nodeCol <- as.character(nodeCol)
-    nodeCol <- replace(nodeCol, which(nodeCol %in% c("R", "B", "1")), "red")
-    nodeCol <- replace(nodeCol, which(nodeCol %in% c("S", "A", "0")), "blue")
-    nodeCol <- replace(nodeCol, which(nodeCol %in% c("0.5")), "grey")
+    nodeCol <- "grey"
+    if(all.is.numeric(phen.nodes)){
+      var <- as.numeric(as.character(phen.nodes))
+    }else{
+      var <- as.character(phen.nodes)
+    }
+    levs <- unique(var[!is.na(var)])
+    if(length(levs) == 2){
+      ## binary:
+      myCol <- c("red", "blue")
+      nodeCol <- var
+      ## for loop
+      for(i in 1:length(levs)){
+        nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
+      } # end for loop
+    }else{
+      if(is.numeric(var)){
+        ## numeric:
+        myCol <- num2col(var, col.pal = seasun)
+        nodeCol <- myCol
+      }else{
+        ## categorical...
+        myCol <- funky(length(levs))
+        nodeCol <- var
+        ## for loop
+        for(i in 1:length(levs)){
+          nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
+        } # end for loop
+      }
+    }
+
+    # nodeCol <- as.character(nodeCol)
+    # nodeCol <- replace(nodeCol, which(nodeCol %in% c("R", "B", "1")), "red")
+    # nodeCol <- replace(nodeCol, which(nodeCol %in% c("S", "A", "0")), "blue")
+    # nodeCol <- replace(nodeCol, which(nodeCol %in% c("0.5")), "grey")
+
     nodeCol <- as.vector(unlist(nodeCol))
     ## get COLOR for LEAVES ONLY
     leafCol <- nodeCol[1:n.ind]
@@ -125,7 +156,11 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
     edgeCol <- rep("black", nrow(tree$edge))
     for(i in 1:nrow(tree$edge)){
       edgeCol[i] <- nodeCol[tree$edge[i,2]]
-      if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
+      if(is.na(nodeCol[tree$edge[i,1]]) | is.na(nodeCol[tree$edge[i,2]])){
+        edgeCol[i] <- "grey"
+      }else{
+        if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
+      }
     }
     edgeLabCol <- edgeCol
 
@@ -241,11 +276,37 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
       if(length(phen.nodes) == (n.ind + tree$Nnode)){
 
         ## get COLOR for NODES
-        nodeCol <- as.vector(phen.nodes)
-        nodeCol <- as.character(nodeCol)
-        nodeCol <- replace(nodeCol, which(nodeCol %in% c("R", "B", "1")), "red")
-        nodeCol <- replace(nodeCol, which(nodeCol %in% c("S", "A", "0")), "blue")
-        nodeCol <- as.vector(unlist(nodeCol))
+        ## get tip.col:
+        nodeCol <- "grey"
+        if(all.is.numeric(phen.nodes)){
+          var <- as.numeric(as.character(phen.nodes))
+        }else{
+          var <- as.character(phen.nodes)
+        }
+        levs <- unique(var[!is.na(var)])
+        if(length(levs) == 2){
+          ## binary:
+          myCol <- c("red", "blue")
+          nodeCol <- var
+          ## for loop
+          for(i in 1:length(levs)){
+            nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
+          } # end for loop
+        }else{
+          if(is.numeric(var)){
+            ## numeric:
+            myCol <- num2col(var, col.pal = seasun)
+            nodeCol <- myCol
+          }else{
+            ## categorical...
+            myCol <- funky(length(levs))
+            nodeCol <- var
+            ## for loop
+            for(i in 1:length(levs)){
+              nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
+            } # end for loop
+          }
+        }
         ## get COLOR for LEAVES ONLY
         leafCol <- nodeCol[1:n.ind]
         ## get COLOR of INTERNAL nodes ONLY
@@ -255,7 +316,12 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
         edgeCol <- rep("black", nrow(tree$edge))
         for(i in 1:nrow(tree$edge)){
           edgeCol[i] <- nodeCol[tree$edge[i,2]]
-          if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
+          if(is.na(nodeCol[tree$edge[i,1]]) | is.na(nodeCol[tree$edge[i,2]])){
+            edgeCol[i] <- "grey"
+          }else{
+            if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
+          }
+          # if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
         }
         edgeLabCol <- edgeCol
 
@@ -342,33 +408,63 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
       # phen <- as.factor(sample(c("A", "B", "C", "D"), 100, replace=TRUE))
 
       ## get COLOR for LEAVES
-      n.levels <- length(levels(as.factor(phen)))
-      ## if we have only 2 levels, use standard red and blue
-      if(n.levels==2){
-        leafCol <- c("red", "blue")
-      }else{
-        ## but if we have n levels (n != 2), use funky palette
-        leafCol <- get("funky")(n.levels)
-      }
+      # n.levels <- length(levels(as.factor(phen)))
+      # ## if we have only 2 levels, use standard red and blue
+      # if(n.levels==2){
+      #   leafCol <- c("red", "blue")
+      # }else{
+      #   ## but if we have n levels (n != 2), use funky palette
+      #   leafCol <- get("funky")(n.levels)
+      # }
+      #
+      # scheme <- as.numeric(phen)
+      # leafCol <- leafCol[scheme]
 
-      scheme <- as.numeric(phen)
-      leafCol <- leafCol[scheme]
+      ## get tip.col:
+      leafCol <- "black"
+      if(all.is.numeric(phen)){
+        var <- as.numeric(as.character(phen))
+      }else{
+        var <- as.character(phen)
+      }
+      levs <- unique(var[!is.na(var)])
+      if(length(levs) == 2){
+        ## binary:
+        myCol <- c("red", "blue")
+        leafCol <- var
+        ## for loop
+        for(i in 1:length(levs)){
+          leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
+        } # end for loop
+      }else{
+        if(is.numeric(var)){
+          ## numeric:
+          myCol <- num2col(var, col.pal = seasun)
+          leafCol <- myCol
+        }else{
+          ## categorical...
+          myCol <- funky(length(levs))
+          leafCol <- var
+          ## for loop
+          for(i in 1:length(levs)){
+            leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
+          } # end for loop
+        }
+      }
 
       ## get COLOR for EDGES
       edgeCol <- edgeLabCol <- "black" ## for NOW...
-      ########
-      ## TO DO-- color ~ terminal edges red/blue same as phen of terminal node...
-      #### ... UNTIL two edge colors meet at any internal node (then just black edges to root)
+
+      ## To Do: ##
+      ## Just automatically run reconstruction before generating colour scheme for all nodes?
 
       ###############
       ## plot TREE ##
       ###############
       if(plot==TRUE){
         plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...)
-        # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotype at leaves")
         ## Add title?
         if(main.title == TRUE){
-          # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
           title("Tree with phenotypic changes")
         }else{
           if(!is.null(main.title)) if(main.title != FALSE) title(main.title)

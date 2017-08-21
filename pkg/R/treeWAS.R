@@ -266,10 +266,10 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' Please note the formatting requirements.
 #'
 #' If provided by the user, \code{snps.reconstruction} should contain \code{snps} in its first \code{nrow(snps)} rows,
-#' and then have the reconstructed states in rows \code{nrow(snps)+1} to \code{nrow(snps)+tree$Nnode}
+#' and then have the reconstructed states in rows \code{nrow(snps)+1} to \code{max(tree$edge)}
 #'
 #' If provided by the user, \code{phen.reconstruction} should contain \code{phen} in its first \code{length(phen)} elements,
-#' and then have the reconstructed states in elements \code{length(phen)+1} to \code{length(phen)+tree$Nnode}
+#' and then have the reconstructed states in elements \code{length(phen)+1} to \code{max(tree$edge)}
 #'
 #' If created externally, the \code{snps.reconstruction} must have
 #' been generated through either parsimony or ML, and the
@@ -279,6 +279,10 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' reconstruction within \code{treeWAS} instead, in case any inconsistencies exist between the
 #' external and internal methods of reconstruction.
 #'
+#' In addition, if either \code{snps.reconstruction} or \code{phen.reconstruction} is being provided as input,
+#' the user must ensure that \code{tree$node.label} contains labels for all internal nodes and
+#' that this same set of names is used to label the rows or indices correspondng
+#' to the internal nodes in \code{snps.reconstruction} and/or \code{phen.reconstruction}.
 #'
 ###########################################################
 #' \strong{Tests of Association}
@@ -688,6 +692,64 @@ treeWAS <- function(snps,
   if(!all(rownames(snps) %in% names(phen))) stop("Some elements of rownames(snps)
                                                  are absent from names(phen).")
   ####################################################################
+  ##############################################
+  ## ASSIGN NODE LABELS to TREE (& SNPS.REC): ##
+  ##############################################
+  if(is.null(tree$node.label)){
+    tree$node.label <- paste("NODE", c((length(tree$tip.label)+1):max(tree$edge)), sep="_")
+  }
+
+  ## get index for terminal nodes:
+  ixt <- c(1:length(tree$tip.label))
+  ## get index for internal nodes:
+  ixi <- c((nrow(snps)+1):max(tree$edge[,2]))
+
+  ## Check phen.rec names:
+  if(length(phen.reconstruction) == max(tree$edge[,2])){
+    if(!identical(names(phen.reconstruction)[ixi], tree$node.label)){
+      ## rearrange internal nodes if possible:
+      ord <- match(names(phen.reconstruction)[ixi], tree$node.label)
+      if(length(which(is.na(ord))) == 0){
+        phen.reconstruction[ixi] <- phen.reconstruction[ixi][ord]
+        names(phen.reconstruction)[ixi] <- names(phen.reconstruction[ixi])[ord]
+      }else{
+        if(identical(names(phen.reconstruction)[ixt], tree$tip.label)){
+          names(phen.reconstruction)[ixi] <- tree$node.label
+          cat("Assuming phen.reconstruction[Nterminal+1:Ntotal] correspond to tree$node.label,
+              although labels do not match.\n")
+        }else{
+          warning("The names of phen.reconstruction[Nterminal+1:Ntotal] do not correspond to tree$node.label.
+                  Reconstructing phen internally instead.\n")
+          phen.reconstruction <- "parsimony"
+        }
+      }
+    }
+  }
+
+  ## Check snps.rec rownames:
+  if(is.matrix(snps.reconstruction)){
+    if(!identical(rownames(snps.reconstruction)[ixi], tree$node.label)){
+      ## rearrange internal nodes if possible:
+      ord <- match(rownames(snps.reconstruction)[ixi], tree$node.label)
+      if(length(which(is.na(ord))) == 0){
+        snps.reconstruction[ixi,] <- snps.reconstruction[ixi[ord],]
+        rownames(snps.reconstruction)[ixi] <- rownames(snps.reconstruction)[ixi][ord]
+      }else{
+        if(identical(rownames(snps.reconstruction)[ixt], tree$tip.label)){
+          rownames(snps.reconstruction)[ixi] <- tree$node.label
+          cat("Assuming snps.reconstruction[Nterminal+1:Ntotal,] correspond to tree$node.label,
+              although labels do not match.\n")
+        }else{
+          warning("The names of snps.reconstruction[Nterminal+1:Ntotal,] do not correspond to tree$node.label.
+                  Reconstructing snps internally instead.\n")
+          snps.reconstruction <- "parsimony"
+        }
+      }
+    }
+  }
+
+
+  ####################################################################
   ################
   ## CHECK PHEN ##
   ################
@@ -708,13 +770,7 @@ treeWAS <- function(snps,
 
     ## (+ snps.reconstruction)
     if(is.matrix(snps.reconstruction)){
-      nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
-      nodes <- nodes[(nrow(snps)+1):length(nodes)]
-
-      toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
-      ## in case snps.rec lacks rownames..
-      if(is.null(toKeep)) toKeep <- which(rownames(snps.ini) %in% rownames(snps))
-      toKeep <- c(toKeep, nodes)
+      toKeep <- which(rownames(snps.reconstruction) %in% c(rownames(snps), tree$node.label))
       snps.reconstruction <- snps.reconstruction[toKeep, ]
     }
   }
@@ -797,13 +853,7 @@ treeWAS <- function(snps,
 
     ## (+ snps.reconstruction)
     if(is.matrix(snps.reconstruction)){
-      nodes <- sort(unique(as.vector(unlist(tree$edge))), decreasing=FALSE)
-      nodes <- nodes[(nrow(snps)+1):length(nodes)]
-
-      toKeep <- which(rownames(snps.reconstruction) %in% rownames(snps))
-      ## in case snps.rec lacks rownames..
-      if(is.null(toKeep)) toKeep <- which(rownames(snps.ini) %in% rownames(snps))
-      toKeep <- c(toKeep, nodes)
+      toKeep <- which(rownames(snps.reconstruction) %in% c(rownames(snps), tree$node.label))
       snps.reconstruction <- snps.reconstruction[toKeep, ]
     }
     rm(snps.ini)
@@ -878,13 +928,13 @@ treeWAS <- function(snps,
 
   ## (+ snps.reconstruction)
   if(is.matrix(snps.reconstruction)){
-    if(!identical(as.character(rownames(snps.reconstruction)), as.character(tree$tip.label))){
-      ord <- match(tree$tip.label, rownames(snps.reconstruction))
-      snps.reconstruction <- snps.reconstruction[ord,]
+    if(!identical(as.character(rownames(snps.reconstruction)[1:nrow(snps)]), as.character(tree$tip.label))){
+      ord <- match(tree$tip.label, rownames(snps.reconstruction)[1:nrow(snps)])
+      snps.reconstruction <- snps.reconstruction[c(ord, (length(ord)+1):nrow(snps.reconstruction)),]
       ## check:
-      if(!identical(as.character(rownames(snps.reconstruction)), as.character(tree$tip.label))){
+      if(!identical(as.character(rownames(snps.reconstruction)[1:nrow(snps)]), as.character(tree$tip.label))){
         stop("Unable to rearrange snps.reconstruction such that
-              rownames(snps.reconstruction)
+              rownames(snps.reconstruction)[1:nrow(snps)]
               match content and order of tree$tip.label.
               Please check that these match.")
       }
@@ -988,11 +1038,34 @@ treeWAS <- function(snps,
     ## If user-provided reconsruction:
     if(length(phen.reconstruction) > 1){
       ## CHECK:
-      if(length(phen.reconstruction) != (length(phen)+(tree$Nnode))){
+      if(length(phen.reconstruction) != max(tree$edge[,2])){
         warning("The number of individuals in the provided phen.reconstruction is not equal to the
                 total number of nodes in the tree. Performing a new reconstruction instead.\n")
         if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
         if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
+      }else{
+        ## If phen provided and correct length:
+        phen.reconstruction.ori <- phen.reconstruction
+        levs <- unique(as.vector(unlist(phen.reconstruction)))
+        n.levs <- length(levs[!is.na(levs)])
+        ## Convert phen.reconstruction to numeric:
+        if(!is.numeric(phen.reconstruction)){
+          ## convert to numeric if possible:
+          if(all.is.numeric(phen.reconstruction)){
+            phen.reconstruction <- as.numeric(as.character(phen.reconstruction))
+          }else{
+            ## if binary, convert from factor:
+            if(n.levs == 2){
+              phen.reconstruction <- as.numeric(as.factor(phen.reconstruction))
+            }else{
+              ## if neither binary nor numeric, warning + reconstruct:
+              warning("phen.reconstruction has more than 2 levels but is not numeric. Reconstructing phen internally instead.\n")
+              if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
+              if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
+            }
+          }
+        }
+        if(length(phen.reconstruction) > 1) names(phen.reconstruction) <- names(phen.reconstruction.ori)
       }
     }
 
@@ -1061,6 +1134,14 @@ treeWAS <- function(snps,
     plot(tree, show.tip=T, tip.col=leafCol, align.tip.label=TRUE, cex=0.5)
     title("Phylogenetic tree")
     axisPhylo()
+
+    ## node labels (optional):
+    # if(!is.null(tree$node.label)){
+    #   nodeLabs <- tree$node.label
+    # }else{
+    #   nodeLabs <- c((length(tree$tip.label)+1):max(tree$edge))
+    # }
+    # nodelabels(nodeLabs, cex=0.6, font=2, col="blue", frame="none")
 
     ## reset plot margins:
     par(mar=mar.ori)
@@ -1461,7 +1542,7 @@ treeWAS <- function(snps,
       ## If user-provided reconsruction:
       if(is.matrix(snps.reconstruction)){
         ## CHECK:
-        if(nrow(snps.reconstruction) != (nrow(snps)+tree$Nnode)){
+        if(nrow(snps.reconstruction) != max(tree$edge[,2])){
           warning("The number of rows in the provided snps.reconstruction is not equal to the
                   total number of nodes in the tree. Performing a new parsimonious reconstruction instead.\n")
           snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
@@ -1751,7 +1832,7 @@ treeWAS <- function(snps,
         noms <- names(phen)
         ## If binary, convert phen to 0/1:
         phen <- as.numeric(as.factor(phen))
-        phen <- rescale(phen, to=c(0,1))
+        phen <- rescale(phen, to=c(0,1)) # require(scales)
         # if(length(phen[-c(which(phen==1), which(phen==2))])==0){
         #   phen <- replace(phen, which(phen==1), 0)
         #   phen <- replace(phen, which(phen==2), 1)
@@ -1905,6 +1986,73 @@ treeWAS <- function(snps,
 
   } # end treeWAS
 
+
+
+
+
+
+
+
+# ##############################################
+# ## ASSIGN NODE LABELS to TREE (& SNPS.REC): ##
+# ##############################################
+# ## If NO snps.rec AND tree has NO nodelabs, ASSIGN nodelabs to tree:
+# if(!is.matrix(snps.reconstruction)){
+#   if(is.null(tree$node.label)){
+#     tree$node.label <- paste("NODE", c((length(tree$tip.label)+1):max(tree$edge)), sep="_")
+#   }
+# }else{
+#   ## If snps.rec is MATRIX..##
+#   ## get index for terminal nodes:
+#   ixt <- c(1:length(tree$tip.label))
+#   ## get index for internal nodes:
+#   ixi <- c((nrow(snps)+1):nrow(snps.reconstruction))
+#   ## Unless tree has node.labs AND they match snps.rec names...
+#   if(is.null(tree$node.label) | !identical(tree$node.label, rownames(snps)[ixi])){
+#     ## If snps.rec[ixt,] match tree$tip.labs, set matching NODElabs (one or both):
+#     if(identical(rownames(snps.reconstruction)[ixt], tree$tip.label)){
+#       ## If snps.rec HAS labs, BUT tree does NOT:
+#       if(is.null(tree$node.label)){
+#         ## If snps.rec labs NOT numeric, assign to nodelabs as is
+#         if(!all.is.numeric(rownames(snps.reconstruction)[ixi])){
+#           tree$node.label <- rownames(snps.reconstruction)[ixi]
+#         }else{
+#           ## If snps.rec is NUMERIC, paste NODE_ and assign to both snps.rec and nodelabs:
+#           tree$node.label <- rownames(snps.reconstruction)[ixi] <- paste("NODE", rownames(snps.reconstruction)[ixi], sep="_")
+#         }
+#         ## + print notice:
+#         cat("tree$node.label is NULL. Assuming identical to rownames(snps.reconstruction)[Nterminal+1:Ntotal].\n")
+#
+#       }else{
+#         ## If nodelabs & snps.rec rowlabs are NOT identical (while both are PRESENT and TERMINAL labs MATCH)...
+#         ## Unless they MATCH in a different order...
+#         if(length(which(is.na(match(tree$node.label, rownames(snps.reconstruction)[ixi])))) > 0){
+#           ## see if you can remove NODE_ & achieve match, otherwise,
+#           ## assign nodelabs to snps.rec rows & print warning (snps.rec order may not match nodelabs order):
+#           nodeNs <- removeFirstN(tree$node.label, 5)
+#           ord <- match(nodeNs,rownames(snps.reconstruction)[ixi])
+#           if(all.is.numeric(nodeNs) & length(which(is.na(ord)))==0){
+#             rownames(snps.reconstruction)[ixi] <- nodeNs[ord]
+#           }else{
+#             rownames(snps.reconstruction)[ixi] <- tree$node.label
+#             warning("Rownames of snps.reconstruction[Nterminal+1:Ntotal,] do not match tree$node.label.
+#                   Cannot be sure that reconstruction's rows correspond to tree's internal nodes.\n")
+#           }
+#         }
+#       }
+#
+#
+#     }else{
+#       ## If snps.rec[ixt] and tiplabs do NOT match (while nodelabs is NULL or does not match snps.rec[ixi])
+#       ## assign labs to nodelabs and snps.rec[ixi]
+#       ## + print WARNING (snps.rec order may not match nodelabs order):
+#       tree$node.label <- rownames(snps.reconstruction)[ixi] <- paste("NODE", ixi, sep="_")
+#       warning("Rownames of snps.reconstruction[Nterminal+1:Ntotal,] do not match tree$node.label.
+#                 Cannot be sure that reconstruction's rows correspond to tree's internal nodes.\n")
+#     }
+#   }
+# } # end pipeline to check/assign matching snps.rec rownames and tree$node.labels
+##############################################################################################
 
 
 # corr.dat <- foo$terminal$corr.dat

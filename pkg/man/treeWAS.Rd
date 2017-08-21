@@ -263,10 +263,10 @@ these reconstructions can be submitted in the form of a matrix and a vector, res
 Please note the formatting requirements.
 
 If provided by the user, \code{snps.reconstruction} should contain \code{snps} in its first \code{nrow(snps)} rows,
-and then have the reconstructed states in rows \code{nrow(snps)+1} to \code{nrow(snps)+tree$Nnode}
+and then have the reconstructed states in rows \code{nrow(snps)+1} to \code{max(tree$edge)}
 
 If provided by the user, \code{phen.reconstruction} should contain \code{phen} in its first \code{length(phen)} elements,
-and then have the reconstructed states in elements \code{length(phen)+1} to \code{length(phen)+tree$Nnode}
+and then have the reconstructed states in elements \code{length(phen)+1} to \code{max(tree$edge)}
 
 If created externally, the \code{snps.reconstruction} must have
 been generated through either parsimony or ML, and the
@@ -276,6 +276,10 @@ At least for small datasets, it may be worth (re-)running this
 reconstruction within \code{treeWAS} instead, in case any inconsistencies exist between the
 external and internal methods of reconstruction.
 
+In addition, if either \code{snps.reconstruction} or \code{phen.reconstruction} is being provided as input,
+the user must ensure that \code{tree$node.label} contains labels for all internal nodes and
+that this same set of names is used to label the rows or indices correspondng
+to the internal nodes in \code{snps.reconstruction} and/or \code{phen.reconstruction}.
 
 \strong{Tests of Association}
 

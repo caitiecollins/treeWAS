@@ -282,6 +282,8 @@ all(rownames(snps) %in% names(phen))
 
 The above checks are run within `treeWAS`, but it may be worthwhile to confirm for yourself that all labels are present and look correct.
 
+In addition, if either `snps.reconstruction` or `phen.reconstruction` is being provided as input, the user must ensure that `tree$node.label` contains labels for all internal nodes and that this same set of names is used to label the rows or indices correspondng to the internal nodes in `snps.reconstruction` and/or `phen.reconstruction`. 
+
 
 ### Biallelic loci:
 <!-- ########################################################################################################## -->
@@ -547,7 +549,7 @@ out <- treeWAS(snps = snps,
                 n.snps.sim = ncol(snps)*10,
                 chunk.size = ncol(snps),
                 test = c("terminal", "simultaneous", "subsequent"),
-                snps.reconstruction = "parsimony",
+                snps.reconstruction =  snps.reconstruction, # "parsimony",
                 snps.sim.reconstruction = "parsimony",
                 phen.reconstruction = "parsimony",
                 phen.type = NULL,
@@ -862,7 +864,7 @@ snps <- snps.rec[toKeep, ]
 <!-- ########################################################################################################## -->
 You can now run `treeWAS` using this `snps` matrix, and the `tree` returned from `read.CFML`. 
 
-Instead of supplying `snps.rec` to the argument `snps.reconstruction`, it may be worth (re-)creating the ancestral state reconstruction within `treeWAS`. This is recommended, provided the dataset you are working with is not very large, in case any inconsistencies exist between the reconstruction performed by ClonalFrameML and that run within `treeWAS` (which will also be applied to the simulated null dataset). 
+Instead of supplying `snps.rec` to the argument `snps.reconstruction`, it may be worth (re-)creating the ancestral state reconstruction within `treeWAS`. This is recommended, provided the dataset you are working with is not extremely large, in case any inconsistencies exist between the reconstruction performed by ClonalFrameML and that run within `treeWAS` (which will also be applied to the simulated null dataset). 
 
 The `dist` object can be provided in the `n.subs` argument, though you may also leave this `NULL` and have `treeWAS` recreate `n.subs` internally, again in case there is any discrepancy between the internal and external methods or reconstruction.
 
