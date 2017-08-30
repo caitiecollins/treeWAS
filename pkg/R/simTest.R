@@ -1520,6 +1520,17 @@ simTest <- function(
     n.grp <- length(levels(pop))
 
     ## CHECK-- ensure no populations contain only 1 individual:
+    ## (UNLESS highest tree division leads to a single-node clade?)
+    # snps.mat <- matrix(as.character(snps), nrow=nrow(snps), ncol=ncol(snps), dimnames=list(rownames(snps), colnames(snps)))
+    # snps.mat <- replace(snps.mat, which(snps.mat == "0"), "a")
+    # snps.mat <- replace(snps.mat, which(snps.mat == "1"), "t")
+    # snps.dna <- as.DNAbin(snps.mat)
+    # clust <- hclust(dist.dna(snps.dna))
+    # tab <- table(cutree(clust, k=2))
+    # ## If 1 of 2 smallest pops contains only 1 ind, CMH will fail...
+    # if(any(tab == 1)) cmh.fails <- TRUE
+
+    cmh.fails <- FALSE
     ## (1) reduce max.n.clust by 1:
     if(any(table(pop) < 2)){
       max.k <- n.PCs
@@ -1543,8 +1554,8 @@ simTest <- function(
         seed.new <- seed.new+1
         counter <- counter+1
       } # end while
-
     } # end pop check
+    if(n.grp == 1) cmh.fails <- TRUE
 
 
     ########################################################
@@ -1712,93 +1723,117 @@ simTest <- function(
     ################################################ ***   CMH   *** ##########################################################
     ###########################################################################################################################
 
-    print("CMH started")
+    ## NB: Only running CMH test if it is possible to get at least 2 pops with > 1 individual in them...
+    ## If not --> set results = CMH find 0 sig snps...
+    ## (If problem recurs too often, could make a genuine soln w drop.tip etc... )
+    if(cmh.fails == FALSE){
+
+      print("CMH started")
 
 
-    snps <- snps.ori.ori
-    phen <- phen.ori.ori
+      snps <- snps.ori.ori
+      phen <- phen.ori.ori
 
-    ## Get colnames(snps)
-    if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
-    snps.names <- colnames(snps)
+      ## Get colnames(snps)
+      if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
+      snps.names <- colnames(snps)
 
-    ## First make sure PHEN is in BINARY form (0, 1) only!
-    levs <- levels(as.factor(phen))
-    phen.ini <- phen
-    if(any(!levs %in% c(0,1))){
-      phen <- as.character(phen)
-      phen <- replace(phen, which(phen == levs[1]), 0)
-      phen <- replace(phen, which(phen == levs[2]), 1)
-    } # end make phen binary..
-    phen <- as.numeric(phen)
-    names(phen) <- names(phen.ini)
+      ## First make sure PHEN is in BINARY form (0, 1) only!
+      levs <- levels(as.factor(phen))
+      phen.ini <- phen
+      if(any(!levs %in% c(0,1))){
+        phen <- as.character(phen)
+        phen <- replace(phen, which(phen == levs[1]), 0)
+        phen <- replace(phen, which(phen == levs[2]), 1)
+      } # end make phen binary..
+      phen <- as.numeric(phen)
+      names(phen) <- names(phen.ini)
 
-    ##############################################
+      ##############################################
 
-    snps.12 <- snps+1
-    phen.34 <- phen+3
-    mat <- t(matrix(as.numeric(paste(snps.12, ".", phen.34, sep="")), nrow=ncol(snps), byrow=T))
+      snps.12 <- snps+1
+      phen.34 <- phen+3
+      mat <- t(matrix(as.numeric(paste(snps.12, ".", phen.34, sep="")), nrow=ncol(snps), byrow=T))
 
-    ## get only unique columns of pasted mat:
-    mat.u <- get.unique.matrix(mat)
-    mat.unique <- mat.u$unique.data
-    index <- mat.u$index
+      ## get only unique columns of pasted mat:
+      mat.u <- get.unique.matrix(mat)
+      mat.unique <- mat.u$unique.data
+      index <- mat.u$index
 
-    ## get all 2x2 combos of snps.12 and phen.34:
-    noms <- c("1.3", "1.4", "2.3", "2.4")
+      ## get all 2x2 combos of snps.12 and phen.34:
+      noms <- c("1.3", "1.4", "2.3", "2.4")
 
-    ## get array from table, by pop:
-    arr.l <- list()
-    for(n in 1:ncol(mat.unique)){
-      tab <- list()
-      for(e in 1:length(levels(pop))){
-        temp <- ftable(mat.unique[pop==e, n])
-        tab[[e]] <- replace(rep(0, 4), which(noms %in% attr(temp, "col.vars")[[1]]), temp)
-      } # end (e) loop
-      arr.l[[n]] <- do.call(cbind, tab)
-    } # end for (i) loop
-    arr <- do.call(rbind, arr.l)
-
-
-    arr.complete <- arr
-    ##############
-    ## FOR LOOP ##
-    ##############
-    ## TO GET P-VALUES FROM CMH TEST for EACH SNPs COLUMN:
-    p.vals <- list()
-    for(n in 1:ncol(mat.unique)){
-      ## get indices for this snp for all pops and all 4 2x2 combos:
-      from <- seq(1, nrow(arr.complete), 4)[n]
-      to <- from+3
-      arr <- arr.complete[from:to,]
-      dat <- array(arr,
-                   dim = c(2,2,ncol(arr)),
-                   dimnames = list(
-                     phen = c("0", "1"),
-                     SNP = c("0", "1"),
-                     pop = levels(pop)
-                   ))
-      ## Run CMH test on this unique snps column:
-      CMH <- mantelhaen.test(dat)
-      p.vals[[n]] <- CMH$p.value
-    } # end for loop
-    p.vals <- as.vector(unlist(p.vals))
-
-    ## get full set of p-vals for non-unique columns:
-    pval.cmh <- p.vals[index]
+      ## get array from table, by pop:
+      arr.l <- list()
+      for(n in 1:ncol(mat.unique)){
+        tab <- list()
+        for(e in 1:length(levels(pop))){
+          temp <- ftable(mat.unique[pop==e, n])
+          tab[[e]] <- replace(rep(0, 4), which(noms %in% attr(temp, "col.vars")[[1]]), temp)
+        } # end (e) loop
+        arr.l[[n]] <- do.call(cbind, tab)
+      } # end for (i) loop
+      arr <- do.call(rbind, arr.l)
 
 
-    ## Get results:
-    p.thresh <- p.value # 0.01
-    p.vals.bonf <- p.adjust(pval.cmh, "bonferroni")
-    p.bonf <- which(p.vals.bonf < p.thresh)
-    cmh.snps.bonf <- snps.names[p.bonf]
+      arr.complete <- arr
+      ##############
+      ## FOR LOOP ##
+      ##############
+      ## TO GET P-VALUES FROM CMH TEST for EACH SNPs COLUMN:
+      p.vals <- list()
+      for(n in 1:ncol(mat.unique)){
+        ## get indices for this snp for all pops and all 4 2x2 combos:
+        from <- seq(1, nrow(arr.complete), 4)[n]
+        to <- from+3
+        arr <- arr.complete[from:to,]
+        dat <- array(arr,
+                     dim = c(2,2,ncol(arr)),
+                     dimnames = list(
+                       phen = c("0", "1"),
+                       SNP = c("0", "1"),
+                       pop = levels(pop)
+                     ))
+        ## Run CMH test on this unique snps column:
+        CMH <- mantelhaen.test(dat)
+        p.vals[[n]] <- CMH$p.value
+      } # end for loop
+      p.vals <- as.vector(unlist(p.vals))
 
-    ## Store results:
-    cmh.results <- list(pval.cmh, cmh.snps.bonf)
-    names(cmh.results) <- c("pval.cmh", "cmh.snps.bonf")
+      ## get full set of p-vals for non-unique columns:
+      pval.cmh <- p.vals[index]
 
-    print("CMH done")
+
+      ## Get results:
+      p.thresh <- p.value # 0.01
+      p.vals.bonf <- p.adjust(pval.cmh, "bonferroni")
+      p.bonf <- which(p.vals.bonf < p.thresh)
+      cmh.snps.bonf <- snps.names[p.bonf]
+
+      ## Store results:
+      cmh.results <- list(pval.cmh, cmh.snps.bonf)
+      names(cmh.results) <- c("pval.cmh", "cmh.snps.bonf")
+
+      print("CMH done")
+
+    }else{
+
+      print("CMH SKIPPED (single-node major clade)")
+
+      ## set results to null results?
+      # pval.cmh <- rep(1, ncol(snps))
+      # cmh.snps.bonf <- snps.names[which(1 < 0)] # character(0)
+
+      ## set results to fisher results:
+      pval.cmh <- pval.fisher
+      cmh.snps.bonf <- fisher.snps.bonf
+
+      ## Store results:
+      cmh.results <- list(pval.cmh, cmh.snps.bonf)
+      names(cmh.results) <- c("pval.cmh", "cmh.snps.bonf")
+
+      print("CMH (null) done")
+    }
 
     ###########################################################################################################################
     ############################################# *** PERFORMANCE *** #########################################################
