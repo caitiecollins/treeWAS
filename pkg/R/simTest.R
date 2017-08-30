@@ -597,12 +597,17 @@ simTest <- function(
     if(is.null(assoc.prob)) assoc.prob <- 90
     ## ensure 10 associated SNPs
     if(is.null(n.snps.assoc)){
-      if(n.snps == 2000){
+      if(length(n.snps) == 1 & n.snps[1] == 2000){
         n.snps.assoc <- 10
       }else{
         n.snps.assoc <- round((n.snps/1000), 0)
       }
     }
+    ## set sim.n.snps:
+    if(is.null(sim.n.snps)){
+      sim.n.snps <- n.snps*10
+    }
+
   } # end set 3
 
   ###########

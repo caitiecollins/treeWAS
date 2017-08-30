@@ -9,11 +9,12 @@ RoxygenNote: 6.0.1
 Depends: adegenet,
     ape,
     Hmisc
-Imports: ggplot2,
-    beeswarm,
+Imports: beeswarm, 
+    ggplot2,       
     phangorn,
-    scales,
-    pryr
+    phytools,
+    pryr,
+    scales
 Suggests: knitr,
     rmarkdown,
     png
