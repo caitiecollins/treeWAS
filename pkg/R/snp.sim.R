@@ -76,9 +76,12 @@ snp.sim <- function(n.snps = 10000,
   ##################################
   ## GET MUTATIONS' branch & loci ##
   ##################################
+  # if(!is.null(tree$tip.label)){
+  #   n.ind <- length(tree$tip.label)
+  # }else{
   n.ind <- min(tree$edge[,1])-1 # tree$Nnode+1
+  #}
   gen.size <- n.snps
-  rm(n.snps)
   edges <- tree$edge
 
   if(!is.null(seed)) set.seed(seed)
@@ -86,7 +89,6 @@ snp.sim <- function(n.snps = 10000,
   ## Simulate genotype for root individual: ##
 
   ## For n.subs = n or = dist approaches:
-  # gen.root <- sample(c("a", "c", "g", "t"), gen.size, replace=TRUE)
   gen.root <- sample(c(TRUE, FALSE), gen.size, replace=TRUE)
 
   ## get the sum of all branch lengths in the tree:
@@ -239,11 +241,15 @@ snp.sim <- function(n.snps = 10000,
   ############################
 
   if(n.snps.assoc != 0){
-    ## for snps.assoc (the last n.snps.assoc snps, for now),
-    ## add n.mts == n.phen.loci s.t these sites mutate at each
-    ## and every phen.loci (for now, to be diluted later
-    ## according to assoc.prob if !=100)
-    n.mts <- c(n.mts, rep(length(phen.loci), n.snps.assoc))
+    if(length(phen.loci) > 0){
+      ## for snps.assoc (the last n.snps.assoc snps, for now),
+      ## add n.mts == n.phen.loci s.t these sites mutate at each
+      ## and every phen.loci (for now, to be diluted later
+      ## according to assoc.prob if !=100)
+      n.mts <- c(n.mts, rep(length(phen.loci), n.snps.assoc))
+    }else{
+      stop("No phen.loci specified, so no associated loci can be generated.")
+    }
   }
 
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
@@ -320,10 +326,6 @@ snp.sim <- function(n.snps = 10000,
     ## genome of the node preceding it, according to snps.loci.
     ## Draw new nts for each locus selected for mutation:
     if(!.is.integer0(snps.loci.unique[[i]])){
-      # new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
-      #   selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-      #                                                  %in% snps[[tree$edge[i,1]]]
-      #                                                  [snps.loci.unique[[i]][e]])]))
       new.nts[[i]] <- !snps[[tree$edge[i,1]]][snps.loci.unique[[i]]]
 
 
@@ -342,13 +344,9 @@ snp.sim <- function(n.snps = 10000,
           foo[[j]] <- new.nts[[i]][toRepeat[j]]
           for(k in 1:n.reps[j]){
             if(k==1){
-              # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-              #                                                               %in% foo[[j]][1])])
               foo[[j]][k] <- !foo[[j]][1]
 
             }else{
-              # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-              #                                                               %in% foo[[j]][k-1])])
               foo[[j]][k] <- !foo[[j]][k-1]
             }
           }
@@ -397,10 +395,6 @@ snp.sim <- function(n.snps = 10000,
 
 
 
-
-
-
-
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
   #################################################################
   ## REPLACE ANY NON-POLYMORPHIC LOCI & GENERATE ASSOCIATED SNPS ##
@@ -427,6 +421,7 @@ snp.sim <- function(n.snps = 10000,
   if(!is.null(seed)) seed.i <- seed
 
   while(length(toRepeat) > 0){
+    # print("LENGTH toREPEAT"); print(length(toRepeat))
     ## for each site, draw the branches to which
     ## you will assign the mts for this site
     ## (~ branch length):
@@ -496,10 +491,6 @@ snp.sim <- function(n.snps = 10000,
       ## genome of the node preceding it, according to snps.loci.
       ## Draw new nts for each locus selected for mutation:
       if(!.is.integer0(snps.loci.unique[[i]])){
-        # new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
-        #   selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-        #                                                  %in% snps[[tree$edge[i,1]]][toRepeat]
-        #                                                  [snps.loci.unique[[i]][e]])]))
         new.nts[[i]] <- !snps[[tree$edge[i,1]]][toRepeat][snps.loci.unique[[i]]]
 
         ## if any loci are selected for multiple mutations
@@ -517,12 +508,8 @@ snp.sim <- function(n.snps = 10000,
             foo[[j]] <- new.nts[[i]][toRep[j]]
             for(k in 1:n.reps[j]){
               if(k==1){
-                # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                #                                                               %in% foo[[j]][1])])
                 foo[[j]][k] <- !foo[[j]][1]
               }else{
-                # foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                #                                                               %in% foo[[j]][k-1])])
                 foo[[j]][k] <- !foo[[j]][k-1]
               }
             }
@@ -840,9 +827,9 @@ snp.sim <- function(n.snps = 10000,
         ## Want to divide tree into 2 sets of clades btw 1/3:2/3 and 1/2:1/2
         clades <- tab <- grp.options <- sets.complete <- list()
 
-        min.size <- ceiling((tree$Nnode+1)*(1/3))
-        max.size <- floor((tree$Nnode+1)*(2/3))
-        grp1 <- tree$Nnode+1
+        min.size <- ceiling((n.ind)*(1/3))
+        max.size <- floor((n.ind)*(2/3))
+        grp1 <- n.ind
 
         ## get 2 sets of clades:
 
@@ -851,9 +838,9 @@ snp.sim <- function(n.snps = 10000,
         ##########################################
         dec <- grp <- sets.temp <- sets.complete <- list()
 
-        inds <- c(1:(tree$Nnode+1))
+        inds <- c(1:(n.ind))
         # new.root <- tree$edge[1,1] # initial root
-        new.root <- tree$Nnode+2 # initial root
+        new.root <- n.ind+1 # initial root
 
         counter <- 0
         #######################################
@@ -931,12 +918,6 @@ snp.sim <- function(n.snps = 10000,
 
 
 
-
-
-
-
-
-
 ################
 ## .get.locus ##
 ################
@@ -1001,10 +982,8 @@ snp.sim <- function(n.snps = 10000,
     ## genome of the node preceding it, according to snps.loci.
     ## Draw new nts for each locus selected for mutation:
     if(!.is.integer0(snps.loci.unique[[i]])){
-      new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
-        selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                       %in% locus[[tree$edge[i,1]]]
-                                                       [snps.loci.unique[[i]][e]])]))
+      new.nts[[i]] <- !locus[[tree$edge[i,1]]][snps.loci.unique[[i]]]
+
       ## if any loci are selected for multiple mutations
       ## within their given branch length:
       if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
@@ -1020,12 +999,10 @@ snp.sim <- function(n.snps = 10000,
           foo[[j]] <- new.nts[[i]][toRepeat[j]]
           for(k in 1:n.reps[j]){
             if(k==1){
-              foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                                            %in% foo[[j]][1])])
+              foo[[j]][k] <- !foo[[j]][1]
 
             }else{
-              foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
-                                                                            %in% foo[[j]][k-1])])
+              foo[[j]][k] <- !foo[[j]][k-1]
             }
           }
           ## retain only the last nt selected
@@ -1052,6 +1029,143 @@ snp.sim <- function(n.snps = 10000,
   ## turn locus into a vector for easier post-handling
   locus <- as.vector(unlist(locus))
 
+  ##############################################################
+  ## temporarily assemble non-associated loci into matrix:
+  # temp <- do.call("rbind", locus)
+
+  ## keep only rows containing terminal individuals:
+  # temp <- temp[1:n.ind, ]
+  ##############################################################
+
   return(locus)
 
 } # end .get.locus
+
+
+
+
+
+
+
+
+
+
+
+# #####################
+# ## .get.locus.char ##
+# #####################
+# .get.locus.char <- function(subs.edges, root.nt, tree){
+#
+#   ##################
+#   ## HANDLE TREE: ##
+#   ##################
+#   ## Always work with trees in "pruningwise" order:
+#   tree <- reorder.phylo(tree, order="pruningwise")
+#   ## Trees must be rooted:
+#   if(!is.rooted(tree)) tree <- midpoint(tree)
+#
+#   ####################################################################
+#   ############################
+#   ## Get Anc-Des EDGE ORDER ##
+#   ############################
+#   ## Get sequence from lowest ("root", Nterm+1) to highest ancestral node:
+#   ix <- c(min(tree$edge[,1]):max(tree$edge[,1]))
+#   ## Get for loop index of rows in tree$edge[,1], in pairs, from lowest to highest:
+#   x <- as.vector(unlist(sapply(c(1:length(ix)), function(e) which(tree$edge[,1] == ix[e]))))
+#   ####################################################################
+#
+#
+#   ## convert subs.edges into appropriate format:
+#   snps.loci <- list()
+#   snps.loci[[1]] <- subs.edges
+#
+#   ## rearrange snps.loci s.t it becomes a
+#   ## list of length tree$edge.length,
+#   ## each element of which contains the
+#   ## locations of the mutations that will
+#   ## occur on that branch
+#   snps.loci <- sapply(c(1:length(tree$edge.length)),
+#                       function(f)
+#                         seq_along(snps.loci)[sapply(snps.loci,
+#                                                     function(e) f %in% e)])
+#
+#
+#   # we will store the output in a list called locus:
+#   locus <- list()
+#   ## get the node names for all individuals (terminal and internal)
+#   all.inds <- sort(unique(as.vector(unlist(tree$edge))))
+#   ## we start w all inds having same genotype as root:
+#   for(j in all.inds){
+#     locus[[j]] <- root.nt
+#   }
+#
+#   ## store replacement nts in list new.nts:
+#   new.nts <- list()
+#   ## distinguish btw list of loci and unique list
+#   snps.loci.ori <- snps.loci
+#   ## will need to treat repeat loci differently...
+#   snps.loci.unique <- lapply(snps.loci, unique)
+#
+#
+#   #############################
+#   ## For Loop to get new nts ##
+#   #############################
+#   for(i in x){
+#     ## for all locus other than root, we mutate the
+#     ## genome of the node preceding it, according to snps.loci.
+#     ## Draw new nts for each locus selected for mutation:
+#     if(!.is.integer0(snps.loci.unique[[i]])){
+#       new.nts[[i]] <- sapply(c(1:length(snps.loci.unique[[i]])), function(e)
+#         selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+#                                                        %in% locus[[tree$edge[i,1]]]
+#                                                        [snps.loci.unique[[i]][e]])]))
+#       ## if any loci are selected for multiple mutations
+#       ## within their given branch length:
+#       if(length(snps.loci.ori[[i]]) != length(snps.loci.unique[[i]])){
+#         ## identify which loci are repeaters
+#         repeats <- table(snps.loci.ori[[i]])[which(table(snps.loci.ori[[i]])!=1)]
+#         ## how many times they repeat
+#         n.reps <- repeats - 1
+#         ## the positions of these loci in the vector of snps loci
+#         toRepeat <- which(snps.loci.unique[[i]] %in% names(repeats))
+#         ## run chain of re-sampling to end in our new nt for repeater loci:
+#         foo <- list()
+#         for(j in 1:length(toRepeat)){
+#           foo[[j]] <- new.nts[[i]][toRepeat[j]]
+#           for(k in 1:n.reps[j]){
+#             if(k==1){
+#               foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+#                                                                             %in% foo[[j]][1])])
+#
+#             }else{
+#               foo[[j]][k] <- selectBiallelicSNP(c("a", "c", "g", "t")[which(c("a", "c", "g", "t")
+#                                                                             %in% foo[[j]][k-1])])
+#             }
+#           }
+#           ## retain only the last nt selected
+#           out <- sapply(c(1:length(foo)),
+#                         function(e) foo[[e]][length(foo[[e]])])
+#         }
+#         ## for the loci with repeated mts, replace these positions
+#         ## in new.nts with the corresponding elements of out, above.
+#         new.nts[[i]][toRepeat] <- out
+#       } # end of if statement for repeaters
+#
+#       ## update ancestral genotype with new.nts:
+#       temp <- locus[[tree$edge[i,1]]]
+#       temp[snps.loci.unique[[i]]] <- new.nts[[i]]
+#       locus[[tree$edge[i,2]]] <- temp
+#
+#     }else{
+#       ## if no mts occur on branch, set genotype of
+#       ## downstream individual to be equal to ancestor's
+#       locus[[tree$edge[i,2]]] <- locus[[tree$edge[i,1]]]
+#     }
+#   } # end of for loop selecting new nts at mutator loci
+#
+#   ## turn locus into a vector for easier post-handling
+#   locus <- as.vector(unlist(locus))
+#
+#   return(locus)
+#
+# } # end .get.locus.char

@@ -68,4 +68,7 @@ run `browseVignettes` and click on the `HTML` hyperlink:
 browseVignettes("treeWAS")
 ```
 
+You may also find useful tips and relevant discussions among the [Issues](https://github.com/caitiecollins/treeWAS/issues) posted by other users (including [Closed Issues](https://github.com/caitiecollins/treeWAS/issues?q=is%3Aissue+is%3Aclosed)).
+
+
 ***
