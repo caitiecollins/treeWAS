@@ -697,39 +697,47 @@ simTest <- function(
   ## CONVERT VECTOR ARGS --> LIST ##
   ##################################
   ## For args of length n.reps, make lists:
-  if(length(n.ind) == n.reps){
-    N.IND <- as.list(n.ind)
-  }else{
+  if(length(n.ind) == 1){
     N.IND <- as.list(rep(n.ind[1], n.reps))
-    if(length(n.ind) > 1) warning("n.ind was neither of length 1 or length n.reps. Using n.ind[1] for all reps.")
+    cat("n.ind was of length 1. Using n.ind[1] for all reps.\n")
+  }else{
+    N.IND <- as.list(n.ind)
+    if(length(n.ind) != n.reps) warning("n.ind was not of length 1 or n.reps.\n")
   }
 
-  if(length(n.snps) == n.reps){
-    N.SNPS <- as.list(n.snps)
-  }else{
+  if(length(n.snps) == 1){
     N.SNPS <- as.list(rep(n.snps[1], n.reps))
-    if(length(n.snps) > 1) warning("n.snps was neither of length 1 or length n.reps. Using n.snps[1] for all reps.")
+    cat("n.snps was of length 1. Using n.snps[1] for all reps.\n")
+  }else{
+    N.SNPS <- as.list(n.snps)
+    if(length(n.snps) != n.reps) warning("n.snps was not of length 1 or n.reps.\n")
   }
 
-  if(length(n.snps.assoc) == n.reps){
-    N.SNPS.ASSOC <- as.list(n.snps.assoc)
-  }else{
+  if(length(n.snps.assoc) == 1){
     N.SNPS.ASSOC <- as.list(rep(n.snps.assoc[1], n.reps))
-    if(length(n.snps.assoc) > 1) warning("n.snps.assoc was neither of length 1 or length n.reps. Using n.snps.assoc[1] for all reps.")
+    cat("n.snps.assoc was of length 1. Using n.snps.assoc[1] for all reps.\n")
+  }else{
+    N.SNPS.ASSOC <- as.list(n.snps.assoc)
+    if(length(n.snps.assoc) != n.reps) warning("n.snps.assoc was not of length 1 or n.reps.\n")
   }
 
-  if(length(sim.n.snps) == n.reps){
-    SIM.N.SNPS <- as.list(sim.n.snps)
-  }else{
+  if(length(sim.n.snps) == 1){
     SIM.N.SNPS <- as.list(rep(sim.n.snps[1], n.reps))
-    if(length(sim.n.snps) > 1) warning("sim.n.snps was neither of length 1 or length n.reps. Using sim.n.snps[1] for all reps.")
+    cat("sim.n.snps was of length 1. Using sim.n.snps[1] for all reps.\n")
+  }else{
+    SIM.N.SNPS <- as.list(sim.n.snps)
+    if(length(sim.n.snps) != n.reps) warning("sim.n.snps was not of length 1 or n.reps.\n")
   }
 
-  if(length(n.subs) == n.reps){
-    N.SUBS <- as.list(n.subs)
-  }else{
+  if(length(n.subs) == 1 | !is.list(n.subs)){
     N.SUBS <- as.list(rep(list(n.subs), n.reps))
-    cat("n.subs was not of length n.reps. Using same n.subs for all reps.")
+    cat("n.subs was of length 1. Using same n.subs for all reps.\n")
+  }else{
+    N.SUBS <- as.list(n.subs)
+    if(length(N.SUBS) != n.reps){
+      N.SUBS <- as.list(rep(n.subs, n.reps))[1:n.reps]
+      warning("n.subs was not of length 1 or n.reps: repeating sequence until n.subs met.\n")
+    }
   }
   ##############################################################################################################################
 

@@ -873,16 +873,42 @@ snp.sim.Q <- function(n.snps = 10000,
     ###################################################
     par(mfrow=c(2,6))
     plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
-    for(i in 1:5){
-      plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
-                main.title=paste("snp.assoc", i, sep=" "))
-      title(N.OVERLAP[[i]], line=0, font.main=1)
-    }
-    plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
-    for(i in 6:10){
-      plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
-                main.title=paste("snp.assoc", i, sep=" "))
-      title(N.OVERLAP[[i]], line=0, font.main=1)
+    if(n.snps.assoc >= 10){
+      ## just plot first 10:
+      for(i in 1:5){
+        plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+                  main.title=paste("snp.assoc", i, sep=" "))
+        title(N.OVERLAP[[i]], line=0, font.main=1)
+      }
+      plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+      for(i in 6:10){
+        plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+                  main.title=paste("snp.assoc", i, sep=" "))
+        title(N.OVERLAP[[i]], line=0, font.main=1)
+      }
+    }else{
+      ## plot up to 5:
+      if(n.snps.assoc <= 5){
+        par(mfrow=c(1,(n.snps.assoc+1)))
+        for(i in 1:n.snps.assoc){
+          plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+                    main.title=paste("snp.assoc", i, sep=" "))
+          title(N.OVERLAP[[i]], line=0, font.main=1)
+        }
+      }else{
+        ## plot btw 5 and 10:
+        for(i in 1:5){
+          plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+                    main.title=paste("snp.assoc", i, sep=" "))
+          title(N.OVERLAP[[i]], line=0, font.main=1)
+        }
+        plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+        for(i in 6:n.snps.assoc){
+          plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+                    main.title=paste("snp.assoc", i, sep=" "))
+          title(N.OVERLAP[[i]], line=0, font.main=1)
+        }
+      }
     }
 
 
