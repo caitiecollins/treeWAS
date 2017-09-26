@@ -61,10 +61,11 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
   if(all.is.numeric(res)){
     res <- as.character(sort(as.numeric(res, decreasing=FALSE)))
   }else{
-    if(all.is.numeric(removeLastN(res, 2))){
-      ord <- match(sort(as.numeric(removeLastN(res, 2), decreasing=FALSE)), removeLastN(res, 2))
-      res <- res[ord]
-    }
+    ## get corresponding loci:
+    locus <- sapply(c(1:length(res)), function(e) which(colnames(x$dat$snps) == res[e]))
+    ## reorder by locus order:
+    ord <- match(locus, sort(locus, decreasing=F))
+    res <- res[ord]
   }
   if(l > 0){
     cat("Significant loci: \n")
@@ -117,6 +118,115 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
   } # end for loop
 
 } # end print.treeWAS
+
+
+
+
+
+###################
+## write.treeWAS ##
+###################
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Write \code{treeWAS} output to a CSV file.
+#'
+#' Save the results of \code{treeWAS} to a CSV file as a summary table of significant findings and scores
+#' (excluding longer data elements within the output).
+#' .
+#'
+#' @param x The output returned by \code{treeWAS}.
+#' @param filename A character string containing the path and filename to which the .csv file will be saved;
+#'                 by default, \code{filename = "./treeWAS_results"} and so would be saved to the current working directory.
+#'
+#' @examples
+#' ## Example ##
+#'
+#' ## Load data:
+#' data(snps)
+#' data(phen)
+#' data(tree)
+#'
+#' ## Run treeWAS:
+#' out <- treeWAS(snps, phen, tree, seed = 1)
+#'
+#' ## Save results to home directory:
+#' write.treeWAS(x = out, filename = "~/treeWAS_results")
+#'
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#' @export
+
+########################################################################
+
+write.treeWAS <- function(x, filename="./treeWAS_results"){
+
+  ## get sig locus names:
+  name <- x$treeWAS.combined$treeWAS.combined
+  ## get corresponding loci:
+  locus <- sapply(c(1:length(name)), function(e) which(colnames(x$dat$snps) == name[e]))
+  ## reorder by locus order:
+  ord <- match(locus, sort(locus, decreasing=F))
+  locus <- locus[ord]
+  name <- name[ord]
+
+  ## Make dummy variables:
+  p.value.1 <- p.value.2 <- p.value.3 <- score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, length(name))
+
+  ## Make table:
+  tab <- data.frame(name, locus, score.1, score.2, score.3, p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
+
+  ## Add relevant values for each test: ##
+  ## Terminal:
+  df <- x$terminal$sig.snps
+  toKeep <- match(df$SNP.locus, locus)
+  tab$p.value.1[toKeep] <- df$p.value
+  tab$score.1[toKeep] <- df$score
+  tab$G1P1[toKeep] <- df$G1P1
+  tab$G0P0[toKeep] <- df$G0P0
+  tab$G1P0[toKeep] <- df$G1P0
+  tab$G0P1[toKeep] <- df$G0P1
+
+  ## Simultaneous:
+  df <- x$simultaneous$sig.snps
+  toKeep <- match(df$SNP.locus, locus)
+  tab$p.value.2[toKeep] <- df$p.value
+  tab$score.2[toKeep] <- df$score
+  tab$G1P1[toKeep] <- df$G1P1
+  tab$G0P0[toKeep] <- df$G0P0
+  tab$G1P0[toKeep] <- df$G1P0
+  tab$G0P1[toKeep] <- df$G0P1
+
+  ## Subsequent:
+  df <- x$subsequent$sig.snps
+  toKeep <- match(df$SNP.locus, locus)
+  tab$p.value.3[toKeep] <- df$p.value
+  tab$score.3[toKeep] <- df$score
+  tab$G1P1[toKeep] <- df$G1P1
+  tab$G0P0[toKeep] <- df$G0P0
+  tab$G1P0[toKeep] <- df$G1P0
+  tab$G0P1[toKeep] <- df$G0P1
+
+  ## Add .CSV to filename:
+  suff <- tolower(keepLastN(filename, 4))
+  names(suff) <- NULL
+  if(!identical(suff, ".csv")){
+    filename <- paste(filename, ".csv", sep="")
+  }
+
+  ## Write table to CSV file:
+  write.table(tab, file=filename, row.names = FALSE)
+
+} # end write.treeWAS
+
+
+
+
+
 
 #############
 ## treeWAS ##
@@ -199,9 +309,9 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #' @param plot.dist A logical indicating whether to plot the true distribution of association score statistics
 #'                    (\code{TRUE}) or not (\code{FALSE}, the default).
 #' @param snps.assoc An optional character string or vector specifying known associated loci to be demarked in
-#'                      results plots (e.g., from previous studies or if data is simulated); else NULL.
+#'                      results plots (e.g., from previous studies or if data is simulated); else \code{NULL}.
 #' @param filename.plot An optional character string denoting the file location for
-#'                        saving any plots produced; else \code{NULL}.
+#'                        saving any plots produced (eg. "C:/Home/treeWAS_plots.pdf"); else \code{NULL}.
 #' @param seed An optional integer to control the pseudo-randomisation process and allow
 #'                for identical repeat runs of the function; else \code{NULL}.
 #'
@@ -617,6 +727,8 @@ treeWAS <- function(snps,
 
     ## Ensure snps.rec is NOT user-provided if tree not provided:
     if(class(snps.reconstruction) != "character") snps.reconstruction <- "parsimony"
+    ## And phen.rec...
+    if(length(phen.reconstruction) != 1) phen.reconstruction <- "parsimony"
 
     ## Reconstruct tree: ##
     ## NOTE: Should really request WHOLE GENOMES here (add separate argument (seqs)) <------------- ##### TO DO #####

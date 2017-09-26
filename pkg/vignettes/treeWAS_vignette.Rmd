@@ -250,12 +250,46 @@ grid.raster(img)
 
 
 
-
 ## Data Cleaning
 <!-- ########################################################################################################## -->
 
 Before running the `treeWAS` function, please ensure that your data is in the appropriate format.
 
+The *ape* and *adegenet* packages loaded with *treeWAS* contain a number of functions useful for reading in data from a file and converting it. Some useful commands are included below. 
+
+For genetic data, the `read.dna` function can read in sequences from "sequential", "CLUSTAL", or "FASTA" formatted files. 
+One way to convert the resulting `DNAbin` class object to a binary matrix is by way of the `DNAbin2genind` function.
+```{r, eval=FALSE}
+## Read data from file
+dna <- read.dna(file = "filename", format = "fasta")
+
+## Convert: 
+mat <- DNAbin2genind(dna)@tab
+```
+Then, see "Biallelic loci" below to remove redundant columns.
+
+
+To read in phylogenetic trees from file, `read.tree` can be used for trees stored in Newick/New Hampshire format and `read.nexus` for trees of Nexus format. Both return a `phylo` object, so no further conversion is required.
+```{r, eval=FALSE}
+## Read tree from a Newick/New Hampshire file:
+tree <- read.tree(file = "filename")
+
+## Or from a Nexus file:
+tree <- read.nexus(file = "filename")
+
+## Convert: 
+mat <- DNAbin2genind(dna)@tab
+```
+
+Phenotypic data can be read in from a text or CSV file with `read.table`. Then, simply convert to a vector and retain the names.
+```{r, eval=FALSE}
+## Read file:
+df <- read.table(file="filename")
+
+## Convert:
+phen <- as.vector(unlist(df))
+names(phen) <- rownames(df)
+```
 
 ### Labels:
 <!-- ########################################################################################################## -->
@@ -328,6 +362,8 @@ Missing data is permitted (denoted by `NA` values only) in the genetic data matr
 Any column that is entirely missing will be automatically removed within `treeWAS`. 
 Any column composed of more than 75% NAs will also be removed; however, 
 if for some reason you do not wish this to be the case, set the argument `na.rm` to `FALSE`.
+
+Missing data is also permitted in the phenotype, although any missing individuals will be automatically removed from the analysis. 
 
 <!-- NOTE TO SELF: YOU MAY WANT TO SUGGEST THAT NON-POLYMORHPIC LOCI (ie WHOLE GENOMES) BE PROVIDED IF THE USER WANTS TO BUILD A TREE WITHIN TREEWAS. IF SO--NEED TO ADD MORE CHECKS TO REMOVE THESE LOCI AFTER THE TREE IS BUILT (AND ALSO ENSURE THAT THE SNPS.RECONSTRUCTION HAS THE APPROPRIATE COLUMNS TO MATCH N.POLYMORPHIC SITES.) -->
 
@@ -523,7 +559,7 @@ out <- treeWAS(snps,
 > previous studies or if data is simulated); else NULL.
 
 > `filename.plot` 
->  : An optional character string denoting the file location for saving any plots produced; else `NULL`.
+>  : An optional character string denoting the file location for saving any plots produced (eg. "C:/Home/treeWAS_plots.pdf"); else `NULL`.
 
 > `seed` 
 >  : An optional integer to control the pseudo-randomisation process and allow for identical repeat runs of the function; else
@@ -694,6 +730,19 @@ class(out) # treeWAS
 
 ```{r, eval=TRUE}
 print(out, sort.by.p=FALSE)
+```
+
+
+
+### Writing Output to CSV
+<!-- ########################################################################################################## -->
+The results contained in the output of `treeWAS` can also be saved in a CSV file. The `write.treeWAS` function will write a summary table to CSV, containing the names and loci of all significant findings, as well as their scores and p-values, as well as the cells of a 2x2 contingency table of genotype and phenotype if the phenotype is binary.
+
+
+All that is required is to run the `write.treeWAS` function and specify a file name to which the ".csv" file will be saved. By default, the `filename` argument is "./treeWAS_results". The "./" prefix means that by default the file will be saved to the current working directory, "~/" will save to the home directory, or you can specify a path explicitly ahead of the desired file name. You can see an example by running the following command on the output from the example above (the object called `out`):
+
+```{r, eval=FALSE}
+write.treeWAS(out, filename="./treeWAS_results")
 ```
 
 

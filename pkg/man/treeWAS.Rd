@@ -91,10 +91,10 @@ only used if \code{tree} is a character string (see ?dist.dna).}
 (\code{TRUE}) or not (\code{FALSE}, the default).}
 
 \item{snps.assoc}{An optional character string or vector specifying known associated loci to be demarked in
-results plots (e.g., from previous studies or if data is simulated); else NULL.}
+results plots (e.g., from previous studies or if data is simulated); else \code{NULL}.}
 
 \item{filename.plot}{An optional character string denoting the file location for
-saving any plots produced; else \code{NULL}.}
+saving any plots produced (eg. "C:/Home/treeWAS_plots.pdf"); else \code{NULL}.}
 
 \item{seed}{An optional integer to control the pseudo-randomisation process and allow
 for identical repeat runs of the function; else \code{NULL}.}

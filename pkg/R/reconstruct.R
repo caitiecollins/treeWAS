@@ -33,6 +33,7 @@
 #' @import ape
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phytools anc.ML
+#' @importFrom phytools fastAnc
 
 
 ########################################################################
@@ -151,11 +152,12 @@ asr <- function(var,
       if(any(is.na(as.vector(unlist(snps))))) na.var <- TRUE
 
 
-      ## With CONTINUOUS ML rec, use anc.ML: ##
+      ## With CONTINUOUS ML rec, use anc.ML (or fastAnc!): ##
       if(method == "continuous"){
 
         ######### (** SLOW! **) ##########
         ## MISSING & Continuous ML rec: ##
+        ## (not yet allowed for snps..) ##
         ##################################
 
         snps.rec <- snps.ML <- list()
@@ -388,21 +390,22 @@ asr <- function(var,
       ## get terminal values
       phen.terminal <- phen
 
-      ## get internal values (from ML output)
-      if(is.rooted(tree) & is.binary.tree(tree) & length(levs) == 2){
-        phen.ML <- ace(phen, tree, type=method)
-        if(method == "discrete"){
-          phen.internal <- phen.ML$lik.anc[,2]
-        }else{
-          phen.internal <- phen.ML$ace
-        }
+      # ## get internal values (from ML output)
+      # if(is.rooted(tree) & is.binary.tree(tree) & length(levs) == 2){
+      #   phen.ML <- ace(phen, tree, type=method)
+      #   if(method == "discrete"){
+      #     phen.internal <- phen.ML$lik.anc[,2]
+      #   }else{
+      #     phen.internal <- phen.ML$ace
+      #   }
+      #
+      #   ## get reconstruction from terminal & internal values
+      #   phen.rec <- c(phen.terminal, phen.internal)
+      #
+      # }else{ # end ML for rooted & binary trees
+      #
 
-        ## get reconstruction from terminal & internal values
-        phen.rec <- c(phen.terminal, phen.internal)
-
-      }else{ # end ML for rooted & binary trees
-
-        ## ML for unrooted or non-binary trees: ##
+        ## ML for all (rooted/unrooted, binary/non-binary) trees: ##
 
         ## DISCRETE: ##
         if(method == "discrete"){
@@ -473,16 +476,19 @@ asr <- function(var,
 
           ## With MISSING DATA in any columns: ##
           ## Continuous ML rec: ##
+          ## get internal values:
+          var.internal <- fastAnc(tree, var) ## require(phytools)
+
           ## get internal values (when (any) var contains NAs):
-          var <- var[!is.na(var)]
-          phen.ML <- anc.ML(tree, var) ## require(phytools)
-          var.internal <- phen.ML$ace
+          # var <- var[!is.na(var)]
+          # phen.ML <- anc.ML(tree, var) ## require(phytools)
+          # var.internal <- phen.ML$ace
 
           ## get reconstruction from terminal & internal values
           phen.rec <- c(var.terminal, var.internal)
         }
 
-      }
+      # }
 
     } # end ML
 
