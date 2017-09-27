@@ -255,12 +255,16 @@ grid.raster(img)
 
 Before running the `treeWAS` function, please ensure that your data is in the appropriate format.
 
+
+### Loading data:
+<!-- ########################################################################################################## -->
 The *ape* and *adegenet* packages loaded with *treeWAS* contain a number of functions useful for reading in data from a file and converting it. Some useful commands are included below. 
 
-For genetic data, the `read.dna` function can read in sequences from "sequential", "CLUSTAL", or "FASTA" formatted files. 
-One way to convert the resulting `DNAbin` class object to a binary matrix is by way of the `DNAbin2genind` function.
+For genetic data, the `read.dna` function can read in sequences from "sequential", "CLUSTAL", or "FASTA" formatted files. One way to convert the resulting `DNAbin` class object to a binary matrix is by way of the `DNAbin2genind` function.
+
 ```{r, eval=FALSE}
-## Read data from file
+## (Template code, don't run)
+## Read data from file:
 dna <- read.dna(file = "filename", format = "fasta")
 
 ## Convert: 
@@ -269,8 +273,10 @@ mat <- DNAbin2genind(dna)@tab
 Then, see "Biallelic loci" below to remove redundant columns.
 
 
-To read in phylogenetic trees from file, `read.tree` can be used for trees stored in Newick/New Hampshire format and `read.nexus` for trees of Nexus format. Both return a `phylo` object, so no further conversion is required.
+Phylogenetic trees can also be imported. Good tree-building programs exist outside of R, and we encourage users to provide a tree that has been built with external software, especially if the organism under analysis undergoes recombination (see the treeWAS Wiki section "Integration with ClonalFrameML"). To read trees from file, `read.tree` can be used for trees stored in Newick/New Hampshire format and `read.nexus` for trees of Nexus format. Both return a `phylo` object, so no further conversion is required.
+
 ```{r, eval=FALSE}
+## (Template code, don't run)
 ## Read tree from a Newick/New Hampshire file:
 tree <- read.tree(file = "filename")
 
@@ -282,7 +288,9 @@ mat <- DNAbin2genind(dna)@tab
 ```
 
 Phenotypic data can be read in from a text or CSV file with `read.table`. Then, simply convert to a vector and retain the names.
+
 ```{r, eval=FALSE}
+## (Template code, don't run)
 ## Read file:
 df <- read.table(file="filename")
 
@@ -397,7 +405,7 @@ grid.raster(img)
 ```
 
 A skewed phenotypic distribution, like this one, can have a negative impact on the performance of *treeWAS* 
-(causing left-skewed null distributions and false positives). 
+(causing left-skewed null distributions in Scores 1 and 3, and false positives). 
 It may be more appropriate to first transform the phenotype by rank, 
 and analyse the relative values (ranks) rather than the original values. 
 

@@ -19,7 +19,7 @@ Save the results of \code{treeWAS} to a CSV file as a summary table of significa
 }
 \examples{
 ## Example ##
-
+\dontrun{
 ## Load data:
 data(snps)
 data(phen)
@@ -30,7 +30,7 @@ out <- treeWAS(snps, phen, tree, seed = 1)
 
 ## Save results to home directory:
 write.treeWAS(x = out, filename = "~/treeWAS_results")
-
+}
 
 }
 \author{

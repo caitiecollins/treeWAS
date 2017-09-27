@@ -145,7 +145,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'
 #' @examples
 #' ## Example ##
-#'
+#' \dontrun{
 #' ## Load data:
 #' data(snps)
 #' data(phen)
@@ -156,7 +156,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'
 #' ## Save results to home directory:
 #' write.treeWAS(x = out, filename = "~/treeWAS_results")
-#'
+#' }
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -944,7 +944,7 @@ treeWAS <- function(snps,
   ## Remove any ENTIRELY missing rows...
   toRemove <- rownames(snps)[which(NA.tab == ncol(snps))]
 
-  ## Remove any NON-POLYMORPHIC rows? (i.e., entirely 1 or 0)
+  # ## Remove any NON-POLYMORPHIC rows? (i.e., entirely 1 or 0)
   # rs <- rowSums(snps, na.rm=TRUE)
   # # toRemove2 <- rownames(snps)[which(rs %in% c(0, ncol(snps)))]
   # l <- rep(ncol(snps), nrow(snps)) - NA.tab
