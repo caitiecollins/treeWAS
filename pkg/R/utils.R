@@ -90,7 +90,7 @@ get.binary.snps <- function(snps, force=FALSE){
       cols.nonBin <- cols.nonBin[-which(cols.nonBin %in% cols.toAdd)]
 
       ## FOR LOOP: ##
-      for(i in 2:length(toKeep)){
+      if(length(toKeep) > 1) for(i in 2:length(toKeep)){
         ## Isolate non-binary columns to add here:
         cols.toAdd <- which(noms %in% noms[cols.nonBin[1]])
         ## Get sequence from end of last COLS element to start of cols.toAdd
