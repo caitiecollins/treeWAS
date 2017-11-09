@@ -869,7 +869,7 @@ treeWAS <- function(snps,
   ## CHECK IF ANY PHEN MISSING:
   if(any(is.na(phen))){
     toRemove <- names(which(is.na(phen)))
-    warning(c("The phenotypic variable for individual(s) ", toRemove, " is missing.
+    warning(c("The phenotypic variable for individual(s) ", list(toRemove), " is missing.
               Removing these individuals from the analysis.\n"))
     ## remove individuals from phen:
     phen <- phen[-which(names(phen) %in% toRemove)]
