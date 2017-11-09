@@ -58,16 +58,19 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
   print(l)
 
   res <- x$treeWAS.combined$treeWAS.combined
-  if(all.is.numeric(res)){
-    res <- as.character(sort(as.numeric(res, decreasing=FALSE)))
-  }else{
-    ## get corresponding loci:
-    locus <- sapply(c(1:length(res)), function(e) which(colnames(x$dat$snps) == res[e]))
-    ## reorder by locus order:
-    ord <- match(locus, sort(locus, decreasing=F))
-    res <- res[ord]
-  }
+
+  ## only sort/print if any sig loci present:
   if(l > 0){
+    if(all.is.numeric(res)){
+      res <- as.character(sort(as.numeric(res, decreasing=FALSE)))
+    }else{
+      ## get corresponding loci:
+      locus <- sapply(c(1:length(res)), function(e) which(colnames(x$dat$snps) == res[e]))
+      ## reorder by locus order:
+      ord <- match(locus, sort(locus, decreasing=F))
+      res <- res[ord]
+    }
+
     cat("Significant loci: \n")
     print(res)
   }
@@ -167,49 +170,62 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 
   ## get sig locus names:
   name <- x$treeWAS.combined$treeWAS.combined
-  ## get corresponding loci:
-  locus <- sapply(c(1:length(name)), function(e) which(colnames(x$dat$snps) == name[e]))
-  ## reorder by locus order:
-  ord <- match(locus, sort(locus, decreasing=F))
-  locus <- locus[ord]
-  name <- name[ord]
 
-  ## Make dummy variables:
-  p.value.1 <- p.value.2 <- p.value.3 <- score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, length(name))
+  ## If NO sig findings, print dummy (NULL) csv:
+  if(is.na(name)){
 
-  ## Make table:
-  tab <- data.frame(name, locus, score.1, score.2, score.3, p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
+    ## Make dummy variables:
+    name <- locus <- p.value.1 <- p.value.2 <- p.value.3 <- score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, 1)
 
-  ## Add relevant values for each test: ##
-  ## Terminal:
-  df <- x$terminal$sig.snps
-  toKeep <- match(df$SNP.locus, locus)
-  tab$p.value.1[toKeep] <- df$p.value
-  tab$score.1[toKeep] <- df$score
-  tab$G1P1[toKeep] <- df$G1P1
-  tab$G0P0[toKeep] <- df$G0P0
-  tab$G1P0[toKeep] <- df$G1P0
-  tab$G0P1[toKeep] <- df$G0P1
+    ## Make table:
+    tab <- data.frame(name, locus, score.1, score.2, score.3, p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
 
-  ## Simultaneous:
-  df <- x$simultaneous$sig.snps
-  toKeep <- match(df$SNP.locus, locus)
-  tab$p.value.2[toKeep] <- df$p.value
-  tab$score.2[toKeep] <- df$score
-  tab$G1P1[toKeep] <- df$G1P1
-  tab$G0P0[toKeep] <- df$G0P0
-  tab$G1P0[toKeep] <- df$G1P0
-  tab$G0P1[toKeep] <- df$G0P1
+  ## If SIG loci found, print csv:
+  }else{
+    ## get corresponding loci:
+    locus <- sapply(c(1:length(name)), function(e) which(colnames(x$dat$snps) == name[e]))
+    ## reorder by locus order:
+    ord <- match(locus, sort(locus, decreasing=F))
+    locus <- locus[ord]
+    name <- name[ord]
 
-  ## Subsequent:
-  df <- x$subsequent$sig.snps
-  toKeep <- match(df$SNP.locus, locus)
-  tab$p.value.3[toKeep] <- df$p.value
-  tab$score.3[toKeep] <- df$score
-  tab$G1P1[toKeep] <- df$G1P1
-  tab$G0P0[toKeep] <- df$G0P0
-  tab$G1P0[toKeep] <- df$G1P0
-  tab$G0P1[toKeep] <- df$G0P1
+    ## Make dummy variables:
+    p.value.1 <- p.value.2 <- p.value.3 <- score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, length(name))
+
+    ## Make table:
+    tab <- data.frame(name, locus, score.1, score.2, score.3, p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
+
+    ## Add relevant values for each test: ##
+    ## Terminal:
+    df <- x$terminal$sig.snps
+    toKeep <- match(df$SNP.locus, locus)
+    tab$p.value.1[toKeep] <- df$p.value
+    tab$score.1[toKeep] <- df$score
+    tab$G1P1[toKeep] <- df$G1P1
+    tab$G0P0[toKeep] <- df$G0P0
+    tab$G1P0[toKeep] <- df$G1P0
+    tab$G0P1[toKeep] <- df$G0P1
+
+    ## Simultaneous:
+    df <- x$simultaneous$sig.snps
+    toKeep <- match(df$SNP.locus, locus)
+    tab$p.value.2[toKeep] <- df$p.value
+    tab$score.2[toKeep] <- df$score
+    tab$G1P1[toKeep] <- df$G1P1
+    tab$G0P0[toKeep] <- df$G0P0
+    tab$G1P0[toKeep] <- df$G1P0
+    tab$G0P1[toKeep] <- df$G0P1
+
+    ## Subsequent:
+    df <- x$subsequent$sig.snps
+    toKeep <- match(df$SNP.locus, locus)
+    tab$p.value.3[toKeep] <- df$p.value
+    tab$score.3[toKeep] <- df$score
+    tab$G1P1[toKeep] <- df$G1P1
+    tab$G0P0[toKeep] <- df$G0P0
+    tab$G1P0[toKeep] <- df$G1P0
+    tab$G0P1[toKeep] <- df$G0P1
+  }
 
   ## Add .CSV to filename:
   suff <- tolower(keepLastN(filename, 4))
