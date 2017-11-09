@@ -8,7 +8,8 @@ LazyData: true
 RoxygenNote: 6.0.1
 Depends: adegenet,
     ape,
-    Hmisc
+    Hmisc,
+    png
 Imports: beeswarm, 
     ggplot2,       
     phangorn,
@@ -16,6 +17,5 @@ Imports: beeswarm,
     pryr,
     scales
 Suggests: knitr,
-    rmarkdown,
-    png
+    rmarkdown
 VignetteBuilder: knitr

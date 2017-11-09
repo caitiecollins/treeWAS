@@ -387,7 +387,9 @@ The tree can be either rooted or unrooted.
 ### Continuous phenotypes:
 <!-- ########################################################################################################## -->
 
-If you are working with a continuous phenotype, it is important to first examine the distribution of the phenotype. 
+If you are working with a continuous phenotype, you may be able to apply *treeWAS* to the phenotype directly. 
+
+But, if you are working with a particularly skewed phenotype or one with serious outliers, you may want to modify your data prior to running *treeWAS*. It is important to examine the distribution of your phenotype. 
 
 ```{r, eval=FALSE}
 ## Load eg. variable: 
@@ -731,15 +733,15 @@ As such, we recommend that the `print.treeWAS` function be used to examine the s
 
 ```{r, eval=TRUE, echo=FALSE, include=FALSE}
 ## Example output:
-data(treeWAS.out)
-out <- treeWAS.out
+data(treeWAS.example.out)
+out <- treeWAS.example.out
 class(out) # treeWAS
 ```
 
 ```{r, eval=TRUE}
 print(out, sort.by.p=FALSE)
 ```
-
+ 
 
 
 ### Writing Output to CSV
