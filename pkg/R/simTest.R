@@ -1650,10 +1650,18 @@ simTest <- function(
     ## we can generate a new DAPC object ...
     ## after performing cross-validation to optimise the discrimination between these subpopulations:
 
+    ## NEW: make sure we get as many PCs  as DAs?
+    n.pca.min <- (n.grp)
+    n.pca.max <- min(min(dim(snps))*0.5, pca1$rank)
+    runs <- 10
+    n.pca <- round(pretty(n.pca.min:n.pca.max, runs))
+
     ## NOTE -- If this is SLOW and always results in 5-10 PCs, we may want to skip it... ??
-    xval.pop <- xvalDapc(snps, pop)
+    xval.pop <- xvalDapc(snps, pop, n.pca=n.pca)
     # str(xval.pop)
     # xval.pop[2:6]
+
+
 
     ## store DAPC object:
     dapc.pop <- xval.pop$DAPC
