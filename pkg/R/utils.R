@@ -10,8 +10,88 @@
 ## (unless we want to release these for public use?)
 
 
+################################################################################
+
+
+#############
+## memfree ##
+#############
+
+########################################################################
+
+###################
+## DOCUMENTATION ##
+###################
+
+#' Get the current amount of available memory.
+#'
+#' Function to determine how much memory (in GB) is currently available for use
+#' on your PC.
+#'
+#'
+#' @param OS A character string indicating the operating system of the machine in question.
+#' Can be one of "Windows", "Mac" (or "Darwin"), or "Linux". If OS is NULL (the default),
+#' OS will be set to Sys.info()["sysname"].
+#'
+#' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
+#' @export
+
+
+########################################################################
+
+#############
+## memfree ##
+#############
+memfree <- function(OS = NULL){
+
+  mem <- NULL
+
+  if(is.null(OS)) OS <- Sys.info()["sysname"]
+  OS <- tolower(OS)
+
+  if(OS == "darwin") OS <- "mac"
+
+  if(OS == "Windows"){
+    ## WORKS ON WINDOWS: ##
+    mem <- as.numeric(shell("wmic OS get FreePhysicalMemory",
+                                intern=TRUE)[2])/1000000 # (KB -> GB)
+  }
+
+  if(OS == "linux"){
+    ## WORKS ON LINUX: ##
+    mem <- as.numeric(system("awk '/MemFree/ {print $2}' /proc/meminfo",
+                                 intern=TRUE))/1000000 # (KB -> GB)
+  }
+
+  if(OS == "mac"){
+    ## WORKS ON MAC: ##
+    mem <- system("vm_stat", intern=TRUE)[2] # [2] = "Pages free:    #."
+    ## Remove text before and (.) after
+    mem <- removeLastN(mem, 1)
+    mem <- removeFirstN(mem, nchar("Pages free:"))
+    ## Convert to numeric:
+    mem <- as.numeric(mem)
+    ## Must convert: 1 Page = 4096 bytes --> GB:
+    mem <- mem*4096/1000000000
+  }
+
+  # mem
+  ## Units = GB
+
+  return(mem)
+
+} # end memfree
+
 
 ################################################################################
+
+
+
+
+
+
+
 
 
 #####################

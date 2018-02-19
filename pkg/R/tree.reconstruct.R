@@ -107,6 +107,8 @@ tree.reconstruct <- function(dna,
   }
   ## TREE REC METHOD ##
   method <- tolower(method)
+  if(method == "njs") method <- "nj*"
+  if(method == "bionjs") method <- "bionj*"
   method <- match.arg(arg = method,
                       choices = c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
                       several.ok = FALSE)

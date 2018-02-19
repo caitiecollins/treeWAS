@@ -1,19 +1,5 @@
 
 
-###################
-## TO DO (2017): ##
-###################
-
-
-## dependencies problems?ssh caitlin@131.251.130.191
-
-## Hmisc new version requiring a non-existant version of pkg "survival"..
-## -->
-## Soln:
-# library(devtools)
-# install_version("Hmisc", version = "3.9-1", repos = "http://cran.us.r-project.org")
-
-
 
 ###################
 ## print.treeWAS ##
@@ -180,7 +166,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
     ## Make table:
     tab <- data.frame(name, locus, score.1, score.2, score.3, p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
 
-  ## If SIG loci found, print csv:
+    ## If SIG loci found, print csv:
   }else{
     ## get corresponding loci:
     locus <- sapply(c(1:length(name)), function(e) which(colnames(x$dat$snps) == name[e]))
@@ -283,6 +269,13 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'                    machines with insufficient memory to analyse the dataset at hand.
 #'                    Note that smaller values of \code{chunk.size} will increase the computational time required
 #'                    (e.g., for \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).
+#' @param mem.lim Either a number or a logical value to establish a memory limit (in GB) that will be used to automatically update
+#'                the \code{chunk.size} argument if their is not enough available memory to run treeWAS in one chunk.
+#'                If FALSE (the default), no limit is estimated and \code{chunk.size} is not changed.
+#'                If TRUE, the amount of memory currently available is estimated with \code{memfree()} and \code{chunk.size} is
+#'                scaled back to account for the amount of memory estimated to be needed by treeWAS for this dataset.
+#'                If a number, this is taken to be the amount of memory (in GB) available/designated
+#'                for use by treeWAS and \code{chunk.size} is updated to reflect this.
 #' @param test A character string or vector containing one or more of the following available tests of association:
 #'              \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
 #'              By default, the first three tests are run (see details).
@@ -590,24 +583,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' out <- treeWAS(snps = snps,
 #'                 phen = phen,
 #'                 tree = tree,
-#'                 n.subs = dist_0,
-#'                 n.snps.sim = ncol(snps)*10,
-#'                 test = c("terminal", "simultaneous", "subsequent"),
-#'                 snps.reconstruction = "parsimony",
-#'                 snps.sim.reconstruction = "parsimony",
-#'                 phen.reconstruction = "parsimony",
-#'                 phen.type = NULL,
-#'                 p.value = 0.01,
-#'                 p.value.correct = "bonf",
-#'                 p.value.by = "count",
-#'                 dist.dna.model = NULL,
-#'                 plot.tree = FALSE,
-#'                 plot.manhattan = TRUE,
-#'                 plot.null.dist = TRUE,
-#'                 plot.dist = FALSE,
-#'                 snps.assoc = NULL,
-#'                 filename.plot = NULL,
-#'                 seed = NULL)
+#'                 seed = 1)
 #'
 #' ## examine output:
 #' print(out)
@@ -623,6 +599,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #' @importFrom scales rescale
+#' @importFrom pryr object_size
 #'
 #' @export
 
@@ -636,6 +613,7 @@ treeWAS <- function(snps,
                     n.subs = NULL,
                     n.snps.sim = ncol(snps)*10,
                     chunk.size = ncol(snps),
+                    mem.lim = FALSE,
                     test = c("terminal", "simultaneous", "subsequent"),
                     snps.reconstruction = "parsimony",
                     snps.sim.reconstruction = "parsimony",
@@ -851,8 +829,8 @@ treeWAS <- function(snps,
           phen.reconstruction <- "parsimony"
         }
       }
+      }
     }
-  }
 
   ## Check snps.rec rownames:
   if(is.matrix(snps.reconstruction)){
@@ -873,8 +851,8 @@ treeWAS <- function(snps,
           snps.reconstruction <- "parsimony"
         }
       }
+      }
     }
-  }
 
 
   ####################################################################
@@ -1062,13 +1040,13 @@ treeWAS <- function(snps,
       ## check:
       if(!identical(as.character(rownames(snps.reconstruction)[1:nrow(snps)]), as.character(tree$tip.label))){
         stop("Unable to rearrange snps.reconstruction such that
-              rownames(snps.reconstruction)[1:nrow(snps)]
-              match content and order of tree$tip.label.
-              Please check that these match.")
+             rownames(snps.reconstruction)[1:nrow(snps)]
+             match content and order of tree$tip.label.
+             Please check that these match.")
       }
-    }
+      }
 
-  }
+      }
 
   ## REORDER PHEN TO MATCH TREE$TIP.LABEL
   if(!identical(as.character(names(phen)), as.character(tree$tip.label))){
@@ -1144,7 +1122,7 @@ treeWAS <- function(snps,
       if(phen.type == "discrete"){
         phen.rec.method <- "discrete"
         if(prop.u > 0.5){
-          cat("Performing *discrete* reconstruction, although phen is ", round(prop.u, 2)*100, "% unique: Are you sure phen.type is 'discrete'?", sep="")
+          cat("Performing *discrete* reconstruction, although phen is ", round(prop.u, 2)*100, "% unique: Are you sure phen.type is 'discrete'?\n", sep="")
         }
       }
     } # end phen.type (discrete/continuous)
@@ -1326,6 +1304,89 @@ treeWAS <- function(snps,
   ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
+
+  #########################
+  ## Handle memory limit ##
+  #########################
+  if(!is.null(mem.lim)){
+    ## If mem.lim = FALSE ##
+    ## --> work with chunk.size set by user.
+    ## * May run out of memory
+    ## * But, allows user to set a chunk.size that works for them,
+    ##   eg. if mem.lim fails/makes poor choice of chunk.size given their PC/data.
+    if(mem.lim == FALSE){
+      mem.lim <- NULL
+    }else{
+      ## If mem.lim = TRUE ##
+      ## --> automatically determine optimal max chunk.size, given available memory,
+      ## regardless of input chunk.size value.
+      if(mem.lim == TRUE){
+        mem.lim <- NULL
+        mem.lim <- memfree()
+        ## round down to be conservative and leave a little space:
+        if(mem.lim > 1) mem.lim <- floor(mem.lim)
+        ## if fails, warn:
+        if(is.null(mem.lim)){
+          warning("Unable to determine amount of available memory.
+          Set mem.lim or chunk.size by hand.")
+        }
+      }else{
+        ## If mem.lim = numeric ##
+        ## --> Skip memfree estimate, use input mem.lim instead,
+        ## but estimate n.chunks, chunk.size, regardless of input chunk.size value.
+        ## * May run out of memory
+        ## * But, allows user to set mem.lim in case memfree() fails for their OS.
+        if(!is.numeric(mem.lim)){
+          warning("mem.lim was not a number or a logical. Ignoring mem.lim and using default chunk.size.")
+          mem.lim <- NULL
+        }else{
+          if(length(mem.lim) > 1){
+            warning("mem.lim must be of length 1 if numeric. Ignoring mem.lim and using default chunk.size.")
+            mem.lim <- NULL
+          }
+        }
+      }
+    } # end mem.lim check
+    ## If mem.lim has been estimated or input...
+    if(!is.null(mem.lim)){
+      #######################################
+      ## Update chunk.size, given mem.lim: ##
+      #######################################
+      ## Check memory occuppied by snps:
+      # require(pryr)
+      memreq <- as.numeric(object_size(snps))/1000000000 # bytes --> GB
+
+      ## Get n.snps.sim factor:
+      fac <- n.snps.sim/ncol(snps)
+      ## Update memreq:
+      memreq <- memreq*fac
+
+      ## Multiply by second factor to approximate total mem req'd by treeWAS:
+      fac2 <- 70 ## (!!) NOTE---THIS IS AN ESTIMATE---IT MAY NEED TO BE IMPROVED... (!!)
+      ## Update memreq:
+      memreq <- memreq*fac2
+
+      ## Get n.chunks (round up):
+      nc <- ceiling(memreq/mf)
+
+      ## Get chunk.size (round up to nearest 1):
+      if(nc > 1){
+        chunk.size <- ceiling(ncol(snps)/nc)
+      }else{
+        chunk.size <- ncol(snps)
+      }
+
+      ## Print notice:
+
+      cat(c("Updated chunk.size:", chunk.size,
+            "\nNumber of chunks:", nc,
+            "\nEstimated memory limit:", mem.lim, "GB",
+            "\nEstimated memory required:", round(memreq, 2), "GB\n"))
+    }
+  } # end mem.lim
+
+
+
   #######################
   ## Handle chunk.size ##
   #######################
@@ -1344,6 +1405,7 @@ treeWAS <- function(snps,
     if(chunks[length(chunks)] < ncol(snps)){
       # chunks <- c(chunks, ncol(snps))
       ## If last chunk too small (<= 10%(chunk.size)?), append to penultimate chunk:
+      ## (What if chunk size is really at max memory??)
       if((ncol(snps) - chunks[length(chunks)]) <= chunk.size*0.1){
         chunks <- chunks[1:(length(chunks)-1)]
         chunks <- c(chunks, (ncol(snps)+1))
@@ -1361,6 +1423,20 @@ treeWAS <- function(snps,
   ## check?
   # for(i in 1:length(CHUNKS)) print(range(CHUNKS[[i]]))
 
+  ## MEMORY ISSUES:
+  ## (1) CHECK MEMORY LIMITS AUTOMATICALLY & CHANGE CHUNK.SIZE DEFAULT?
+  ## (2) ENABLE PARALLEL RUNS FOR CHUNK.SIZE FOR LOOP?
+  ##### (+) Automatically check n.cores available, and if chunk.size == ncol(snps),
+  ##### reduce chunk.size to ncol(snps)/n.cores...
+  # require(pryr)
+  # ## Check memory used in current R session (only):
+  # mem_used()
+  # ## Check memory occuppied by a given object:
+  # object_size(snps)
+  # memfree <- as.numeric(system("awk '/MemFree/ {print $2}' /proc/meminfo",  intern=TRUE))
+  # memfree/1000000 # convert from KB to GB (??)
+  ## CHECK UNITS OF memfree
+  ## + CHECK IF SYSTEM (and/or) COMMAND PATH WORK ON WINDOWS, MAC, ETC...
 
   #########################################
   ## BEFORE RUNNING CHUNK-BY-CHUNK LOOP: ##
@@ -1523,8 +1599,8 @@ treeWAS <- function(snps,
 
           ## Print update notice:
           cat("Note: Updating n.snps.sim to match the number of real loci after data cleaning.
-          Input:", n.snps.sim.ori, " -->
-          Updated:", n.snps.sim, "\n")
+              Input:", n.snps.sim.ori, " -->
+              Updated:", n.snps.sim, "\n")
 
         }else{
           Nx <- c(2:200)
@@ -1535,8 +1611,8 @@ treeWAS <- function(snps,
 
             ## Print update notice:
             cat("Note: Updating n.snps.sim to match ", Nx, "x the number of real loci after data cleaning.
-            Input: ", n.snps.sim.ori, " -->
-            Updated: ", n.snps.sim, "\n", sep="")
+                Input: ", n.snps.sim.ori, " -->
+                Updated: ", n.snps.sim, "\n", sep="")
 
             ## TO DO: ##
             ## If the user, for whatever reason, wanted to simulate the number they requested
@@ -1547,7 +1623,7 @@ treeWAS <- function(snps,
           }
         }
       }
-  }
+    }
     out <- genomes <- snps.mat <- list()
 
     ## SIMULATE A DATASET | your tree ##
@@ -1692,12 +1768,12 @@ treeWAS <- function(snps,
         snps.rec.index <- temp$index
         if(!identical(snps.rec.index, snps.index)){
           warning("Careful-- snps and snps.rec should have the same index when reduced
-              to their unique forms.\n") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+                  to their unique forms.\n") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
         }
-      }else{
-        # system.time( # 274
-        snps.rec <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
-        # )
+        }else{
+          # system.time( # 274
+          snps.rec <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
+          # )
       }
 
       #################################
@@ -1741,29 +1817,29 @@ treeWAS <- function(snps,
     ## Run get.assoc.scores for each assoc.test
     ## Then run get.sig.snps (ONLY once ALL of corr.sim, corr.dat have been generated w get.assoc.scores (IFF running chunk-by-chunk!))
     # system.time(
-      for(t in 1:length(TEST)){
-        assoc.scores <- get.assoc.scores(snps = snps,
-                                         snps.sim,
-                                         phen = phen,
-                                         tree = tree,
-                                         test = TEST[[t]],
-                                         snps.reconstruction = snps.rec,
-                                         snps.sim.reconstruction = snps.sim.rec,
-                                         phen.reconstruction = phen.rec,
-                                         unique.cols = TRUE)
-        ## EXPAND CORR.DAT & CORR.SIM:
-        cd <- assoc.scores$corr.dat
-        cs <- assoc.scores$corr.sim
-        cd <- cd[snps.index]
-        cs <- cs[snps.sim.index]
-        names(cd) <- colnames(snps.complete)
-        names(cs) <- colnames(snps.sim.complete)
+    for(t in 1:length(TEST)){
+      assoc.scores <- get.assoc.scores(snps = snps,
+                                       snps.sim,
+                                       phen = phen,
+                                       tree = tree,
+                                       test = TEST[[t]],
+                                       snps.reconstruction = snps.rec,
+                                       snps.sim.reconstruction = snps.sim.rec,
+                                       phen.reconstruction = phen.rec,
+                                       unique.cols = TRUE)
+      ## EXPAND CORR.DAT & CORR.SIM:
+      cd <- assoc.scores$corr.dat
+      cs <- assoc.scores$corr.sim
+      cd <- cd[snps.index]
+      cs <- cs[snps.sim.index]
+      names(cd) <- colnames(snps.complete)
+      names(cs) <- colnames(snps.sim.complete)
 
-        ## STORE DATA FOR EACH TEST:
-        CORR.DAT[[i]][[t]] <- cd
-        CORR.SIM[[i]][[t]] <- cs
-        rm(assoc.scores)
-      } # end for (t) loop
+      ## STORE DATA FOR EACH TEST:
+      CORR.DAT[[i]][[t]] <- cd
+      CORR.SIM[[i]][[t]] <- cs
+      rm(assoc.scores)
+    } # end for (t) loop
     # )
 
     ## EXPAND DATA BEFORE STORING FOR THIS CHUNK:
@@ -1778,7 +1854,7 @@ treeWAS <- function(snps,
     SNPS.REC[[i]] <- snps.rec
     SNPS.SIM.REC[[i]] <- snps.sim.rec
 
-    } # end for (i) loop (CHUNKS)
+  } # end for (i) loop (CHUNKS)
   ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ####### END LOOP/OPTIONAL CHUNK-BY-CHUNK TREEWAS HERE ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
@@ -1812,16 +1888,16 @@ treeWAS <- function(snps,
   sig.list <- list()
 
   # system.time(
-    for(t in 1:length(TEST)){
-      sig.list[[t]] <- get.sig.snps(corr.dat = CORR.DAT[[t]],
-                                    corr.sim = CORR.SIM[[t]],
-                                    snps.names = colnames(snps),
-                                    test = TEST[[t]],
-                                    n.tests = length(TEST),
-                                    p.value = p.value,
-                                    p.value.correct = p.value.correct,
-                                    p.value.by = p.value.by)
-    }
+  for(t in 1:length(TEST)){
+    sig.list[[t]] <- get.sig.snps(corr.dat = CORR.DAT[[t]],
+                                  corr.sim = CORR.SIM[[t]],
+                                  snps.names = colnames(snps),
+                                  test = TEST[[t]],
+                                  n.tests = length(TEST),
+                                  p.value = p.value,
+                                  p.value.correct = p.value.correct,
+                                  p.value.by = p.value.by)
+  }
   # )
 
   names(sig.list) <- test
@@ -1855,6 +1931,8 @@ treeWAS <- function(snps,
     corr.dat <- sig.list[[i]]$corr.dat
     corr.sim <- sig.list[[i]]$corr.sim
     p.vals <- sig.list[[i]]$p.vals
+    ## add names to p.vals:
+    names(p.vals) <- names(corr.dat)
     sig.snps.names <- sig.list[[i]]$sig.snps.names
     sig.snps <- sig.list[[i]]$sig.snps
     sig.corrs <- sig.list[[i]]$sig.corrs
@@ -1999,16 +2077,16 @@ treeWAS <- function(snps,
                        "G1P1", "G0P0", "G1P0", "G0P1")
       }else{ # end G1P1 etc.
 
-      ## If G1P1 etc. not valid (non-binary phen),
-      ## return df without these variables..
-      df <- data.frame(sig.snps,
-                       sig.p.vals,
-                       sig.corrs)
-      names(df) <- c("SNP.locus",
-                     "p.value",
-                     "score")
+        ## If G1P1 etc. not valid (non-binary phen),
+        ## return df without these variables..
+        df <- data.frame(sig.snps,
+                         sig.p.vals,
+                         sig.corrs)
+        names(df) <- c("SNP.locus",
+                       "p.value",
+                       "score")
 
-      ## NOTE: Could return sig.snps.names as column rather than rownames..? ####   (??)   ####
+        ## NOTE: Could return sig.snps.names as column rather than rownames..? ####   (??)   ####
       }
 
     }else{
@@ -2021,9 +2099,9 @@ treeWAS <- function(snps,
     min.p <- 1/length(corr.sim)
     names(min.p) <- c("p-values listed as 0 are less than:")
 
-    ## TO DO:
-    ## ADD MANHATTAN PLOT
 
+
+    ## Get output:
     results <- list()
     results[[1]] <- corr.dat
     results[[2]] <- corr.sim
