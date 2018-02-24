@@ -20,7 +20,9 @@ html_document:
 ## Introduction
 <!-- ########################################################################################################## -->
 
-The *treeWAS* R package allows users to apply our phylogenetic tree-based appraoch to Genome-Wide Association Studies (GWAS) to microbial genetic and phenotypic data. In short, *treeWAS* aims to identify genetic variables that are statistically associated with a phenotypic trait, while correcting for the confounding effects of population structure and recombination. *treeWAS* is applicable to both bacterial and viral genetic data and to both binary and continuous phenotypes. 
+The *treeWAS* R package allows users to apply our phylogenetic tree-based appraoch to Genome-Wide Association Studies (GWAS) to microbial genetic and phenotypic data. 
+In short, *treeWAS* measures the statistical association between a phenotype of interest and the genotype at all loci, with the aim of identifying significant associations, while correcting for the confounding effects of clonal population structure and homologous recombination. 
+*treeWAS* is applicable to both bacterial and viral genetic data from both the core and accessory genomes, and to both binary and continuous phenotypes. 
 
 
 ***
@@ -74,24 +76,20 @@ browseVignettes("treeWAS")
 <!-- ########################################################################################################## -->
 
 The approach adopted within *treeWAS* is described fully in our paper, 
-available on [bioRXiv](http://www.biorxiv.org/content/early/2017/05/22/140798).
-Briefly, it uses data simulation to identify a null distribution of association score statistics.
-This allows *treeWAS* to disentangle genuine associations, with statistical significance and evolutionary support,
-from a noisy background of chance associations.
+available in [PLOS Computational Biology](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958).
 
+As a GWAS approach, *treeWAS* performs an unbiased search for statistically significant associations between a phenotype of interest and the genotype at all loci in a genetic dataset. No prior hypotheses about potential associations at candidate loci are required. Instead, a statistical approach is used to compare the genomes of individuals and to identify systematic differences in genotype that correspond to differences in the phenotype. 
 
-A central aim of *treeWAS* is to control for the confounding effects of population stratification; 
-that is, the overlap between the clonal population structure and the phenotypic distribution which gives rise to spurious associations. 
-This is accomplished through the identification of a null distribution of association score statistics derived from simulated data. 
-Data is simulated in such a way as to maintain both the population stratification and genetic composition of the dataset under analysis, 
-but without recreating the "true" associations beyond those expected to arise from these cofounding factors. 
-The null dataset is simulated using the phylogenetic tree of the real dataset, 
-as well as the original homoplasy distribution including the number of substitutions per site due to both mutation and recombination. 
+In addition to measuring associations and identifying statistically-significant findings, a central aim of *treeWAS* is to control for the confounding effects of clonal population structure and population stratification (overlap between the genetic ancestry and phenotypic states of individuals that gives rise to spurious associations) and homologous recombination. 
+Our approach uses data simulation to disentangle genuine associations, with statistical significance and evolutionary support,
+from the noisy background of spurious associations arising by chance and from confounding factors. 
+*treeWAS* simulates a "null" genetic dataset in such a way as to maintain several features of the empirical dataset, namely: its clonal genealogy, terminal phenotype, genetic composition, and homoplasy distribution (the number of substitutions per site due to both mutation and recombination). 
+The simulated dataset is therefore able to capture these potentially-confounding features of the dataset under analysis, but without recreating any of the "true" associations, beyond those expected to arise by chance or as a result of these confounding factors. 
 
-
-Association score statistics are calculated for both the real and the simulated datasets. 
-The null distribution is drawn from the association scores of the simulated dataset. 
-At the upper tail of this null distribution, 
+Once the "null" genetic dataset has been generated, *treeWAS* can calculate association scores for loci in both the real and simulated datasets and compare the two. 
+The association between each simulated locus and the empirical phenotype is measured and, collectively, these values form a null distribution of association score statistics. 
+The degree of association between each locus in the empirical genetic dataset and the empirical phenotype is measured using the same association scores. 
+At the upper tail of the null distribution, 
 a threshold of significance is drawn at the quantile corresponding to:
 1 - (a base p-value corrected for multiple testing). 
 Any loci in the real dataset that have association score values lying 
@@ -103,7 +101,8 @@ above this threshold are deemed to be significantly associated to the phenotype.
 ### Tests of Association
 <!-- ########################################################################################################## -->
 
-By default, three measures of association are used to identify significant loci within *treeWAS*.
+When measuring association between the phenotype of interest and the genotype, by default, three separate association scores are calculated for each locus in the genetic dataset.
+
 
 <!-- ![Equation Notation](figs/Eqn_Legend_genotype.JPG) -->
 <!-- 
@@ -273,7 +272,7 @@ mat <- DNAbin2genind(dna)@tab
 Then, see "Biallelic loci" below to remove redundant columns.
 
 
-Phylogenetic trees can also be imported. Good tree-building programs exist outside of R, and we encourage users to provide a tree that has been built with external software, especially if the organism under analysis undergoes recombination (see the treeWAS Wiki section "Integration with ClonalFrameML"). To read trees from file, `read.tree` can be used for trees stored in Newick/New Hampshire format and `read.nexus` for trees of Nexus format. Both return a `phylo` object, so no further conversion is required.
+Phylogenetic trees can also be imported. Good tree-building programs exist outside of R, and we encourage users to provide a tree that has been built with external software, especially if the organism under analysis undergoes recombination (see the section below on "Integration with ClonalFrameML"). To read trees from file, `read.tree` can be used for trees stored in Newick/New Hampshire format and `read.nexus` for trees of Nexus format. Both return a `phylo` object, so no further conversion is required.
 
 ```{r, eval=FALSE}
 ## (Template code, don't run)
@@ -330,7 +329,7 @@ In addition, if either `snps.reconstruction` or `phen.reconstruction` is being p
 ### Biallelic loci:
 <!-- ########################################################################################################## -->
 If, in the genetic data matrix, redundant columns are present for binary loci
-(ie. Denoting the state of the second allele as the inverse of the previous column), these should be removed.
+(i.e., Denoting the state of the second allele as the inverse of the previous column), these should be removed.
 For loci with more than two alleles, all columns should be retained. 
 
 The removal of redundant binary columns can be done by hand; but, the function `get.binary.snps` may also be used. 
@@ -462,6 +461,7 @@ out <- treeWAS(snps,
                 n.subs = NULL,
                 n.snps.sim = ncol(snps)*10,
                 chunk.size = ncol(snps),
+                mem.im = FALSE,
                 test = c("terminal", "simultaneous", "subsequent"),
                 snps.reconstruction = "parsimony",
                 snps.sim.reconstruction = "parsimony",
@@ -497,7 +497,7 @@ out <- treeWAS(snps,
 >  : A `phylo` object containing the phylogenetic tree; or, a character string, one of `"NJ"`, `"BIONJ"` (the default), `"ML"`, or `"UPGMA"`; or, if NAs are present in the distance matrix, one of: `"NJ*"` or `"BIONJ*"`, specifying the method of phylogenetic reconstruction.
 
 > `n.subs`
->  : A numeric vector containing the homoplasy distribution (if known, see details), or NULL (the default).
+>  : A numeric vector containing the homoplasy distribution (if known, see details), or `NULL` (the default).
 
 > `n.snps.sim` 
 >  : An integer specifying the number of loci to be simulated for estimating the null distribution (by default 
@@ -506,6 +506,9 @@ out <- treeWAS(snps,
 
 > `chunk.size`
 >  : An integer indicating the number of `snps` loci to be analysed at one time. This provides a solution for machines with insufficient memory to analyse the  dataset at hand. Note that smaller values of `chunk.size` will increase the computational time required (e.g., for `chunk.size = ncol(snps)/2`, treeWAS will take twice as long to complete).
+
+> `mem.lim`
+>  : Either a number or a logical value to establish a memory limit (in GB) that will be used to automatically update the `chunk.size` argument if there is not enough available memory to run treeWAS in one chunk. If `FALSE` (the default), no limit is estimated and `chunk.size` is not changed. If `TRUE`, the amount of memory currently available is estimated with `memfree()` and `chunk.size` is scaled back to account for the amount of memory estimated to be needed by treeWAS for this dataset. If a single numeric value, this is taken to be the amount of memory (in GB) available/designated for use by treeWAS and `chunk.size` is updated to reflect this.
 
 > `test` 
 >  : A character string or vector containing one or more of the following available tests of association:
@@ -591,25 +594,6 @@ Running `treeWAS` takes only one function. It should finish within a few minutes
 out <- treeWAS(snps = snps,
                 phen = phen,
                 tree = tree,
-                n.subs = NULL,
-                n.snps.sim = ncol(snps)*10,
-                chunk.size = ncol(snps),
-                test = c("terminal", "simultaneous", "subsequent"),
-                snps.reconstruction =  "parsimony",
-                snps.sim.reconstruction = "parsimony",
-                phen.reconstruction = "parsimony",
-                phen.type = NULL,
-                na.rm = TRUE,
-                p.value = 0.01,
-                p.value.correct = "bonf",
-                p.value.by = "count",
-                dist.dna.model = "JC69",
-                plot.tree = TRUE,
-                plot.manhattan = TRUE,
-                plot.null.dist = TRUE,
-                plot.dist = FALSE,
-                snps.assoc = NULL, 
-                filename.plot = NULL,
                 seed = 1)
 
 ```

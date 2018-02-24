@@ -243,13 +243,12 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 
 #' Phylogenetic tree-based GWAS for microbes.
 #'
-#' This function implements a phylogenetic approach to genome-wide association studies
-#'(GWAS) designed for use in bacteria and viruses.
-#' The \code{treeWAS} approach allows for the identification of
-#' significant asociations between genotype and phenotype, while accounting for the
-#' confounding effects of clonal population structure,
-#' stratification (overlap between the population structure and phenotypic distribution),
-#' and homologous recombination.
+#' This function implements a phylogenetic approach to genome-wide association studies (GWAS)
+#' designed for use in bacteria and viruses.
+#' The \code{treeWAS} approach measures the statistical association
+#' between a phenotype of interest and the genotype at all loci,
+#' seeking to identify significant associations, while accounting for the
+#' confounding effects of clonal population structure and homologous recombination.
 #'
 #'
 #' @param snps A matrix containing binary genetic data, with individuals in the rows
@@ -261,7 +260,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'                one of \code{"NJ"}, \code{"BIONJ"} (the default), \code{"ML"}, or \code{"UPGMA"},
 #'                or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
 #'                specifying the method of phylogenetic reconstruction.
-#' @param n.subs A numeric vector containing the homoplasy distribution (if known, see details), or NULL (the default).
+#' @param n.subs A numeric vector containing the homoplasy distribution (if known, see details), or \code{NULL} (the default).
 #' @param n.snps.sim An integer specifying the number of loci to be simulated for estimating the null distribution
 #'                      (by default \code{10*ncol(snps)}). If memory errors arise during the analyis of a large dataset,
 #'                      it may be necesary to reduce \code{n.snps.sim} from a multiple of 10 to, for example, 5x the number of loci.
@@ -270,11 +269,11 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'                    Note that smaller values of \code{chunk.size} will increase the computational time required
 #'                    (e.g., for \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).
 #' @param mem.lim Either a number or a logical value to establish a memory limit (in GB) that will be used to automatically update
-#'                the \code{chunk.size} argument if their is not enough available memory to run treeWAS in one chunk.
-#'                If FALSE (the default), no limit is estimated and \code{chunk.size} is not changed.
-#'                If TRUE, the amount of memory currently available is estimated with \code{memfree()} and \code{chunk.size} is
+#'                the \code{chunk.size} argument if there is not enough available memory to run treeWAS in one chunk.
+#'                If \code{FALSE} (the default), no limit is estimated and \code{chunk.size} is not changed.
+#'                If \code{TRUE}, the amount of memory currently available is estimated with \code{memfree()} and \code{chunk.size} is
 #'                scaled back to account for the amount of memory estimated to be needed by treeWAS for this dataset.
-#'                If a number, this is taken to be the amount of memory (in GB) available/designated
+#'                If a single numeric value, this is taken to be the amount of memory (in GB) available/designated
 #'                for use by treeWAS and \code{chunk.size} is updated to reflect this.
 #' @param test A character string or vector containing one or more of the following available tests of association:
 #'              \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
@@ -327,6 +326,17 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 ###########################################################
 #'
 #' @details
+###########################################################
+#' \strong{The treeWAS Approach}
+#'
+#' For a description of the approach adopted in our method,
+#' please see either the \code{treeWAS} vignette
+#' or the \code{treeWAS} \href{https://github.com/caitiecollins/treeWAS/wiki}{GitHub Wiki}.
+#'
+#' A more detailed description of our method can also be found in our paper, available in
+#' \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology}.
+#'
+###########################################################
 #' \strong{Data Cleaning}
 #'
 #' The genetic data matrix, phenotype, and phylogenetic tree (terminal nodes)
@@ -337,7 +347,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' the phenotypic variable, and/or the phylogenetic tree must be removed.
 #'
 #' If, in the genetic data matrix, redundant columns are present for binary loci
-#' (ie. Denoting the state of the second allele as the inverse of the previous colummn), these should be removed.
+#' (i.e., Denoting the state of the second allele as the inverse of the previous colummn), these should be removed.
 #' For loci with more than two alleles, all columns should be retained. The removal of redundant binary columns
 #' can be done by hand; but, the function \code{get.binary.snps} may also be used. This function requires
 #' column names to have a two-character suffix and unique locus identifiers. The function expects the suffixes
@@ -592,6 +602,13 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'
 #'
 ###########################################################
+#' @references Collins, C. and Didelot, X. "A phylogenetic method to perform genome-wide association studies in microbes
+#' that accounts for population structure and recombination."
+#' \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{\emph{PLoS Comput. Biol.}},
+#' vol. 14, p. e1005958, Feb. 2018.
+#'
+###########################################################
+#'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
@@ -1322,13 +1339,15 @@ treeWAS <- function(snps,
       ## regardless of input chunk.size value.
       if(mem.lim == TRUE){
         mem.lim <- NULL
-        mem.lim <- memfree()
-        ## round down to be conservative and leave a little space:
-        if(mem.lim > 1) mem.lim <- floor(mem.lim)
-        ## if fails, warn:
-        if(is.null(mem.lim)){
+        ## run memfree, or warn if it fails:
+        if(class(try(memfree(), silent=TRUE)) == "try-error"){
           warning("Unable to determine amount of available memory.
           Set mem.lim or chunk.size by hand.")
+        }else{
+          ## set mem.lim w memfree:
+          mem.lim <- memfree()
+          ## round down to be conservative and leave a little space:
+          if(mem.lim > 1) mem.lim <- floor(mem.lim)
         }
       }else{
         ## If mem.lim = numeric ##

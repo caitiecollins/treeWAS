@@ -14,7 +14,9 @@ output:
 ## Introduction
 <!-- ########################################################################################################## -->
 
-The *treeWAS* R package allows users to apply our phylogenetic tree-based appraoch to Genome-Wide Association Studies (GWAS) to microbial genetic and phenotypic data. In short, *treeWAS* aims to identify genetic variables that are statistically associated with a phenotypic trait, while correcting for the confounding effects of population structure and recombination. *treeWAS* is applicable to both bacterial and viral genetic data and to both binary and continuous phenotypes. The approach adopted within *treeWAS* is described fully in our paper, available on [bioRXiv](http://www.biorxiv.org/content/early/2017/05/22/140798).
+The *treeWAS* R package allows users to apply our phylogenetic tree-based appraoch to Genome-Wide Association Studies (GWAS) to microbial genetic and phenotypic data. 
+In short, *treeWAS* measures the statistical association between a phenotype of interest and the genotype at all loci, with the aim of identifying significant associations, while correcting for the confounding effects of clonal population structure and homologous recombination. 
+*treeWAS* is applicable to both bacterial and viral genetic data from both the core and accessory genomes, and to both binary and continuous phenotypes.The approach adopted within *treeWAS* is described fully in our paper, available in [PLOS Computational Biology](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958).
 
 
 

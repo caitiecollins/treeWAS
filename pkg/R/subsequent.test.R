@@ -173,7 +173,7 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l=NULL){
   score3 <- NULL
 
   if(!is.null(l)){
-    ## NEW original integral-based score (WITHOUT edge-length!)...
+    ## NEW integral-based score (WITH edge-length!)...
     score3 <- l*(((4/3)*Pa*Sa) +
                    ((2/3)*Pa*Sd) +
                    ((2/3)*Pd*Sa) +
@@ -184,7 +184,7 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l=NULL){
                    Sd +
                    1)
   }else{
-    ## NEW original integral-based score (WITHOUT edge-length!)...
+    ## NEW integral-based score (WITHOUT edge-length!)...
     score3 <- (((4/3)*Pa*Sa) +
                  ((2/3)*Pa*Sd) +
                  ((2/3)*Pd*Sa) +
@@ -202,7 +202,18 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l=NULL){
 
 
 
-#
+###########################################################################################
+
+###########################################################################################
+
+
+
+
+
+
+
+
+
 
 
 
