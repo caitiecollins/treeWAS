@@ -131,6 +131,8 @@ tree.reconstruct <- function(dna,
 
   ## Handle MISSING data:
   ## NOTE: hclust not able to handle NAs/NaNs in D..
+  ## NB: NAs are ok in dna, but NAs in D arise when dist.dna cannot find a dist btw. any 2 individuals,
+  ## e.g., there is an NA at all loci in at least one of the 2 inds.
   ## --> Use phylo methods that can handle NAs in D (eg. NJ* and BIONJ*, from ape).
   if(any(is.na(D))){
     if(!method %in% c("nj*", "bionj*")){

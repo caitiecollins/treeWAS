@@ -11,9 +11,11 @@
 ## DOCUMENTATION ##
 ###################
 
-#' Short one-phrase description.
+#' Ancestral state reconstruction
 #'
-#' Longer proper discription of function...
+#' Reconstruct the ancestral states of a vector or matrix object by using either
+#' parsimony or maximum-likelihood methods to infer the states
+#' at the internal nodes of a phylogenetic tree.
 #'
 #' @param var Either a matrix or a vector containing the state of a variable (eg. SNPs or a phenotype)
 #' for all individuals (ie. for all terminal nodes in the tree).
@@ -26,6 +28,10 @@
 #' @param unique.cols A logical indicating whether only unique column patterns are present in \code{var}, if \code{var} is a matrix
 #' (if so (TRUE), a time-consuming step can be skipped); by default, FALSE.
 #'
+#' @return Depending on the dimensions of the input \code{var} object,
+#' either a matrix or a vector containing \emph{both} the known states
+#' of the variable at the terminal nodes (in positions 1:Nterminal) and the
+#' inferred states at internal nodes (in positions (Nterminal+1):Ntotal).
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
@@ -361,9 +367,8 @@ asr <- function(var,
 
     } # end parsimony
 
-
     ######################
-    ## run ML on phen: ##
+    ## run ML on phen:  ##
     ######################
     if(type == "ml"){
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconstruct.R
 \name{asr}
 \alias{asr}
-\title{Short one-phrase description.}
+\title{Ancestral state reconstruction}
 \usage{
 asr(var, tree, type = c("parsimony", "ML", "ace"), method = c("discrete",
   "continuous"), unique.cols = FALSE)
@@ -23,8 +23,16 @@ performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} funct
 \item{unique.cols}{A logical indicating whether only unique column patterns are present in \code{var}, if \code{var} is a matrix
 (if so (TRUE), a time-consuming step can be skipped); by default, FALSE.}
 }
+\value{
+Depending on the dimensions of the input \code{var} object,
+either a matrix or a vector containing \emph{both} the known states
+of the variable at the terminal nodes (in positions 1:Nterminal) and the
+inferred states at internal nodes (in positions (Nterminal+1):Ntotal).
+}
 \description{
-Longer proper discription of function...
+Reconstruct the ancestral states of a vector or matrix object by using either
+parsimony or maximum-likelihood methods to infer the states
+at the internal nodes of a phylogenetic tree.
 }
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}

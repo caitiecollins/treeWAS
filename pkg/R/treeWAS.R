@@ -1386,7 +1386,7 @@ treeWAS <- function(snps,
       memreq <- memreq*fac2
 
       ## Get n.chunks (round up):
-      nc <- ceiling(memreq/mf)
+      nc <- ceiling(memreq/mem.lim)
 
       ## Get chunk.size (round up to nearest 1):
       if(nc > 1){
