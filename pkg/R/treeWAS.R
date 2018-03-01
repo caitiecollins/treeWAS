@@ -1325,6 +1325,7 @@ treeWAS <- function(snps,
   #########################
   ## Handle memory limit ##
   #########################
+  ml.est <- FALSE
   if(!is.null(mem.lim)){
     ## If mem.lim = FALSE ##
     ## --> work with chunk.size set by user.
@@ -1348,6 +1349,7 @@ treeWAS <- function(snps,
           mem.lim <- memfree()
           ## round down to be conservative and leave a little space:
           if(mem.lim > 1) mem.lim <- floor(mem.lim)
+          ml.est <- TRUE
         }
       }else{
         ## If mem.lim = numeric ##
@@ -1396,11 +1398,17 @@ treeWAS <- function(snps,
       }
 
       ## Print notice:
-
-      cat(c("Updated chunk.size:", chunk.size,
-            "\nNumber of chunks:", nc,
-            "\nEstimated memory limit:", mem.lim, "GB",
-            "\nEstimated memory required:", round(memreq, 2), "GB\n"))
+      if(ml.est == TRUE){
+        cat(c("Updated chunk.size:", chunk.size,
+              "\nNumber of chunks:", nc,
+              "\nEstimated memory limit:", mem.lim, "GB",
+              "\nEstimated memory required:", round(memreq, 2), "GB\n"))
+      }else{
+        cat(c("Updated chunk.size:", chunk.size,
+              "\nNumber of chunks:", nc,
+              "\nInput memory limit:", mem.lim, "GB",
+              "\nEstimated memory required:", round(memreq, 2), "GB\n"))
+      }
     }
   } # end mem.lim
 
