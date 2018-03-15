@@ -17,10 +17,9 @@
 #' @param dna A matrix or DNAbin object containing genomes for (only)
 #'                the terminal nodes of the tree to be reconstructed.
 #'                Individuals should be in the rows and loci in the columns; rows and columns should be labelled.
-#' @param method A character string,
-#'                one of \code{"NJ"}, \code{"BIONJ"} (the default), \code{"ML"}, or \code{"UPGMA"};
-#'                or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
-#'                specifying the method of phylogenetic reconstruction.
+#' @param method A character string specifying the method of phylogenetic reconstruction:
+#'                one of \code{"NJ"}, \code{"BIONJ"} (the default), or \code{"parsimony"};
+#'                or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"}.
 #' @param dist.dna.model A character string specifying the type of model to use in
 #'                          calculating the genetic distance between individual genomes (see ?dist.dna).
 #' @param plot A logical specifying whether to plot the reconstructed phylogenetic tree.
@@ -44,8 +43,9 @@
 #' @import ape
 #' @importFrom phangorn as.phyDat
 #' @importFrom phangorn midpoint
-#' @importFrom phangorn optim.pml
-#' @importFrom phangorn pml
+#' @importFrom phangorn pratchet
+#' @importFrom phangorn acctran
+#'
 #'
 #' @export
 
@@ -53,6 +53,9 @@
 # @import phangorn
 # @useDynLib phangorn as.phyDat midpoint optim.pml pml, .registration = TRUE
 # @useDynLib phangorn, .registration = TRUE
+# @importFrom phangorn optim.pml
+# @importFrom phangorn pml
+# @importFrom phangorn optim.parsimony
 
 ############
 ## TO DO: ##
@@ -62,7 +65,7 @@
 
 
 tree.reconstruct <- function(dna,
-                             method= c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
+                             method= c("BIONJ", "NJ", "parsimony", "BIONJ*", "NJ*"),
                              dist.dna.model="JC69",
                              plot=TRUE){
 
@@ -110,10 +113,10 @@ tree.reconstruct <- function(dna,
   if(method == "njs") method <- "nj*"
   if(method == "bionjs") method <- "bionj*"
   method <- match.arg(arg = method,
-                      choices = c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
+                      choices = c("bionj", "nj", "parsimony", "nj*", "bionj*"),
                       several.ok = FALSE)
-  if(!any(c("upgma", "nj", "bionj", "ml", "nj*", "bionj*") %in% method)){
-    warning("method should be one of  'nj', 'bionj', 'upgma', 'ml', 'nj*', 'bionj*'. Choosing 'BIONJ'.")
+  if(!any(c("nj", "bionj", "parsimony", "nj*", "bionj*") %in% method)){
+    warning("method should be one of  'nj', 'bionj', 'parsimony', 'nj*', 'bionj*'. Choosing 'BIONJ'.")
     method <- "bionj"
   }else{
     ## use first arg if more than 1 present:
@@ -121,6 +124,11 @@ tree.reconstruct <- function(dna,
       method <- method[1]
     }
   }
+
+  # if(method == "upgma"){
+  #   warning("UPGMA enforces ultrametricity, which can bias treeWAS results.
+  #           NJ or BIONJ may give more reliable results.")
+  # }
 
   tree <- NULL
 
@@ -139,7 +147,7 @@ tree.reconstruct <- function(dna,
       if(method == "nj"){
         method <- "nj*"
       }else{
-        method <- "bionj*" ## TO DO: Should bionj* should be the default instead??
+        method <- "bionj*"
       }
       cat("NAs in distance matrix. Replacing method of phylo estimation with ", method, ".", sep="")
     }
@@ -149,22 +157,6 @@ tree.reconstruct <- function(dna,
   ## Methods with NO missing data: ##     #####     #####     #####     #####     #####     #####     #####     #####     #####
   ###################################
 
-  ###########
-  ## UPGMA ##
-  ###########
-  if(method=="upgma"){
-    tree <- hclust(D, method="average")
-    tree <- as.phylo(tree)
-    #tree <- midpoint(ladderize(tree))
-    ## Always work with tree in pruningwise order:
-    tree <- reorder.phylo(tree, order="pruningwise")
-    ## Trees must be rooted:
-    if(!is.rooted(tree)) tree <- midpoint(tree)
-    if(plot==TRUE){
-      plot(tree, main="")
-      title("UPGMA tree")
-    }
-  }
   ########
   ## NJ ##
   ########
@@ -197,38 +189,79 @@ tree.reconstruct <- function(dna,
       axisPhylo()
     }
   }
-  ########
-  ## ML ##
-  ########
-  if(method=="ml"){
-    dna4 <- as.phyDat(dna)
-    tre.ini <- nj(D)
-    fit.ini <- pml(tre.ini, dna4, k=nrow(dna))
-    fit <- optim.pml(fit.ini, optNni = TRUE, optBf = TRUE,
-                     optQ = TRUE, optGamma = TRUE)
 
-    ## NOTE--you may want to store these in a results.ml list
-    ## and return it with your results instead of printing
-    ## OR at least print a message
-    ## (eg. "Printing maximum-likelihood calculations...")
-    ## before printing these numbers...
+  ###########
+  ## UPGMA ##
+  ###########
+  # if(method=="upgma"){
+  #   tree <- hclust(D, method="average")
+  #   tree <- as.phylo(tree)
+  #   #tree <- midpoint(ladderize(tree))
+  #   ## Always work with tree in pruningwise order:
+  #   tree <- reorder.phylo(tree, order="pruningwise")
+  #   ## Trees must be rooted:
+  #   if(!is.rooted(tree)) tree <- midpoint(tree)
+  #   if(plot==TRUE){
+  #     plot(tree, edge.width=2, cex=0.5)
+  #     title("UPGMA tree")
+  #   }
+  # }
 
-    #     anova(fit.ini, fit)
-    #     AIC(fit.ini)
-    #     AIC(fit)
-
-    tree <- fit$tree
-    #tree <- midpoint(ladderize(tree))
+  ###############
+  ## parsimony ## ## a bit slow if many unique columns
+  ###############
+  if(method=="parsimony"){
+    ## as.phyDat warns if NAs present (& doesn't include these...)
+    dna4 <- suppressWarnings(as.phyDat(dna))
+    ## get pars tree:
+    # tre.ini <- nj(D)
+    # tree <- optim.parsimony(tre.ini, dna4)
+    tre.ini <- pratchet(dna4, trace=0) # better (can also return set of treeS)
+    ## add edge lengths w ACCTRAN:
+    tree <- acctran(tre.ini, dna4) # edge lengths in n.subs (but relative lengths still fine).
     ## Always work with tree in pruningwise order:
     tree <- reorder.phylo(tree, order="pruningwise")
     ## Trees must be rooted:
-    if(!is.rooted(tree)) tree <- midpoint(tree)
+    if(!is.rooted(tree)) tree <- midpoint(tree) # can't root, no edge length
     if(plot==TRUE){
-      plot(tree, show.tip=TRUE, edge.width=2)
-      title("Maximum-likelihood tree")
+      plot(tree, edge.width=2, cex=0.5)
+      title("Parsimony tree")
       axisPhylo()
     }
   }
+
+  ########
+  ## ML ##  ## discontinued: too slow
+  ########
+  # if(method=="ml"){
+  #   dna4 <- suppressWarnings(as.phyDat(dna))
+  #   tre.ini <- nj(D)
+  #   fit.ini <- pml(tre.ini, dna4, k=nrow(dna))
+  #   fit <- optim.pml(fit.ini, optNni = TRUE, optBf = TRUE,
+  #                    optQ = TRUE, optGamma = TRUE)
+  #
+  #   ## NOTE--you may want to store these in a results.ml list
+  #   ## and return it with your results instead of printing
+  #   ## OR at least print a message
+  #   ## (eg. "Printing maximum-likelihood calculations...")
+  #   ## before printing these numbers...
+  #
+  #   #     anova(fit.ini, fit)
+  #   #     AIC(fit.ini)
+  #   #     AIC(fit)
+  #
+  #   tree <- fit$tree
+  #   #tree <- midpoint(ladderize(tree))
+  #   ## Always work with tree in pruningwise order:
+  #   tree <- reorder.phylo(tree, order="pruningwise")
+  #   ## Trees must be rooted:
+  #   if(!is.rooted(tree)) tree <- midpoint(tree)
+  #   if(plot==TRUE){
+  #     plot(tree, show.tip=TRUE, edge.width=2)
+  #     title("Maximum-likelihood tree")
+  #     axisPhylo()
+  #   }
+  # }
 
 
   ######################################

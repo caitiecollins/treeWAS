@@ -24,7 +24,7 @@ and genetic loci in the columns and both rows and columns labelled.}
 The phenotype can be either binary (character or numeric) or continuous (numeric).}
 
 \item{tree}{A \code{phylo} object containing the phylogenetic tree; or, a character string,
-one of \code{"NJ"}, \code{"BIONJ"} (the default), \code{"ML"}, or \code{"UPGMA"},
+one of \code{"NJ"}, \code{"BIONJ"} (the default), or \code{"parsimony"};
 or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
 specifying the method of phylogenetic reconstruction.}
 

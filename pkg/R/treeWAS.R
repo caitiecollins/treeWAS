@@ -257,7 +257,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'              \code{snps} and which is named with the same set of labels.
 #'              The phenotype can be either binary (character or numeric) or continuous (numeric).
 #' @param tree A \code{phylo} object containing the phylogenetic tree; or, a character string,
-#'                one of \code{"NJ"}, \code{"BIONJ"} (the default), \code{"ML"}, or \code{"UPGMA"},
+#'                one of \code{"NJ"}, \code{"BIONJ"} (the default), or \code{"parsimony"};
 #'                or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
 #'                specifying the method of phylogenetic reconstruction.
 #' @param n.subs A numeric vector containing the homoplasy distribution (if known, see details), or \code{NULL} (the default).
@@ -626,7 +626,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 
 treeWAS <- function(snps,
                     phen,
-                    tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
+                    tree = c("BIONJ", "NJ", "parsimony", "BIONJ*", "NJ*"),
                     n.subs = NULL,
                     n.snps.sim = ncol(snps)*10,
                     chunk.size = ncol(snps),
@@ -671,14 +671,14 @@ treeWAS <- function(snps,
   if(is.character(tree)){
     tree <- tolower(tree)
     if(class(try(match.arg(arg = tree,
-                           choices = c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
+                           choices = c("bionj", "nj", "parsimony", "nj*", "bionj*"),
                            several.ok = FALSE), silent=TRUE)) == "try-error"){
       tree <- "bionj"
       cat("If tree is not a phylo object, please specify one of the following reconstruction methods:
-          'UPGMA', 'NJ', 'BIONJ', ML', 'NJ*', 'BIONJ*'. Choosing 'BIONJ' by default.\n")
+          'NJ', 'BIONJ', 'parsimony', 'NJ*', 'BIONJ*'. Choosing 'BIONJ' by default.\n")
     }else{
       tree <- match.arg(arg = tree,
-                        choices =  c("bionj", "nj", "upgma", "ml", "nj*", "bionj*"),
+                        choices =  c("bionj", "nj", "parsimony", "nj*", "bionj*"),
                         several.ok = FALSE)
     }
   }

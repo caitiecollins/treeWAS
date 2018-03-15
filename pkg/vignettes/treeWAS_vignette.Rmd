@@ -457,7 +457,7 @@ The `treeWAS` function takes the following arguments:
 ## Don't run this:
 out <- treeWAS(snps,
                 phen,
-                tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
+                tree = c("BIONJ", "NJ", "BIONJ*", "NJ*"),
                 n.subs = NULL,
                 n.snps.sim = ncol(snps)*10,
                 chunk.size = ncol(snps),
@@ -494,7 +494,7 @@ out <- treeWAS(snps,
 > The phenotype can be either binary (character or numeric) or continuous (numeric).
 
 > `tree`
->  : A `phylo` object containing the phylogenetic tree; or, a character string, one of `"NJ"`, `"BIONJ"` (the default), `"ML"`, or `"UPGMA"`; or, if NAs are present in the distance matrix, one of: `"NJ*"` or `"BIONJ*"`, specifying the method of phylogenetic reconstruction.
+>  : A `phylo` object containing the phylogenetic tree; or, a character string, one of `"NJ"`, `"BIONJ"` (the default), or `"parsimony"`; or, if NAs are present in the distance matrix, one of: `"NJ*"` or `"BIONJ*"`, specifying the method of phylogenetic reconstruction.
 
 > `n.subs`
 >  : A numeric vector containing the homoplasy distribution (if known, see details), or `NULL` (the default).

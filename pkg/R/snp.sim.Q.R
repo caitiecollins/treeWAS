@@ -681,8 +681,8 @@ snp.sim.Q <- function(n.snps = 10000,
 
     ## Need to update tree$edge.length probs to mirror sampling without replacement...
     ## BUT only remove branches from the calculation once they have had a sub on them...?
-    N.SUBS.TOTAL <- 15
-    # N.SUBS.TOTAL <- rpois(1, n.phen.subs)  ############
+    # N.SUBS.TOTAL <- 15
+    N.SUBS.TOTAL <- rpois(1, n.phen.subs)  ############
 
     ################
     ## WHILE LOOP ##
