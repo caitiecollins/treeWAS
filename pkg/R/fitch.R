@@ -54,7 +54,7 @@ get.fitch.n.mts <- function(snps, tree){
   if(!is.matrix(snps)) stop("snps must be a matrix.")
   levs <- unique(as.vector(snps))
   if(any(is.na(levs))) levs <- levs[-which(is.na(levs))]
-  if(!is.numeric(snps) | length(levs)!=2){
+  if((!is.numeric(snps) & !is.logical(snps)) | length(levs)!=2){
     stop("snps must be a numeric matrix with exactly two unique values,
          excluding NAs (though we recommend that NAs be in the minority for each column).")
   }

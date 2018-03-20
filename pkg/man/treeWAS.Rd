@@ -4,7 +4,7 @@
 \alias{treeWAS}
 \title{Phylogenetic tree-based GWAS for microbes.}
 \usage{
-treeWAS(snps, phen, tree = c("BIONJ", "NJ", "UPGMA", "ML", "BIONJ*", "NJ*"),
+treeWAS(snps, phen, tree = c("BIONJ", "NJ", "parsimony", "BIONJ*", "NJ*"),
   n.subs = NULL, n.snps.sim = ncol(snps) * 10, chunk.size = ncol(snps),
   mem.lim = FALSE, test = c("terminal", "simultaneous", "subsequent"),
   snps.reconstruction = "parsimony", snps.sim.reconstruction = "parsimony",

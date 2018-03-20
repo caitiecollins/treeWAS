@@ -168,6 +168,9 @@ asr <- function(var,
 
         snps.rec <- snps.ML <- list()
 
+        lgc <- FALSE
+        if(is.logical(snps)) lgc <- TRUE
+
         for(i in 1:ncol(snps)){
 
           ## get variable i
@@ -185,6 +188,11 @@ asr <- function(var,
 
           ## get reconstruction from terminal & internal values
           snps.rec[[i]] <- c(var.terminal, var.internal)
+          if(lgc == TRUE){
+            noms <- names(snps.rec[[i]])
+            snps.rec[[i]] <- as.logical(snps.rec[[i]])
+            names(snps.rec[[i]]) <- noms
+          }
         } # end for loop
 
         ## bind columns of snps.rec together
@@ -251,6 +259,15 @@ asr <- function(var,
           ## Bind list into matrix:
           snps.rec <- do.call(cbind, rec[ord])
           snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))])
+
+          ## Convert to logical (but only for binary snps that were originally logical):
+          if(is.logical(snps)){
+            r.noms <- rownames(snps.rec)
+            c.noms <- colnames(snps.rec)
+            snps.rec <- matrix(as.logical(snps.rec), nrow=nrow(snps.rec), ncol=ncol(snps.rec)) ## logical
+            rownames(snps.rec) <- r.noms ## names may actually be assigned below
+            colnames(snps.rec) <- c.noms
+          }
 
         }else{
 
@@ -677,6 +694,15 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
       snps.rec <- do.call(cbind, rec[ord])
       snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))])
+
+      ## Convert to logical (but only for binary snps that were originally logical):
+      if(is.logical(snps)){
+        r.noms <- rownames(snps.rec)
+        c.noms <- colnames(snps.rec)
+        snps.rec <- matrix(as.logical(snps.rec), nrow=nrow(snps.rec), ncol=ncol(snps.rec)) ## logical
+        rownames(snps.rec) <- r.noms
+        colnames(snps.rec) <- c.noms
+      }
 
     }else{
 

@@ -1,4 +1,9 @@
 
+### TO DO:
+## - Update memreq estimate to be on the basis of UNIQUE snps columns rather than TOTAL ncol...
+## - Change snps, SNPS, snps.sim, SNPS.SIM, snps.rec, SNPS.REC to logicals instead of numerics
+
+
 
 
 ###################
@@ -907,19 +912,21 @@ treeWAS <- function(snps,
   if(length(unique(as.vector(unlist(snps[!is.na(snps)])))) != 2){
     stop("snps must be a binary matrix")
   }else{
-    ## Convert to numeric, binary:
+    ## Convert to numeric, binary (then logical?):
     if(!is.numeric(snps)){
       na.before <- length(which(is.na(snps)))
       if(!all.is.numeric(snps)){
         r.noms <- rownames(snps)
         c.noms <- colnames(snps)
         snps <- matrix(as.numeric(as.factor(snps))-1, nrow=nrow(snps), ncol=ncol(snps))
+        snps <- matrix(as.logical(snps), nrow=nrow(snps), ncol=ncol(snps)) ## logical
         rownames(snps) <- r.noms
         colnames(snps) <- c.noms
       }else{
         r.noms <- rownames(snps)
         c.noms <- colnames(snps)
         snps <- matrix(as.numeric(as.character(snps)), nrow=nrow(snps), ncol=ncol(snps))
+        snps <- matrix(as.logical(snps), nrow=nrow(snps), ncol=ncol(snps)) ## logical
         rownames(snps) <- r.noms
         colnames(snps) <- c.noms
       }
@@ -927,6 +934,12 @@ treeWAS <- function(snps,
       if(na.after > na.before){
         stop("NAs created in converting snps to numeric.")
       }
+    }else{
+      r.noms <- rownames(snps)
+      c.noms <- colnames(snps)
+      snps <- matrix(as.logical(snps), nrow=nrow(snps), ncol=ncol(snps)) ## logical
+      rownames(snps) <- r.noms
+      colnames(snps) <- c.noms
     }
   }
   ####################################################################
@@ -1373,6 +1386,11 @@ treeWAS <- function(snps,
       #######################################
       ## Update chunk.size, given mem.lim: ##
       #######################################
+
+
+      ### TO DO: UPDATE MEMREQ ESTIMATE ON THE BASIS OF UNIQUE SNPS COLUMNS INSTEAD OF TOTAL...   %%   <---  (!)
+
+
       ## Check memory occuppied by snps:
       # require(pryr)
       memreq <- as.numeric(object_size(snps))/1000000000 # bytes --> GB

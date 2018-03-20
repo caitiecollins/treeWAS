@@ -271,6 +271,7 @@ snp.sim <- function(n.snps = 10000,
 
 
   ## TO DO: Memory inefficient step... Improve if possible?
+  ## NB: this condition should never be met within treeWAS | parsimonious homoplasy dist:
   if(max(n.mts) > l.edge){
     if(!is.null(seed)) set.seed(seed)
       for(e in 1:length(n.mts)){
@@ -741,9 +742,9 @@ snp.sim <- function(n.snps = 10000,
   ## CONVERT SNPS ##
   ##################
 
-  ## CONVERT TO NUMERIC: ##
+  ## (NO LONGER) CONVERT TO NUMERIC: ##
   ## Convert from logical to binary SNPs (for terminal nodes only):
-  snps <- replace(snps, which(snps == TRUE), 1)
+  # snps <- replace(snps, which(snps == TRUE), 1)
 
   ## Reassort snps.assoc to new columns:
   if(!is.null(snps.assoc)){
@@ -890,11 +891,13 @@ snp.sim <- function(n.snps = 10000,
 
         ## replace set1 snps with 0 at all inds in clade.set1:
         for(e in 1:length(snps.assoc.set1)){
-          snps[which(rownames(snps) %in% set1), snps.assoc[snps.assoc.set1[e]]] <- 0
+          # snps[which(rownames(snps) %in% set1), snps.assoc[snps.assoc.set1[e]]] <- 0
+          snps[which(rownames(snps) %in% set1), snps.assoc[snps.assoc.set1[e]]] <- FALSE
         }
         ## replace set2 snps with 0 at all inds in clade.set2:
         for(e in 1:length(snps.assoc.set2)){
-          snps[which(rownames(snps) %in% set2), snps.assoc[snps.assoc.set2[e]]] <- 0
+          # snps[which(rownames(snps) %in% set2), snps.assoc[snps.assoc.set2[e]]] <- 0
+          snps[which(rownames(snps) %in% set2), snps.assoc[snps.assoc.set2[e]]] <- FALSE
         }
       }
     }
