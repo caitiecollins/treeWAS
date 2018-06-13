@@ -404,11 +404,11 @@ get.sig.snps <- function(corr.dat,
   #####################
   ## p.value.correct ##
   #####################
-  if(p.value.correct == "bonf"){
+  if(p.value.correct == "bonf" || p.value.correct == F) {
     ##########
     ## bonf ##
     ##########
-    p.value <- p.value/(length(corr.dat)*n.tests)
+    if (p.value.correct == "bonf") p.value <- p.value/(length(corr.dat)*n.tests)
 
     ################
     ## p.value.by ##
