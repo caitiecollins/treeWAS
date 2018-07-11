@@ -451,18 +451,6 @@ get.unique.snps <- get.unique.matrix
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' @examples
-#'
-#' ## load data
-#' data(dist)
-#' str(dist)
-#'
-#' ## basic use of fn
-#' fn(arg1, arg2)
-#'
-#' #' ## more elaborate use of fn
-#' fn(arg1, arg2)
-#'
 #' @import ape
 #' @importFrom Hmisc all.is.numeric
 
@@ -538,17 +526,17 @@ get.tip.order <- function(tree){
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @examples
-#'
-#' ## load example data:
-#' data("snps.ace")
-#' x <- snps.ace
-#'
-#' ## basic use of fn on rows of x:
-#' tab.out <- table.matrix(x)
-#'
-#' ## apply fn to columns of x:
-#' tab.out <- table.matrix(t(x))
+# @examples
+#
+# ## load example data:
+# data("snps.ace")
+# x <- snps.ace
+#
+# ## basic use of fn on rows of x:
+# tab.out <- table.matrix(x)
+#
+# ## apply fn to columns of x:
+# tab.out <- table.matrix(t(x))
 #'
 #' @export
 

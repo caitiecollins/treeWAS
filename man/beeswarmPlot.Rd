@@ -18,19 +18,6 @@ Wrapper combining the beeswarm and box plot functions from packages \code{beeswa
 \details{
 NOTE TO SELF--CAREFUL: y.lim is HARD-CODED as (0,1). Change this is you want to release this wrapper!
 }
-\examples{
-
-## load data
-data(dist)
-str(dist)
-
-## basic use of fn
-fn(arg1, arg2)
-
-#' ## more elaborate use of fn
-fn(arg1, arg2)
-
-}
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }

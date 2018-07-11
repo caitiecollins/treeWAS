@@ -23,9 +23,9 @@
 #' @examples
 #'
 #' ## generate a tree
-#' tree <- rtree(100)
-#' ## geerate snps, a matrix of 0s and 1s
-#' snps <- matrix(sample(c(0,1),100000,T), nrow=100)
+#' tree <- ape::rtree(100)
+#' ## generate snps, a matrix of 0s and 1s
+#' snps <- matrix(sample(c(0,1),100000,TRUE), nrow=100)
 #' row.names(snps) <- tree$tip.label
 #'
 #' ## run function

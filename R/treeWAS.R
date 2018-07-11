@@ -617,7 +617,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import adegenet ape phangorn
+#' @import adegenet ape
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #' @importFrom scales rescale

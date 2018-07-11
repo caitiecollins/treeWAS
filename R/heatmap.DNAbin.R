@@ -21,19 +21,6 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#'
-#' @examples
-#'
-#' ## load data
-#' data(dist)
-#' str(dist)
-#'
-#' ## basic use of fn
-#' fn(arg1, arg2)
-#'
-#' #' ## more elaborate use of fn
-#' fn(arg1, arg2)
-#'
 #' @import ape
 #' @export
 

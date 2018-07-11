@@ -33,20 +33,6 @@ according to a given test of association and p-value.
 (Serves as the treeWAS association testing function;
 runs the \code{assoc.test} function internally.)
 }
-\examples{
-
-## load data
-data(dist)
-str(dist)
-
-## basic use of fn
-
-fn(arg1, arg2)
-
-#' ## more elaborate use of fn
-fn(arg1, arg2)
-
-}
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }

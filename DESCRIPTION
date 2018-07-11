@@ -1,16 +1,20 @@
 Package: treeWAS
 Title: Run phylogenetic tree-based GWAS
 Version: 1.0
-Authors@R: person("Caitlin", "Collins", , "caitiecollins@gmail.com", role = c("aut", "cre"))
-Description: Perform microbial GWAS using phylogenetic trees to correct for population stratification and recombination.
-License: GPL (3)
+Authors@R: c(person("Caitlin", "Collins", email="caitiecollins@gmail.com", role = c("aut", "cre")),person("Xavier", "Didelot",email = "xavier.didelot@gmail.com",role = c("aut")))
+Maintainer: Caitlin Collins <caitiecollins@gmail.com>
+Description: Perform microbial GWAS using phylogenetic trees to correct for population structure and recombination.
+License: GPL (>=2)
 LazyData: true
 RoxygenNote: 6.0.1
-Depends: adegenet,
+Depends: R (>= 3.0.0)
+Imports: graphics,
+    stats,
     ape,
+    adegenet,
     Hmisc,
-    png
-Imports: beeswarm, 
+    png,
+    beeswarm, 
     ggplot2,       
     phangorn,
     phytools,

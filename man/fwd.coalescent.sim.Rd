@@ -61,19 +61,6 @@ every time the phenotype undergoes a substitution (ie. perfect association).
 The assoc.prob parameter then acts like a dilution factor, removing (100 - assoc.prob)%
 of the substitutions that occurred during simulation under perfect association.
 }
-\examples{
-
-## load data
-data(dist)
-str(dist)
-
-## basic use of fn
-fn(arg1, arg2)
-
-#' ## more elaborate use of fn
-fn(arg1, arg2)
-
-}
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }

@@ -20,18 +20,6 @@
 #' @details NOTE TO SELF--CAREFUL: y.lim is HARD-CODED as (0,1). Change this is you want to release this wrapper!
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @examples
-#'
-#' ## load data
-#' data(dist)
-#' str(dist)
-#'
-#' ## basic use of fn
-#' fn(arg1, arg2)
-#'
-#' #' ## more elaborate use of fn
-#' fn(arg1, arg2)
-#'
 #' @import ggplot2
 #' @importFrom beeswarm beeswarm
 #'
@@ -48,8 +36,8 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                          x.text.size = 15, y.text.size = 15, y.title.size = 20,
                          mean=TRUE){
 
-  require(beeswarm)
-  require(Hmisc)
+  #require(beeswarm)
+  #require(Hmisc)
   # library(plyr)
   # library(ggplot2)
 
