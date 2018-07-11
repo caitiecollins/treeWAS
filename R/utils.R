@@ -451,7 +451,7 @@ get.unique.snps <- get.unique.matrix
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' @import ape
+#  ape
 #' @importFrom Hmisc all.is.numeric
 
 ########################################################################

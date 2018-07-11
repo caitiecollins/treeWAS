@@ -20,7 +20,7 @@
 #' @details NOTE TO SELF--CAREFUL: y.lim is HARD-CODED as (0,1). Change this is you want to release this wrapper!
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @import ggplot2
+#  ggplot2
 #' @importFrom beeswarm beeswarm
 #'
 #' @export

@@ -64,9 +64,6 @@ the allele in \code{sig.snps.names} and \code{colnames(snps)}. For names of the 
 If \code{snps} names are purely numeric with no alleles indicated
 (i.e., they already match names in \code{seqs}), then set \code{suff.length = 0}.
 }
-\examples{
-
-}
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }

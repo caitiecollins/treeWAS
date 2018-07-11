@@ -27,7 +27,7 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
-#' @import adegenet
+#  adegenet
 
 ########################################################################
 
@@ -262,7 +262,7 @@ manhattan.plot <- function(p.vals,
 
 
 ###################
-## plot.sig.snps ##
+## plot_sig_snps ##
 ###################
 
 ########################################################################
@@ -281,7 +281,7 @@ manhattan.plot <- function(p.vals,
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
-#' @import adegenet ape
+#  adegenet ape
 
 ########################################################################
 # res <- out$res
@@ -296,7 +296,7 @@ manhattan.plot <- function(p.vals,
 # sig.corrs <- corr.dat[snps.assoc]
 # sig.snps <- snps.assoc
 
-plot.sig.snps <- function(corr.dat,
+plot_sig_snps <- function(corr.dat,
                           corr.sim,
                           corr.sim.subset = NULL,
                           sig.corrs,
@@ -853,14 +853,14 @@ plot.sig.snps <- function(corr.dat,
 
   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=FALSE)
 
-} # end plot.sig.snps
+} # end plot_sig_snps
 
 
 
 
 
 #' ###################
-#' ## plot.sig.snps ##
+#' ## plot_sig_snps ##
 #' ###################
 #'
 #' ########################################################################
@@ -879,7 +879,7 @@ plot.sig.snps <- function(corr.dat,
 #' #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' #' @export
 #' #'
-#' #' @import adegenet ape
+#' #  adegenet ape
 #'
 #' ########################################################################
 #' # res <- out$res
@@ -894,7 +894,7 @@ plot.sig.snps <- function(corr.dat,
 #' # sig.corrs <- corr.dat[snps.assoc]
 #' # sig.snps <- snps.assoc
 #'
-#' plot.sig.snps <- function(corr.dat,
+#' plot_sig_snps <- function(corr.dat,
 #'                           corr.sim,
 #'                           corr.sim.subset = NULL,
 #'                           sig.corrs,
@@ -1372,7 +1372,7 @@ plot.sig.snps <- function(corr.dat,
 #'
 #'   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=FALSE)
 #'
-#' } # end plot.sig.snps
+#' } # end plot_sig_snps
 
 
 

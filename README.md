@@ -38,7 +38,7 @@ install.packages("devtools", dep=TRUE)
 library(devtools)
 
 ## install treeWAS from github:
-install_github("caitiecollins/treeWAS/pkg", build_vignettes = TRUE)
+install_github("caitiecollins/treeWAS", build_vignettes = TRUE)
 library(treeWAS)
 ```
 

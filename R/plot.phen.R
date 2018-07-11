@@ -1,6 +1,6 @@
 
 ###############
-## plot.phen ##
+## plot_phen ##
 ###############
 
 ############
@@ -32,7 +32,7 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @import adegenet ape
+#  adegenet ape
 #' @export
 
 ########################################################################
@@ -55,14 +55,14 @@
 
 # phen.nodes <- phen.plot.col$all.nodes
 
-plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, main.title = TRUE, ...){
+plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, main.title = TRUE, ...){
 
   # require(phangorn)
   # require(adegenet)
 
   ## HANDLE TREE: ##
   ## Always work w tree in pruningwise order..
-  ## Note: plot.phen expects output from phen.sim as input, and phen.sim works w pruningwise trees...
+  ## Note: plot_phen expects output from phen.sim as input, and phen.sim works w pruningwise trees...
   tree <- reorder.phylo(tree, order="pruningwise")
 
   ## PLOT MARGINS: ##
@@ -481,16 +481,16 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
 
   return(phen.plot.colors)
 
-} # end plot.phen
+} # end plot_phen
 
 
 
 # i <- 7
-# plot.phen(tree, phen.nodes=phen.nodes, snp.nodes=snps.assoc.nodes[,i])
+# plot_phen(tree, phen.nodes=phen.nodes, snp.nodes=snps.assoc.nodes[,i])
 # length(which(phen.nodes[1:100] == snps.assoc.nodes[,i][1:100]))
 
 # i <- 6
-# plot.phen(tree, phen.nodes=phen.rec, snp.nodes=snps.rec[,snps.assoc[i]])
+# plot_phen(tree, phen.nodes=phen.rec, snp.nodes=snps.rec[,snps.assoc[i]])
 # length(which(phen.rec[1:100] == snps.rec[,snps.assoc[i]][1:100]))
 
 ###############################
@@ -513,22 +513,22 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, ma
 # var.rec <- replace(var.rec, which(var.rec == 0), "A")
 # var.rec <- replace(var.rec, which(var.rec == 1), "B")
 #
-# plot.phen(tree, phen.nodes = var.rec)
+# plot_phen(tree, phen.nodes = var.rec)
 #
 # ## compare to phen:
 # phen.rec <- as.character(out$res[[1]]$dat$phen.rec)
 # phen.rec <- replace(phen.rec, which(phen.rec == 0), "A")
 # phen.rec <- replace(phen.rec, which(phen.rec == 1), "B")
 #
-# plot.phen(tree, phen.nodes=phen.rec)
+# plot_phen(tree, phen.nodes=phen.rec)
 #
 # ## side-by-side?
 # par(mfrow=c(1,2))
 # ## phen:
-# plot.phen(tree, phen.nodes=phen.rec)
+# plot_phen(tree, phen.nodes=phen.rec)
 # title("set1_31: phen.rec (left) vs.", line=-0.5)
 # ## snp:
-# plot.phen(tree, phen.nodes = var.rec, direction="leftwards") # tip adj=c(1.5,0)
+# plot_phen(tree, phen.nodes = var.rec, direction="leftwards") # tip adj=c(1.5,0)
 # title("snps.rec 304 (right)", line=-0.5)
 
 

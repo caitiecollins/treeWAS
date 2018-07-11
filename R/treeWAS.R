@@ -28,11 +28,11 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' @import adegenet ape
+#  adegenet ape
 
 ########################################################################
 
-print.treeWAS <- function(x, sort.by.p = FALSE){
+print.treeWAS <- function(x, sort.by.p = FALSE,...){
   cat("\t#################### \n")
   cat("\t## treeWAS output ## \n")
   cat("\t#################### \n")
@@ -617,11 +617,12 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import adegenet ape
+#  adegenet ape
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #' @importFrom scales rescale
 #' @importFrom pryr object_size
+#' @importFrom adegenet funky
 #'
 #' @export
 
@@ -1257,7 +1258,7 @@ treeWAS <- function(snps,
         leafCol <- myCol
       }else{
         ## categorical...
-        myCol <- funky(length(levs))
+        myCol <- adegenet::funky(length(levs))
         leafCol <- var
         ## for loop
         for(i in 1:length(levs)){
@@ -2014,7 +2015,7 @@ treeWAS <- function(snps,
 
     if(plot.null.dist == TRUE){
       ## Generate one histogram per test:
-      plot.sig.snps(corr.dat = abs(corr.dat),
+      plot_sig_snps(corr.dat = abs(corr.dat),
                     corr.sim = abs(corr.sim),
                     corr.sim.subset = NULL,
                     sig.corrs = abs(corr.dat[sig.snps]),
@@ -2036,7 +2037,7 @@ treeWAS <- function(snps,
 
     if(plot.dist == TRUE){
       ## Generate one histogram per test:
-      plot.sig.snps(corr.dat = abs(corr.dat),
+      plot_sig_snps(corr.dat = abs(corr.dat),
                     corr.sim = abs(corr.sim),
                     corr.sim.subset = NULL,
                     sig.corrs = abs(corr.dat[sig.snps]),
@@ -2484,3 +2485,10 @@ treeWAS <- function(snps,
 
 
 ###
+
+#' @import stats
+#' @import graphics
+#' @import grDevices
+#' @import ape
+#' @importFrom utils write.table
+NULL

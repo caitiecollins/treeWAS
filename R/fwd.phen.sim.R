@@ -91,7 +91,7 @@ fwd.phen.sim <- function(snps.assoc, p=1, tree=NULL){
   #   ################
   #   ## PROB CURVE ##
   #   ################
-  #   plot.prob.phen(p=p, n.snps.assoc=ncol(snps.assoc))
+  #   plot_prob_phen(p=p, n.snps.assoc=ncol(snps.assoc))
 
 
   ###############

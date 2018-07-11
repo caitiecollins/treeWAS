@@ -21,7 +21,7 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @import ape
+#  ape
 #' @export
 
 ########################################################################

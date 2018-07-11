@@ -27,7 +27,7 @@
 #' @examples
 #' ## Example ##
 #'
-#' @import adegenet ape
+#  adegenet ape
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #'
@@ -785,7 +785,7 @@ snp.sim.Q <- function(n.snps = 10000,
       phen <- phen.nodes[1:n.ind]
 
       # ## TEMP -- CHECK w PLOT:
-      # plot.phen(tree, phen.nodes=phen.nodes, snp.nodes=snps.assoc.nodes[[i]])
+      # plot_phen(tree, phen.nodes=phen.nodes, snp.nodes=snps.assoc.nodes[[i]])
       # cor(as.numeric(phen.nodes[1:n.ind]), as.numeric(snps.assoc.nodes[[i]][1:n.ind]))
       N.overlap <- length(which(phen.nodes[1:n.ind] == snps.assoc.nodes[[i]][1:n.ind]))
       N.overlap <- max(N.overlap, (n.ind-N.overlap))
@@ -815,7 +815,7 @@ snp.sim.Q <- function(n.snps = 10000,
     # phen.node.ori <- phen.node
     # phen.rec <- as.vector(unlist(phen.node))
     # snp.rec <- as.vector(unlist(snps.assoc.nodes[[3]]))
-    # plot.phen(tree, phen.nodes=phen.rec, snp.nodes=snp.rec)
+    # plot_phen(tree, phen.nodes=phen.rec, snp.nodes=snp.rec)
     # title("set3_1 phen vs. snps.assoc3", line=0)
     #
     # cor(as.numeric(snp.rec[1:n.ind]), as.numeric(phen.rec[1:n.ind])) # 0.46 0.63 0.48
@@ -872,17 +872,17 @@ snp.sim.Q <- function(n.snps = 10000,
     ## TEMP -- COMPARE PHEN & ALL SNPS.ASSOC w PLOT: ##
     ###################################################
     par(mfrow=c(2,6))
-    plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+    plot_phen(tree, phen.nodes=phen.nodes, main.title="phen")
     if(n.snps.assoc >= 10){
       ## just plot first 10:
       for(i in 1:5){
-        plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+        plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
                   main.title=paste("snp.assoc", i, sep=" "))
         title(N.OVERLAP[[i]], line=0, font.main=1)
       }
-      plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+      plot_phen(tree, phen.nodes=phen.nodes, main.title="phen")
       for(i in 6:10){
-        plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+        plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
                   main.title=paste("snp.assoc", i, sep=" "))
         title(N.OVERLAP[[i]], line=0, font.main=1)
       }
@@ -891,20 +891,20 @@ snp.sim.Q <- function(n.snps = 10000,
       if(n.snps.assoc <= 5){
         par(mfrow=c(1,(n.snps.assoc+1)))
         for(i in 1:n.snps.assoc){
-          plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
                     main.title=paste("snp.assoc", i, sep=" "))
           title(N.OVERLAP[[i]], line=0, font.main=1)
         }
       }else{
         ## plot btw 5 and 10:
         for(i in 1:5){
-          plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
                     main.title=paste("snp.assoc", i, sep=" "))
           title(N.OVERLAP[[i]], line=0, font.main=1)
         }
-        plot.phen(tree, phen.nodes=phen.nodes, main.title="phen")
+        plot_phen(tree, phen.nodes=phen.nodes, main.title="phen")
         for(i in 6:n.snps.assoc){
-          plot.phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
                     main.title=paste("snp.assoc", i, sep=" "))
           title(N.OVERLAP[[i]], line=0, font.main=1)
         }
@@ -1359,7 +1359,7 @@ snp.sim.Q <- function(n.snps = 10000,
 # phen.rec <- res$dat$phen.rec
 # snps.rec <- res$dat$snps.rec
 #
-# plot.phen(tree, phen.nodes=phen.rec, snp.nodes=snps.rec[,i])
+# plot_phen(tree, phen.nodes=phen.rec, snp.nodes=snps.rec[,i])
 #
 # ## NOTE-- snps.rec has inverted snps numbering (ie. 0,1 --> 2,1)
 # ## AND kept plink version w added columns:

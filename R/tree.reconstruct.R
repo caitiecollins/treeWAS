@@ -27,7 +27,7 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#' @import ape
+#  ape
 #' @importFrom phangorn as.phyDat
 #' @importFrom phangorn midpoint
 #' @importFrom phangorn pratchet

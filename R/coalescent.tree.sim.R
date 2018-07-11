@@ -27,7 +27,7 @@
 #' ## plot output
 #' plot(tree)
 #'
-#' @import ape
+#  ape
 #' @importFrom phangorn midpoint
 #'
 #' @export

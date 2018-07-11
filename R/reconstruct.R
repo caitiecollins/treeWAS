@@ -36,7 +36,7 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
-#' @import ape
+#  ape
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phytools anc.ML
 #' @importFrom phytools fastAnc
@@ -569,7 +569,7 @@ asr <- function(var,
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import ape
+#  ape
 #' @importFrom phangorn as.phyDat
 #' @importFrom phangorn phyDat
 #' @importFrom phangorn pace

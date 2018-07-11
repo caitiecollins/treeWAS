@@ -38,9 +38,8 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' @examples
 #'
-#' @import ape adegenet
+#  ape adegenet
 
 ########################################################################
 
@@ -265,7 +264,6 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' @examples
 #'
 #' @importFrom ape read.dna
 #' @importFrom utils write.csv

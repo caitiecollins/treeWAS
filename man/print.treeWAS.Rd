@@ -4,7 +4,7 @@
 \alias{print.treeWAS}
 \title{Print \code{treeWAS} output.}
 \usage{
-\method{print}{treeWAS}(x, sort.by.p = FALSE)
+\method{print}{treeWAS}(x, sort.by.p = FALSE, ...)
 }
 \arguments{
 \item{x}{The output returned by \code{treeWAS}.}

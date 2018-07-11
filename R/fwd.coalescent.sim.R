@@ -90,7 +90,7 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' @import adegenet ape
+#  adegenet ape
 
 ########################################################################
 

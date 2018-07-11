@@ -22,7 +22,7 @@
 #' @examples
 #' ## Example ##
 #'
-#' @import adegenet ape
+#  adegenet ape
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #'

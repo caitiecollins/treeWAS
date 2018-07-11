@@ -1,6 +1,6 @@
 
 ####################
-## plot.prob.phen ##
+## plot_prob_phen ##
 ####################
 
 ########################################################################
@@ -26,24 +26,24 @@
 #'
 #' ## basic use of fn ##
 #' ## compare probability of having phenotype with 10 SNPs at varying p:
-#' plot.prob.phen(p=0.8, n.snps.assoc=10)
-#' plot.prob.phen(p=0.5, n.snps.assoc=10)
-#' plot.prob.phen(p=0.2, n.snps.assoc=10)
+#' plot_prob_phen(p=0.8, n.snps.assoc=10)
+#' plot_prob_phen(p=0.5, n.snps.assoc=10)
+#' plot_prob_phen(p=0.2, n.snps.assoc=10)
 #'
 #' @export
 
 ########################################################################
 
-# plot.prob.phen(p=1.8, n.snps.assoc=10)
-# plot.prob.phen(p=1.5, n.snps.assoc=10)
-# plot.prob.phen(p=1.4, n.snps.assoc=10)
-# plot.prob.phen(p=1, n.snps.assoc=10)
-# plot.prob.phen(p=0.8, n.snps.assoc=10)
-# plot.prob.phen(p=0.5, n.snps.assoc=10)
-# plot.prob.phen(p=0.2, n.snps.assoc=10)
+# plot_prob_phen(p=1.8, n.snps.assoc=10)
+# plot_prob_phen(p=1.5, n.snps.assoc=10)
+# plot_prob_phen(p=1.4, n.snps.assoc=10)
+# plot_prob_phen(p=1, n.snps.assoc=10)
+# plot_prob_phen(p=0.8, n.snps.assoc=10)
+# plot_prob_phen(p=0.5, n.snps.assoc=10)
+# plot_prob_phen(p=0.2, n.snps.assoc=10)
 
 
-plot.prob.phen <- function(p=0.5, n.snps.assoc=10){
+plot_prob_phen <- function(p=0.5, n.snps.assoc=10){
 
   xs <- 0:n.snps.assoc
   if(p == 1){
@@ -56,6 +56,6 @@ plot.prob.phen <- function(p=0.5, n.snps.assoc=10){
   plot(xs,ys,xlim=c(0,10),ylim=c(0,1),
        main=paste("p = ", p, sep=""))
 
-} # end plot.prob.phen
+} # end plot_prob_phen
 
 
