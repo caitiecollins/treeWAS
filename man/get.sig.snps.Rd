@@ -4,8 +4,9 @@
 \alias{get.sig.snps}
 \title{Get significant SNPs, according to a given test of association.}
 \usage{
-get.sig.snps(corr.dat, corr.sim, snps.names, test = "terminal", n.tests = 1,
-  p.value = 0.01, p.value.correct = "bonf", p.value.by = "count")
+get.sig.snps(corr.dat, corr.sim, snps.names, test = "terminal",
+  n.tests = 1, p.value = 0.01, p.value.correct = "bonf",
+  p.value.by = "count")
 }
 \arguments{
 \item{corr.dat}{A vector containing the association score values, for a given association test, for the real data.}

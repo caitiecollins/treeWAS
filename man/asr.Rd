@@ -4,8 +4,8 @@
 \alias{asr}
 \title{Ancestral state reconstruction}
 \usage{
-asr(var, tree, type = c("parsimony", "ML", "ace"), method = c("discrete",
-  "continuous"), unique.cols = FALSE)
+asr(var, tree, type = c("parsimony", "ML", "ace"),
+  method = c("discrete", "continuous"), unique.cols = FALSE)
 }
 \arguments{
 \item{var}{Either a matrix or a vector containing the state of a variable (eg. SNPs or a phenotype)
@@ -17,8 +17,8 @@ between the individuals for which snps and phen are known.}
 \item{type}{A character string specifying whether ancestral state reconstruction should be
 performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} function in package \emph{ape}).}
 
-\item{method}{A character string specifying the type of ASR method to implement (only used if
-\code{type} is set to "ML").}
+\item{method}{A character string specifying the type of ASR method to implement,
+either \code{'discrete'} or \code{'continuous'} (only used if \code{type} is set to "ML").}
 
 \item{unique.cols}{A logical indicating whether only unique column patterns are present in \code{var}, if \code{var} is a matrix
 (if so (TRUE), a time-consuming step can be skipped); by default, FALSE.}

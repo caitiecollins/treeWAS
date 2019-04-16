@@ -27,7 +27,10 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#  ape
+#'
+#' 
+#'
+#' @import ape
 #' @importFrom phangorn as.phyDat
 #' @importFrom phangorn midpoint
 #' @importFrom phangorn pratchet
@@ -47,7 +50,7 @@
 ############
 ## TO DO: ##
 ############
-## add all the options from hclust (stats) as available methods..
+## add all the options from hclust (stats) as available methods..?
 ## change all methods to either upper or lower case (or add to lower check).
 
 
@@ -204,12 +207,16 @@ tree.reconstruct <- function(dna,
     # tre.ini <- nj(D)
     # tree <- optim.parsimony(tre.ini, dna4)
     tre.ini <- pratchet(dna4, trace=0) # better (can also return set of treeS)
+                        # , maxit=400, k=8)
     ## add edge lengths w ACCTRAN:
     tree <- acctran(tre.ini, dna4) # edge lengths in n.subs (but relative lengths still fine).
     ## Always work with tree in pruningwise order:
     tree <- reorder.phylo(tree, order="pruningwise")
+    ## Convert edge.lengths from parsimony cost to n.subs-per-site
+    ## (s.t. parsimony lengths ~ lengths via NJ or UPGMA):
+    tree$edge.length <- tree$edge.length/ncol(dna)
     ## Trees must be rooted:
-    if(!is.rooted(tree)) tree <- midpoint(tree) # can't root, no edge length
+    if(!is.rooted(tree)) tree <- midpoint(tree)
     if(plot==TRUE){
       plot(tree, edge.width=2, cex=0.5)
       title("Parsimony tree")
@@ -293,3 +300,4 @@ tree.reconstruct <- function(dna,
 
   return(tree)
 } # end tree.reconstruct
+

@@ -5,12 +5,13 @@
 \title{Aternative SNPs simulation fn.}
 \usage{
 snp.sim.Q(n.snps = 10000, n.subs = 1, snp.root = NULL,
-  n.snps.assoc = 10, assoc.prob = 100, Q = matrix(c(2, 0.75, 0.75, 1, 3,
-  0.5, 0.25, 3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2), nrow = 4, byrow = T,
+  n.snps.assoc = 10, assoc.prob = 100, Q = matrix(c(2, 0.75, 0.75, 1,
+  3, 0.5, 0.25, 3, 3, 0.25, 0.5, 3, 1, 0.75, 0.75, 2), nrow = 4, byrow = T,
   dimnames = rep(list(c("0|0", "0|1", "1|0", "1|1")), 2)),
-  tree = coalescent.tree.sim(100), n.phen.subs = 15, phen.loci = NULL,
-  heatmap = FALSE, reconstruct = FALSE, dist.dna.model = "JC69",
-  grp.min = 0.25, row.names = NULL, set = 3, seed = 1)
+  tree = coalescent.tree.sim(100), n.phen.subs = 15,
+  phen.loci = NULL, heatmap = FALSE, reconstruct = FALSE,
+  dist.dna.model = "JC69", grp.min = 0.25, row.names = NULL,
+  set = 3, seed = 1)
 }
 \arguments{
 \item{n.snps}{An integer specifying the number of snps columns to be simulated.}

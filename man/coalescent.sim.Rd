@@ -5,10 +5,11 @@
 \title{Simulate a tree, phenotype, and genetic data.}
 \usage{
 coalescent.sim(n.ind = 100, n.snps = 10000, n.subs = 1,
-  n.snps.assoc = 0, assoc.prob = 100, n.phen.subs = 15, phen = NULL,
-  plot = TRUE, heatmap = FALSE, reconstruct = FALSE,
-  dist.dna.model = "JC69", grp.min = 0.25, row.names = TRUE, set = 1,
-  coaltree = TRUE, s = 20, af = 10, filename.plot = NULL, seed = NULL)
+  n.snps.assoc = 0, assoc.prob = 100, n.phen.subs = 15,
+  phen = NULL, plot = TRUE, heatmap = FALSE, reconstruct = FALSE,
+  dist.dna.model = "JC69", grp.min = 0.25, row.names = TRUE,
+  set = 1, tree = NULL, coaltree = TRUE, s = 20, af = 10,
+  filename.plot = NULL, seed = NULL)
 }
 \arguments{
 \item{n.ind}{An integer specifying the number of individual genomes to simulate

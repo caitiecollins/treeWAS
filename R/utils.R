@@ -160,12 +160,19 @@ get.binary.snps <- function(snps, force=FALSE){
       ## (with one column for each binary SNP and N columns for the non-binary loci):
 
       COLS <- list()
-      COLS[[1]] <- c(1:(cols.toKeep[1] - 1))
-      COLS[[1]] <- COLS[[1]][seq(1, length(COLS[[1]]), 2)]
-      ## Isolate non-binary columns to add here:
-      cols.toAdd <- which(noms %in% noms[cols.nonBin[1]])
-      ## Append these columns to current sequence:
-      COLS[[1]] <- c(COLS[[1]], cols.toAdd)
+      if(cols.toKeep[1] > 1){
+        COLS[[1]] <- c(1:(cols.toKeep[1] - 1))
+        COLS[[1]] <- COLS[[1]][seq(1, length(COLS[[1]]), 2)]
+        ## Isolate non-binary columns to add here:
+        cols.toAdd <- which(noms %in% noms[cols.nonBin[1]])
+        ## Append these columns to current sequence:
+        COLS[[1]] <- c(COLS[[1]], cols.toAdd)
+      }else{
+        ## Isolate non-binary columns to add here:
+        cols.toAdd <- which(noms %in% noms[cols.nonBin[1]])
+        ## Append these columns as current sequence:
+        COLS[[1]] <- cols.toAdd
+      }
       ## Remove cols.toAdd from cols.nonBin:
       cols.nonBin <- cols.nonBin[-which(cols.nonBin %in% cols.toAdd)]
 
@@ -448,41 +455,51 @@ get.unique.snps <- get.unique.matrix
 #'
 #' @param tree An object of class phylo containing a tree
 #' whose tip order is desired to be known.
+#' @param original.format A logical, indicating whether to use the original
+#' format of this function (kept for consistency's sake) or the new format. 
+#' (For now, if you find one isn't giving you sensible output, 
+#' please try changing this argument.)
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#  ape
+#' 
+#'
+#' @import ape
 #' @importFrom Hmisc all.is.numeric
 
 ########################################################################
 
-get.tip.order <- function(tree){
-
-  # require(ape)
-  # require(Hmisc)
+get.tip.order <- function(tree, original.format=TRUE){
 
   tree2 <- read.tree(text=write.tree(tree))
   if(all.is.numeric(tree2$tip.label)){
-    out <- as.numeric(tree2$tip.label)
-    out <- rev(out)
+    if(original.format == TRUE){
+      ## keeping this, for consistency's sake
+      out1 <- as.numeric(tree2$tip.label)
+      out <- rev(out1)
+    }else{
+      ## although I think I prefer the returned order to be bottom to top... 
+      out1 <- as.numeric(tree2$tip.label)
+      out <- rev(out1)
+    }
   }else{
-    out <- sort(tree2$tip.label)
-    out <- sapply(c(1:length(tree$tip.label)), function(e)
-      which(out == tree$tip.label[e]))
+    # if(!identical(tree$tip.label, sort(tree$tip.label)))
+    if(original.format == TRUE){
+      ## keeping this, for consistency's sake
+      out1 <- sort(tree2$tip.label)
+      out <- sapply(c(1:length(tree$tip.label)), function(e)
+        which(out1 == tree$tip.label[e]))
+    }else{
+      ## although this seems to be more generally applicable (?!)
+      out1 <- tree2$tip.label
+      out <- sapply(c(1:length(tree$tip.label)), function(e)
+        which(tree$tip.label == out1[e]))
+    }
   }
 
   return(out)
 
 } # end get.tip.order
-
-## OLD VERSION (pre-2016) --> NAs if tip labs not numeric!
-# get.tip.order <- function(tree){
-#   require(ape)
-#   tree2 <- read.tree(text=write.tree(tree))
-#   out <- as.numeric(tree2$tip.label)
-#   out <- rev(out)
-#   return(out)
-# } # end get.tip.order
 
 
 
@@ -526,18 +543,19 @@ get.tip.order <- function(tree){
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-# @examples
-#
-# ## load example data:
-# data("snps.ace")
-# x <- snps.ace
-#
-# ## basic use of fn on rows of x:
-# tab.out <- table.matrix(x)
-#
-# ## apply fn to columns of x:
-# tab.out <- table.matrix(t(x))
+#' @examples
+#' \dontrun{
+#' ## load example data:
+#' data("snps.ace")
+#' x <- snps.ace
 #'
+#' ## basic use of fn on rows of x:
+#' tab.out <- table.matrix(x)
+#'
+#' ## apply fn to columns of x:
+#' tab.out <- table.matrix(t(x))
+#' }
+#' 
 #' @export
 
 ########################################################################

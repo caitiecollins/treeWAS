@@ -4,11 +4,16 @@
 \alias{get.tip.order}
 \title{Get the order of the tip labels of a phylogenetic tree as plotted.}
 \usage{
-get.tip.order(tree)
+get.tip.order(tree, original.format = TRUE)
 }
 \arguments{
 \item{tree}{An object of class phylo containing a tree
 whose tip order is desired to be known.}
+
+\item{original.format}{A logical, indicating whether to use the original
+format of this function (kept for consistency's sake) or the new format. 
+(For now, if you find one isn't giving you sensible output, 
+please try changing this argument.)}
 }
 \description{
 Longer proper discription of function...

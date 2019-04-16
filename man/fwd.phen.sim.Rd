@@ -2,22 +2,27 @@
 % Please edit documentation in R/fwd.phen.sim.R
 \name{fwd.phen.sim}
 \alias{fwd.phen.sim}
-\title{Short one-phrase description.}
+\title{Simulate a phenotype, from root to tips.}
 \usage{
 fwd.phen.sim(snps.assoc, p = 1, tree = NULL)
 }
 \arguments{
-\item{tree}{An phylo object.}
+\item{snps.assoc}{A matrix created by the \code{fwd.snp.sim} function, 
+which indicates where genotypic substitutions occur on the tree at phenoypically-associated sites.}
 
-\item{n.subs}{An integer controlling the phenotypic substition rate (see details).}
+\item{p}{An integer specifying the probability of phenotypic substition, 
+given genotypic substitution (see details).}
+
+\item{tree}{An phylo object.}
 }
 \description{
-The parameter n.subs controls the simulation of the phenotype by specifying
-the expected value of the number of phenotypic substitions to occur on the tree provided.
-The true number of phenotypic substitions is drawn from a Poisson distribution with parameter n.subs.
+[*An exploratory function:*] Having already simulated a genotype, 
+this function allows you to simulate an associated phenotype along the tree, from root to tips.
 }
 \details{
-Longer proper discription of function...
+The parameter \code{p} controls the simulation of the phenotype by specifying
+the expected value of the number of phenotypic substitions to occur on the tree provided,
+given that a genotypic substitution has occurred on a particular branch of the tree.
 }
 \examples{
 

@@ -6,12 +6,13 @@
 \usage{
 simTest(set.number = 3, n.reps = 1, set.seed.as = "file.number",
   working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
-  from.file = FALSE, file.n = NULL, Windows = FALSE, cluster = FALSE,
-  n.ind = 100, n.snps = 10000, n.subs = 1, n.phen.subs = 15,
-  n.snps.assoc = 10, assoc.prob = 90, grp.min = 0.25, s = 20, af = 10,
-  coaltree = TRUE, p.value = 0.01, p.value.correct = "bonf",
-  p.value.by = "count", sim.n.snps = 1e+05, treeWAS.test = c("terminal",
-  "simultaneous", "subsequent"), snps.reconstruction = "parsimony",
+  from.file = FALSE, file.n = NULL, Windows = FALSE,
+  cluster = FALSE, n.ind = 100, n.snps = 10000, n.subs = dist_0.01,
+  n.phen.subs = 15, n.snps.assoc = 10, assoc.prob = 90,
+  grp.min = 0.25, s = 20, af = 10, coaltree = TRUE,
+  p.value = 0.01, p.value.correct = "bonf", p.value.by = "count",
+  sim.n.snps = 1e+05, treeWAS.test = c("terminal", "simultaneous",
+  "subsequent"), snps.reconstruction = "parsimony",
   phen.reconstruction = "parsimony")
 }
 \arguments{

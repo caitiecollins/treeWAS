@@ -2,18 +2,20 @@
 % Please edit documentation in R/plot.sig.snps.R
 \name{manhattan.plot}
 \alias{manhattan.plot}
-\title{Short one-phrase description.}
+\title{Manhattan Plot}
 \usage{
 manhattan.plot(p.vals, x = c(1:length(p.vals)), col = "funky",
   transp = 0.25, sig.thresh = NULL, thresh.col = "red",
   snps.assoc = NULL, snps.assoc.col = "red", jitter.amount = 1e-05,
-  min.p = NULL, log10 = FALSE, ylab = NULL)
+  min.p = NULL, log10 = FALSE, ylab = NULL,
+  main.title = "Manhattan plot")
 }
 \arguments{
-\item{arg}{Description.}
+\item{p.vals}{A numeric vector containing p-values or association score values for each genetic locus.}
 }
 \description{
-Longer proper discription of function...
+Generate a Manhattan plot showing the association score values or p-values (y-axis)
+for each locus (x-axis) tested by an association test.
 }
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}

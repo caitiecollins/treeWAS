@@ -4,8 +4,8 @@
 \alias{assoc.test}
 \title{Run a test of association between SNPs and a phenotype.}
 \usage{
-assoc.test(snps, phen, tree = NULL, test = c("terminal", "simultaneous",
-  "subsequent", "cor", "fisher"))
+assoc.test(snps, phen, tree = NULL, test = c("terminal",
+  "simultaneous", "subsequent", "cor", "fisher"))
 }
 \arguments{
 \item{snps}{A matrix containing the real snps.}

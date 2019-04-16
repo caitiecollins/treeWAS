@@ -4,8 +4,8 @@
 \alias{tree.reconstruct}
 \title{Short one-phrase description.}
 \usage{
-tree.reconstruct(dna, method = c("BIONJ", "NJ", "parsimony", "BIONJ*", "NJ*"),
-  dist.dna.model = "JC69", plot = TRUE)
+tree.reconstruct(dna, method = c("BIONJ", "NJ", "parsimony", "BIONJ*",
+  "NJ*"), dist.dna.model = "JC69", plot = TRUE)
 }
 \arguments{
 \item{dna}{A matrix or DNAbin object containing genomes for (only)

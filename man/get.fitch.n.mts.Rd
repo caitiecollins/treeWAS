@@ -4,15 +4,15 @@
 \alias{get.fitch.n.mts}
 \title{Caclulate parsimony scores.}
 \usage{
-get.fitch.n.mts(snps, tree)
+get.fitch.n.mts(x, tree, snps = NULL)
 }
 \arguments{
-\item{snps}{A numeric matrix containing two unique values with row.names matching tree tip.labels.}
+\item{x}{A numeric matrix or vector containing two unique values with row.names matching tree tip.labels.}
 
 \item{tree}{A phylo object.}
 }
 \description{
-Determine parsimony scores for all genetic loci and a given tree.
+Determine parsimony scores for all genetic loci, or a phenotypic variable, along a given tree.
 An extension of the fitch function available in package phangorn.
 }
 \examples{
@@ -24,7 +24,7 @@ snps <- matrix(sample(c(0,1),100000,TRUE), nrow=100)
 row.names(snps) <- tree$tip.label
 
 ## run function
-out <- get.fitch.n.mts(snps, tree)
+out <- get.fitch.n.mts(x=snps.mat, tree)
 
 ## examine output
 str(out)

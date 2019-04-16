@@ -22,7 +22,7 @@
 #' @examples
 #' ## Example ##
 #'
-#  adegenet ape
+#' @import adegenet ape
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #'
@@ -53,6 +53,14 @@ snp.sim <- function(n.snps = 10000,
 
   # require(adegenet)
   # require(ape)
+
+  ## Allow assoc.prob to be in percent or
+  ## as a proportion (-> eg 80 or 90, ie out of 100):
+  if(!is.null(assoc.prob)){
+    if(assoc.prob[1] >= 0 & assoc.prob <= 1){
+      assoc.prob <- assoc.prob*100
+    }
+  }
 
   ##################
   ## HANDLE TREE: ##
@@ -274,15 +282,18 @@ snp.sim <- function(n.snps = 10000,
   ## NB: this condition should never be met within treeWAS | parsimonious homoplasy dist:
   if(max(n.mts) > l.edge){
     if(!is.null(seed)) set.seed(seed)
+    snps.loci <- NULL
       for(e in 1:length(n.mts)){
+        snps.loci <- list()
         repTF <- FALSE
         if(n.mts[e] > l.edge) repTF <- TRUE
         snps.loci[[e]] <- replace(null.vect, sample(c(1:l.edge),
                                                     n.mts[e],
                                                     replace=repTF,
                                                     prob=tree$edge.length), TRUE)
+
+        snps.loci <- t(do.call(rbind, snps.loci))
       }
-      snps.loci <- t(do.call(rbind, snps.loci))
 
   }else{
     if(!is.null(seed)) set.seed(seed)
@@ -659,7 +670,9 @@ snp.sim <- function(n.snps = 10000,
         ## if only 1 prob value given...
         if(length(assoc.prob) == 1){
           ## ... assume uniform assoc.prob;
-          assoc.prob <- rep(assoc.prob, n.snps.assoc)
+          # assoc.prob <- rep(assoc.prob, n.snps.assoc)
+          ## ... OR, randomly draw assoc.probs from normal dist around assoc.prob;
+          assoc.prob <- round(rnorm(n.snps.assoc, assoc.prob, 2), 3)
           ## no warning needed
         }else{
           ## BUT if assoc.prob of random length:
@@ -671,22 +684,35 @@ snp.sim <- function(n.snps = 10000,
         }
         } # end checks
 
+
+      ## re-pseudo-randomise seed:
+      if(!is.null(seed)){
+        seed.i <- seed*c(1:n.snps.assoc)*10
+      }
+
       ## for each associated SNP,
       ## we undo some associations | assoc.prob for that snp.assoc
       for(i in 1:n.snps.assoc){
 
         ## re-pseudo-randomise seed:
         if(!is.null(seed)){
-          seed.i <- seed*i*10
-          set.seed(seed.i)
+          set.seed(seed.i[i])
         }
 
         prob <- assoc.prob[i]
         ## only if the association is imperfect
-        if(prob != 100){
+        if(prob <= 100){
+
+          # print("prob"); print(prob)
+          # print("inv. prob"); print((1 - (prob/100)))
+
           ## draw snps to change at snps.assoc[i]
           n.toChange <- round(nrow(snps)*(1 - (prob/100)))
-          toChange <- sample(c(1:nrow(snps)), n.toChange)
+
+          # print("N to change"); print(n.toChange)
+          # print("Nrow SNPS"); print(str(snps))
+
+          toChange <- sample(c(1:nrow(snps)), n.toChange)  # , replace=TRUE
 
           ## change those snps at rows toChange, loci snps.assoc[i]
           for(j in 1:length(toChange)){
@@ -761,9 +787,11 @@ snp.sim <- function(n.snps = 10000,
     ## just drawing indices and shuffling the columns accordingly...
     ## draw which SNPs will be associated to the phenotype
     if(!is.null(seed)) set.seed(seed)
+
     snps.assoc.loci <- sort(sample(c(1:gen.size.final),
                                    n.snps.assoc,
                                    replace=FALSE))
+
 
     snps.indices <- c(1:gen.size.final)
     snps.ori <- snps

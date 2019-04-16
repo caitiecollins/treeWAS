@@ -11,7 +11,8 @@
 #
 # ## CHECKING SNP.SIM.Q vs. SNP.SIM: ##
 # #####################################
-#
+# ## load treeWAS:
+# require(treeWAS)
 # ## load data:
 # data(tree)
 # data(phen)
@@ -466,7 +467,8 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#  adegenet ape
+#'
+#' @import adegenet ape
 #' @importFrom Hmisc all.is.numeric
 #'
 #' @export
@@ -491,7 +493,8 @@ simTest <- function(
   ## coalescent.sim args:
   n.ind = 100,
   n.snps = 10000, # gen.size
-  n.subs = 1, # theta (*2)
+  # n.subs = 1, # theta (*2)
+  n.subs = dist_0.01, # theta (*2)
   n.phen.subs = 15, # theta_p = NULL
   n.snps.assoc = 10, # = 0
   assoc.prob = 90, # 100 (set2)
@@ -763,6 +766,7 @@ simTest <- function(
       number <- file.n[i]
     }
 
+    number <- 20
 
     ################
     ## dummy plot ##
@@ -871,6 +875,7 @@ simTest <- function(
       if(is.null(colnames(snps))) colnames(snps) <- c(1:ncol(snps))
       snps.names <- colnames(snps)
 
+
       ##########################################
       ## isolate set-specific elements of foo ##
       ##########################################
@@ -937,7 +942,6 @@ simTest <- function(
     ## RUN treeWAS ##
     #################
     print("treeWAS started")
-    # gc()
     set.seed(seed)
 
     syst.time <- system.time( # 341
@@ -1504,16 +1508,21 @@ simTest <- function(
 
     ## run PCA: ##
     ## Keep only n.PCs significant axes:
-    n.PCs <- 5
-    # n.PCs <- 15
+    # n.PCs <- 5
+    # n.PCs <- 7
+    # n.PCs <- 9
+    n.PCs <- 15
+    # n.PCs <- 25
     pca1 <- dudi.pca(snps, scale=FALSE, scannf=FALSE, nf=n.PCs)
 
     ## Identify main pop clusters: ##
     set.seed(seed)
+    # grp <- find.clusters(snps, choose.n.clust=TRUE, max.n.clust=(n.PCs + 1))
     grp <- find.clusters(snps, n.pca=n.PCs, choose.n.clust=FALSE, max.n.clust=(n.PCs + 1))
-    # grp <- find.clusters(snps, choose.n.clust=FALSE, max.n.clust=(n.PCs + 1), pca.select="percVar", perc.pca=60)
+    # # grp <- find.clusters(snps, choose.n.clust=FALSE, max.n.clust=(n.PCs + 1), pca.select="percVar", perc.pca=60)
     pop <- grp$grp # gives same result as cutree(clust, k=6)
     n.grp <- length(levels(pop))
+    # table(pop)
 
     ## CHECK-- ensure no populations contain only 1 individual:
     ## (UNLESS highest tree division leads to a single-node clade?)
@@ -1553,6 +1562,7 @@ simTest <- function(
     } # end pop check
     if(n.grp == 1) cmh.fails <- TRUE
 
+    # table(pop)
 
     ########################################################
     ## Correct for pop strat by regressing along sig PCs: ##
@@ -1644,12 +1654,27 @@ simTest <- function(
     runs <- 10
     n.pca <- round(pretty(n.pca.min:n.pca.max, runs))
 
+    ############
+    ## set3_1 ##
+    # n.PCs <- 7
+    ## k = 8 ## (?) k = 14 ##
+    # set.seed(1)
+    # xval.pop <- xvalDapc(snps, pop, n.pca=n.pca, training.set = 0.5)
+    # abline(v=20, col="red", lty=2, lwd=2)
+    # xval.pop9 <- xval.pop
+    # xval.pop9[2:6]
+    # # $`Number of PCs Achieving Lowest MSE`
+    # # [1] "25"
+    # ###########
+    # set.seed(1)
+    # xval.pop2 <- xvalDapc(snps, pop, n.pca=n.pca, training.set = 0.9)
+    # xval.pop2[2:6]
+
+
     ## NOTE -- If this is SLOW and always results in 5-10 PCs, we may want to skip it... ??
     xval.pop <- xvalDapc(snps, pop, n.pca=n.pca)
     # str(xval.pop)
     # xval.pop[2:6]
-
-
 
     ## store DAPC object:
     dapc.pop <- xval.pop$DAPC

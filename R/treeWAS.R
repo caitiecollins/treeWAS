@@ -23,16 +23,14 @@
 #' @param x The output returned by \code{treeWAS}.
 #' @param sort.by.p A logical indicating whether to sort the results by decreasing p-value (\code{TRUE}) or by locus (\code{FALSE}, the default).
 #'
-#' @examples
-#' ## Example ##
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#  adegenet ape
+#' @import adegenet ape
 
 ########################################################################
 
-print.treeWAS <- function(x, sort.by.p = FALSE,...){
+print.treeWAS <- function(x, sort.by.p = FALSE){
   cat("\t#################### \n")
   cat("\t## treeWAS output ## \n")
   cat("\t#################### \n")
@@ -163,7 +161,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
   name <- x$treeWAS.combined$treeWAS.combined
 
   ## If NO sig findings, print dummy (NULL) csv:
-  if(is.na(name)){
+  if(length(name[!is.na(name)]) == 0){
 
     ## Make dummy variables:
     name <- locus <- p.value.1 <- p.value.2 <- p.value.3 <- score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, 1)
@@ -188,34 +186,46 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 
     ## Add relevant values for each test: ##
     ## Terminal:
-    df <- x$terminal$sig.snps
-    toKeep <- match(df$SNP.locus, locus)
-    tab$p.value.1[toKeep] <- df$p.value
-    tab$score.1[toKeep] <- df$score
-    tab$G1P1[toKeep] <- df$G1P1
-    tab$G0P0[toKeep] <- df$G0P0
-    tab$G1P0[toKeep] <- df$G1P0
-    tab$G0P1[toKeep] <- df$G0P1
+    if(length(x$terminal$sig.snps) > 1){
+      df <- x$terminal$sig.snps
+      toKeep <- match(df$SNP.locus, locus)
+      tab$p.value.1[toKeep] <- df$p.value
+      tab$score.1[toKeep] <- df$score
+      if("G1P1" %in% names(df)){
+        tab$G1P1[toKeep] <- df$G1P1
+        tab$G0P0[toKeep] <- df$G0P0
+        tab$G1P0[toKeep] <- df$G1P0
+        tab$G0P1[toKeep] <- df$G0P1
+      }
+    }
 
     ## Simultaneous:
-    df <- x$simultaneous$sig.snps
-    toKeep <- match(df$SNP.locus, locus)
-    tab$p.value.2[toKeep] <- df$p.value
-    tab$score.2[toKeep] <- df$score
-    tab$G1P1[toKeep] <- df$G1P1
-    tab$G0P0[toKeep] <- df$G0P0
-    tab$G1P0[toKeep] <- df$G1P0
-    tab$G0P1[toKeep] <- df$G0P1
+    if(length(x$simultaneous$sig.snps) > 1){
+      df <- x$simultaneous$sig.snps
+      toKeep <- match(df$SNP.locus, locus)
+      tab$p.value.2[toKeep] <- df$p.value
+      tab$score.2[toKeep] <- df$score
+      if("G1P1" %in% names(df)){
+        tab$G1P1[toKeep] <- df$G1P1
+        tab$G0P0[toKeep] <- df$G0P0
+        tab$G1P0[toKeep] <- df$G1P0
+        tab$G0P1[toKeep] <- df$G0P1
+      }
+    }
 
     ## Subsequent:
-    df <- x$subsequent$sig.snps
-    toKeep <- match(df$SNP.locus, locus)
-    tab$p.value.3[toKeep] <- df$p.value
-    tab$score.3[toKeep] <- df$score
-    tab$G1P1[toKeep] <- df$G1P1
-    tab$G0P0[toKeep] <- df$G0P0
-    tab$G1P0[toKeep] <- df$G1P0
-    tab$G0P1[toKeep] <- df$G0P1
+    if(length(x$subsequent$sig.snps) > 1){
+      df <- x$subsequent$sig.snps
+      toKeep <- match(df$SNP.locus, locus)
+      tab$p.value.3[toKeep] <- df$p.value
+      tab$score.3[toKeep] <- df$score
+      if("G1P1" %in% names(df)){
+        tab$G1P1[toKeep] <- df$G1P1
+        tab$G0P0[toKeep] <- df$G0P0
+        tab$G1P0[toKeep] <- df$G1P0
+        tab$G0P1[toKeep] <- df$G0P1
+      }
+    }
   }
 
   ## Add .CSV to filename:
@@ -514,7 +524,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'           }
 #'
 #'           \item{\code{$min.p.value}
-#'           The minimum p-value. P-values listed as zero can only truly be defined as below this value.}
+#'           The minimum p-value. P-values listed as zero can only truly be defined as being below this value.}
 #'           }
 #'           }
 #'
@@ -617,12 +627,11 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#  adegenet ape
+#' @import adegenet ape
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #' @importFrom scales rescale
 #' @importFrom pryr object_size
-#' @importFrom adegenet funky
 #'
 #' @export
 
@@ -1234,51 +1243,62 @@ treeWAS <- function(snps,
     ## get plot margins:
     mar.ori <- par()$mar
 
-    ## get tip.col:
-    leafCol <- "black"
-    if(all.is.numeric(phen)){
-      var <- as.numeric(as.character(phen))
+    if(!is.null(phen.rec)){
+
+      ## PLOT TERMINAL PHEN + RECONSTRUCTED PHEN:
+      plot.phen(phen.nodes = phen.rec, tree = tree, main.title = "Phylogenetic tree", align.tip.label = T, RTL = F)
+
+
     }else{
-      var <- as.character(phen)
-    }
-    levs <- unique(var)
-    if(length(levs) == 2){
-      ## binary:
-      myCol <- c("red", "blue")
-      leafCol <- var
-      ## for loop
-      for(i in 1:length(levs)){
-        leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
-      } # end for loop
-    }else{
-      if(is.numeric(var)){
-        ## numeric:
-        # myCol <- seasun(length(levs))
-        myCol <- num2col(var, col.pal = seasun)
-        leafCol <- myCol
+
+      ## PLOT TERMINAL PHEN ONLY:
+
+      ## get tip.col:
+      leafCol <- "black"
+      if(all.is.numeric(phen)){
+        var <- as.numeric(as.character(phen))
       }else{
-        ## categorical...
-        myCol <- adegenet::funky(length(levs))
+        var <- as.character(phen)
+      }
+      levs <- unique(var)
+      if(length(levs) == 2){
+        ## binary:
+        myCol <- c("red", "blue")
         leafCol <- var
         ## for loop
         for(i in 1:length(levs)){
           leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
         } # end for loop
+      }else{
+        if(is.numeric(var)){
+          ## numeric:
+          # myCol <- seasun(length(levs))
+          myCol <- num2col(var, col.pal = seasun)
+          leafCol <- myCol
+        }else{
+          ## categorical...
+          myCol <- funky(length(levs))
+          leafCol <- var
+          ## for loop
+          for(i in 1:length(levs)){
+            leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
+          } # end for loop
+        }
       }
+
+      ## PLOT TREE:
+      plot(tree, show.tip=T, tip.col=leafCol, align.tip.label=TRUE, cex=0.5)
+      title("Phylogenetic tree")
+      axisPhylo()
+
+      ## node labels (optional):
+      # if(!is.null(tree$node.label)){
+      #   nodeLabs <- tree$node.label
+      # }else{
+      #   nodeLabs <- c((length(tree$tip.label)+1):max(tree$edge))
+      # }
+      # nodelabels(nodeLabs, cex=0.6, font=2, col="blue", frame="none")
     }
-
-    ## PLOT TREE:
-    plot(tree, show.tip=T, tip.col=leafCol, align.tip.label=TRUE, cex=0.5)
-    title("Phylogenetic tree")
-    axisPhylo()
-
-    ## node labels (optional):
-    # if(!is.null(tree$node.label)){
-    #   nodeLabs <- tree$node.label
-    # }else{
-    #   nodeLabs <- c((length(tree$tip.label)+1):max(tree$edge))
-    # }
-    # nodelabels(nodeLabs, cex=0.6, font=2, col="blue", frame="none")
 
     ## reset plot margins:
     par(mar=mar.ori)
@@ -1302,7 +1322,7 @@ treeWAS <- function(snps,
     ## using the Fitch parsimony score calculation fns from phangorn.
 
     ## get parsimomy cost for each SNP locus using fitch:
-    n.subs <- get.fitch.n.mts(snps=snps, tree=tree)
+    n.subs <- get.fitch.n.mts(x=snps, tree=tree)
     n.subs <- table(n.subs)
     ## handle n.subs "levels" with 0 SNP loci at those levels:
     noms <- as.numeric(names(n.subs))
@@ -1623,6 +1643,12 @@ treeWAS <- function(snps,
 
   for(i in 1:length(CHUNKS)){
 
+
+    if(length(CHUNKS) > 1){
+      ## Print update notice:
+      cat("########### Running chunk ", i, " of ", length(CHUNKS), "###########")
+    }
+
     snps <- SNPS[[i]]
     n.snps.sim <- N.SNPS.SIM[[i]]
     snps.reconstruction <- SNPS.REC[[i]]
@@ -1890,10 +1916,14 @@ treeWAS <- function(snps,
 
     ## EXPAND DATA BEFORE STORING FOR THIS CHUNK:
     snps.sim <- snps.sim.complete
-    snps.rec <- snps.rec[,snps.index]
-    colnames(snps.rec) <- colnames(snps.complete)
-    snps.sim.rec <- snps.sim.rec[,snps.sim.index]
-    colnames(snps.sim.rec) <- colnames(snps.sim.complete)
+    if(!is.null(snps.rec)){
+      snps.rec <- snps.rec[,snps.index]
+      colnames(snps.rec) <- colnames(snps.complete)
+    }
+    if(!is.null(snps.sim.rec)){
+      snps.sim.rec <- snps.sim.rec[,snps.sim.index]
+      colnames(snps.sim.rec) <- colnames(snps.sim.complete)
+    }
 
     ## STORE DATA CREATED FOR THIS CHUNK:
     SNPS.SIM[[i]] <- snps.sim
@@ -1993,6 +2023,17 @@ treeWAS <- function(snps,
     ############################
     if(plot.manhattan == TRUE){
 
+      if(TEST[[i]] == "fisher"){
+        ylab <- NULL # --> (uncorrected or) -log10 p-value
+        log10 <- TRUE
+        ttl <- paste("\n \n(", TEST[[i]], "test)")
+      }else{
+        ylab <- paste(TEST[[i]], "score", sep=" ")
+        log10 <- FALSE
+        ttl <- paste("\n \n(", TEST[[i]], "score)")
+      }
+
+      ## plot:
       manhattan.plot(p.vals = abs(corr.dat),
                      col = "funky",
                      transp = 0.25,
@@ -2002,10 +2043,10 @@ treeWAS <- function(snps,
                      snps.assoc.col = "red",
                      jitter.amount = 0.00001,
                      min.p = NULL,
-                     log10=FALSE,
-                     ylab=paste(TEST[[i]], "score", sep=" "))
+                     log10=log10,
+                     ylab=ylab)
       ## Add subtitle:
-      title(paste("\n \n(", TEST[[i]], "score)"), cex.main=0.9)
+      title(ttl, cex.main=0.9)
     } # end plot manhattan
 
 
@@ -2014,47 +2055,91 @@ treeWAS <- function(snps,
     ####################################
 
     if(plot.null.dist == TRUE){
-      ## Generate one histogram per test:
-      plot_sig_snps(corr.dat = abs(corr.dat),
-                    corr.sim = abs(corr.sim),
-                    corr.sim.subset = NULL,
-                    sig.corrs = abs(corr.dat[sig.snps]),
-                    sig.snps = sig.snps.names,
-                    sig.thresh = sig.thresh,
-                    test = TEST[[i]],
-                    sig.snps.col = "black",
-                    hist.col = rgb(0,0,1,0.5),
-                    hist.subset.col = rgb(1,0,0,0.5),
-                    thresh.col = "red",
-                    snps.assoc = NULL,
-                    snps.assoc.col = "blue",
-                    bg = "lightgrey",
-                    grid = TRUE,
-                    freq = FALSE,
-                    plot.null.dist = TRUE,
-                    plot.dist = FALSE)
+      if(TEST[[i]] == "fisher"){
+        ## Generate one histogram per test:
+        plot.sig.snps(corr.dat = -log10(abs(corr.dat)),
+                      corr.sim = -log10(abs(corr.sim)),
+                      corr.sim.subset = NULL,
+                      sig.corrs = -log10(abs(corr.dat[sig.snps])),
+                      sig.snps = sig.snps.names,
+                      sig.thresh = -log10(sig.thresh),
+                      test = TEST[[i]],
+                      sig.snps.col = "black",
+                      hist.col = rgb(0,0,1,0.5),
+                      hist.subset.col = rgb(1,0,0,0.5),
+                      thresh.col = "red",
+                      snps.assoc = NULL,
+                      snps.assoc.col = "blue",
+                      bg = "lightgrey",
+                      grid = TRUE,
+                      freq = FALSE,
+                      plot.null.dist = TRUE,
+                      plot.dist = FALSE)
+      }else{
+        ## Generate one histogram per test:
+        plot.sig.snps(corr.dat = abs(corr.dat),
+                      corr.sim = abs(corr.sim),
+                      corr.sim.subset = NULL,
+                      sig.corrs = abs(corr.dat[sig.snps]),
+                      sig.snps = sig.snps.names,
+                      sig.thresh = sig.thresh,
+                      test = TEST[[i]],
+                      sig.snps.col = "black",
+                      hist.col = rgb(0,0,1,0.5),
+                      hist.subset.col = rgb(1,0,0,0.5),
+                      thresh.col = "red",
+                      snps.assoc = NULL,
+                      snps.assoc.col = "blue",
+                      bg = "lightgrey",
+                      grid = TRUE,
+                      freq = FALSE,
+                      plot.null.dist = TRUE,
+                      plot.dist = FALSE)
+      }
     } # end plot.null.dist
 
     if(plot.dist == TRUE){
-      ## Generate one histogram per test:
-      plot_sig_snps(corr.dat = abs(corr.dat),
-                    corr.sim = abs(corr.sim),
-                    corr.sim.subset = NULL,
-                    sig.corrs = abs(corr.dat[sig.snps]),
-                    sig.snps = sig.snps.names,
-                    sig.thresh = sig.thresh,
-                    test = TEST[[i]],
-                    sig.snps.col = "black",
-                    hist.col = rgb(0,0,1,0.5),
-                    hist.subset.col = rgb(1,0,0,0.5),
-                    thresh.col = "red",
-                    snps.assoc = NULL,
-                    snps.assoc.col = "blue",
-                    bg = "lightgrey",
-                    grid = TRUE,
-                    freq = FALSE,
-                    plot.null.dist = FALSE,
-                    plot.dist = TRUE)
+      if(TEST[[i]] == "fisher"){
+        ## Generate one histogram per test:
+        plot.sig.snps(corr.dat = -log10(abs(corr.dat)),
+                      corr.sim = -log10(abs(corr.sim)),
+                      corr.sim.subset = NULL,
+                      sig.corrs = -log10(abs(corr.dat[sig.snps])),
+                      sig.snps = sig.snps.names,
+                      sig.thresh = -log10(sig.thresh),
+                      test = TEST[[i]],
+                      sig.snps.col = "black",
+                      hist.col = rgb(0,0,1,0.5),
+                      hist.subset.col = rgb(1,0,0,0.5),
+                      thresh.col = "red",
+                      snps.assoc = NULL,
+                      snps.assoc.col = "blue",
+                      bg = "lightgrey",
+                      grid = TRUE,
+                      freq = FALSE,
+                      plot.null.dist = FALSE,
+                      plot.dist = TRUE)
+      }else{
+        ## Generate one histogram per test:
+        plot.sig.snps(corr.dat = abs(corr.dat),
+                      corr.sim = abs(corr.sim),
+                      corr.sim.subset = NULL,
+                      sig.corrs = abs(corr.dat[sig.snps]),
+                      sig.snps = sig.snps.names,
+                      sig.thresh = sig.thresh,
+                      test = TEST[[i]],
+                      sig.snps.col = "black",
+                      hist.col = rgb(0,0,1,0.5),
+                      hist.subset.col = rgb(1,0,0,0.5),
+                      thresh.col = "red",
+                      snps.assoc = NULL,
+                      snps.assoc.col = "blue",
+                      bg = "lightgrey",
+                      grid = TRUE,
+                      freq = FALSE,
+                      plot.null.dist = FALSE,
+                      plot.dist = TRUE)
+      }
     } # end plot.dist
 
 
@@ -2485,10 +2570,3 @@ treeWAS <- function(snps,
 
 
 ###
-
-#' @import stats
-#' @import graphics
-#' @import grDevices
-#' @import ape
-#' @importFrom utils write.table
-NULL

@@ -17,7 +17,9 @@
 #' @param snps description.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#  adegenet ape
+#'
+#'
+#' @import adegenet ape
 #' @export
 
 ########################################################################

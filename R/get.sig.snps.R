@@ -31,6 +31,7 @@
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
 #' @export
 #' @importFrom pryr mem_used
 #'
@@ -329,6 +330,7 @@ get.assoc.scores <- function(snps,
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
+#'
 #' @export
 #' @importFrom pryr mem_used
 #'
@@ -383,12 +385,18 @@ get.sig.snps <- function(corr.dat,
     ## bonf ##
     ##########
     if (p.value.correct == "bonf") p.value <- p.value/(length(corr.dat)*n.tests)
-
+    
     ################
     ## p.value.by ##
     ################
-    if(p.value.by == "count") thresh <- quantile(abs(corr.sim), probs=1-p.value)
-    if(p.value.by == "density") thresh <- quantile(density(abs(corr.sim))$x, probs=1-p.value)
+    if(test == "fisher"){
+      if(p.value.by == "count") thresh <- quantile(abs(corr.sim), probs=p.value)
+      if(p.value.by == "density") thresh <- quantile(density(abs(corr.sim))$x, probs=p.value)
+      if(thresh < 0) thresh <- 0 # problem only for density approach
+    }else{
+      if(p.value.by == "count") thresh <- quantile(abs(corr.sim), probs=1-p.value)
+      if(p.value.by == "density") thresh <- quantile(density(abs(corr.sim))$x, probs=1-p.value)
+    }
   }
 
   # print(paste("Test flag #4; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @",  Sys.time()))
@@ -402,14 +410,19 @@ get.sig.snps <- function(corr.dat,
                           corr.dat = NULL,
                           fisher.test = TRUE)
     p.vals <- sort(p.vals, decreasing=TRUE)
-    p.fdr <- p.adjust(p.vals, method="fdr", n=length(p.vals)*n.tests) # CHECK--IS THIS THE CORRECT MT APPROACH FOR FDR????????????????????????
+    p.fdr <- p.adjust(p.vals, method="fdr", n=length(p.vals)*n.tests) # CHECK--IS THIS THE CORRECT MT APPROACH FOR FDR???
     p.thresh <- quantile(p.fdr, probs=1-p.value)
 
     ################
     ## p.value.by ##
     ################
-    if(p.value.by == "count") thresh <- quantile(abs(corr.sim), probs=p.thresh)
-    if(p.value.by == "density") thresh <- quantile(density(abs(corr.sim))$x, probs=p.thresh)
+    if(test == "fisher"){
+      if(p.value.by == "count") thresh <- quantile(abs(corr.sim), probs=1-p.thresh)
+      if(p.value.by == "density") thresh <- quantile(density(abs(corr.sim))$x, probs=1-p.thresh)
+    }else{
+      if(p.value.by == "count") thresh <- quantile(abs(corr.sim), probs=p.thresh)
+      if(p.value.by == "density") thresh <- quantile(density(abs(corr.sim))$x, probs=p.thresh)
+    }
 
   } # end p.value.correct == "fdr"
 
@@ -548,14 +561,21 @@ assoc.test <- function(snps,
   if(test=="fisher"){
     ## (!) Consider using tryCatch to avoid stupid (unpredictable?)
     ## workspace (FEXACT, LDSTP) error? (soln: arg workspace=2e6 (slow)).
-    ## Using as.factor prevents errors w 1-level factors.
-    # if(class(tryCatch(
-      corr.dat <- sapply(c(1:ncol(snps)),
-                       function(e) fisher.test(as.factor(snps[,e]),
-                                               y=as.factor(phen),
-                                               alternative="two.sided")$p.value)
-      # , silent=TRUE)) == "try-error") print(1)
-    ## the phen have EITHER more 1s or 0s
+    # # if(class(tryCatch(
+    #   corr.dat <- sapply(c(1:ncol(snps)),
+    #                    function(e) fisher.test(as.factor(snps[,e]),
+    #                                            y=as.factor(phen),
+    #                                            alternative="two.sided")$p.value)
+    #   # , silent=TRUE)) == "try-error") print(1)
+
+    ## Must prevent errors w 1-level factors (eg. if only 0 or NA but no 1s in snps[,e]):
+    levs <- sapply(c(1:ncol(snps)), function(e) length(which(!is.na(unique(snps[,e])))))
+    toKeep <- which(levs >= 2)
+    corr.dat <- rep(NA, ncol(snps))
+    corr.dat[toKeep] <- sapply(c(1:ncol(snps[,toKeep])),
+                               function(e) fisher.test(snps[,toKeep[e]],
+                                                       y=phen,
+                                                       alternative="two.sided")$p.value)
   } # end test fisher
 
 

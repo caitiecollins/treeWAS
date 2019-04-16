@@ -119,7 +119,7 @@
 #' snps.assoc <- dat$snps.assoc
 #' tree <- dat$tree
 #' }
-#  adegenet ape
+#' @import adegenet ape
 #' @importFrom phangorn midpoint
 #'
 #' @export
@@ -220,6 +220,7 @@ coalescent.sim <- function(n.ind = 100,
                            grp.min = 0.25,
                            row.names = TRUE,
                            set = 1,
+                           tree = NULL,
                            coaltree = TRUE,
                            s = 20,
                            af = 10,
@@ -243,15 +244,44 @@ coalescent.sim <- function(n.ind = 100,
     par(ask=TRUE)
   }
 
+  ## Allow assoc.prob to be in percent or
+  ## as a proportion (-> eg 80 or 90, ie out of 100):
+  if(!is.null(assoc.prob)){
+    if(assoc.prob[1] >= 0 & assoc.prob <= 1){
+      assoc.prob <- assoc.prob*100
+    }
+  }
+
   ################################
   ## Simulate Phylogenetic Tree ##
   ################################
-  if(coaltree == TRUE){
-    if(!is.null(seed)) set.seed(seed)
-    tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
-  }else{
-    if(!is.null(seed)) set.seed(seed)
-    tree <- rtree(n = n.ind)
+  ## tree provided?
+  if(!is.null(tree)){
+    ## check:
+    if(is.null(n.ind)){
+      n.ind <- length(tree$tip.label)
+    }
+    if(length(tree$tip.label) != n.ind){
+      warning("n.ind did not match length(tree$tip.label). Simulating tree instead.")
+      tree <- NULL
+    }
+    if(!is.null(phen)){
+      if(length(tree$tip.label) != length(phen)){
+        warning("length(phen) did not match length(tree$tip.label). Simulating tree instead.")
+        tree <- NULL
+      }
+    }
+  }
+
+  ## simulate tree:
+  if(is.null(tree)){
+    if(coaltree == TRUE){
+      if(!is.null(seed)) set.seed(seed)
+      tree <- coalescent.tree.sim(n.ind = n.ind, seed = seed)
+    }else{
+      if(!is.null(seed)) set.seed(seed)
+      tree <- rtree(n = n.ind)
+    }
   }
   ## Always work with tree in pruningwise order:
   tree <- reorder.phylo(tree, order="pruningwise")
@@ -349,8 +379,56 @@ coalescent.sim <- function(n.ind = 100,
     #############################
     ## User-provided Phenotype ##
     #############################
-    phen.nodes <- phen
-    phen.loci <- NULL
+    phen.nodes <- asr(phen, tree, type="parsimony")
+
+    ## get COLOR for NODES
+    nodeCol <- "grey"
+    if(all.is.numeric(phen.nodes[!is.na(phen.nodes)])){
+      var <- as.numeric(as.character(phen.nodes))
+    }else{
+      var <- as.character(phen.nodes)
+    }
+    levs <- unique(var[!is.na(var)])
+    if(length(levs) == 2){
+      ## binary:
+      # myCol <- c("red", "blue")
+      myCol <- c("blue", "red")
+      nodeCol <- var
+      ## for loop
+      for(i in 1:length(levs)){
+        nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
+      } # end for loop
+    }else{
+      if(is.numeric(var)){
+        ## numeric:
+        myCol <- num2col(var, col.pal = seasun)
+        nodeCol <- myCol
+      }else{
+        ## categorical...
+        myCol <- funky(length(levs))
+        nodeCol <- var
+        ## for loop
+        for(i in 1:length(levs)){
+          nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
+        } # end for loop
+      }
+    }
+    nodeCol <- as.vector(unlist(nodeCol))
+
+    ## get COLOR for EDGES
+    edgeCol <- rep("black", nrow(tree$edge))
+    for(i in 1:nrow(tree$edge)){
+      edgeCol[i] <- nodeCol[tree$edge[i,2]]
+      if(is.na(nodeCol[tree$edge[i,1]]) | is.na(nodeCol[tree$edge[i,2]])){
+        edgeCol[i] <- "grey"
+      }else{
+        ## No grey if truly continuous...
+        if(length(levs) < length(tree$tip.label)/10){
+          if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
+        }
+      }
+    }
+    phen.loci <- which(edgeCol == "grey")
   }
 
 
@@ -403,14 +481,14 @@ coalescent.sim <- function(n.ind = 100,
   }
 
   if(plot==TRUE){
-    if(class(try(plot_phen(tree = tree,
+    if(class(try(plot.phen(tree = tree,
                            phen.nodes = phen.nodes,
                            plot = plot))) =="try-error"){
       plot(tree)
       warning("Oops-- something went wrong when trying to plot
               phenotypic changes on tree.")
     }else{
-      phen.plot.col <- plot_phen(tree = tree,
+      phen.plot.col <- plot.phen(tree = tree,
                                  phen.nodes = phen.nodes,
                                  plot = plot, main.title=FALSE)
     }

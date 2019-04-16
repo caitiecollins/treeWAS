@@ -36,6 +36,20 @@ To apply this function to the \emph{columns} of a matrix, simply
 transpose the matrix before executing the command, as in:
 \code{table.matrix(t(data))}.
 }
+\examples{
+\dontrun{
+## load example data:
+data("snps.ace")
+x <- snps.ace
+
+## basic use of fn on rows of x:
+tab.out <- table.matrix(x)
+
+## apply fn to columns of x:
+tab.out <- table.matrix(t(x))
+}
+
+}
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }

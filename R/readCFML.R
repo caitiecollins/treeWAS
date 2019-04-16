@@ -31,7 +31,8 @@
 #' (ii) \code{snps}: The binary genetic data matrix of polymorphic loci.
 #' (iii) \code{snps.rec}: The genetic data reconstruction matrix.
 #' (iv) \code{seqs}: The genetic data sequences (polymorphic loci only), a \code{DNAbin} object.
-#' (v) \code{index}: The index vector, indicating for each column in \code{seqs} the unique polymorphic column pattern to which it corresponds (0 = non-polymorphic).
+#' (v) \code{index}: The index vector, indicating for each column in \code{seqs}
+#' the unique polymorphic column pattern to which it corresponds (0 = non-polymorphic).
 #' (vi) \code{n.subs}: The distribution of the number of substitutions per site.
 #' Note that all genetic data elements (ii - iv) are returned in expanded form; that is,
 #' they contain both unique and duplicate column patterns for all polymorphic loci as indicated in the \code{index} vector.
@@ -39,7 +40,7 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
-#  ape adegenet
+#' @import ape adegenet
 
 ########################################################################
 
@@ -52,7 +53,7 @@
 ## the distribution of substitutions per site (n.subs),
 
 
-read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
+read.CFML <- function(prefix, tree=NULL, plot=TRUE, suff.length = 2) {
 
   # require(ape)
   # require(adegenet)
@@ -116,7 +117,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
   num <- rep(0,l) # Number of times a given pattern is used
 
   ## SLOW STEP!!!
-  system.time(
+  # system.time(
   for(i in 1:l) {
     if(length(unique(seqs[,i])) == 2){
       num[i] <- sum(mapping == i) # Only count biallelic sites
@@ -124,7 +125,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
       subs[i] <- subs[i]+n
     } ## NOTE--only counting biallelic sites for num, and for subs dist (below)...
   } # end for loop
-  ) # end system.time
+  # ) # end system.time
 
   ## Build distribution
   dist <- rep(0, max(subs)) # there should be no trailing zeros!
@@ -143,7 +144,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
             col=transp("royalblue", alpha=0.5))
   }
 
-  ## NEW ##
+
 
   ## Expand seqs with mapping/index:
   seqs <- seqs[,mapping]
@@ -162,6 +163,41 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
   N <- nrow(snps.rec)-tree$Nnode
   toKeep <- 1:N
   snps <- snps.rec[toKeep, ]
+
+
+  ## NEW ##
+
+  ## keep original names...
+  ########################
+  ## get ORIGINAL positions of snps.loci: ##
+  ## name index according to ORIGINAL indices:
+  indx <- mapping
+  names(indx) <- c(1:length(indx))
+  ## get POLYMORPHIC indices:
+  ix <- indx[indx != 0]
+
+  ####    ####    ####    ####    ####
+  ## ENTER SNP.locus POSITION:
+  if(is.null(suff.length)) suff.length <- 0
+  l.ori <- removeLastN(colnames(snps), suff.length)
+  l.ori <- as.numeric(l.ori)
+  ## and SEQS positions:
+  l.ori.sq <- 1:ncol(seqs)
+
+  ## Identify locus original name among polymorphic indices:
+  l <- as.numeric(names(ix[l.ori])) # snps
+  l.sq <- as.numeric(names(ix[l.ori.sq])) # seqs
+  # head(l, 20) # original positions
+  ## Check (should be no NAs):
+  if(length(which(is.na(l))) > 0){
+    warning("Oops, there should be no NAs in the set of original positions, but NAs have been generated.")
+  }
+
+  ## Set originalPositions.allele as snps colnames:
+  colnames(snps) <- paste(l, keepLastN(colnames(snps), suff.length), sep="")
+  colnames(snps.rec) <- colnames(snps)
+  colnames(seqs) <- l.sq
+  ########################
 
 
   ## NOTE: BOTH seqs and snps are being returned in EXPANDED form (POLYMORPHIC only).
@@ -235,7 +271,8 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 #' @param csv.prefix An optional character vector specifying a directory and
 #' filename prefix for the CSV file (if \code{csv=TRUE}); default name/suffix, "sig_loci.csv".
 #' \emph{Please be careful: Any existing file of that name will be overwritten!}
-#' @param NA.thresh A number between 0 and 1 indicating the max allowable NA proportion for sequence fragments
+#' @param NA.thresh A number between 0 and 1 indicating the max allowable
+#' proportion of NAs that the output sequence fragments can contain.
 #' (if a sequence fragment from row 1 exceeds this threshold,
 #' a sufficiently complete sequence fragment will be sought in subsequent rows); by default, 0.2.
 #'
@@ -264,6 +301,7 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
+#' @examples
 #'
 #' @importFrom ape read.dna
 #' @importFrom utils write.csv
@@ -287,40 +325,73 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE) {
 #
 # foo <- get.original.loci(seqs, dat, sig.snps.names, n.bp=40, csv=T, csv.prefix="/home/caitiecollins/ClonalFrameML/src/pubMLST/Gono/CRO/Grad2014_CRO")
 ################################################
+################################################
+# fasta <- "/media/caitiecollins/Seagate Backup Plus Drive/ClonalFrameML/src/pubMLST/Neisseria/B/penicillin_range/WG/phylip/B_penicillin_range_WG.fas"
+# prefix <- "/media/caitiecollins/Seagate Backup Plus Drive/ClonalFrameML/src/pubMLST/Neisseria/B/penicillin_range/WG/phylip/B_penicillin_range_WG.fas.out"
+#
+# ## read in original fasta sequence:
+# seqs <- read.dna(fasta, format="fasta")
+#
+# ## load read.CFML_dat.Rdata
+# dat <- get(load(sprintf('%s.read.CFML_dat.Rdata', prefix)))
+#
+# ## get sig.snps.names from treeWAS output:
+# ## core SNPs results:
+# out <- get(load(sprintf('%s.treeWAS_out.Rdata', prefix)))
+# ## accessory gene presence/absence results:
+# # out <- get(load("/media/caitiecollins/Seagate Backup Plus Drive/ClonalFrameML/src/pubMLST/Neisseria/B/penicillin_range/WG/phylip/B_penicillin_range_WG.fas.out.treeWAS_PA_out.Rdata"))
+# sig.snps.names <- out$treeWAS.combined$treeWAS.combined
+#
+# foo <- get.original.loci(seqs, dat, sig.snps.names, n.bp=40, csv=T, csv.prefix=prefix)
+################################################
 
 get.original.loci <- function(seqs, dat, sig.snps.names, n.bp = 50, suff.length = 2, csv = TRUE, csv.prefix = NULL, NA.thresh = 0.2){
 
   ## Extract elements from read.CFML dat:
   index <- dat$index
   snps <- dat$snps
+  # seqs <- dat$seqs
 
-  ## get ORIGINAL positions of snps.loci: ##
+  ## (if necessary) get ORIGINAL positions of snps.loci: ##
   ## name index according to ORIGINAL indices:
-  inds <- index
-  names(inds) <- c(1:length(inds))
+  indx <- index
+  names(indx) <- c(1:length(indx))
   ## get POLYMORPHIC indices:
-  ix <- inds[which(inds != 0)]
+  ix <- indx[which(indx != 0)]
 
   ####    ####    ####    ####    ####
-  ## ENTER SNP.locus POSITION:
-  if(is.null(suff.length)) suff.length <- 0
-  # l.ori <- 1:ncol(snps)
-  l.ori <- removeLastN(colnames(snps), suff.length)
-  l.ori <- as.numeric(l.ori)
+  ## CHECK---old snps.names (!= seqs) or new (matching seqs)?
+  if(max(as.numeric(names(ix))) == max(as.numeric(unique(removeLastN(colnames(snps), suff.length))))){
+  # which.max(mapping)
+  # identical(as.numeric(unique(removeLastN(colnames(snps), suff.length))), as.numeric(unique(colnames(seqs))))
 
-  ## Identify sig.locus original name among polymorphic indices:
-  l <- as.numeric(names(ix[l.ori]))
-  # head(l, 20) # original positions
-  ## Check (should be no NAs):
-  if(length(which(is.na(l))) > 0){
-    warning("Oops, there should be no NAs in the set of original positions, but NAs have been generated.")
+    ## Get set of ORIGINAL POSITIONS (total or for sig.loci only if provided): ##
+    sig.snps <- sapply(c(1:length(sig.snps.names)), function(e) which(colnames(snps) == sig.snps.names[e]))
+    l.sig <- l[sig.snps]
+    names(l.sig) <- paste(l[sig.snps], keepLastN(sig.snps.names, suff.length), sep="")
+
+  }else{
+    ####    ####    ####    ####    ####
+    ## ENTER SNP.locus POSITION:
+    if(is.null(suff.length)) suff.length <- 0
+    # l.ori <- 1:ncol(snps)
+    l.ori <- removeLastN(colnames(snps), suff.length)
+    l.ori <- as.numeric(l.ori)
+
+    ## Identify sig.locus original name among polymorphic indices:
+    l <- as.numeric(names(ix[l.ori]))
+    # head(l, 20) # original positions
+    ## Check (should be no NAs):
+    if(length(which(is.na(l))) > 0){
+      warning("Oops, there should be no NAs in the set of original positions, but NAs have been generated.")
+    }
+
+    ## Get set of ORIGINAL POSITIONS (total or for sig.loci only if provided): ##
+    sig.snps <- sapply(c(1:length(sig.snps.names)), function(e) which(colnames(snps) == sig.snps.names[e]))
+    # sig.snps <- which(colnames(snps) %in% sig.snps.names)
+    l.sig <- l[sig.snps]
+    names(l.sig) <- paste(l[sig.snps], keepLastN(sig.snps.names, suff.length), sep="")
   }
-
-  ## Get set of ORIGINAL POSITIONS (total or for sig.loci only if provided): ##
-  sig.snps <- sapply(c(1:length(sig.snps.names)), function(e) which(colnames(snps) == sig.snps.names[e]))
-  # sig.snps <- which(colnames(snps) %in% sig.snps.names)
-  l.sig <- l[sig.snps]
-  names(l.sig) <- paste(l[sig.snps], keepLastN(sig.snps.names, 2), sep="")
 
 
   ###############################################################

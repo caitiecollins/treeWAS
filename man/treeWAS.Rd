@@ -4,10 +4,11 @@
 \alias{treeWAS}
 \title{Phylogenetic tree-based GWAS for microbes.}
 \usage{
-treeWAS(snps, phen, tree = c("BIONJ", "NJ", "parsimony", "BIONJ*", "NJ*"),
-  n.subs = NULL, n.snps.sim = ncol(snps) * 10, chunk.size = ncol(snps),
-  mem.lim = FALSE, test = c("terminal", "simultaneous", "subsequent"),
-  snps.reconstruction = "parsimony", snps.sim.reconstruction = "parsimony",
+treeWAS(snps, phen, tree = c("BIONJ", "NJ", "parsimony", "BIONJ*",
+  "NJ*"), n.subs = NULL, n.snps.sim = ncol(snps) * 10,
+  chunk.size = ncol(snps), mem.lim = FALSE, test = c("terminal",
+  "simultaneous", "subsequent"), snps.reconstruction = "parsimony",
+  snps.sim.reconstruction = "parsimony",
   phen.reconstruction = "parsimony", phen.type = NULL, na.rm = TRUE,
   p.value = 0.01, p.value.correct = c("bonf", "fdr", FALSE),
   p.value.by = c("count", "density"), dist.dna.model = "JC69",
@@ -165,7 +166,7 @@ The \code{treeWAS} function returns a list object, which takes on the following 
           }
 
           \item{\code{$min.p.value}
-          The minimum p-value. P-values listed as zero can only truly be defined as below this value.}
+          The minimum p-value. P-values listed as zero can only truly be defined as being below this value.}
           }
           }
 

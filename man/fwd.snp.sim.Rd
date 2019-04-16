@@ -5,8 +5,9 @@
 \title{Short one-phrase description.}
 \usage{
 fwd.snp.sim(n.snps = 10000, n.subs = 1, n.snps.assoc = 0,
-  n.subs.assoc = 15, tree = coalescent.tree.sim(100), heatmap = FALSE,
-  reconstruct = FALSE, dist.dna.model = "JC69", seed = 1)
+  n.subs.assoc = 15, tree = coalescent.tree.sim(100),
+  heatmap = FALSE, reconstruct = FALSE, dist.dna.model = "JC69",
+  seed = 1)
 }
 \arguments{
 \item{snps}{description.}

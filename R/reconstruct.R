@@ -23,8 +23,8 @@
 #' between the individuals for which snps and phen are known.
 #' @param type A character string specifying whether ancestral state reconstruction should be
 #' performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} function in package \emph{ape}).
-#' @param method A character string specifying the type of ASR method to implement (only used if
-#' \code{type} is set to "ML").
+#' @param method A character string specifying the type of ASR method to implement,
+#' either \code{'discrete'} or \code{'continuous'} (only used if \code{type} is set to "ML").
 #' @param unique.cols A logical indicating whether only unique column patterns are present in \code{var}, if \code{var} is a matrix
 #' (if so (TRUE), a time-consuming step can be skipped); by default, FALSE.
 #'
@@ -36,10 +36,10 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
-#  ape
+#' @import ape
 #' @importFrom Hmisc all.is.numeric
-#' @importFrom phytools anc.ML
-#' @importFrom phytools fastAnc
+#' @importFrom phytools anc.ML fastAnc
+#' @importFrom phangorn pml ancestral.pml
 
 
 ########################################################################
@@ -332,7 +332,7 @@ asr <- function(var,
     ## CHECK ARGS: ##
     #################
     levs <- unique(as.vector(unlist(var)))
-    levs <- levs[!is.na(levs)]
+    levs <- levs[!is.na(levs)] # no NAs allowed in phen variables in GWAS.
     ## BINARY: ##
     if(length(levs) == 2){
       ## Choose parsimony if none:
@@ -358,8 +358,10 @@ asr <- function(var,
         }
       }
       if(method == "continuous"){
-        type <- "ml"
-        cat("Reconstruction type must be 'ML' when variable is 'continuous'. Setting type to 'ML'.\n")
+        if(type != "ml"){
+          type <- "ml"
+          cat("Reconstruction type must be 'ML' when variable is 'continuous'. Setting type to 'ML'.\n")
+        }
       }
 
       ## Parsimony NOT available if >75% unique:
@@ -374,6 +376,13 @@ asr <- function(var,
 
     ## Assign var to phen:
     phen <- var
+
+    ###############################
+    ## *If phen is NOT variable: ##
+    ###############################
+    if(length(levs) == 1){
+      phen.rec <- rep(levs, max(tree$edge[,2]))
+    }else{
 
     ############################
     ## run PARSIMONY on phen: ##
@@ -427,92 +436,94 @@ asr <- function(var,
       # }else{ # end ML for rooted & binary trees
       #
 
-        ## ML for all (rooted/unrooted, binary/non-binary) trees: ##
+      ## ML for all (rooted/unrooted, binary/non-binary) trees: ##
 
-        ## DISCRETE: ##
-        if(method == "discrete"){
+      ## DISCRETE: ##
+      if(method == "discrete"){
 
-          ## get levels (ie. 0, 1)
-          phen.levels <- sort(unique(phen), na.last = TRUE)
-          ## returns only unique patterns...
-          phen.phyDat <- as.phyDat(as.matrix(phen),
-                                   type="USER", levels=phen.levels)
-          ## get index of all original snps columns to map to unique pattern
-          index.phyDat <- attr(phen.phyDat, "index")
+        ## get levels (ie. 0, 1)
+        phen.levels <- sort(unique(phen), na.last = TRUE)
+        ## returns only unique patterns...
+        phen.phyDat <- as.phyDat(as.matrix(phen),
+                                 type="USER", levels=phen.levels)
+        ## get index of all original snps columns to map to unique pattern
+        index.phyDat <- attr(phen.phyDat, "index")
+
+        ## ML discrete reconstruction:
+        ## Step 1:
+        fit <- pml(tree, phen.phyDat)
+
+        ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
+        l <- max(tree$edge[,2])
+        ord <- 1:l
+
+        ## Binary:
+        if(length(phen.levels[!is.na(phen.levels)]) == 2){
 
           ## ML discrete reconstruction:
-          ## Step 1:
-          fit <- pml(tree, phen.phyDat)
+          ## Step 2 (Binary --> get probs):
+          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
 
-          ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
-          l <- max(tree$edge[,2])
-          ord <- 1:l
-
-          ## Binary:
-          if(length(phen.levels[!is.na(phen.levels)]) == 2){
-
-            ## ML discrete reconstruction:
-            ## Step 2 (Binary --> get probs):
-            rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
-
-            ## If NAs are present, replace column 1 0s with NA values
-            ## whenever column 3 (NA) has a 1 in it:
-            if(any(is.na(phen.levels))){
-              na.col <- which(is.na(phen.levels))
-              for(i in 1:length(rec)){
-                foo <- rec[[i]]
-                toReplace <- which(foo[,na.col] == 1)
-                if(length(toReplace) > 0){
-                  foo[toReplace,1] <- NA
-                  foo[toReplace,2] <- NA
-                }
-                rec[[i]] <- foo
-              } # end for loop
-            }
-            ## Bind list into matrix:
-            phen.rec <- do.call(cbind, rec[ord])
-            phen.rec <- as.vector(t(phen.rec[, seq(2, ncol(phen.rec), length(phen.levels))]))
-
-          }else{
-
-            ## Non-Binary (discrete):
-
-            ## ML discrete reconstruction:
-            ## Step 2 (Non-binary --> get states):
-            rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
-
-            ## Bind list & reorder elements:
-            phen.rec <- do.call(rbind, rec[ord])
-
-            ## replace level #s w levels:
-            phen.rec <- attr(rec, "levels")[phen.rec]
-
-          } # end non-binary
+          ## If NAs are present, replace column 1 0s with NA values
+          ## whenever column 3 (NA) has a 1 in it:
+          if(any(is.na(phen.levels))){
+            na.col <- which(is.na(phen.levels))
+            for(i in 1:length(rec)){
+              foo <- rec[[i]]
+              toReplace <- which(foo[,na.col] == 1)
+              if(length(toReplace) > 0){
+                foo[toReplace,1] <- NA
+                foo[toReplace,2] <- NA
+              }
+              rec[[i]] <- foo
+            } # end for loop
+          }
+          ## Bind list into matrix:
+          phen.rec <- do.call(cbind, rec[ord])
+          phen.rec <- as.vector(t(phen.rec[, seq(2, ncol(phen.rec), length(phen.levels))]))
 
         }else{
 
-          ## CONTINUOUS: ##
+          ## Non-Binary (discrete):
 
-          ## get terminal values
-          var.terminal <- var
+          ## ML discrete reconstruction:
+          ## Step 2 (Non-binary --> get states):
+          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
 
-          ## With MISSING DATA in any columns: ##
-          ## Continuous ML rec: ##
-          ## get internal values:
-          var.internal <- fastAnc(tree, var) ## require(phytools)
+          ## Bind list & reorder elements:
+          phen.rec <- do.call(rbind, rec[ord])
 
-          ## get internal values (when (any) var contains NAs):
-          # var <- var[!is.na(var)]
-          # phen.ML <- anc.ML(tree, var) ## require(phytools)
-          # var.internal <- phen.ML$ace
+          ## replace level #s w levels:
+          phen.rec <- attr(rec, "levels")[phen.rec]
 
-          ## get reconstruction from terminal & internal values
-          phen.rec <- c(var.terminal, var.internal)
-        }
+        } # end non-binary
+
+      }else{
+
+        ## CONTINUOUS: ##
+
+        ## get terminal values
+        var.terminal <- var
+
+        ## With MISSING DATA in any columns: ##
+        ## Continuous ML rec: ##
+        ## get internal values:
+        var.internal <- fastAnc(tree, var) ## require(phytools)
+
+        ## get internal values (when (any) var contains NAs):
+        # var2 <- var[!is.na(var)]
+        # phen.ML <- anc.ML(tree, var2) ## require(phytools)
+        # var.internal <- phen.ML$ace
+
+        ## get reconstruction from terminal & internal values
+        phen.rec <- c(var.terminal, var.internal)
+      }
 
       # }
 
     } # end ML
+
+    } # end (rec | Nlevs > 1)
 
     ## assign rownames for all terminal and internal nodes
     if(is.null(tree$node.label)){
@@ -569,7 +580,7 @@ asr <- function(var,
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#  ape
+#' @import ape
 #' @importFrom phangorn as.phyDat
 #' @importFrom phangorn phyDat
 #' @importFrom phangorn pace
@@ -739,7 +750,6 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     } # end non-binary
 
 
-
     ## assign rownames for all terminal and internal nodes
     if(is.null(tree$node.label)){
       rownames(snps.rec) <- c(tree$tip.label, c((nrow(snps)+1):max(tree$edge[,2])))
@@ -780,19 +790,15 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
     ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
-
     #############################
     ## RUN PARSIMONY on VECTOR ##
     #############################
-
     ## Eg. get PHEN states of all internal nodes
-
     phen <- var
 
     #############
     ## ACCTRAN ##
     #############
-
     phen.ori <- phen
     ## Make phen numeric:
     if(!is.numeric(phen)){
@@ -800,7 +806,7 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
         phen <- as.numeric(as.character(phen))
       }else{
         phen <- as.numeric(as.factor(phen))
-        warning("Trying to reconstruct a non-numeric phen.")
+        warning("Reconstructing non-numeric phen.")
       }
     }
     names(phen) <- names(phen.ori)
@@ -810,16 +816,22 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     if(is.null(tree$tip.label)) stop("Trees must have tip.labels corresponding to names(phen).")
     if(is.null(names(phen))) stop("Phen must have names corresponding to tree$tip.label.")
     if(!all(tree$tip.label %in% names(phen))) stop("tree$tip.label and names(phen)
-                                                      must contain the same set of labels
-                                                      so that individuals can be correctly identified.")
+                                                   must contain the same set of labels
+                                                   so that individuals can be correctly identified.")
 
     ## get levels (ie. 0, 1)
     phen.levels <- sort(unique(phen))
     phen.phyDat <- as.phyDat(as.matrix(phen),
                              type="USER", levels=phen.levels)
     ## pace == ancestral.pars
-    rec <- phen.pa.ACCTRAN <- pace(tree, phen.phyDat, type="ACCTRAN")
+    if(class(try(suppressWarnings(pace(tree, phen.phyDat, type="ACCTRAN")), silent=T)) == "try-error"){
 
+      rec <- phen.pa.ACCTRAN <- pace(tree, phen.phyDat, type="MPR")
+
+    }else{
+      rec <- phen.pa.ACCTRAN <- pace(tree, phen.phyDat, type="ACCTRAN")
+
+    }
     ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
     ord <- 1:length(rec)
 
@@ -838,20 +850,33 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
       phen.rec <- do.call(rbind, rec)
       phen.rec <- phen.rec[ord,]
 
-      ## Replace non-binary (uncertain) values w NA:
-      phen.rec <- replace(phen.rec, which(!phen.rec %in% c(0,1)), NA)
-      ## Convert to logical matrix:
-      pr <- as.logical(phen.rec)
-      pr <- matrix(pr, nrow=nrow(phen.rec), ncol=ncol(phen.rec))
-      # Replace any row containing NAs to ONE NA:
-      toReplace <- which(is.na(rowSums(pr, na.rm = FALSE)))
-      pr[toReplace,] <- FALSE
-      pr[toReplace, 1] <- NA
+      # ## Replace non-binary (?!) values w NA:
+      # phen.rec <- replace(phen.rec, which(!phen.rec %in% c(0,1)), NA)
+      # ## Convert to logical matrix:
+      # pr <- as.logical(phen.rec)
+      # pr <- matrix(pr, nrow=nrow(phen.rec), ncol=ncol(phen.rec))
+      # # Replace any row containing NAs to ONE NA:
+      # toReplace <- which(is.na(rowSums(pr, na.rm = FALSE)))
+      # pr[toReplace,] <- FALSE
+      # pr[toReplace, 1] <- NA
+      #####
+      # ## Get values:
+      # levs <- attr(rec, "levels")
+      # foo <- rep(levs, nrow(pr))
+      # phen.rec <- foo[t(pr)]
 
       ## Get values:
+      pr <- phen.rec
       levs <- attr(rec, "levels")
-      foo <- rep(levs, nrow(pr))
-      phen.rec <- foo[t(pr)]
+      foo <- matrix(rep(levs, nrow(pr)), nrow=nrow(pr), byrow=TRUE)
+      pr2 <-  rep(NA, nrow(pr))
+      for(e in 1:nrow(foo)){
+        val <- foo[e, as.logical(pr[e,])]
+        ## if no val or ties, set to NA:
+        if(length(val) != 1) val <- NA
+        pr2[e] <- val
+      }
+      phen.rec <- pr2
 
     } # end non-binary
 

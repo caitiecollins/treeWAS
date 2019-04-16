@@ -4,8 +4,8 @@
 \alias{get.original.loci}
 \title{\code{(read.CFML+)} Get original sequence positions of polymorphic loci.}
 \usage{
-get.original.loci(seqs, dat, sig.snps.names, n.bp = 50, suff.length = 2,
-  csv = TRUE, csv.prefix = NULL, NA.thresh = 0.2)
+get.original.loci(seqs, dat, sig.snps.names, n.bp = 50,
+  suff.length = 2, csv = TRUE, csv.prefix = NULL, NA.thresh = 0.2)
 }
 \arguments{
 \item{seqs}{A \code{DNAbin} object containing the original sequences
@@ -28,7 +28,8 @@ of \code{snps} elements; by default, 2 (see details).}
 filename prefix for the CSV file (if \code{csv=TRUE}); default name/suffix, "sig_loci.csv".
 \emph{Please be careful: Any existing file of that name will be overwritten!}}
 
-\item{NA.thresh}{A number between 0 and 1 indicating the max allowable NA proportion for sequence fragments
+\item{NA.thresh}{A number between 0 and 1 indicating the max allowable
+proportion of NAs that the output sequence fragments can contain.
 (if a sequence fragment from row 1 exceeds this threshold,
 a sufficiently complete sequence fragment will be sought in subsequent rows); by default, 0.2.}
 }
@@ -63,6 +64,9 @@ the allele in \code{sig.snps.names} and \code{colnames(snps)}. For names of the 
 "1234.a", \code{suff.length = 2} (note that the decimal counts as a character).
 If \code{snps} names are purely numeric with no alleles indicated
 (i.e., they already match names in \code{seqs}), then set \code{suff.length = 0}.
+}
+\examples{
+
 }
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}

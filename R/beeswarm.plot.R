@@ -17,10 +17,9 @@
 #' @param y A character string specifying the label of the (numeric) column
 #' in data frame \code{df} to be plotted along the y-axis.
 #'
-#' @details NOTE TO SELF--CAREFUL: y.lim is HARD-CODED as (0,1). Change this is you want to release this wrapper!
-#'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-#  ggplot2
+#'
+#' @import ggplot2 Hmisc
 #' @importFrom beeswarm beeswarm
 #'
 #' @export
@@ -34,12 +33,9 @@
 beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                          pt.size=4, x.text=FALSE,
                          x.text.size = 15, y.text.size = 15, y.title.size = 20,
+                         y.lim=c(-0.002, 1.02),
                          mean=TRUE){
 
-  #require(beeswarm)
-  #require(Hmisc)
-  # library(plyr)
-  # library(ggplot2)
 
   beeswarm.ori <- fm <- NULL
 
@@ -56,7 +52,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
                                      #priority="descending", ## ONLY for SWARM method...
                                      pwcol = eval(parse(text=x)),
                                      # col = myCol, ## to set w funky colours (INSTEAD of pwcol = test)
-                                     ylim = c(-0.002, 1.002), # otherwise ggplot can't plot ZERO values --> NAs
+                                     ylim = y.lim, # otherwise ggplot can't plot ZERO values --> NAs
                                      las=2,
                                      cex=0.8,
                                      corral = "omit",
@@ -135,7 +131,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
       xlab("") +
       guides(fill=FALSE) +
       scale_x_discrete(drop=FALSE) +
-      scale_y_continuous(y.lab, limits=c(-0.002, 1.02))  # expression("char")
+      scale_y_continuous(y.lab, limits=y.lim)  # expression("char")
 
     beeswarm.plot2 <- beeswarm.plot1 +
       guides(fill=FALSE) +
@@ -182,7 +178,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
         xlab("") +
         guides(fill=FALSE) +
         scale_x_discrete(drop=FALSE) +
-        scale_y_continuous(y.lab, limits=c(-0.002, 1.02)) # expression("char")
+        scale_y_continuous(y.lab, limits=y.lim) # expression("char")
 
       beeswarm.plot2 <- beeswarm.plot1 +
         guides(fill=FALSE) +
@@ -227,7 +223,7 @@ beeswarmPlot <- function(y="sensitivity", x="test", df, y.lab=NULL,
         xlab("") +
         guides(fill=FALSE) +
         scale_x_discrete(drop=FALSE) +
-        scale_y_continuous(y.lab, limits=c(-0.002, 1.02)) # expression("char")
+        scale_y_continuous(y.lab, limits=y.lim) # expression("char")
 
       beeswarm.plot2 <- beeswarm.plot1 +
         guides(fill=FALSE) +

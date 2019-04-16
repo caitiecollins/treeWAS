@@ -4,7 +4,7 @@
 \alias{read.CFML}
 \title{Convert ClonalFrameML output.}
 \usage{
-read.CFML(prefix, tree = NULL, plot = TRUE)
+read.CFML(prefix, tree = NULL, plot = TRUE, suff.length = 2)
 }
 \arguments{
 \item{prefix}{A character string containing the prefix of all file names to be read in.}
@@ -15,7 +15,8 @@ read.CFML returns a list containing:
 (ii) \code{snps}: The binary genetic data matrix of polymorphic loci.
 (iii) \code{snps.rec}: The genetic data reconstruction matrix.
 (iv) \code{seqs}: The genetic data sequences (polymorphic loci only), a \code{DNAbin} object.
-(v) \code{index}: The index vector, indicating for each column in \code{seqs} the unique polymorphic column pattern to which it corresponds (0 = non-polymorphic).
+(v) \code{index}: The index vector, indicating for each column in \code{seqs}
+the unique polymorphic column pattern to which it corresponds (0 = non-polymorphic).
 (vi) \code{n.subs}: The distribution of the number of substitutions per site.
 Note that all genetic data elements (ii - iv) are returned in expanded form; that is,
 they contain both unique and duplicate column patterns for all polymorphic loci as indicated in the \code{index} vector.
