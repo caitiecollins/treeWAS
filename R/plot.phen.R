@@ -21,7 +21,7 @@
 #'
 #' This function is designed to visualise the reconstructed ancestral states of a variable along a phylogenetic tree. 
 #' It uses colour to represent the states of terminal and internal nodes (if available), 
-#' indicating changes between states by grey branches. 
+#' indicating changes between states by grey branches (except in the case of truly continuous variables).
 #' 
 #'
 #' @param tree A phylo object.

@@ -42,7 +42,7 @@ at the foot of the plot with \code{axisPhylo} (TRUE, the default) or not (FALSE)
 \description{
 This function is designed to visualise the reconstructed ancestral states of a variable along a phylogenetic tree. 
 It uses colour to represent the states of terminal and internal nodes (if available), 
-indicating changes between states by grey branches.
+indicating changes between states by grey branches (except in the case of truly continuous variables).
 }
 \details{
 Ancestral states must be inferred in advance, for example, using function \code{asr}. 
