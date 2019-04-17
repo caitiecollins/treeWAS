@@ -81,12 +81,21 @@ get.fitch.n.mts <- function(x, tree, snps=NULL){
          (though we recommend that NAs be in the minority for each column).")
   }
   if(any(is.na(levs))){
-    nnas <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e])))/nrow(snps))
-    toRemove <- which(nnas > 0.5)
-    if(length(toRemove) > 0){
-      cat(length(toRemove), "snps columns are over 50% NAs.
-          You may want to consider removing these columns as they are
-          unlikely to be significant and can generate inappropriate inferences.")
+    if(is.matrix(x)){
+      nnas <- sapply(c(1:ncol(x)), function(e) length(which(is.na(x[,e])))/nrow(x))
+      toRemove <- which(nnas > 0.5)
+      if(length(toRemove) > 0){
+        cat(length(toRemove), "snps columns are over 50% NAs.
+            You may want to consider removing these columns as they are unlikely to be significant
+            and can generate inappropriate inferences during ancestral state reconstruction.")
+      }
+    }else{
+      nnas <- length(which(is.na(x)))/length(x)
+      # toRemove <- which(nnas > 0.5)
+      if(nnas > 0.5){
+        cat("x is over 50% NAs.
+            This may generate inappropriate inferences during ancestral state reconstruction.")
+      }
     }
   }
 
