@@ -218,7 +218,9 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
           if(align.tip.label == FALSE){
             # plot(tree, show.tip=T, tip.col="white", cex=0.5, adj=c(7.5), edge.width=3, edge.color=edgeCol ,...) #  no.margin=T, align.tip.label =T
             ## TEMP
-            plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=c(-0.5, 0), edge.width=3, edge.color=edgeCol, ...) #  no.margin=T, align.tip.label =T
+            suppressWarnings(plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=c(-0.5, 0), edge.width=3, edge.color=edgeCol, ...)) #  no.margin=T, align.tip.label =T
+            # Error in xx.tmp + lox : 
+            #   (converted from warning) longer object length is not a multiple of shorter object length
             tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.5, 0), col=leafCol, frame="none")  #  no.margin=T, align.tip.label =T
           }else{
             plot(tree, show.tip=T, tip.col=leafCol, edge.width=3, edge.color=edgeCol, align.tip.label=T, cex=0.5, ...) #  no.margin=T, align.tip.label =T
@@ -339,7 +341,7 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
             if(align.tip.label == FALSE){
               # plot(tree, show.tip=T, tip.col="white", cex=0.5, adj=c(7.5), edge.width=3, edge.color=edgeCol ,...) #  no.margin=T, align.tip.label =T
               ## TEMP
-              plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=c(-0.5, 0), edge.width=3, edge.color=edgeCol, direction = "leftwards", ...)  #  no.margin=T, align.tip.label =T
+              suppressWarnings(plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=c(-0.5, 0), edge.width=3, edge.color=edgeCol, direction = "leftwards", ...))  #  no.margin=T, align.tip.label =T
               tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.5, 0), col=leafCol, frame="none")  #  no.margin=T, align.tip.label =T
             }else{
               plot(tree, show.tip=T, tip.col=leafCol, edge.width=3, edge.color=edgeCol, align.tip.label=T, cex=0.5, direction = "leftwards", ...) #  no.margin=T, align.tip.label =T
@@ -481,7 +483,7 @@ plot.phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
   phen.plot.colors <- list(edgeLabCol, edgeCol, nodeCol, internalNodeCol, leafCol)
   names(phen.plot.colors) <- c("edge.labels", "edges", "all.nodes", "internal.nodes", "tip.labels")
 
-  return(phen.plot.colors)
+  invisible(phen.plot.colors)
 
 } # end plot.phen
 
@@ -495,5 +497,7 @@ plot_phen <- function(tree, phen.nodes, ...){
 } # end plot_phen
 
 
+
 #
+
 

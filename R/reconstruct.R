@@ -503,20 +503,23 @@ asr <- function(var,
         ## CONTINUOUS: ##
 
         ## get terminal values
-        var.terminal <- var
+        phen.terminal <- phen
+        ox <- match(tree$tip.label, names(phen))
+        phen.terminal <- phen.terminal[ox]
 
         ## With MISSING DATA in any columns: ##
         ## Continuous ML rec: ##
         ## get internal values:
-        var.internal <- fastAnc(tree, var) ## require(phytools)
+        phen.internal <- fastAnc(tree, phen) ## require(phytools)
 
         ## get internal values (when (any) var contains NAs):
-        # var2 <- var[!is.na(var)]
-        # phen.ML <- anc.ML(tree, var2) ## require(phytools)
-        # var.internal <- phen.ML$ace
+        # phen2 <- phen[!is.na(phen)]
+        # phen.ML <- anc.ML(tree, phen2) ## require(phytools)
+        # phen.internal <- phen.ML$ace
 
         ## get reconstruction from terminal & internal values
-        phen.rec <- c(var.terminal, var.internal)
+        phen.rec <- c(phen.terminal, phen.internal)
+        
       }
 
       # }
