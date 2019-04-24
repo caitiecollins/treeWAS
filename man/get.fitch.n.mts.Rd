@@ -24,7 +24,7 @@ snps <- matrix(sample(c(0,1),100000,TRUE), nrow=100)
 row.names(snps) <- tree$tip.label
 
 ## run function
-out <- get.fitch.n.mts(x=snps.mat, tree)
+out <- get.fitch.n.mts(x=snps, tree)
 
 ## examine output
 str(out)

@@ -5,8 +5,6 @@
 
 
 
-
-
 ####################
 ## manhattan.plot ##
 ####################
@@ -285,7 +283,7 @@ manhattan.plot <- function(p.vals,
 
 
 ###################
-## plot.sig.snps ##
+## plot_sig_snps ##
 ###################
 
 ########################################################################
@@ -306,7 +304,8 @@ manhattan.plot <- function(p.vals,
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
-#' @import adegenet ape
+#' @import adegenet
+#' @rawNamespace import(ape, except = zoom)
 
 ########################################################################
 # res <- out$res
@@ -321,7 +320,7 @@ manhattan.plot <- function(p.vals,
 # sig.corrs <- corr.dat[snps.assoc]
 # sig.snps <- snps.assoc
 
-plot.sig.snps <- function(corr.dat,
+plot_sig_snps <- function(corr.dat,
                           corr.sim,
                           corr.sim.subset = NULL,
                           sig.corrs = NULL,
@@ -923,7 +922,7 @@ plot.sig.snps <- function(corr.dat,
 
   if(plot.null.dist==TRUE & plot.dist==TRUE) par(ask=FALSE)
 
-} # end plot.sig.snps
+} # end plot_sig_snps
 
 
 
@@ -931,9 +930,9 @@ plot.sig.snps <- function(corr.dat,
 #################################
 ##  ENABLE ALTERNATE FN NAME:  ##
 #################################
-plot_sig_snps <- function(corr.dat, corr.sim, ...){
-  return(plot.sig.snps(corr.dat, corr.sim,  ...))
-} # end plot_sig_snps
+# plot.sig.snps <- function(corr.dat, corr.sim, ...){
+#   return(plot_sig_snps(corr.dat, corr.sim,  ...))
+# } # end plot.sig.snps
 
 
 

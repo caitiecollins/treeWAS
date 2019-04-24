@@ -19,7 +19,8 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import ggplot2 Hmisc
+#' @import ggplot2
+#' @importFrom Hmisc all.is.numeric
 #' @importFrom beeswarm beeswarm
 #'
 #' @export

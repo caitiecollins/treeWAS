@@ -17,12 +17,12 @@
 #' @param dna A DNAbin object.
 #' @param dist.dna.model A character string specifying the type of model to use in
 #' calculating the genetic distance between individual genomes (see ?dist.dna).
-#' 
+#'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
 #'
-#' @import ape
+#' @rawNamespace import(ape, except = zoom)
 #' @export
 
 ########################################################################

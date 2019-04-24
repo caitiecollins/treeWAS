@@ -456,15 +456,14 @@ get.unique.snps <- get.unique.matrix
 #' @param tree An object of class phylo containing a tree
 #' whose tip order is desired to be known.
 #' @param original.format A logical, indicating whether to use the original
-#' format of this function (kept for consistency's sake) or the new format. 
-#' (For now, if you find one isn't giving you sensible output, 
+#' format of this function (kept for consistency's sake) or the new format.
+#' (For now, if you find one isn't giving you sensible output,
 #' please try changing this argument.)
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' 
 #'
-#' @import ape
+#'
 #' @importFrom Hmisc all.is.numeric
 
 ########################################################################
@@ -478,7 +477,7 @@ get.tip.order <- function(tree, original.format=TRUE){
       out1 <- as.numeric(tree2$tip.label)
       out <- rev(out1)
     }else{
-      ## although I think I prefer the returned order to be bottom to top... 
+      ## although I think I prefer the returned order to be bottom to top...
       out1 <- as.numeric(tree2$tip.label)
       out <- rev(out1)
     }
@@ -555,7 +554,7 @@ get.tip.order <- function(tree, original.format=TRUE){
 #' ## apply fn to columns of x:
 #' tab.out <- table.matrix(t(x))
 #' }
-#' 
+#'
 #' @export
 
 ########################################################################

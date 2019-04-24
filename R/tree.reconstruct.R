@@ -28,9 +28,9 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' 
 #'
-#' @import ape
+#'
+#' @rawNamespace import(ape, except = zoom)
 #' @importFrom phangorn as.phyDat
 #' @importFrom phangorn midpoint
 #' @importFrom phangorn pratchet

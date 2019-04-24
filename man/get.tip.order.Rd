@@ -11,8 +11,8 @@ get.tip.order(tree, original.format = TRUE)
 whose tip order is desired to be known.}
 
 \item{original.format}{A logical, indicating whether to use the original
-format of this function (kept for consistency's sake) or the new format. 
-(For now, if you find one isn't giving you sensible output, 
+format of this function (kept for consistency's sake) or the new format.
+(For now, if you find one isn't giving you sensible output,
 please try changing this argument.)}
 }
 \description{

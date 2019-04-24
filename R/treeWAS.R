@@ -5,11 +5,9 @@
 
 
 
-
 ###################
 ## print.treeWAS ##
 ###################
-
 ########################################################################
 
 ###################
@@ -26,9 +24,13 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
-#' @import adegenet ape
+#' @import adegenet
 
 ########################################################################
+# #' @rdname treeWAS
+# #' @method treeWAS print
+# #' @S3method treeWAS print
+# https://stackoverflow.com/questions/7198758/roxygen2-how-to-properly-document-s3-methods
 
 print.treeWAS <- function(x, sort.by.p = FALSE){
   cat("\t#################### \n")
@@ -627,17 +629,34 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import adegenet ape
+#' @import adegenet
+#' @rawNamespace import(ape, except = zoom)
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #' @importFrom scales rescale
 #' @importFrom pryr object_size
+#' @importFrom grDevices col2rgb dev.off heat.colors pdf rgb
+#' @importFrom graphics arrows axis barplot box hist image lines par plot.new points rect text title
+#' @importFrom stats anova as.formula cor density dist ecdf fisher.test ftable glm lm mantelhaen.test p.adjust quantile residuals rexp rnorm rpois
+#' @importFrom utils str write.table
 #'
 #' @export
 
 ###################################################################################################################################
 # @useDynLib phangorn, .registration = TRUE
 
+# #' @import ape, except=zoom
+
+# importFrom("grDevices", "col2rgb", "dev.off", "heat.colors", "pdf",
+#            "rgb")
+# importFrom("graphics", "arrows", "axis", "barplot", "box", "hist",
+#            "image", "lines", "par", "plot.new", "points", "rect",
+#            "text", "title")
+# importFrom("stats", "anova", "as.formula", "cor", "density", "dist",
+#            "ecdf", "fisher.test", "ftable", "glm", "lm",
+#            "mantelhaen.test", "p.adjust", "quantile", "residuals",
+#            "rexp", "rnorm", "rpois")
+# importFrom("utils", "str", "write.table")
 
 treeWAS <- function(snps,
                     phen,
@@ -1246,7 +1265,7 @@ treeWAS <- function(snps,
     if(!is.null(phen.rec)){
 
       ## PLOT TERMINAL PHEN + RECONSTRUCTED PHEN:
-      plot.phen(phen.nodes = phen.rec, tree = tree, main.title = "Phylogenetic tree", align.tip.label = T, RTL = F)
+      plot_phen(phen.nodes = phen.rec, tree = tree, main.title = "Phylogenetic tree", align.tip.label = T, RTL = F)
 
 
     }else{
@@ -2057,7 +2076,7 @@ treeWAS <- function(snps,
     if(plot.null.dist == TRUE){
       if(TEST[[i]] == "fisher"){
         ## Generate one histogram per test:
-        plot.sig.snps(corr.dat = -log10(abs(corr.dat)),
+        plot_sig_snps(corr.dat = -log10(abs(corr.dat)),
                       corr.sim = -log10(abs(corr.sim)),
                       corr.sim.subset = NULL,
                       sig.corrs = -log10(abs(corr.dat[sig.snps])),
@@ -2077,7 +2096,7 @@ treeWAS <- function(snps,
                       plot.dist = FALSE)
       }else{
         ## Generate one histogram per test:
-        plot.sig.snps(corr.dat = abs(corr.dat),
+        plot_sig_snps(corr.dat = abs(corr.dat),
                       corr.sim = abs(corr.sim),
                       corr.sim.subset = NULL,
                       sig.corrs = abs(corr.dat[sig.snps]),
@@ -2101,7 +2120,7 @@ treeWAS <- function(snps,
     if(plot.dist == TRUE){
       if(TEST[[i]] == "fisher"){
         ## Generate one histogram per test:
-        plot.sig.snps(corr.dat = -log10(abs(corr.dat)),
+        plot_sig_snps(corr.dat = -log10(abs(corr.dat)),
                       corr.sim = -log10(abs(corr.sim)),
                       corr.sim.subset = NULL,
                       sig.corrs = -log10(abs(corr.dat[sig.snps])),
@@ -2121,7 +2140,7 @@ treeWAS <- function(snps,
                       plot.dist = TRUE)
       }else{
         ## Generate one histogram per test:
-        plot.sig.snps(corr.dat = abs(corr.dat),
+        plot_sig_snps(corr.dat = abs(corr.dat),
                       corr.sim = abs(corr.sim),
                       corr.sim.subset = NULL,
                       sig.corrs = abs(corr.dat[sig.snps]),
@@ -2326,10 +2345,6 @@ treeWAS <- function(snps,
 
 
 
-
-
-
-
 # ##############################################
 # ## ASSIGN NODE LABELS to TREE (& SNPS.REC): ##
 # ##############################################
@@ -2437,25 +2452,6 @@ treeWAS <- function(snps,
 #     par(oma=c(0,0,0,0))
 #     par(mar=c(5,4,4,2)+0.1)
 ##############################################################################################
-
-
-
-# ## only 2 unique sets of p.vals for each test
-# ## (for n.snps & 10x n.snps):
-# pv <- list()
-# summ <- list()
-# for(j in 1:length(results)){
-#   pv[[j]] <- list()
-#   summ[[j]] <- list()
-# for(i in 1:length(results[[j]])){
-#   pv[[j]][[i]] <- results[[j]][[i]]$p.vals
-#   summ[[j]][[i]] <- summary(pv[[j]][[i]])
-# }
-# }
-#
-# length(unique(summ[[2]]))
-# length(unique(summ[[2]][seq(2, length(summ[[3]]), 2)]))
-# length(unique(summ[[2]][seq(2, length(summ[[3]]), 2)]))
 
 
 

@@ -7,16 +7,16 @@
 fwd.phen.sim(snps.assoc, p = 1, tree = NULL)
 }
 \arguments{
-\item{snps.assoc}{A matrix created by the \code{fwd.snp.sim} function, 
+\item{snps.assoc}{A matrix created by the \code{fwd.snp.sim} function,
 which indicates where genotypic substitutions occur on the tree at phenoypically-associated sites.}
 
-\item{p}{An integer specifying the probability of phenotypic substition, 
+\item{p}{An integer specifying the probability of phenotypic substition,
 given genotypic substitution (see details).}
 
 \item{tree}{An phylo object.}
 }
 \description{
-[*An exploratory function:*] Having already simulated a genotype, 
+[*An exploratory function:*] Having already simulated a genotype,
 this function allows you to simulate an associated phenotype along the tree, from root to tips.
 }
 \details{

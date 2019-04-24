@@ -19,7 +19,8 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
 #'
-#' @import adegenet ape
+#' @import adegenet
+#' @rawNamespace import(ape, except = zoom)
 #' @export
 
 ########################################################################

@@ -15,14 +15,14 @@
 ## DOCUMENTATION ##
 ###################
 
-#' Simulate a phenotype, from root to tips. 
+#' Simulate a phenotype, from root to tips.
 #'
-#' [*An exploratory function:*] Having already simulated a genotype, 
-#' this function allows you to simulate an associated phenotype along the tree, from root to tips. 
+#' [*An exploratory function:*] Having already simulated a genotype,
+#' this function allows you to simulate an associated phenotype along the tree, from root to tips.
 #'
-#' @param snps.assoc A matrix created by the \code{fwd.snp.sim} function, 
-#' which indicates where genotypic substitutions occur on the tree at phenoypically-associated sites. 
-#' @param p An integer specifying the probability of phenotypic substition, 
+#' @param snps.assoc A matrix created by the \code{fwd.snp.sim} function,
+#' which indicates where genotypic substitutions occur on the tree at phenoypically-associated sites.
+#' @param p An integer specifying the probability of phenotypic substition,
 #' given genotypic substitution (see details).
 #' @param tree An phylo object.
 #'
@@ -95,7 +95,7 @@ fwd.phen.sim <- function(snps.assoc, p=1, tree=NULL){
   #   ################
   #   ## PROB CURVE ##
   #   ################
-  #   plot.prob.phen(p=p, n.snps.assoc=ncol(snps.assoc))
+  #   plot_prob_phen(p=p, n.snps.assoc=ncol(snps.assoc))
 
 
   ###############

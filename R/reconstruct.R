@@ -36,7 +36,7 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #'
-#' @import ape
+#' @rawNamespace import(ape, except = zoom)
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phytools anc.ML fastAnc
 #' @importFrom phangorn pml ancestral.pml
@@ -519,7 +519,7 @@ asr <- function(var,
 
         ## get reconstruction from terminal & internal values
         phen.rec <- c(phen.terminal, phen.internal)
-        
+
       }
 
       # }
@@ -583,7 +583,7 @@ asr <- function(var,
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
-#' @import ape
+#' @rawNamespace import(ape, except = zoom)
 #' @importFrom phangorn as.phyDat
 #' @importFrom phangorn phyDat
 #' @importFrom phangorn pace

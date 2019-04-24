@@ -237,7 +237,7 @@ str(snps.reconstruction)
 data(phen.plot.col)
 
 ## Plot tree showing phenotype:
-p <- plot.phen(tree, phen.nodes=phen.plot.col$all.nodes)
+p <- plot_phen(tree, phen.nodes=phen.plot.col$all.nodes)
 ```
 
 ```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}
@@ -415,6 +415,7 @@ Identify the ranks of your phenotypic values and examine the distribution of the
 ```{r, eval=FALSE}
 ## Get ranks of phen:
 phen.cont.rank <- rank(phen.cont, ties.method = "average")
+names(phen.cont.rank) <- names(phen.cont)
 
 ## Examine distribution of phen ranks:
 hist(phen.cont.rank)

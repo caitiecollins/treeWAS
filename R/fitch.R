@@ -29,7 +29,7 @@
 #' row.names(snps) <- tree$tip.label
 #'
 #' ## run function
-#' out <- get.fitch.n.mts(x=snps.mat, tree)
+#' out <- get.fitch.n.mts(x=snps, tree)
 #'
 #' ## examine output
 #' str(out)

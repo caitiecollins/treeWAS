@@ -22,7 +22,8 @@
 #' @examples
 #' ## Example ##
 #'
-#' @import adegenet ape
+#' @import adegenet
+#' @rawNamespace import(ape, except = zoom)
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #'

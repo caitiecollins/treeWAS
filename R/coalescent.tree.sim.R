@@ -27,7 +27,7 @@
 #' ## plot output
 #' plot(tree)
 #'
-#' @import ape
+#' @rawNamespace import(ape, except = zoom)
 #' @importFrom phangorn midpoint
 #'
 #' @export
