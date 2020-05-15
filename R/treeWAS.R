@@ -1396,7 +1396,7 @@ treeWAS <- function(snps,
         ## run memfree, or warn if it fails:
         if(class(try(memfree(), silent=TRUE)) == "try-error"){
           warning("Unable to determine amount of available memory.
-          Set mem.lim or chunk.size by hand.")
+                  Set mem.lim or chunk.size by hand.")
         }else{
           ## set mem.lim w memfree:
           mem.lim <- memfree()
@@ -1836,36 +1836,46 @@ treeWAS <- function(snps,
       ############################
       ## If user-provided reconsruction:
       if(is.matrix(snps.reconstruction)){
-        ## CHECK:
+
+        ## CHECK row N:
         if(nrow(snps.reconstruction) != max(tree$edge[,2])){
           warning("The number of rows in the provided snps.reconstruction is not equal to the
                   total number of nodes in the tree. Performing a new parsimonious reconstruction instead.\n")
           snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
         }
+
+        ## CHECK column N:
         if(ncol(snps.reconstruction) != ncol(snps)){
-          warning("The number of columns in the provided snps.reconstruction is not equal to the number of
-                  columns in the snps matrix. Performing a new parsimonious reconstruction instead.\n")
-          snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
+          ## If user-provided:
+          snps.rec <- snps.reconstruction
+          ## Get UNIQUE snps.reconstruction
+          snps.rec.complete <- snps.rec
+          temp <- get.unique.matrix(snps.rec, MARGIN=2)
+          snps.rec <- temp$unique.data
+          snps.rec.index <- temp$index
+          snps.reconstruction <- snps.rec
+
+          ## CHECK index:
+          if(!identical(snps.rec.index, snps.index)){
+            warning("Careful-- snps and snps.rec should have the same index when reduced
+                    to their unique forms.\n") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
+          }
+
+          ## CHECK again:
+          if(ncol(snps.reconstruction) != ncol(snps)){
+            warning("The number of columns in the provided snps.reconstruction is not equal to the number of
+                    columns in the snps matrix. Performing a new parsimonious reconstruction instead.\n")
+            snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
+          }
+          }
         }
-      }
 
       ## If not user-provided or checks failed, reconstruct ancestral states:
-      if(is.matrix(snps.reconstruction)){
-        snps.rec <- snps.reconstruction
-        ## Get UNIQUE snps.reconstruction
-        snps.rec.complete <- snps.rec
-        temp <- get.unique.matrix(snps.rec, MARGIN=2)
-        snps.rec <- temp$unique.data
-        snps.rec.index <- temp$index
-        if(!identical(snps.rec.index, snps.index)){
-          warning("Careful-- snps and snps.rec should have the same index when reduced
-                  to their unique forms.\n") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-        }
-        }else{
-          # system.time( # 274
-          snps.rec <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
-          # )
+      if(!is.matrix(snps.reconstruction)){
+        snps.rec <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
       }
+
+
 
       #################################
       ## Reconstruct SIMULATED SNPs: ##
@@ -1874,7 +1884,7 @@ treeWAS <- function(snps,
       snps.sim.rec <- asr(var = snps.sim, tree = tree, type = snps.sim.reconstruction, unique.cols = TRUE)
       # )
 
-        } # end reconstruction for tests 2 & 3
+      } # end reconstruction for tests 2 & 3
 
 
     ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
@@ -1949,7 +1959,7 @@ treeWAS <- function(snps,
     SNPS.REC[[i]] <- snps.rec
     SNPS.SIM.REC[[i]] <- snps.sim.rec
 
-  } # end for (i) loop (CHUNKS)
+    } # end for (i) loop (CHUNKS)
   ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ####### END LOOP/OPTIONAL CHUNK-BY-CHUNK TREEWAS HERE ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
@@ -2340,7 +2350,7 @@ treeWAS <- function(snps,
 
   return(results)
 
-  } # end treeWAS
+    } # end treeWAS
 
 
 

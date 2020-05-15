@@ -104,7 +104,8 @@ manhattan.plot <- function(p.vals,
     n0 <- rep(0, n0)
     n0 <- paste0(n0, collapse="")
     N <- as.numeric(paste0(n1, n0, collapse=""))
-    N <- N/10
+    N <- round(N/10)
+    if(N < 1) N <- 1
 
     myCol <- eval(parse(text=paste(col, "(", 10, ")")))
     myCol <- as.vector(unlist(sapply(c(1:length(myCol)),
@@ -130,7 +131,7 @@ manhattan.plot <- function(p.vals,
     }
     transp <- 1-transp
     myCol <- transp(myCol, alpha = transp)
-  }
+    }
 
   ## check no myCol = ~white!
   cols <- col2rgb(unique(myCol))
@@ -441,7 +442,7 @@ plot_sig_snps <- function(corr.dat,
            col=hist.col,
            cex.axis=1.1,
            cex.lab=1.2)
-           # ...)
+      # ...)
 
 
       ## Add grey background? ##
@@ -683,8 +684,8 @@ plot_sig_snps <- function(corr.dat,
         }else{
           if(!is.null(test)){
             title(paste("Null distribution \n(", test, "score)"
-                       # \n (with significant SNPs indicated)"
-                       , sep=" "))
+                        # \n (with significant SNPs indicated)"
+                        , sep=" "))
           }else{
             title(paste("Null distribution \n"
                         # \n (with significant SNPs indicated)"
@@ -738,7 +739,7 @@ plot_sig_snps <- function(corr.dat,
            xlim=c(min(h.null$breaks), xmax),
            freq=freq,
            col=hist.col)
-           # ,...)
+      # ,...)
 
       ## Add grey background? ##
       if(!is.null(bg)){
@@ -780,7 +781,7 @@ plot_sig_snps <- function(corr.dat,
            ylab = y.lab,
            freq=freq,
            col=hist.col)
-           # ,...)
+      # ,...)
 
       ## Add grey background? ##
       if(!is.null(bg)){
@@ -914,8 +915,8 @@ plot_sig_snps <- function(corr.dat,
                         , sep=" "))
           }
         }
+      }
     }
-  }
 
   } # end plot.dist == TRUE
 
