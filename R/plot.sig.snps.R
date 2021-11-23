@@ -94,25 +94,22 @@ manhattan.plot <- function(p.vals,
                 "seasun", "lightseasun", "deepseasun",
                 "spectral", "wasp", "funky")
 
+  ## get unit length (base 10) for coloured sections:
+  l <- length(p.vals)
+  sq <- pretty(x=1:l, n=10, min.n=8)
+  sq <- sq[which(sq >= 0)]
+  NS <- length(sq)-1
+  N <- sq[2] - sq[1]
+  
+  ## get colour for each point:
   if(col %in% col.pals){
-    ## get unit length (base 10) for coloured sections:
-    l <- length(p.vals)
-    n1 <- keepFirstN(l, 1)
-    # n1 <- as.numeric(n1) + 1
-    n1 <- as.numeric(n1)
-    n0 <- nchar(l)-1
-    n0 <- rep(0, n0)
-    n0 <- paste0(n0, collapse="")
-    N <- as.numeric(paste0(n1, n0, collapse=""))
-    N <- round(N/10)
-    if(N < 1) N <- 1
-
-    myCol <- eval(parse(text=paste(col, "(", 10, ")")))
+    myCol <- eval(parse(text=paste(col, "(", NS, ")")))
     myCol <- as.vector(unlist(sapply(c(1:length(myCol)),
                                      function(e)
                                        rep(myCol[e], N))))
     myCol <- myCol[c(1:length(pval))]
-  }else{
+    
+  }else{ 
     ## from vector of colours?
     myCol <- as.vector(unlist(sapply(c(1:length(col)),
                                      function(e)
@@ -120,7 +117,7 @@ manhattan.plot <- function(p.vals,
     # myCol <- sort(myCol)
     myCol <- rep(myCol, ceiling(length(pval)/(N*(length(col)))))
     myCol <- myCol[1:length(pval)]
-  }
+  }    
 
   ## add transparency?
   if(!is.null(transp)){
@@ -680,16 +677,19 @@ plot_sig_snps <- function(corr.dat,
     if(!is.null(main.title)){
       if(main.title != FALSE){
         if(is.character(main.title)){
-          title(main.title)
+          title(main.title, 
+                cex.main=1)
         }else{
           if(!is.null(test)){
             title(paste("Null distribution \n(", test, "score)"
                         # \n (with significant SNPs indicated)"
-                        , sep=" "))
+                        , sep=" "), 
+                  cex.main=1)
           }else{
             title(paste("Null distribution \n"
                         # \n (with significant SNPs indicated)"
-                        , sep=" "))
+                        , sep=" "), 
+                  cex.main=1)
           }
         }
       }
@@ -903,16 +903,19 @@ plot_sig_snps <- function(corr.dat,
     if(!is.null(main.title)){
       if(main.title != FALSE){
         if(is.character(main.title)){
-          title(main.title)
+          title(main.title, 
+                cex.main=1)
         }else{
           if(!is.null(test)){
             title(paste("Empirical distribution \n(", test, "score)"
                         # \n (with significant SNPs indicated)"
-                        , sep=" "))
+                        , sep=" "), 
+                  cex.main=1)
           }else{
             title(paste("Empirical distribution \n"
                         # \n (with significant SNPs indicated)"
-                        , sep=" "))
+                        , sep=" "), 
+                  cex.main=1)
           }
         }
       }

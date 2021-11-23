@@ -114,10 +114,10 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
   mar.ori <- par()$mar
   # mar.ori <- c(5,4,4,1)+0.1
   if(RTL==FALSE){
-    mar.new <- c(1.5,0.5,0,0.5)
+    mar.new <- c(1.5,0.5,0.5,0.5)
     # mar.new <- c(4, 2, 4, 0.5) + 0.1
   }else{
-    mar.new <- c(1.5,0.5,0,0.5)
+    mar.new <- c(1.5,0.5,0.5,0.5)
     # mar.new <- c(5, 4, 4, 2) + 0.1
   }
   ## Set plot margins:
@@ -233,14 +233,14 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
       ## Add title?
       if(main.title == TRUE){
         # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
-        title("Tree with phenotypic changes")
+        title("Tree with phenotypic changes", cex.main=1, line=-0.5)
       }else{
-        if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
+        if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.5)
       }
 
       ## Add axis?
       if(show.axis == TRUE){
-        mar.new2 <- c(2.5,0.5,0,0.5)
+        mar.new2 <- c(2,0.5,0,0.5)
         par(mar=mar.new2)
         axisPhylo(cex.axis=0.7)
       }
@@ -324,16 +324,16 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
         plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...)
         ## Add title?
         if(main.title == TRUE){
-          title("Tree with phenotypic changes")
+          title("Tree with phenotypic changes", cex.main=1, line=-0.5)
         }else{
-          if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
+          if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.5)
         }
 
         tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
 
         ## Add axis?
         if(show.axis == TRUE){
-          mar.new2 <- c(2.5,0.5,0,0.5)
+          mar.new2 <- c(2,0.5,0,0.5)
           par(mar=mar.new2)
           axisPhylo(cex.axis=0.7)
         }
@@ -455,15 +455,15 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
         ## Add title?
         if(main.title == TRUE){
           # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
-          title("Tree with phenotypic changes")
+          title("Tree with phenotypic changes", cex.main=1, line=-0.5)
         }else{
-          if(!is.null(main.title)) if(main.title != FALSE) title(main.title)
+          if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.5)
         }
 
 
         ## Add axis?
         if(show.axis == TRUE){
-          mar.new2 <- c(2.5,0.5,0,0.5)
+          mar.new2 <- c(2,0.5,0,0.5)
           par(mar=mar.new2)
           axisPhylo(cex.axis=0.7)
         }
