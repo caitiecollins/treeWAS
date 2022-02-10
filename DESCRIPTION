@@ -21,7 +21,8 @@ Imports: graphics,
         phangorn, 
         phytools, 
         pryr, 
+        rmarkdown, 
         scales
-Suggests: knitr, rmarkdown
+Suggests: knitr
 VignetteBuilder: knitr
 Encoding: UTF-8
