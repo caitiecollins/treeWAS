@@ -2350,7 +2350,7 @@ treeWAS <- function(snps,
 
   return(results)
 
-    } # end treeWAS
+} # end treeWAS
 
 
 

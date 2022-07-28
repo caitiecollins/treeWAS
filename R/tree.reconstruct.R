@@ -69,7 +69,7 @@ tree.reconstruct <- function(dna,
   ## CHECKS ##
   ############
   ## DNA ##
-  if(class(dna) != "DNAbin"){
+  if(class(dna)[1] != "DNAbin"){
     # if(class(dna) == "genind"){
     #   dna <- dna@tab ## might be problems w ploidy...
     # }
