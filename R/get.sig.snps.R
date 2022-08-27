@@ -25,6 +25,13 @@
 #' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
 #' (note that within treeWAS, the first three tests are run in a loop by default).
 #' See details for more information on what these tests do and when they may be appropriate.
+#' @param correct.prop A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for 
+#'                     phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across 
+#'                     the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous). 
+#'                     If \code{correct.prop} if \code{FALSE} (the default), the original versions of each test will be run as described in our
+#'                     \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
+#'                     If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated 
+#'                     across the terminal and all (internal and terminal) nodes, respectively.  
 #' @param n.tests An integer between 1 and 5 specifying the number of tests you are running on all loci,
 #' to be used in appropriately correcting for multiple testing.
 #' (i.e., the number of times you will be running the \code{get.sig.snps} function).
@@ -63,12 +70,12 @@ get.assoc.scores <- function(snps,
                              phen,
                              tree,
                              test = "terminal",
+                             correct.prop = FALSE,
                              snps.reconstruction = NULL,
                              snps.sim.reconstruction = NULL,
                              phen.reconstruction = NULL,
                              unique.cols = FALSE){
 
-  # print(paste("Started running", test, "test; memory used:", as.character(round(as.numeric(as.character(mem_used()/1000000000)), 2)), "Gb @", Sys.time()))
   print(paste("Started running", test, "test @", Sys.time()))
 
   ########         ########         ########         ########         ########         ########         ########         ########
@@ -195,20 +202,7 @@ get.assoc.scores <- function(snps,
     ## ensure ind names not lost:
     names(phen) <- noms
   }
-  # if(!is.numeric(phen)) phen <- as.numeric(phen)
-  # ## for ease of interpretation,
-  # ## if phen has 2 levels, 1 and 2,
-  # ## make these 0 and 1:
-  # if(length(unique(phen))!=2){
-  #   stop("This function is only designed for phenotypes with two levels.")
-  # }else{
-  #   if(length(phen[-c(which(phen==1), which(phen==2))])==0){
-  #     phen <- replace(phen, which(phen==1), 0)
-  #     phen <- replace(phen, which(phen==2), 1)
-  #   }
-  # }
-  # ## ensure ind names not lost
-  # names(phen) <- names(phen.ori)
+
 
   ########         ########         ########         ########         ########         ########         ########         ########
   ###############################################################################################################################
@@ -222,7 +216,8 @@ get.assoc.scores <- function(snps,
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
-    corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test)
+    corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test, 
+                           correct.prop=correct.prop)
 
     print(paste("Real data scores completed for", test, "test @", Sys.time()))
 
@@ -230,7 +225,8 @@ get.assoc.scores <- function(snps,
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
-    corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test)
+    corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test, 
+                           correct.prop=correct.prop)
 
     print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
 
@@ -244,7 +240,8 @@ get.assoc.scores <- function(snps,
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
-    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test, 
+                           correct.prop=correct.prop)
 
     print(paste("Real data scores completed for", test, "test @", Sys.time()))
 
@@ -252,7 +249,8 @@ get.assoc.scores <- function(snps,
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
-    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test)
+    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test, 
+                           correct.prop=correct.prop)
 
     print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
   }
@@ -285,7 +283,7 @@ get.assoc.scores <- function(snps,
 
   return(out)
 
-  } # end get.assoc.scores
+} # end get.assoc.scores
 
 
 ########################################################################
@@ -362,6 +360,7 @@ get.sig.snps <- function(corr.dat,
                          corr.sim,
                          snps.names, # = colnames(snps),
                          test = "terminal",
+                         correct.prop=correct.prop,
                          n.tests = 1,
                          p.value = 0.01,
                          p.value.correct = "bonf",
@@ -544,7 +543,8 @@ assoc.test <- function(snps,
                                 "simultaneous",
                                 "subsequent",
                                 "cor",
-                                "fisher")){
+                                "fisher"),
+                       correct.prop=FALSE){
 
   #################
   ## CORRELATION ##
@@ -583,7 +583,8 @@ assoc.test <- function(snps,
   ## TERMINAL TEST (score 1: correlation score) ##
   ################################################
   if(test=="terminal"){
-    corr.dat <- terminal.test(snps = snps, phen = phen)
+    corr.dat <- terminal.test(snps = snps, phen = phen,
+                              correct.prop=correct.prop)
     # ~ Correlation "SCORE" =
     # ((nS1P1 + nS0P0) - (nS1P0 + nS0P1) / (n.total))
   } # end test terminal
@@ -599,7 +600,8 @@ assoc.test <- function(snps,
   ## SUBSEQUENT TEST ##
   #####################
   if(test == "subsequent"){
-    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree)
+    corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree,
+                                correct.prop=correct.prop)
   } # end test subsequent
 
 

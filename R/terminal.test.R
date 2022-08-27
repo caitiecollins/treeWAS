@@ -32,7 +32,8 @@
 
 
 terminal.test <- function(snps,
-                          phen){
+                          phen,
+                          correct.prop = FALSE){
 
   ####################################################################
   #################
@@ -73,9 +74,9 @@ terminal.test <- function(snps,
   }
   ####################################################################
 
-  ###############################
-  ## GET SCORE ACROSS BRANCHES ##
-  ###############################
+  ##################################
+  ## GET SCORE 1 @ TERMINAL NODES ##
+  ##################################
 
   Pd <- phen # .rec[edges[,2]]
   Sd <- snps # .rec[edges[,2], ]
@@ -91,22 +92,22 @@ terminal.test <- function(snps,
   #############
   ## SCORE 1 ##
   #############
-  ## ORIGINAL TERMINAL SCORE 1:
-
-  score1 <- (Pd*Sd - (1 - Pd)*Sd - Pd*(1 - Sd) + (1 - Pd)*(1 - Sd))  ## CALCULATE SCORE 1 EQUATION
-
-  ## Return with sign:
-  score1 <- colSums(score1, na.rm=TRUE)/length(Pd)
+  
+  if(correct.prop == FALSE){
+    ## ORIGINAL TERMINAL SCORE 1:
+    score1 <- (Pd*Sd - (1 - Pd)*Sd - Pd*(1 - Sd) + (1 - Pd)*(1 - Sd))  ## CALCULATE SCORE 1 EQUATION
+    
+    ## Return with sign:
+    score1 <- colSums(score1, na.rm=TRUE)/length(Pd)
+  }else{
+    ## NEW MARGINAL-CORRECTED SCORE 1 (~Phi):
+    score1 <- ((colSums((1 - Pd)*(1 - Sd), na.rm=TRUE)*colSums(Pd*Sd, na.rm=TRUE)) - 
+                 (colSums((1 - Pd)*Sd, na.rm=TRUE)*colSums(Pd*(1 - Sd), na.rm=TRUE))) / 
+      (sqrt(colSums(1 - Sd, na.rm=TRUE)*colSums(Sd, na.rm=TRUE)*sum(1 - Pd)*sum(Pd)))
+  }
+  
   # score1 <- abs(score1)
   names(score1) <- colnames(snps)
-
-  ## Return with and without sign?
-  # score1.sign <- colSums(score1, na.rm=TRUE)/length(Pd)
-  # score1 <- abs(score1.sign)
-  # names(score1) <- names(score1.sign) <- colnames(snps)
-  #
-  # score1 <- list("score1" = score1,
-  #               "score1.sign" = score1.sign)
 
   return(score1)
 

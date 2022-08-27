@@ -295,15 +295,19 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @param test A character string or vector containing one or more of the following available tests of association:
 #'              \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
 #'              By default, the first three tests are run (see details).
-#'
+#' @param correct.prop A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for 
+#'                     phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across 
+#'                     the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous). 
+#'                     If \code{correct.prop} if \code{FALSE} (the default), the original versions of each test will be run as described in our
+#'                     \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
+#'                     If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated 
+#'                     across the terminal and all (internal and terminal) nodes, respectively.  
 #' @param snps.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the genetic dataset,
 #'                              or a matrix containing this reconstruction if it has been performed elsewhere
 #'                              \emph{and} you provide the tree.
-#'
 #' @param snps.sim.reconstruction A character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                                  for the ancestral state reconstruction of the simulated null genetic dataset.
-#'
 #' @param phen.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the phenotypic variable,
 #'                              or a vector containing this reconstruction if it has been performed elsewhere.
@@ -314,7 +318,6 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'                  non-binary phenotypes.
 #' @param na.rm A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 #'                should be removed at the outset (TRUE, the default) or not (FALSE).
-#'
 #' @param p.value A number specifying the base p-value to be set the threshold of significance (by default, \code{0.01}).
 #' @param p.value.correct A character string, either \code{"bonf"} (the default) or \code{"fdr"},
 #'                          specifying whether correction for multiple testing
@@ -666,6 +669,7 @@ treeWAS <- function(snps,
                     chunk.size = ncol(snps),
                     mem.lim = FALSE,
                     test = c("terminal", "simultaneous", "subsequent"),
+                    correct.prop = FALSE, 
                     snps.reconstruction = "parsimony",
                     snps.sim.reconstruction = "parsimony",
                     phen.reconstruction = "parsimony",
@@ -1924,6 +1928,7 @@ treeWAS <- function(snps,
                                        phen = phen,
                                        tree = tree,
                                        test = TEST[[t]],
+                                       correct.prop = correct.prop,
                                        snps.reconstruction = snps.rec,
                                        snps.sim.reconstruction = snps.sim.rec,
                                        phen.reconstruction = phen.rec,

@@ -230,6 +230,9 @@ coalescent.sim <- function(n.ind = 100,
   ## load packages:
   # require(adegenet)
   # require(ape)
+  
+  ## store input args to return call at end of fn: 
+  args <- mget(names(formals()), sys.frame(sys.nframe()))
 
   filename <- filename.plot
 
@@ -524,12 +527,76 @@ coalescent.sim <- function(n.ind = 100,
     }
 
   }
+  
+  ################
+  ## Handle phen 
+  phen.rec.method <- levs <- NULL
+  phen.ori <- phen
+  
+  ## Convert to numeric (required for assoc tests):
+  na.before <- length(which(is.na(phen)))
+  
+  ## CHECK for discrete vs. continuous (Only binary & continuous implemented)
+  levs <- unique(as.vector(unlist(phen)))
+  n.levs <- length(levs[!is.na(levs)])
+  ## BINARY: ##
+  if(n.levs == 2){
+    ## Convert phen to numeric:
+    if(!is.numeric(phen)){
+      if(all.is.numeric(phen)){
+        phen <- as.numeric(as.character(phen))
+      }else{
+        phen <- as.numeric(as.factor(phen))
+      }
+    }
+    ## Set phen.rec.method: ##
+    phen.rec.method <- "discrete"
+    # if(!is.null(phen.type)){
+    #   if(phen.type == "continuous"){
+    #     phen.rec.method <- "continuous"
+    #     warning("phen is binary. Are you sure phen.type is 'continuous'?")
+    #   }
+    # } # end phen.type (binary)
+  }else{
+    ## DISCRETE or CONTINUOUS: ##
+    ## Convert phen to numeric:
+    if(!is.numeric(phen)){
+      if(all.is.numeric(phen)){
+        phen <- as.numeric(as.character(phen))
+      }else{
+        stop("phen has more than 2 levels but is not numeric (and therefore neither binary nor continuous).")
+      }
+    }
+    ## Set phen.rec.method: ##
+    phen.rec.method <- "continuous"
+    ## Get proportion unique:
+    prop.u <- length(unique(phen))/length(phen)
+    # if(!is.null(phen.type)){
+    #   if(phen.type == "discrete"){
+    #     phen.rec.method <- "discrete"
+    #     if(prop.u > 0.5){
+    #       cat("Performing *discrete* reconstruction, although phen is ", round(prop.u, 2)*100, "% unique: Are you sure phen.type is 'discrete'?\n", sep="")
+    #     }
+    #   }
+    # } # end phen.type (discrete/continuous)
+  }
+  ## ensure ind names not lost
+  names(phen) <- names(phen.ori)
+  
+  
+  ## (+) Copy treeWAS lines for all checks/cleaning: phen.rec ~1201:1244... 
+  ## (+) Add args: phen.reconstruction, phen.rec.method, snps.reconstruction, snps.rec.method.
+  ## (+?) Add check/warning for categorical phen (if phen.type=discrete but prop.u < 0.1 (?))
+  snps.rec <- asr(var = snps, tree = tree, unique.cols = TRUE) # , type = snps.reconstruction)
+  phen.rec <- asr(var = phen, tree = tree, method = phen.rec.method) #, type = phen.reconstruction)
+  
+  ################
 
   ################
   ## Get Output ##
   ################
-  out <- list(snps, snps.assoc, phen, phen.plot.col, tree, sets)
-  names(out) <- c("snps", "snps.assoc", "phen", "phen.plot.col", "tree", "sets")
+  out <- list(snps, snps.rec, snps.assoc, phen, phen.rec, tree, sets, args)
+  names(out) <- c("snps", "snps.rec", "snps.assoc", "phen", "phen.rec", "tree", "sets", "args")
   return(out)
 
 } # end coalescent.sim

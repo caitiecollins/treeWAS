@@ -32,7 +32,8 @@
 
 subsequent.test <- function(snps.reconstruction,
                             phen.reconstruction,
-                            tree){
+                            tree, 
+                            correct.prop = FALSE){
 
   snps.rec <- snps.reconstruction
   phen.rec <- phen.reconstruction
@@ -106,11 +107,24 @@ subsequent.test <- function(snps.reconstruction,
   ###############
   ## SCORE 3.0 ##
   ###############
-  ## ORIGINAL AND NEW INTEGRAL-BASED SCORE3 (without edge length):
-  score3 <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
-
-  ## Return with sign:
-  score3 <- colSums(score3, na.rm=TRUE)
+  
+  if(correct.prop == FALSE){
+    ## ORIGINAL AND NEW INTEGRAL-BASED SCORE3 (without edge length):
+    score3 <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
+    
+    ## Return with sign:
+    score3 <- colSums(score3, na.rm=TRUE)
+  }else{
+    ## Get snps, phen values for all internal+terminal nodes:
+    Sx <- snps.rec
+    Px <- phen.rec
+    
+    ## NEW MARGINAL-CORRECTED SCORE 1 (~Phi):
+    score3 <- ((colSums((1 - Px)*(1 - Sx), na.rm=TRUE)*colSums(Px*Sx, na.rm=TRUE)) - 
+                 (colSums((1 - Px)*Sx, na.rm=TRUE)*colSums(Px*(1 - Sx), na.rm=TRUE))) / 
+      (sqrt(colSums(1 - Sx, na.rm=TRUE)*colSums(Sx, na.rm=TRUE)*sum(1 - Px)*sum(Px)))
+  }
+ 
   # score3 <- abs(score3)
   names(score3) <- colnames(snps.rec)
 
@@ -174,7 +188,7 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l=NULL){
 
   if(!is.null(l)){
     ## NEW integral-based score (WITH edge-length!)...
-    score3 <- l*(((4/3)*Pa*Sa) +
+    score3 <- (l*(((4/3)*Pa*Sa) +
                    ((2/3)*Pa*Sd) +
                    ((2/3)*Pd*Sa) +
                    ((4/3)*Pd*Sd) -
@@ -182,7 +196,7 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l=NULL){
                    Pd -
                    Sa -
                    Sd +
-                   1)
+                   1))/sum(l)
   }else{
     ## NEW integral-based score (WITHOUT edge-length!)...
     score3 <- (((4/3)*Pa*Sa) +
@@ -193,7 +207,7 @@ get.score3 <- function(Pa, Pd, Sa, Sd, l=NULL){
                  Pd -
                  Sa -
                  Sd +
-                 1)
+                 1)/length(Pa)
   }
 
   return(score3)
