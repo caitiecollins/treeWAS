@@ -4,7 +4,9 @@
 \name{phen.cont}
 \alias{phen.cont}
 \title{A continuous phenotype.}
-\format{A named vector of length 533.}
+\format{
+A named vector of length 533.
+}
 \usage{
 data(phen.cont)
 }

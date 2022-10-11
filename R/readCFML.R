@@ -39,6 +39,12 @@
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
+#' @examples
+#' ## Example ##
+#' \dontrun{
+#' ## basic use of fn
+#' out <- read.CFML(prefix="./filename_")
+#' }
 #'
 #' @import adegenet
 #' @rawNamespace import(ape, except = zoom)
@@ -303,6 +309,22 @@ read.CFML <- function(prefix, tree=NULL, plot=TRUE, suff.length = 2) {
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #' @examples
+#' ## Example ##
+#' \dontrun{
+#' fasta <- "./filename.fas"
+#' prefix <- "/filename.fas.out"
+#' 
+#' ## read in original fasta sequence:
+#' seqs <- read.dna(fasta, format="fasta")
+#' 
+#' ## load saved read.CFML output
+#' dat <- get(load(sprintf('%s.read.CFML_dat.Rdata', prefix)))
+#' 
+#' ## get sig snps from treeWAS results
+#' sig.snps.names <- out$treeWAS.combined$treeWAS.combined
+#' 
+#' out <- get.original.loci(seqs, dat, sig.snps.names, n.bp=40, csv=T, csv.prefix="/filename")
+#' }
 #'
 #' @importFrom ape read.dna
 #' @importFrom utils write.csv

@@ -4,13 +4,28 @@
 \alias{plot_sig_snps}
 \title{Plot null distribution and significant sites.}
 \usage{
-plot_sig_snps(corr.dat, corr.sim, corr.sim.subset = NULL,
-  sig.corrs = NULL, sig.snps = NULL, sig.thresh = NULL,
-  test = NULL, sig.snps.col = "blue", hist.col = rgb(0, 0, 1, 0.5),
-  hist.subset.col = rgb(1, 0, 0, 0.5), thresh.col = "seasun",
-  snps.assoc = NULL, snps.assoc.col = "red", bg = "lightgray",
-  grid = TRUE, freq = FALSE, plot.null.dist = TRUE,
-  plot.dist = FALSE, main.title = TRUE, ...)
+plot_sig_snps(
+  corr.dat,
+  corr.sim,
+  corr.sim.subset = NULL,
+  sig.corrs = NULL,
+  sig.snps = NULL,
+  sig.thresh = NULL,
+  test = NULL,
+  sig.snps.col = "blue",
+  hist.col = rgb(0, 0, 1, 0.5),
+  hist.subset.col = rgb(1, 0, 0, 0.5),
+  thresh.col = "seasun",
+  snps.assoc = NULL,
+  snps.assoc.col = "red",
+  bg = "lightgray",
+  grid = TRUE,
+  freq = FALSE,
+  plot.null.dist = TRUE,
+  plot.dist = FALSE,
+  main.title = TRUE,
+  ...
+)
 }
 \arguments{
 \item{arg}{Description.}

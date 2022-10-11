@@ -4,8 +4,16 @@
 \alias{get.original.loci}
 \title{\code{(read.CFML+)} Get original sequence positions of polymorphic loci.}
 \usage{
-get.original.loci(seqs, dat, sig.snps.names, n.bp = 50,
-  suff.length = 2, csv = TRUE, csv.prefix = NULL, NA.thresh = 0.2)
+get.original.loci(
+  seqs,
+  dat,
+  sig.snps.names,
+  n.bp = 50,
+  suff.length = 2,
+  csv = TRUE,
+  csv.prefix = NULL,
+  NA.thresh = 0.2
+)
 }
 \arguments{
 \item{seqs}{A \code{DNAbin} object containing the original sequences
@@ -66,6 +74,22 @@ If \code{snps} names are purely numeric with no alleles indicated
 (i.e., they already match names in \code{seqs}), then set \code{suff.length = 0}.
 }
 \examples{
+## Example ##
+\dontrun{
+fasta <- "./filename.fas"
+prefix <- "/filename.fas.out"
+
+## read in original fasta sequence:
+seqs <- read.dna(fasta, format="fasta")
+
+## load saved read.CFML output
+dat <- get(load(sprintf('\%s.read.CFML_dat.Rdata', prefix)))
+
+## get sig snps from treeWAS results
+sig.snps.names <- out$treeWAS.combined$treeWAS.combined
+
+out <- get.original.loci(seqs, dat, sig.snps.names, n.bp=40, csv=T, csv.prefix="/filename")
+}
 
 }
 \author{

@@ -4,9 +4,18 @@
 \alias{fwd.coalescent.sim}
 \title{Short one-phrase description.}
 \usage{
-fwd.coalescent.sim(n.ind = 100, n.snps = 10000, n.subs = 1,
-  n.snps.assoc = 10, n.subs.assoc = 15, p = 1, heatmap = FALSE,
-  reconstruct = FALSE, dist.dna.model = "JC69", seed = 1)
+fwd.coalescent.sim(
+  n.ind = 100,
+  n.snps = 10000,
+  n.subs = 1,
+  n.snps.assoc = 10,
+  n.subs.assoc = 15,
+  p = 1,
+  heatmap = FALSE,
+  reconstruct = FALSE,
+  dist.dna.model = "JC69",
+  seed = 1
+)
 }
 \arguments{
 \item{n.ind}{An integer specifying the number of individual genomes to simulate

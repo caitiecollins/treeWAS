@@ -6,7 +6,7 @@ Maintainer: Caitlin Collins <caitiecollins@gmail.com>
 Description: Perform microbial GWAS using phylogenetic trees to correct for population structure and recombination.
 License: GPL (>=2)
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.2.0
 Depends: R (>= 3.0.0), 
         adegenet, 
         ape

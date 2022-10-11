@@ -4,9 +4,15 @@
 \alias{get.sig.snps}
 \title{Get significant SNPs, according to a given test of association.}
 \usage{
-get.sig.snps(corr.dat, corr.sim, snps.names, test = "terminal",
-  n.tests = 1, p.value = 0.01, p.value.correct = "bonf",
-  p.value.by = "count")
+get.sig.snps(
+  corr.dat,
+  corr.sim,
+  snps.names,
+  test = "terminal",
+  p.value = 0.01,
+  p.value.correct = "bonf",
+  p.value.by = "count"
+)
 }
 \arguments{
 \item{corr.dat}{A vector containing the association score values, for a given association test, for the real data.}
@@ -17,22 +23,18 @@ get.sig.snps(corr.dat, corr.sim, snps.names, test = "terminal",
 in \code{corr.dat} were derived.}
 
 \item{test}{A character string or vector containing one or more of the following available tests of association:
-"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
-(note that within treeWAS, the first three tests are run in a loop by default).
+"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run 
+(note that within treeWAS, the first three tests are run in a loop by default). 
 See details for more information on what these tests do and when they may be appropriate.}
-
-\item{n.tests}{An integer between 1 and 5 specifying the number of tests you are running on all loci,
-to be used in appropriately correcting for multiple testing.
-(i.e., the number of times you will be running the \code{get.sig.snps} function).}
 
 \item{p.value}{A single number specifying the p.value below which correlations are deemed to be 'significant'.}
 
-\item{p.value.correct}{Specify if/how to correct for multiple testing:
-either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
+\item{p.value.correct}{Specify if/how to correct for multiple testing: 
+either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively, 
 the Bonferroni and False Discovery Rate corrections). By default, 'bonf' is selected}
 
-\item{p.value.by}{Specify how to determine the location of the p.value threshold:
-either 'count' or 'density' (indicating, respectively, that the p.value threshold should
+\item{p.value.by}{Specify how to determine the location of the p.value threshold: 
+either 'count' or 'density' (indicating, respectively, that the p.value threshold should 
 be determined by exact count or with the use of a density function).}
 }
 \description{

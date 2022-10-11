@@ -2,20 +2,22 @@
 % Please edit documentation in R/terminal.test.R
 \name{terminal.test}
 \alias{terminal.test}
-\title{Short one-phrase description.}
+\title{Terminal test}
 \usage{
-terminal.test(snps, phen)
+terminal.test(snps, phen, correct.prop = FALSE, categorical = FALSE)
 }
 \arguments{
 \item{tree}{A phylo object.}
 }
 \description{
-Longer proper discription of function...
+Calculates treeWAS score 1, the terminal test.
 }
 \examples{
-
+## Example ##
+\dontrun{
 ## basic use of fn
 out <- terminal.test(snps, phen)
+} 
 
 }
 \author{

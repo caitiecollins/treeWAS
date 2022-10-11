@@ -4,9 +4,18 @@
 \alias{plot_phen}
 \title{Plot the states of a phenotype or genotype along a phylogenetic tree.}
 \usage{
-plot_phen(tree, phen.nodes, snp.nodes = NULL, plot = TRUE,
-  RTL = FALSE, LTR.snp = FALSE, main.title = NULL,
-  align.tip.label = FALSE, show.axis = TRUE, ...)
+plot_phen(
+  tree,
+  phen.nodes,
+  snp.nodes = NULL,
+  plot = TRUE,
+  RTL = FALSE,
+  LTR.snp = FALSE,
+  main.title = NULL,
+  align.tip.label = FALSE,
+  show.axis = TRUE,
+  ...
+)
 }
 \arguments{
 \item{tree}{A phylo object.}

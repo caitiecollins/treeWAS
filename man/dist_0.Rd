@@ -4,7 +4,9 @@
 \name{dist_0}
 \alias{dist_0}
 \title{Nsubs per site with no recombination (R = 0; M = 0.01).}
-\format{A named vector of length 4.}
+\format{
+A named vector of length 4.
+}
 \usage{
 data(dist_0)
 }

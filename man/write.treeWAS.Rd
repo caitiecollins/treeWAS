@@ -10,7 +10,8 @@ write.treeWAS(x, filename = "./treeWAS_results")
 \item{x}{The output returned by \code{treeWAS}.}
 
 \item{filename}{A character string containing the path and filename to which the .csv file will be saved;
-by default, \code{filename = "./treeWAS_results"} and so would be saved to the current working directory.}
+by default, \code{filename = "./treeWAS_results"} and so
+would be saved to the current working directory.}
 }
 \description{
 Save the results of \code{treeWAS} to a CSV file as a summary table of significant findings and scores

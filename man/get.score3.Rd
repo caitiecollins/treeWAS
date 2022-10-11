@@ -26,10 +26,11 @@ that joins the ancestral and descendant node.}
 Longer proper discription of function...
 }
 \examples{
-
+## Example ##
+\dontrun{
 ## basic use of fn
 tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
-
+}
 }
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}

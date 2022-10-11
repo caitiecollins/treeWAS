@@ -25,8 +25,9 @@
 #' performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} function in package \emph{ape}).
 #' @param method A character string specifying the type of ASR method to implement,
 #' either \code{'discrete'} or \code{'continuous'} (only used if \code{type} is set to "ML").
-#' @param unique.cols A logical indicating whether only unique column patterns are present in \code{var}, if \code{var} is a matrix
-#' (if so (TRUE), a time-consuming step can be skipped); by default, FALSE.
+#' @param unique.cols A logical indicating whether only unique column patterns are present in \code{var}, 
+#' if \code{var} is a matrix (if so (\code{TRUE}), a time-consuming step can be skipped); 
+#' by default, \code{FALSE}.
 #'
 #' @return Depending on the dimensions of the input \code{var} object,
 #' either a matrix or a vector containing \emph{both} the known states

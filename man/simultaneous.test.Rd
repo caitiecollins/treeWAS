@@ -2,9 +2,14 @@
 % Please edit documentation in R/simultaneous.test.R
 \name{simultaneous.test}
 \alias{simultaneous.test}
-\title{Short one-phrase description.}
+\title{Simultaneous test}
 \usage{
-simultaneous.test(snps.reconstruction, phen.reconstruction, tree)
+simultaneous.test(
+  snps.reconstruction,
+  phen.reconstruction,
+  tree,
+  categorical = FALSE
+)
 }
 \arguments{
 \item{snps.reconstruction}{A matrix containing the terminal and reconstructed
@@ -17,7 +22,9 @@ ancestral states of the phenotype for all nodes in the tree.}
 between the individuals for which snps and phen are known.}
 }
 \description{
-Longer proper discription of function...
+Calculates treeWAS score 2, the simultaneous test, as the number of 
+substitutions or changes in genotype (\code{snps.reconstruction}) and phenotype 
+(\code{phen.reconstruction}) that occur simultaneously on the same branches of the tree.
 }
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}

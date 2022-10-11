@@ -4,7 +4,9 @@
 \name{phen.reconstruction}
 \alias{phen.reconstruction}
 \title{The ancestral state reconstruction of a binary phenotype.}
-\format{A named vector of length 199.}
+\format{
+A named vector of length 199.
+}
 \usage{
 data(phen.reconstruction)
 }

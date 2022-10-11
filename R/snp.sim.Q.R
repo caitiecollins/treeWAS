@@ -5,9 +5,9 @@
 ## sapply, add n.mts > l.edge check,
 ## convert snps to logical, for loop (selectBiallelicSNP --> !l[[i]])
 
-#############
-## snp.sim ##
-#############
+###############
+## snp.sim.Q ##
+###############
 
 ########################################################################
 

@@ -4,9 +4,19 @@
 \alias{get.assoc.scores}
 \title{Get significant SNPs, according to a given test of association.}
 \usage{
-get.assoc.scores(snps, snps.sim, phen, tree, test = "terminal",
-  snps.reconstruction = NULL, snps.sim.reconstruction = NULL,
-  phen.reconstruction = NULL, unique.cols = FALSE)
+get.assoc.scores(
+  snps,
+  snps.sim,
+  phen,
+  tree,
+  test = "terminal",
+  correct.prop = FALSE,
+  categorical = FALSE,
+  snps.reconstruction = NULL,
+  snps.sim.reconstruction = NULL,
+  phen.reconstruction = NULL,
+  unique.cols = FALSE
+)
 }
 \arguments{
 \item{snps}{A matrix containing the real snps.}
@@ -19,13 +29,21 @@ get.assoc.scores(snps, snps.sim, phen, tree, test = "terminal",
 length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.}
 
 \item{test}{A character string or vector containing one or more of the following available tests of association:
-"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
-(note that within treeWAS, the first three tests are run in a loop by default).
+"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run 
+(note that within treeWAS, the first three tests are run in a loop by default). 
 See details for more information on what these tests do and when they may be appropriate.}
 
-\item{n.tests}{An integer between 1 and 5 specifying the number of tests you are running on all loci,
-to be used in appropriately correcting for multiple testing.
-(i.e., the number of times you will be running the \code{get.sig.snps} function).}
+\item{correct.prop}{A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for 
+phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across 
+the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous). 
+If \code{correct.prop} is \code{FALSE} (the default), 
+the original versions of each test will be run as described in our
+\href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
+If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated 
+across the terminal and all (internal and terminal) nodes, respectively.}
+
+\item{categorical}{A logical indicating whether \code{phen} should be treated as a nominal categorical variable
+whose unique values should be treated as levels rather than as meaningful numbers.}
 }
 \description{
 Identify which SNPs are deemed to be significantly associated with a phenotype,

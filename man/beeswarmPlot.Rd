@@ -4,9 +4,19 @@
 \alias{beeswarmPlot}
 \title{Beeswarm-and-Box-Plot.}
 \usage{
-beeswarmPlot(y = "sensitivity", x = "test", df, y.lab = NULL,
-  pt.size = 4, x.text = FALSE, x.text.size = 15, y.text.size = 15,
-  y.title.size = 20, y.lim = c(-0.002, 1.02), mean = TRUE)
+beeswarmPlot(
+  y = "sensitivity",
+  x = "test",
+  df,
+  y.lab = NULL,
+  pt.size = 4,
+  x.text = FALSE,
+  x.text.size = 15,
+  y.text.size = 15,
+  y.title.size = 20,
+  y.lim = c(-0.002, 1.02),
+  mean = TRUE
+)
 }
 \arguments{
 \item{y}{A character string specifying the label of the (numeric) column

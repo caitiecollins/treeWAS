@@ -4,7 +4,9 @@
 \name{phen}
 \alias{phen}
 \title{A binary phenotype.}
-\format{A named vector of length 100.}
+\format{
+A named vector of length 100.
+}
 \usage{
 data(phen)
 }

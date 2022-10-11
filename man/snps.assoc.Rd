@@ -4,7 +4,9 @@
 \name{snps.assoc}
 \alias{snps.assoc}
 \title{The phenotypically-associated sites in the \code{snps} matrix.}
-\format{A vector of length 10.}
+\format{
+A vector of length 10.
+}
 \usage{
 data(snps.assoc)
 }

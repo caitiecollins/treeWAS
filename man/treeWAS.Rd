@@ -4,30 +4,57 @@
 \alias{treeWAS}
 \title{Phylogenetic tree-based GWAS for microbes.}
 \usage{
-treeWAS(snps, phen, tree = c("BIONJ", "NJ", "parsimony", "BIONJ*",
-  "NJ*"), n.subs = NULL, n.snps.sim = ncol(snps) * 10,
-  chunk.size = ncol(snps), mem.lim = FALSE, test = c("terminal",
-  "simultaneous", "subsequent"), snps.reconstruction = "parsimony",
+treeWAS(
+  snps,
+  phen,
+  tree = c("BIONJ", "NJ", "parsimony", "BIONJ*", "NJ*"),
+  phen.type = NULL,
+  n.subs = NULL,
+  n.snps.sim = ncol(snps) * 10,
+  chunk.size = ncol(snps),
+  mem.lim = FALSE,
+  test = c("terminal", "simultaneous", "subsequent"),
+  correct.prop = FALSE,
+  snps.reconstruction = "parsimony",
   snps.sim.reconstruction = "parsimony",
-  phen.reconstruction = "parsimony", phen.type = NULL, na.rm = TRUE,
-  p.value = 0.01, p.value.correct = c("bonf", "fdr", FALSE),
-  p.value.by = c("count", "density"), dist.dna.model = "JC69",
-  plot.tree = TRUE, plot.manhattan = TRUE, plot.null.dist = TRUE,
-  plot.dist = FALSE, snps.assoc = NULL, filename.plot = NULL,
-  seed = NULL)
+  phen.reconstruction = "parsimony",
+  na.rm = TRUE,
+  p.value = 0.01,
+  p.value.correct = c("bonf", "fdr", FALSE),
+  p.value.by = c("count", "density"),
+  dist.dna.model = "JC69",
+  plot.tree = TRUE,
+  plot.manhattan = TRUE,
+  plot.null.dist = TRUE,
+  plot.dist = FALSE,
+  snps.assoc = NULL,
+  filename.plot = NULL,
+  seed = NULL
+)
 }
 \arguments{
 \item{snps}{A matrix containing binary genetic data, with individuals in the rows
 and genetic loci in the columns and both rows and columns labelled.}
 
 \item{phen}{A vector containing the phenotypic state of each individual, whose length is equal to the number of rows in
-\code{snps} and which is named with the same set of labels.
-The phenotype can be either binary (character or numeric) or continuous (numeric).}
+\code{snps} and which is named with the same set of labels. The phenotype can be either
+binary (character or numeric), categorical (character or numeric), discrete or continuous (numeric).
+You must specify which type it is via the \code{phen.type} argument
+(otherwise treeWAS will assume binary or continuous).}
 
 \item{tree}{A \code{phylo} object containing the phylogenetic tree; or, a character string,
 one of \code{"NJ"}, \code{"BIONJ"} (the default), or \code{"parsimony"};
 or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
 specifying the method of phylogenetic reconstruction.}
+
+\item{phen.type}{An optional character string specifying whether the phenotypic variable should be treated
+as either \code{"categorical"}, \code{"discrete"} or \code{"continuous"}.
+By default, \code{phen.type} is \code{NULL}, in which case ML reconstructions will be
+"discrete" for binary phenotypes and "continuous" for any non-binary phenotypes.
+Categorical phenotypes must have >= 3 unique values (<= 5 recommended);
+association tests will treat these as nominal (not ordered) levels and not as meaningful numbers.
+For continuous phenotypes, ancestral state reconstruction if performed via ML will treat
+values as meaningful numbers and may infer intermediate values.}
 
 \item{n.subs}{A numeric vector containing the homoplasy distribution (if known, see details), or \code{NULL} (the default).}
 
@@ -52,6 +79,15 @@ for use by treeWAS and \code{chunk.size} is updated to reflect this.}
 \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
 By default, the first three tests are run (see details).}
 
+\item{correct.prop}{A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for
+phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across
+the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous).
+If \code{correct.prop} is \code{FALSE} (the default), the original
+versions of each test will be run as described in our
+\href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
+If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated
+across the terminal and all (internal and terminal) nodes, respectively.}
+
 \item{snps.reconstruction}{Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 for the ancestral state reconstruction of the genetic dataset,
 or a matrix containing this reconstruction if it has been performed elsewhere
@@ -64,16 +100,10 @@ for the ancestral state reconstruction of the simulated null genetic dataset.}
 for the ancestral state reconstruction of the phenotypic variable,
 or a vector containing this reconstruction if it has been performed elsewhere.}
 
-\item{phen.type}{An optional character string specifying whether the ancestral state reconstruction
-of the phenotypic variable, if performed via ML, should treat the phenotype
-as either \code{"discrete"} or \code{"continuous"}. By default,
-\code{phen.type} is \code{NULL}, in which case ML reconstructions will be "continuous" for any
-non-binary phenotypes.}
-
 \item{na.rm}{A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 should be removed at the outset (TRUE, the default) or not (FALSE).}
 
-\item{p.value}{A number specifying the base p-value to be set the threshold of significance (by default, \code{0.01}).}
+\item{p.value}{A number specifying the base p-value to be set as the threshold of significance (by default, \code{0.01}).}
 
 \item{p.value.correct}{A character string, either \code{"bonf"} (the default) or \code{"fdr"},
 specifying whether correction for multiple testing
@@ -309,13 +339,15 @@ to the internal nodes in \code{snps.reconstruction} and/or \code{phen.reconstruc
            \deqn{Nterm = Number of terminal nodes}
 
 \describe{
-\item{\code{terminal}}{The \code{terminal} test solves the following equation, for each genetic locus, at the terminal nodes of the tree only:
+\item{\code{terminal}}{The \code{terminal} test solves the following equation, for each genetic locus,
+                       at the terminal nodes of the tree only:
                        \deqn{Terminal = | (1/Nterm)*(Pt*Gt - (1 - Pt)*Gt - Pt*(1 - Gt) + (1 - Pt)*(1 - Gt)) |}
                        The \code{terminal} test is a sample-wide test of association that
                        seeks to identify broad patterns of correlation between genetic loci and the phenotype,
                        without relying on inferences drawn from reconstructions of the ancestral states.}
 
-\item{\code{simultaneous}}{The \code{simultaneous} test solves the following equation, for each genetic locus, across each branch in the tree:
+\item{\code{simultaneous}}{The \code{simultaneous} test solves the following equation, for each genetic locus,
+                           across each branch in the tree:
                            \deqn{Simultaneous = | (Pa - Pd)*(Ga - Gd) |}
                            This allows for the identification of simultaneous substitutions (i.e., substitutions occuring in
                            both the genetic locus and phenotypic variable on the same branch of the phylogenetic tree,
@@ -326,7 +358,8 @@ to the internal nodes in \code{snps.reconstruction} and/or \code{phen.reconstruc
                            within some clades but not others and, therefore, to identify
                            loci giving rise to the phenotype through complementary pathways.}
 
-\item{\code{subsequent}}{The \code{subsequent} test solves the following equation, for each genetic locus, across each branch in the tree:
+\item{\code{subsequent}}{The \code{subsequent} test solves the following equation, for each genetic locus,
+                           across each branch in the tree:
                            \deqn{Subsequent = | 4/3(Pa*Ga) + 2/3(Pa*Gd) + 2/3(Pd*Ga) + 4/3(Pd*Gd) - Pa - Pd - Ga - Gd + 1 |}
                            Calculating this metric across all branches of the tree allows us to measure in what
                            proportion of tree branches we expect the genotype and phenotype to be in the same state.}

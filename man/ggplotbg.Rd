@@ -4,9 +4,18 @@
 \alias{ggplotbg}
 \title{Mimic ggplot2 Background}
 \usage{
-ggplotbg(bg = transp("lightgray", 0.5), x.ax = FALSE, y.ax = FALSE,
-  box = TRUE, grid = TRUE, grid.col = "white", grid.nx = NULL,
-  grid.ny = NULL, grid.lwd = 1, grid.lty = 1)
+ggplotbg(
+  bg = transp("lightgray", 0.5),
+  x.ax = FALSE,
+  y.ax = FALSE,
+  box = TRUE,
+  grid = TRUE,
+  grid.col = "white",
+  grid.nx = NULL,
+  grid.ny = NULL,
+  grid.lwd = 1,
+  grid.lty = 1
+)
 }
 \arguments{
 \item{bg}{The background colour, by default ``lightgray'' with 50\% transparency.}

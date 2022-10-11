@@ -1,6 +1,6 @@
 
 #####################
-## subsequent.test ## ## NEW ORIGINAL SCORE 3 (w integral score, no edge-length) ##
+## subsequent.test ## ## SCORE 3 ##
 #####################
 
 ########################################################################
@@ -9,9 +9,9 @@
 ## DOCUMENTATION ##
 ###################
 
-#' Short one-phrase description.
+#' Subsequent test
 #'
-#' Longer proper discription of function...
+#' Calculates treeWAS score 3, the subsequent test.
 #'
 #' @param tree A phylo object.
 #'
@@ -33,7 +33,8 @@
 subsequent.test <- function(snps.reconstruction,
                             phen.reconstruction,
                             tree, 
-                            correct.prop = FALSE){
+                            correct.prop = FALSE,
+                            categorical = FALSE){
 
   snps.rec <- snps.reconstruction
   phen.rec <- phen.reconstruction
@@ -59,20 +60,17 @@ subsequent.test <- function(snps.reconstruction,
   ## NB: can only be binary or continuous at this point...
   levs <- unique(as.vector(unlist(phen.rec)))
   n.levs <- length(levs[!is.na(levs)])
-  if(n.levs == 2){
-    if(!is.numeric(phen.rec)){
-      if(all.is.numeric(phen.rec)){
-        phen.rec <- as.numeric(as.character(phen.rec))
-      }else{
-        phen.rec <- as.numeric(as.factor(phen.rec))
-      }
-    }
-  }else{
-    if(!is.numeric(phen.rec)){
-      if(all.is.numeric(phen.rec)){
-        phen.rec <- as.numeric(as.character(phen.rec))
-      }else{
-        stop("phen.rec has more than 2 levels but is not numeric (and therefore neither binary nor continuous).")
+  if(!is.numeric(phen.rec)){
+    if(all.is.numeric(phen.rec)){
+      phen.rec <- as.numeric(as.character(phen.rec))
+    }else{
+      phen.rec <- as.numeric(as.factor(phen.rec))
+      if(n.levs > 2){
+        if(categorical != TRUE){
+          warning("phen.rec has more than 2 levels but is not numeric. 
+                  Setting 'categorical' to TRUE.")
+          categorical <- TRUE
+        }
       }
     }
   }
@@ -90,51 +88,50 @@ subsequent.test <- function(snps.reconstruction,
   ## RE-SCALE NON-BINARY VALUES (phen only ...) ##
   ################################################
   ## phen.rec (both Pa and Pd should be on same scale):
-  # if(n.levs > 2)
-  phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
+  if(categorical == FALSE){
+    phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
+  }
 
   ###############################
   ## GET SCORE ACROSS BRANCHES ##
   ###############################
 
+  ## Get snps, phen values for ancestral & descendant nodes:
   Pa <- phen.rec[edges[,1]]
   Pd <- phen.rec[edges[,2]]
   Sa <- snps.rec[edges[,1], ]
   Sd <- snps.rec[edges[,2], ]
   bl <- tree$edge.length
+  
+  ## Get snps, phen values for all internal+terminal nodes:
+  Sx <- snps.rec
+  Px <- phen.rec
 
   #################################################################     #####
   ###############
   ## SCORE 3.0 ##
   ###############
-  
-  if(correct.prop == FALSE){
-    ## ORIGINAL AND NEW INTEGRAL-BASED SCORE3 (without edge length):
-    score3 <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
-    
-    ## Return with sign:
-    score3 <- colSums(score3, na.rm=TRUE)
+  if(categorical == FALSE){
+    if(correct.prop == FALSE){
+      ## ORIGINAL INTEGRAL-BASED SCORE3 (without edge length):
+      score3 <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
+      
+      ## Return with sign:
+      score3 <- colSums(score3, na.rm=TRUE)
+    }else{
+      ## MARGINAL-CORRECTED SCORE 1 (Phi):
+      score3 <- ((colSums((1 - Px)*(1 - Sx), na.rm=TRUE)*colSums(Px*Sx, na.rm=TRUE)) - 
+                   (colSums((1 - Px)*Sx, na.rm=TRUE)*colSums(Px*(1 - Sx), na.rm=TRUE))) / 
+        (sqrt(colSums(1 - Sx, na.rm=TRUE)*colSums(Sx, na.rm=TRUE)*sum(1 - Px)*sum(Px)))
+    }
   }else{
-    ## Get snps, phen values for all internal+terminal nodes:
-    Sx <- snps.rec
-    Px <- phen.rec
-    
-    ## NEW MARGINAL-CORRECTED SCORE 1 (~Phi):
-    score3 <- ((colSums((1 - Px)*(1 - Sx), na.rm=TRUE)*colSums(Px*Sx, na.rm=TRUE)) - 
-                 (colSums((1 - Px)*Sx, na.rm=TRUE)*colSums(Px*(1 - Sx), na.rm=TRUE))) / 
-      (sqrt(colSums(1 - Sx, na.rm=TRUE)*colSums(Sx, na.rm=TRUE)*sum(1 - Px)*sum(Px)))
+    ## CATEGORICAL SCORE 3 (Phi):
+    score3 <- suppressWarnings(sqrt(sapply(c(1:ncol(Sx)), function(e) 
+      chisq.test(x=Px, y=Sx[,e], correct=F)$statistic)/length(Px)))
   }
  
   # score3 <- abs(score3)
   names(score3) <- colnames(snps.rec)
-
-  ## Return with and without sign?
-  # score3.sign <- colSums(score3, na.rm=TRUE)
-  # score3 <- abs(score3.sign)
-  # names(score3) <- names(score3.sign) <- colnames(snps.rec)
-  #
-  # score3 <- list("score3" = score3,
-  #                "score3.sign" = score3.sign)
 
   return(score3)
 
@@ -175,10 +172,11 @@ subsequent.test <- function(snps.reconstruction,
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #' @export
 #' @examples
-#'
+#' ## Example ##
+#' \dontrun{
 #' ## basic use of fn
 #' tree <- coalescent.tree.sim(n.ind = 100, seed = 1)
-#'
+#' }
 
 ########################################################################
 

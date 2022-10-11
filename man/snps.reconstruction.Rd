@@ -4,7 +4,9 @@
 \name{snps.reconstruction}
 \alias{snps.reconstruction}
 \title{The ancestral state reconstruction of a genetic data matrix.}
-\format{A binary matrix with 199 rows and 20,003 columns.}
+\format{
+A binary matrix with 199 rows and 20,003 columns.
+}
 \usage{
 data(snps.reconstruction)
 }

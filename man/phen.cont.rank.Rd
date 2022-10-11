@@ -4,7 +4,9 @@
 \name{phen.cont.rank}
 \alias{phen.cont.rank}
 \title{A rank-transformed continuous phenotype.}
-\format{A named vector of length 533.}
+\format{
+A named vector of length 533.
+}
 \usage{
 data(phen.cont.rank)
 }

@@ -4,7 +4,9 @@
 \name{phen.plot.col}
 \alias{phen.plot.col}
 \title{Phenotypic tree-colouring schemes.}
-\format{A list of length 5.}
+\format{
+A list of length 5.
+}
 \usage{
 data(phen.plot.col)
 }

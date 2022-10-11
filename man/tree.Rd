@@ -4,7 +4,9 @@
 \name{tree}
 \alias{tree}
 \title{A phylogenetic tree.}
-\format{A phylo object with 100 terminal nodes and 99 internal nodes.}
+\format{
+A phylo object with 100 terminal nodes and 99 internal nodes.
+}
 \usage{
 data(tree)
 }

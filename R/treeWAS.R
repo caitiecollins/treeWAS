@@ -19,7 +19,8 @@
 #' Print the results of \code{treeWAS}, excluding longer data elements within the output.
 #'
 #' @param x The output returned by \code{treeWAS}.
-#' @param sort.by.p A logical indicating whether to sort the results by decreasing p-value (\code{TRUE}) or by locus (\code{FALSE}, the default).
+#' @param sort.by.p A logical indicating whether to sort the results by decreasing p-value (\code{TRUE})
+#'                  or by locus (\code{FALSE}, the default).
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -32,7 +33,7 @@
 # #' @S3method treeWAS print
 # https://stackoverflow.com/questions/7198758/roxygen2-how-to-properly-document-s3-methods
 
-print.treeWAS <- function(x, sort.by.p = FALSE){
+print.treeWAS <- function(x, sort.by.p = FALSE, digits = 3){
   cat("\t#################### \n")
   cat("\t## treeWAS output ## \n")
   cat("\t#################### \n")
@@ -72,7 +73,12 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
   cat("\t## Findings by test:  ## \n")
   cat("\t######################## \n")
 
-  N <- c(2:(length(x)-1))
+  if("pairwise" %in% names(x)){
+    ## categorical (+pairwise)
+    N <- c(2:(length(x)-2))
+  }else{
+    N <- c(2:(length(x)-1))
+  }
 
   for(i in N){
     test <- names(x)[i]
@@ -100,16 +106,27 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 
       cat("Significant loci: \n")
       if(sort.by.p == TRUE){
-        print(res)
+        print(signif(res, digits = digits))
       }else{
         sl <- sort(res$SNP.locus, decreasing=FALSE)
         ord <- match(sl, res$SNP.locus)
-        print(res[ord, ])
+        print(signif(res[ord, ], digits = digits))
       }
-
     }
 
   } # end for loop
+
+  ## Print pairwise results for categorical phens:
+  if("pairwise" %in% names(x)){
+
+    cat("\t \n")
+
+    cat("\t############################################ \n")
+    cat("\t## Pairwise scores for significant snps:  ## \n")
+    cat("\t############################################ \n")
+
+    print(x$pairwise)
+  }
 
 } # end print.treeWAS
 
@@ -135,7 +152,8 @@ print.treeWAS <- function(x, sort.by.p = FALSE){
 #'
 #' @param x The output returned by \code{treeWAS}.
 #' @param filename A character string containing the path and filename to which the .csv file will be saved;
-#'                 by default, \code{filename = "./treeWAS_results"} and so would be saved to the current working directory.
+#'                 by default, \code{filename = "./treeWAS_results"} and so
+#'                 would be saved to the current working directory.
 #'
 #' @examples
 #' ## Example ##
@@ -166,10 +184,12 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
   if(length(name[!is.na(name)]) == 0){
 
     ## Make dummy variables:
-    name <- locus <- p.value.1 <- p.value.2 <- p.value.3 <- score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, 1)
+    name <- locus <- p.value.1 <- p.value.2 <- p.value.3 <-
+      score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, 1)
 
     ## Make table:
-    tab <- data.frame(name, locus, score.1, score.2, score.3, p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
+    tab <- data.frame(name, locus, score.1, score.2, score.3,
+                      p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
 
     ## If SIG loci found, print csv:
   }else{
@@ -181,10 +201,12 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
     name <- name[ord]
 
     ## Make dummy variables:
-    p.value.1 <- p.value.2 <- p.value.3 <- score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, length(name))
+    p.value.1 <- p.value.2 <- p.value.3 <-
+      score.1 <- score.2 <- score.3 <- G1P1 <- G0P0 <- G1P0 <- G0P1 <- rep(NA, length(name))
 
     ## Make table:
-    tab <- data.frame(name, locus, score.1, score.2, score.3, p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
+    tab <- data.frame(name, locus, score.1, score.2, score.3,
+                      p.value.1, p.value.2, p.value.3, G1P1, G0P0, G1P0, G0P1)
 
     ## Add relevant values for each test: ##
     ## Terminal:
@@ -271,12 +293,22 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @param snps A matrix containing binary genetic data, with individuals in the rows
 #'                and genetic loci in the columns and both rows and columns labelled.
 #' @param phen A vector containing the phenotypic state of each individual, whose length is equal to the number of rows in
-#'              \code{snps} and which is named with the same set of labels.
-#'              The phenotype can be either binary (character or numeric) or continuous (numeric).
+#'              \code{snps} and which is named with the same set of labels. The phenotype can be either
+#'              binary (character or numeric), categorical (character or numeric), discrete or continuous (numeric).
+#'              You must specify which type it is via the \code{phen.type} argument
+#'              (otherwise treeWAS will assume binary or continuous).
 #' @param tree A \code{phylo} object containing the phylogenetic tree; or, a character string,
 #'                one of \code{"NJ"}, \code{"BIONJ"} (the default), or \code{"parsimony"};
 #'                or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
 #'                specifying the method of phylogenetic reconstruction.
+#' @param phen.type An optional character string specifying whether the phenotypic variable should be treated
+#'                  as either \code{"categorical"}, \code{"discrete"} or \code{"continuous"}.
+#'                  By default, \code{phen.type} is \code{NULL}, in which case ML reconstructions will be
+#'                  "discrete" for binary phenotypes and "continuous" for any non-binary phenotypes.
+#'                  Categorical phenotypes must have >= 3 unique values (<= 5 recommended);
+#'                  association tests will treat these as nominal (not ordered) levels and not as meaningful numbers.
+#'                  For continuous phenotypes, ancestral state reconstruction if performed via ML will treat
+#'                  values as meaningful numbers and may infer intermediate values.
 #' @param n.subs A numeric vector containing the homoplasy distribution (if known, see details), or \code{NULL} (the default).
 #' @param n.snps.sim An integer specifying the number of loci to be simulated for estimating the null distribution
 #'                      (by default \code{10*ncol(snps)}). If memory errors arise during the analyis of a large dataset,
@@ -295,13 +327,14 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @param test A character string or vector containing one or more of the following available tests of association:
 #'              \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
 #'              By default, the first three tests are run (see details).
-#' @param correct.prop A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for 
-#'                     phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across 
-#'                     the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous). 
-#'                     If \code{correct.prop} if \code{FALSE} (the default), the original versions of each test will be run as described in our
+#' @param correct.prop A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for
+#'                     phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across
+#'                     the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous).
+#'                     If \code{correct.prop} is \code{FALSE} (the default), the original
+#'                     versions of each test will be run as described in our
 #'                     \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
-#'                     If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated 
-#'                     across the terminal and all (internal and terminal) nodes, respectively.  
+#'                     If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated
+#'                     across the terminal and all (internal and terminal) nodes, respectively.
 #' @param snps.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the genetic dataset,
 #'                              or a matrix containing this reconstruction if it has been performed elsewhere
@@ -311,14 +344,9 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @param phen.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the phenotypic variable,
 #'                              or a vector containing this reconstruction if it has been performed elsewhere.
-#' @param phen.type An optional character string specifying whether the ancestral state reconstruction
-#'                  of the phenotypic variable, if performed via ML, should treat the phenotype
-#'                  as either \code{"discrete"} or \code{"continuous"}. By default,
-#'                  \code{phen.type} is \code{NULL}, in which case ML reconstructions will be "continuous" for any
-#'                  non-binary phenotypes.
 #' @param na.rm A logical indicating whether columns in \code{snps} containing more than 75\% \code{NA}s
 #'                should be removed at the outset (TRUE, the default) or not (FALSE).
-#' @param p.value A number specifying the base p-value to be set the threshold of significance (by default, \code{0.01}).
+#' @param p.value A number specifying the base p-value to be set as the threshold of significance (by default, \code{0.01}).
 #' @param p.value.correct A character string, either \code{"bonf"} (the default) or \code{"fdr"},
 #'                          specifying whether correction for multiple testing
 #'                          should be performed by Bonferonni correction (recommended) or the False Discovery Rate.
@@ -445,13 +473,15 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'            \deqn{Nterm = Number of terminal nodes}
 #'
 #' \describe{
-#' \item{\code{terminal}}{The \code{terminal} test solves the following equation, for each genetic locus, at the terminal nodes of the tree only:
+#' \item{\code{terminal}}{The \code{terminal} test solves the following equation, for each genetic locus,
+#'                        at the terminal nodes of the tree only:
 #'                        \deqn{Terminal = | (1/Nterm)*(Pt*Gt - (1 - Pt)*Gt - Pt*(1 - Gt) + (1 - Pt)*(1 - Gt)) |}
 #'                        The \code{terminal} test is a sample-wide test of association that
 #'                        seeks to identify broad patterns of correlation between genetic loci and the phenotype,
 #'                        without relying on inferences drawn from reconstructions of the ancestral states.}
 #'
-#' \item{\code{simultaneous}}{The \code{simultaneous} test solves the following equation, for each genetic locus, across each branch in the tree:
+#' \item{\code{simultaneous}}{The \code{simultaneous} test solves the following equation, for each genetic locus,
+#'                            across each branch in the tree:
 #'                            \deqn{Simultaneous = | (Pa - Pd)*(Ga - Gd) |}
 #'                            This allows for the identification of simultaneous substitutions (i.e., substitutions occuring in
 #'                            both the genetic locus and phenotypic variable on the same branch of the phylogenetic tree,
@@ -462,7 +492,8 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'                            within some clades but not others and, therefore, to identify
 #'                            loci giving rise to the phenotype through complementary pathways.}
 #'
-#' \item{\code{subsequent}}{The \code{subsequent} test solves the following equation, for each genetic locus, across each branch in the tree:
+#' \item{\code{subsequent}}{The \code{subsequent} test solves the following equation, for each genetic locus,
+#'                            across each branch in the tree:
 #'                            \deqn{Subsequent = | 4/3(Pa*Ga) + 2/3(Pa*Gd) + 2/3(Pd*Ga) + 4/3(Pd*Gd) - Pa - Pd - Ga - Gd + 1 |}
 #'                            Calculating this metric across all branches of the tree allows us to measure in what
 #'                            proportion of tree branches we expect the genotype and phenotype to be in the same state.}
@@ -640,7 +671,8 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @importFrom pryr object_size
 #' @importFrom grDevices col2rgb dev.off heat.colors pdf rgb
 #' @importFrom graphics arrows axis barplot box hist image lines par plot.new points rect text title
-#' @importFrom stats anova as.formula cor density dist ecdf fisher.test ftable glm lm mantelhaen.test p.adjust quantile residuals rexp rnorm rpois
+#' @importFrom stats anova as.formula chisq.test cor density dist ecdf fisher.test ftable glm lm mantelhaen.test
+#' p.adjust quantile residuals rexp rnorm rpois
 #' @importFrom utils str write.table
 #'
 #' @export
@@ -664,16 +696,16 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 treeWAS <- function(snps,
                     phen,
                     tree = c("BIONJ", "NJ", "parsimony", "BIONJ*", "NJ*"),
+                    phen.type = NULL,
                     n.subs = NULL,
                     n.snps.sim = ncol(snps)*10,
                     chunk.size = ncol(snps),
                     mem.lim = FALSE,
                     test = c("terminal", "simultaneous", "subsequent"),
-                    correct.prop = FALSE, 
+                    correct.prop = FALSE,
                     snps.reconstruction = "parsimony",
                     snps.sim.reconstruction = "parsimony",
                     phen.reconstruction = "parsimony",
-                    phen.type = NULL,
                     na.rm = TRUE,
                     p.value = 0.01,
                     p.value.correct = c("bonf", "fdr", FALSE),
@@ -727,14 +759,27 @@ treeWAS <- function(snps,
   p.value.correct <- match.arg(arg = p.value.correct,
                                choices = c("bonf", "fdr", "false"),
                                several.ok = FALSE)
-  if(p.value.correct == "false") p.value.correct <- FALSE
 
+  if(p.value.correct == "false") p.value.correct <- FALSE
 
   ## P-VALUE BY ##
   p.value.by <- tolower(p.value.by)
   p.value.by <- match.arg(arg = p.value.by,
                           choices = c("count", "density"),
                           several.ok = FALSE)
+
+  ##############
+  ## get call ##
+  ##############
+  ## get arguments inputed to treeWAS for this run
+  # args <- match.call()
+
+  ## TO DO: update arguments to get actual values used (report both?).
+
+  args <- NA
+
+  ## store input args to return call at end of fn:
+  args <- mget(names(formals()), sys.frame(sys.nframe()))
 
   ########################
   ## HANDLE SNPS & PHEN ##
@@ -744,6 +789,7 @@ treeWAS <- function(snps,
   n.snps <- ncol(snps)
 
   ## convert phenotype to factor
+  phen.input <- phen
   phen <- as.factor(phen)
   # y <- phen
 
@@ -1073,7 +1119,8 @@ treeWAS <- function(snps,
   }
 
   ####################################################################
-  ## CHECK FOR NON-BINARY SNPS (?): ## DO THIS OUTSIDE OF THE treeWAS PIPELINE -- TOO MANY OPPORTUNITIES FOR ERRORS IF DONE AUTOMATICALLY.
+  ## CHECK FOR NON-BINARY SNPS (?): ## DO THIS OUTSIDE OF THE treeWAS PIPELINE...
+  ## ... TOO MANY OPPORTUNITIES FOR ERRORS IF DONE AUTOMATICALLY.
   ## (This will only work if all snps colnames end in one of .a/.c/.g/.t)
   #   snps <- get.binary.snps(snps)
   #   ## (+ snps.reconstruction)
@@ -1168,15 +1215,21 @@ treeWAS <- function(snps,
       }
     } # end phen.type (binary)
   }else{
-    ## DISCRETE or CONTINUOUS: ##
+    ## CATEGORICAL, DISCRETE or CONTINUOUS: ##
     ## Convert phen to numeric:
     if(!is.numeric(phen)){
       if(all.is.numeric(phen)){
         phen <- as.numeric(as.character(phen))
       }else{
-        stop("phen has more than 2 levels but is not numeric (and therefore neither binary nor continuous).")
+        if(is.null(phen.type) || if(!is.null(phen.type)){phen.type != "categorical"}){
+          phen.type <- "categorical"
+          warning("phen has more than 2 levels but is not numeric.
+             Setting phen.type to 'categorical'.")
+        }
+        phen <- as.numeric(as.factor(phen))
       }
     }
+
     ## Set phen.rec.method: ##
     phen.rec.method <- "continuous"
     ## Get proportion unique:
@@ -1185,11 +1238,32 @@ treeWAS <- function(snps,
       if(phen.type == "discrete"){
         phen.rec.method <- "discrete"
         if(prop.u > 0.5){
-          cat("Performing *discrete* reconstruction, although phen is ", round(prop.u, 2)*100, "% unique: Are you sure phen.type is 'discrete'?\n", sep="")
+          warning("Performing discrete reconstruction, although phen is ", round(prop.u, 2)*100, "% unique.
+              Are you sure phen.type is 'discrete' not 'continuous'?\n", sep="")
+        }
+        if(n.levs < 6){
+          warning("Your phen has only ", n.levs, " unique values.
+          Are you sure phen.type is 'discrete' not 'categorical'?
+          (If values should be treated as levels and not as meaningful numbers, set phen.type to 'categorical').\n", sep="")
         }
       }
-    } # end phen.type (discrete/continuous)
-  }
+      if(phen.type == "categorical"){
+        phen.rec.method <- "discrete"
+        if(n.levs > 5){
+          warning("Association tests with categorical traits work best with fewer levels: your phen has ", n.levs, " levels.
+          Are you sure phen.type is 'categorical' not 'discrete'?
+          If categorical, consider eliminating some levels by collapsing similar ones or
+          removing levels with few individuals.\n", sep="")
+        }
+      }
+    } # end phen.type (categorical/discrete)
+    if(is.null(phen.type) || if(!is.null(phen.type)){phen.type == "continuous"}){
+      if(n.levs < 6){
+        warning("Your phen is being treated as continuous, but it has only ", n.levs, " unique values.
+          Set phen.type to 'discrete' or 'categorical' if these better describe your data.\n", sep="")
+      }
+    }
+    } # end phen.type (categorical/discrete/continuous)
   ## ensure ind names not lost
   names(phen) <- names(phen.ori)
 
@@ -1210,7 +1284,13 @@ treeWAS <- function(snps,
       if(length(phen.reconstruction) != max(tree$edge[,2])){
         warning("The number of individuals in the provided phen.reconstruction is not equal to the
                 total number of nodes in the tree. Performing a new reconstruction instead.\n")
-        if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
+        if(phen.rec.method == "discrete"){
+          if(n.levs == 2){
+            phen.reconstruction <- "parsimony"
+          }else{
+            phen.reconstruction <- "ml"
+          }
+        }
         if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
       }else{
         ## If phen provided and correct length:
@@ -1223,15 +1303,8 @@ treeWAS <- function(snps,
           if(all.is.numeric(phen.reconstruction)){
             phen.reconstruction <- as.numeric(as.character(phen.reconstruction))
           }else{
-            ## if binary, convert from factor:
-            if(n.levs == 2){
-              phen.reconstruction <- as.numeric(as.factor(phen.reconstruction))
-            }else{
-              ## if neither binary nor numeric, warning + reconstruct:
-              warning("phen.reconstruction has more than 2 levels but is not numeric. Reconstructing phen internally instead.\n")
-              if(phen.rec.method == "discrete") phen.reconstruction <- "parsimony"
-              if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
-            }
+            ## convert from factor:
+            phen.reconstruction <- as.numeric(as.factor(phen.reconstruction))
           }
         }
         if(length(phen.reconstruction) > 1) names(phen.reconstruction) <- names(phen.reconstruction.ori)
@@ -1431,9 +1504,7 @@ treeWAS <- function(snps,
       ## Update chunk.size, given mem.lim: ##
       #######################################
 
-
       ### TO DO: UPDATE MEMREQ ESTIMATE ON THE BASIS OF UNIQUE SNPS COLUMNS INSTEAD OF TOTAL...   %%   <---  (!)
-
 
       ## Check memory occuppied by snps:
       # require(pryr)
@@ -1709,12 +1780,6 @@ treeWAS <- function(snps,
                 Input: ", n.snps.sim.ori, " -->
                 Updated: ", n.snps.sim, "\n", sep="")
 
-            ## TO DO: ##
-            ## If the user, for whatever reason, wanted to simulate the number they requested
-            ## (ie. matching the input n.snps), could either
-            ## (A) Add an argument like upate.n.snps.sim = FALSE,
-            ## (B) Tell them to do their own data cleaning exactly as I do but outside of/before running the treeWAS function.
-            ## (C) Fudge--tell them to add 1, eg. 10,000 --> 10,001?
           }
         }
       }
@@ -1919,16 +1984,24 @@ treeWAS <- function(snps,
     CORR.DAT[[i]] <- CORR.SIM[[i]] <- vector(mode="list", length=length(test))
     # names(CORR.DAT[[i]]) <- names(CORR.SIM[[i]]) <- test
 
+    ## Add categorical flag:
+    ctg <- FALSE
+    if(!is.null(phen.type)){
+      if(phen.type == "categorical"){
+        ctg <- TRUE
+      }
+    }
+
     ## Run get.assoc.scores for each assoc.test
-    ## Then run get.sig.snps (ONLY once ALL of corr.sim, corr.dat have been generated w get.assoc.scores (IFF running chunk-by-chunk!))
     # system.time(
     for(t in 1:length(TEST)){
       assoc.scores <- get.assoc.scores(snps = snps,
-                                       snps.sim,
+                                       snps.sim = snps.sim,
                                        phen = phen,
                                        tree = tree,
                                        test = TEST[[t]],
                                        correct.prop = correct.prop,
+                                       categorical = ctg,
                                        snps.reconstruction = snps.rec,
                                        snps.sim.reconstruction = snps.sim.rec,
                                        phen.reconstruction = phen.rec,
@@ -2003,7 +2076,6 @@ treeWAS <- function(snps,
                                   corr.sim = CORR.SIM[[t]],
                                   snps.names = colnames(snps),
                                   test = TEST[[t]],
-                                  n.tests = length(TEST),
                                   p.value = p.value,
                                   p.value.correct = p.value.correct,
                                   p.value.by = p.value.by)
@@ -2198,16 +2270,12 @@ treeWAS <- function(snps,
       n.levs <- length(levs)
 
       if(n.levs == 2){
-
+        ## BINARY
         ## store ind names:
         noms <- names(phen)
         ## If binary, convert phen to 0/1:
         phen <- as.numeric(as.factor(phen))
         phen <- rescale(phen, to=c(0,1)) # require(scales)
-        # if(length(phen[-c(which(phen==1), which(phen==2))])==0){
-        #   phen <- replace(phen, which(phen==1), 0)
-        #   phen <- replace(phen, which(phen==2), 1)
-        # }
         ## ensure ind names not lost:
         names(phen) <- noms
 
@@ -2240,20 +2308,48 @@ treeWAS <- function(snps,
                        "p.value",
                        "score",
                        "G1P1", "G0P0", "G1P0", "G0P1")
-      }else{ # end G1P1 etc.
+      }else{
 
-        ## If G1P1 etc. not valid (non-binary phen),
-        ## return df without these variables..
-        df <- data.frame(sig.snps,
-                         sig.p.vals,
-                         sig.corrs)
-        names(df) <- c("SNP.locus",
-                       "p.value",
-                       "score")
-
-        ## NOTE: Could return sig.snps.names as column rather than rownames..? ####   (??)   ####
+        if(is.null(phen.type) || if(!is.null(phen.type)){phen.type != "categorical"}){
+          ## CONTINUOUS
+          ## Return df without G1P1 columns
+          df <- data.frame(sig.snps,
+                           sig.p.vals,
+                           sig.corrs)
+          names(df) <- c("SNP.locus",
+                         "p.value",
+                         "score")
+        }else{
+          ## CATEGORICAL
+          if(!is.null(phen.type)){
+            if(phen.type == "categorical"){
+              phen.output <- phen
+              phen <- phen.input
+              if(length(toKeep) == 1){
+                tb <- t(table(phen, snps.toKeep))
+                cn <- paste(c("G0P","G1P"), rep(colnames(tb), each=2), sep="")
+                tb <- t(as.matrix(as.vector(unlist(tb))))
+                colnames(tb) <- cn
+              }else{
+                tb <- t(table(phen, snps.toKeep[,1]))
+                cn <- paste(c("G0P","G1P"), rep(colnames(tb), each=2), sep="")
+                tb <- t(sapply(c(1:ncol(snps.toKeep)),
+                               function(e) as.vector(unlist(t(table(phen, snps.toKeep[,e]))))))
+                colnames(tb) <- cn
+              }
+              ## return df with k*2 extra columns
+              df <- data.frame(sig.snps,
+                               sig.p.vals,
+                               sig.corrs)
+              names(df) <- c("SNP.locus",
+                             "p.value",
+                             "score")
+              df <- cbind(df, tb)
+            }
+          }
+        }
+        ## NOTE: Could return df with rownames=# rather than rownames=sig.snps.names.. ####   (??)   ####
       }
-
     }else{
       df <- "No significant SNPs found."
     }
@@ -2297,9 +2393,9 @@ treeWAS <- function(snps,
   }
 
 
-  ################################
-  ## NEW! Get COMBINED results: ##
-  ################################
+  ###########################
+  ## Get COMBINED results: ##
+  ###########################
   ## get uniques(sig.snps) for terminal, simultaneous, subsequent results combined
   ## for best thresh only (ie. pval.0.01.bonf.count.10.x.n.snps)
   SNP.loci <- vector("list", length=length(test))
@@ -2332,6 +2428,100 @@ treeWAS <- function(snps,
   RES[[1]] <- SNP.loci
   RES[(2:(length(RES.ORI)+1))] <- RES.ORI
 
+
+  ##############################################################################
+  #######################################
+  ## PAIRWISE categorical assoc tests: ##
+  #######################################
+  ## Post-hoc pairwise assoc tests* btw each sig. SNP & each comparison of 2 levels of the phenotype.
+  ## *Score 1 (phi), Score 2 (by phen pair), Score 3 (phi), chi-squared p-values.
+  if(!is.null(phen.type)){
+    if(phen.type == "categorical"){
+      snps.sig <- sort(as.numeric(RES[[1]]$treeWAS.combined))
+
+      phen.output <- phen
+      phen <- phen.input
+      ## ensure phen.rec levels match input levels:
+      if(!all(unique(phen.rec[!is.na(phen.rec)]) %in% unique(phen[!is.na(phen)]))){
+        pr <- phen.rec
+        pn <- as.numeric(as.factor(phen))
+        prn <- as.numeric(as.factor(phen.rec))
+        levs <- unique(pn[!is.na(pn)])
+        if(all(unique(prn[!is.na(prn)]) %in% levs)){
+          for(l in 1:length(levs)){
+            lev.c <- as.character(phen[which(pn == levs[l])[1]])
+            prn[which(prn == levs[l])] <- lev.c
+          }
+          pr <- prn
+          names(pr) <- names(phen.rec)
+          phen.rec <- pr
+        }
+        #
+      }
+
+      ###################################
+      ## PAIRWISE CATEGORICAL SCORE 2: ##
+      ###################################
+      if(length(snps.sig) > 0){
+
+        ## Get SNPs diffs: ##
+        edges <- tree$edge
+        snps.diffs <- snps.rec[edges[,1], ] - snps.rec[edges[,2], ]
+
+        pairs <- t(combn(unique(phen.rec[!is.na(phen.rec)]), m=2))
+        S2 <- list()
+        for(p in 1:nrow(pairs)){
+
+          ## Get phen diffs: ##
+          pr <- phen.rec
+          pr[which(!pr %in% pairs[p,])] <- NA
+          pr <- as.numeric(as.factor(as.character(pr)))-1
+          phen.diffs <- pr[edges[,1]] - pr[edges[,2]]
+
+          sp.diffs <- snps.diffs * phen.diffs
+          S2[[p]] <- colSums(sp.diffs, na.rm=TRUE)
+        } # end for (p) loop
+        s2 <- do.call(rbind, S2)
+        rownames(s2) <- sapply(c(1:nrow(pairs)),
+                               function(e) paste0(pairs[e,], collapse=" : "))
+        ###############
+        ## FOR LOOP: ##
+        ###############
+        PT <- list()
+        for(j in 1:length(snps.sig)){
+
+          ## PAIRWISE CATEGORICAL SCORE 1:
+          ## Cross-tabulate snps.sig[,j] x phen (w original levels):
+          snp <- snps[,snps.sig[j]]
+          tab <- table(phen, snp, dnn=c("phen", paste("snp", snps.sig[j], sep=".")))
+
+          ## PAIRWISE CATEGORICAL SCORE 3:
+          ## Cross-tabulate snps.sig[,j] x phen.rec (w original levels):
+          snp.rec <- snps.rec[,snps.sig[j]]
+          tab.rec <- table(phen.rec, snp.rec,
+                           dnn=c("phen", paste("snp.rec", snps.sig[j], sep=".")))
+
+          ## PAIRWISE TESTS for SNPS.SIG J:
+          PT[[j]] <- pair.tests(x = tab, y = s2[, snps.sig[j]], z = tab.rec,
+                                method = p.value.correct)
+
+        } # end for (j) loop
+        names(PT) <- snps.sig
+        # PT
+
+      }else{
+        PT <- "No significant SNPs to test."
+      }
+
+      ## Add as last item of RES list.
+      RES[[(length(RES)+1)]] <- PT
+
+      phen <- phen.output
+    }
+  } # end categorical sig.snps
+  ##############################################################################
+
+
   phen <- phen.curr
 
   ## Also return data (in the form we were working with):
@@ -2342,13 +2532,19 @@ treeWAS <- function(snps,
               "phen" = phen,
               "phen.reconstruction" = phen.rec,
               "tree" = tree,
-              "n.subs" = n.subs)
+              "n.subs" = n.subs,
+              "call" = args)
 
   ## Assign data to last element of RES:
   RES[[(length(RES)+1)]] <- dat
 
   ## name elements of RES:
-  names(RES) <- c("treeWAS.combined", test, "dat")
+  if(is.null(phen.type) || if(!is.null(phen.type)){phen.type != "categorical"}){
+    names(RES) <- c("treeWAS.combined", test, "dat")
+  }else{
+    names(RES) <- c("treeWAS.combined", test, "pairwise", "dat")
+  }
+
   results <- RES
 
   class(results) <- "treeWAS"
@@ -2360,196 +2556,8 @@ treeWAS <- function(snps,
 
 
 
-# ##############################################
-# ## ASSIGN NODE LABELS to TREE (& SNPS.REC): ##
-# ##############################################
-# ## If NO snps.rec AND tree has NO nodelabs, ASSIGN nodelabs to tree:
-# if(!is.matrix(snps.reconstruction)){
-#   if(is.null(tree$node.label)){
-#     tree$node.label <- paste("NODE", c((length(tree$tip.label)+1):max(tree$edge)), sep="_")
-#   }
-# }else{
-#   ## If snps.rec is MATRIX..##
-#   ## get index for terminal nodes:
-#   ixt <- c(1:length(tree$tip.label))
-#   ## get index for internal nodes:
-#   ixi <- c((nrow(snps)+1):nrow(snps.reconstruction))
-#   ## Unless tree has node.labs AND they match snps.rec names...
-#   if(is.null(tree$node.label) | !identical(tree$node.label, rownames(snps)[ixi])){
-#     ## If snps.rec[ixt,] match tree$tip.labs, set matching NODElabs (one or both):
-#     if(identical(rownames(snps.reconstruction)[ixt], tree$tip.label)){
-#       ## If snps.rec HAS labs, BUT tree does NOT:
-#       if(is.null(tree$node.label)){
-#         ## If snps.rec labs NOT numeric, assign to nodelabs as is
-#         if(!all.is.numeric(rownames(snps.reconstruction)[ixi])){
-#           tree$node.label <- rownames(snps.reconstruction)[ixi]
-#         }else{
-#           ## If snps.rec is NUMERIC, paste NODE_ and assign to both snps.rec and nodelabs:
-#           tree$node.label <- rownames(snps.reconstruction)[ixi] <- paste("NODE", rownames(snps.reconstruction)[ixi], sep="_")
-#         }
-#         ## + print notice:
-#         cat("tree$node.label is NULL. Assuming identical to rownames(snps.reconstruction)[Nterminal+1:Ntotal].\n")
-#
-#       }else{
-#         ## If nodelabs & snps.rec rowlabs are NOT identical (while both are PRESENT and TERMINAL labs MATCH)...
-#         ## Unless they MATCH in a different order...
-#         if(length(which(is.na(match(tree$node.label, rownames(snps.reconstruction)[ixi])))) > 0){
-#           ## see if you can remove NODE_ & achieve match, otherwise,
-#           ## assign nodelabs to snps.rec rows & print warning (snps.rec order may not match nodelabs order):
-#           nodeNs <- removeFirstN(tree$node.label, 5)
-#           ord <- match(nodeNs,rownames(snps.reconstruction)[ixi])
-#           if(all.is.numeric(nodeNs) & length(which(is.na(ord)))==0){
-#             rownames(snps.reconstruction)[ixi] <- nodeNs[ord]
-#           }else{
-#             rownames(snps.reconstruction)[ixi] <- tree$node.label
-#             warning("Rownames of snps.reconstruction[Nterminal+1:Ntotal,] do not match tree$node.label.
-#                   Cannot be sure that reconstruction's rows correspond to tree's internal nodes.\n")
-#           }
-#         }
-#       }
-#
-#
-#     }else{
-#       ## If snps.rec[ixt] and tiplabs do NOT match (while nodelabs is NULL or does not match snps.rec[ixi])
-#       ## assign labs to nodelabs and snps.rec[ixi]
-#       ## + print WARNING (snps.rec order may not match nodelabs order):
-#       tree$node.label <- rownames(snps.reconstruction)[ixi] <- paste("NODE", ixi, sep="_")
-#       warning("Rownames of snps.reconstruction[Nterminal+1:Ntotal,] do not match tree$node.label.
-#                 Cannot be sure that reconstruction's rows correspond to tree's internal nodes.\n")
-#     }
-#   }
-# } # end pipeline to check/assign matching snps.rec rownames and tree$node.labels
-##############################################################################################
 
-
-# corr.dat <- foo$terminal$corr.dat
-# corr.sim <- foo$terminal$corr.sim
-# hist(corr.sim, col=transp("red", 0.5), freq=F, xlim=c(0, ceiling(max(c(corr.dat, corr.sim)))))
-# hist(corr.dat, col=transp("blue", 0.5), freq=F, add=T, xlim=c(0, ceiling(max(c(corr.dat, corr.sim)))))
-#
-# corr.dat <- foo$simultaneous$corr.dat
-# corr.sim <- foo$simultaneous$corr.sim
-# hist(corr.sim, col=transp("red", 0.5), freq=F, xlim=c(0, ceiling(max(c(corr.dat, corr.sim)))))
-# hist(corr.dat, col=transp("blue", 0.5), freq=F, add=T, xlim=c(0, ceiling(max(c(corr.dat, corr.sim)))))
-#
-# corr.dat <- foo$subsequent$corr.dat
-# corr.sim <- foo$subsequent$corr.sim
-# hist(corr.sim, col=transp("red", 0.5), freq=F, xlim=c(0, ceiling(max(c(corr.dat, corr.sim)))))
-# hist(corr.dat, col=transp("blue", 0.5), freq=F, add=T, xlim=c(0, ceiling(max(c(corr.dat, corr.sim)))))
-
-
-##############################################################################################
-## legend (temporary?)
-## Not necessarily needed--usually only a couple UNIQUE thresholds...
-#     par(mfrow=c(1,2))
-#     par(oma = c(5,4,0,0) + 0.1)
-#     par(mar = c(0,0,1,1) + 0.1)
-#     ## column 1:
-#     midpoints1 <- barplot(rep(10, length(THRESH)/2),
-#                         col = seasun(length(THRESH))[1:(length(THRESH)/2)],
-#                         horiz=TRUE)
-#     ##overlay names:
-#     text(3, midpoints1, labels=names(THRESH)[1:(length(THRESH)/2)], cex=0.75, adj=0.3)
-#
-#     ## column 2:
-#     midpoints2 <- barplot(rep(10, length(THRESH)/2),
-#                           col = seasun(length(THRESH))[((length(THRESH)/2)+1):length(THRESH)],
-#                           horiz=TRUE)
-#     ##overlay names:
-#     text(3, midpoints2, labels=names(THRESH)[((length(THRESH)/2)+1):length(THRESH)], cex=0.75, adj=0.3)
-#
-#     ## return to original par settings:
-#     par(mfrow=c(1,1))
-#
-#     ## add title
-#     title("Legend: Significance Thresholds")
-#
-#     par(oma=c(0,0,0,0))
-#     par(mar=c(5,4,4,2)+0.1)
-##############################################################################################
-
-
-
-
-###############
-## CHECK!!!! ##
-###############
-## w assoc.prob == 100, still getting low/0(!) scores for "snps.assoc"
-## get original phen for all terminal + internal nodes and edges...
-
-## checking simultaneous score:
-
-# str(foo)
-# phen.str <- foo$phen.plot.col
-# phen1 <- foo$phen
-# phen2 <- phen.str$all.nodes
-#
-# head(phen1, 20)
-# head(phen2, 20)
-#
-# phen2[which(phen2 == "blue")] <- "A"
-# phen2[which(phen2 == "red")] <- "B"
-# phen2 <- as.factor(phen2)
-# names(phen2) <- paste("ind", 1:length(phen2), sep=".")
-#
-# phen.edges <- phen.str$edges
-# phen.edges[which(phen.edges == "blue")] <- "A"
-# phen.edges[which(phen.edges == "red")] <- "B"
-# # phen.edges[which(phen.edges == "green")] <- "C"
-# phen.edges <- as.factor(phen.edges)
-# names(phen.edges) <- paste("ind", 1:length(phen.edges), sep=".")
-# head(phen.edges)
-#
-# ## which edges should/do contain phen subs?
-# which(phen.edges == "green")
-# ## run relevant code in reconstruct to get phen.subs.edges list (to see which edges are identified):
-# phen.subs.edges$total
-#
-# snps.diffs <- list()
-# snps.assoc.index <- index[snps.assoc] ## GAK! -- all snps.assoc have the same index (915)! set.seed problem, for a start...
-# for(i in snps.assoc.index){
-#   snps.diffs[[i]] <- get.branch.diffs(var = snps.rec[,i],
-#                                       edges = edges)
-# }
-# which(abs(snps.diffs[[i]]) == 1)
-# ## ALSO--important to NOTE that a lot of the reconstructed edges are only off by one...
-# ## (thus should the subsequent score not be doing much better????)
-# length(which(which(abs(snps.diffs[[i]]) == 1) %in% phen.subs.edges$total)) ## SO Shouldn't the max corr.dat score2 be 11????
-
-###############
-## CHECK!!!! ##
-###############
-## The FPR for Score 2 (simultaneous) should NOT be that high-- something wrong with the threshold selection??
-#
-# snps.assoc.ori.ori <- snps.assoc
-#
-# sim.dat <- sim.dat.ori <- results$dat$simultaneous
-# corr.dat <- corr.dat.ori <- sim.dat$corr.dat
-# corr.sim <- corr.sim.ori <- sim.dat$corr.sim
-# p.vals <- p.vals.ori <- sim.dat$p.vals
-#
-# sim.res <- sim.res.ori <- results$res$simultaneous
-# str(sim.res[[1]])
-# str(sim.res[[32]])
-# thresh.ori <- thresh <- sim.res[[1]]$sig.thresh
-# thresh.ori <- thresh <- sim.res[[32]]$sig.thresh
-#
-# table(corr.sim)
-#
-# hist(corr.sim)
-# lines(density(corr.sim), col="red", lwd=2)
-#
-# str(density(corr.sim))
-#
-# ## with first 10000 only??
-# corr.sim.ori <- corr.sim
-# corr.sim <- corr.sim.ori[1:10000]
-# table(corr.sim)
-
-
-
-# ###
-#
+##########################################################################
 # t.corr.sim <- results$dat$terminal$corr.sim
 #
 # ########################

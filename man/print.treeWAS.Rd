@@ -4,12 +4,13 @@
 \alias{print.treeWAS}
 \title{Print \code{treeWAS} output.}
 \usage{
-\method{print}{treeWAS}(x, sort.by.p = FALSE)
+\method{print}{treeWAS}(x, sort.by.p = FALSE, digits = 3)
 }
 \arguments{
 \item{x}{The output returned by \code{treeWAS}.}
 
-\item{sort.by.p}{A logical indicating whether to sort the results by decreasing p-value (\code{TRUE}) or by locus (\code{FALSE}, the default).}
+\item{sort.by.p}{A logical indicating whether to sort the results by decreasing p-value (\code{TRUE})
+or by locus (\code{FALSE}, the default).}
 }
 \description{
 Print the results of \code{treeWAS}, excluding longer data elements within the output.

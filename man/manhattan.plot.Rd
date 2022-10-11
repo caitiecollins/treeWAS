@@ -4,11 +4,21 @@
 \alias{manhattan.plot}
 \title{Manhattan Plot}
 \usage{
-manhattan.plot(p.vals, x = c(1:length(p.vals)), col = "funky",
-  transp = 0.25, sig.thresh = NULL, thresh.col = "red",
-  snps.assoc = NULL, snps.assoc.col = "red", jitter.amount = 1e-05,
-  min.p = NULL, log10 = FALSE, ylab = NULL,
-  main.title = "Manhattan plot")
+manhattan.plot(
+  p.vals,
+  x = c(1:length(p.vals)),
+  col = "funky",
+  transp = 0.25,
+  sig.thresh = NULL,
+  thresh.col = "red",
+  snps.assoc = NULL,
+  snps.assoc.col = "red",
+  jitter.amount = 1e-05,
+  min.p = NULL,
+  log10 = FALSE,
+  ylab = NULL,
+  main.title = "Manhattan plot"
+)
 }
 \arguments{
 \item{p.vals}{A numeric vector containing p-values or association score values for each genetic locus.}

@@ -28,6 +28,14 @@ Convert the output of ClonalFrameML into a form usable within \code{treeWAS}.
 The \code{prefix} must be the prefix to three files ending in:
 (i) "labelled_tree.newick", (ii) "ML_sequence.fasta", (iii) "position_cross_reference.txt".
 }
+\examples{
+## Example ##
+\dontrun{
+## basic use of fn
+out <- read.CFML(prefix="./filename_")
+}
+
+}
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}
 }

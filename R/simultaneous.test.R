@@ -3,7 +3,7 @@
 
 
 #######################
-## simultaneous.test ##
+## simultaneous.test ## ## SCORE 2 ##
 #######################
 
 ########################################################################
@@ -12,9 +12,11 @@
 ## DOCUMENTATION ##
 ###################
 
-#' Short one-phrase description.
+#' Simultaneous test
 #'
-#' Longer proper discription of function...
+#' Calculates treeWAS score 2, the simultaneous test, as the number of 
+#' substitutions or changes in genotype (\code{snps.reconstruction}) and phenotype 
+#' (\code{phen.reconstruction}) that occur simultaneously on the same branches of the tree. 
 #'
 #' @param snps.reconstruction A matrix containing the terminal and reconstructed
 #' ancestral states of SNPs for all nodes in the tree.
@@ -29,6 +31,7 @@
 #'
 #' @importFrom scales rescale
 #' @importFrom Hmisc all.is.numeric
+#' @importFrom utils combn
 #'
 #' @export
 
@@ -36,9 +39,10 @@
 # @useDynLib phangorn, .registration = TRUE
 # @importFrom phangorn midpoint
 
-simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim.REC matrix ## NOTE: subs.edges no longer required for any version of this test.
+simultaneous.test <- function(snps.reconstruction,
                               phen.reconstruction,
-                              tree){
+                              tree,
+                              categorical = FALSE){
 
   snps.rec <- snps.reconstruction
   phen.rec <- phen.reconstruction
@@ -64,20 +68,17 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   ## NB: can only be binary or continuous at this point...
   levs <- unique(as.vector(unlist(phen.rec)))
   n.levs <- length(levs[!is.na(levs)])
-  if(n.levs == 2){
-    if(!is.numeric(phen.rec)){
-      if(all.is.numeric(phen.rec)){
-        phen.rec <- as.numeric(as.character(phen.rec))
-      }else{
-        phen.rec <- as.numeric(as.factor(phen.rec))
-      }
-    }
-  }else{
-    if(!is.numeric(phen.rec)){
-      if(all.is.numeric(phen.rec)){
-        phen.rec <- as.numeric(as.character(phen.rec))
-      }else{
-        stop("phen.rec has more than 2 levels but is not numeric (and therefore neither binary nor continuous).")
+  if(!is.numeric(phen.rec)){
+    if(all.is.numeric(phen.rec)){
+      phen.rec <- as.numeric(as.character(phen.rec))
+    }else{
+      phen.rec <- as.numeric(as.factor(phen.rec))
+      if(n.levs > 2){
+        if(categorical != TRUE){
+          warning("phen.rec has more than 2 levels but is not numeric. 
+                  Setting 'categorical' to TRUE.")
+          categorical <- TRUE
+        }
       }
     }
   }
@@ -95,85 +96,58 @@ simultaneous.test <- function(snps.reconstruction, # can be snps.REC OR snps.sim
   ## RE-SCALE NON-BINARY VALUES (phen only ...) ##
   ################################################
   ## phen.rec (both Pa and Pd should be on same scale):
-  # if(n.levs > 2)
-  phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
+  if(categorical == FALSE){
+    phen.rec <- rescale(phen.rec, to=c(0,1)) # require(scales)
+  }
 
   ###############################
   ## GET DIFFS ACROSS BRANCHES ##
   ###############################
 
-  ## Get SNPs diffs: ##
-  snps.diffs <- snps.rec[edges[,1], ] - snps.rec[edges[,2], ]
-
-  ## Get phen diffs: ##
-  phen.diffs <- phen.rec[edges[,1]] - phen.rec[edges[,2]]
-
-  sp.diffs <- snps.diffs * phen.diffs
-
-  ## Return with sign:
-  score2 <- colSums(sp.diffs, na.rm=TRUE)
-  # score2 <- abs(score2)
-  names(score2) <- colnames(snps.rec)
-
-  ## Return with and without sign?
-  # score2.sign <- colSums(sp.diffs, na.rm=TRUE)
-  # score2 <- abs(score2.sign)
-  # names(score2) <- names(score2.sign) <- colnames(snps.rec)
-  #
-  # score2 <- list("score2" = score2,
-  #                "score2.sign" = score2.sign)
-
+  if(categorical == FALSE){
+    ## ORIGINAL SCORE 2:
+    ## Get SNPs diffs: ##
+    snps.diffs <- snps.rec[edges[,1], ] - snps.rec[edges[,2], ]
+    
+    ## Get phen diffs: ##
+    phen.diffs <- phen.rec[edges[,1]] - phen.rec[edges[,2]]
+    
+    sp.diffs <- snps.diffs * phen.diffs
+    
+    ## Return with sign:
+    score2 <- colSums(sp.diffs, na.rm=TRUE)
+    # score2 <- abs(score2)
+    names(score2) <- colnames(snps.rec)
+    
+  }else{
+    ## CATEGORICAL SCORE 2:
+    
+    ## Get SNPs diffs: ##
+    snps.diffs <- snps.rec[edges[,1], ] - snps.rec[edges[,2], ]
+    
+    pairs <- t(combn(unique(phen.rec[!is.na(phen.rec)]), m=2))
+    S2 <- list()
+    for(p in 1:nrow(pairs)){
+      
+      ## Get phen diffs: ##
+      pr <- phen.rec
+      pr[which(!pr %in% pairs[p,])] <- NA
+      pr <- as.numeric(as.factor(as.character(pr)))-1
+      phen.diffs <- pr[edges[,1]] - pr[edges[,2]]
+      
+      sp.diffs <- snps.diffs * phen.diffs
+      S2[[p]] <- colSums(sp.diffs, na.rm=TRUE)
+    } # end for (p) loop
+    
+    s2 <- do.call(rbind, S2)
+    score2 <- colSums(abs(s2), na.rm=TRUE)
+    names(score2) <- colnames(snps.rec)
+  }
+  
   return(score2)
 
 } # end simultaneous.test
 
-
-
-
-
-# ######################
-# ## get.branch.diffs ##
-# ######################
-# Not actually needed to get score 2!
-# ########################################################################
-#
-# ###################
-# ## DOCUMENTATION ##
-# ###################
-#
-# #' Short one-phrase description.
-# #'
-# #' Longer proper discription of function...
-# #'
-# #' @param var A vector containing a variable whose change across edges we want to examine.
-# #' @param edges A 2-column matrix containing the upstream and downstream nodes
-# #'  in columns 1 and 2 of a tree's edge matrix, as found in a phylo object's tree$edge slot.
-# #'
-# #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
-# #' @export
-# #'
-#
-# ########################################################################
-#
-# ## get diffs btw ace prob/likelihood at upstream vs. downstream node
-# ## for a single variable for which you have a value for all terminal and internal nodes.
-# get.branch.diffs <- function(var, edges){
-#   ## CHECKS: ##
-#   ## var should be a vector or have 2 columns summing to 1 or 100:
-#   if(!is.null(dim(var))){
-#     if(ncol(var) > 2) warning("var contains more than one discrete variable;
-#                               selecting first variable.")
-#     var <- var[,2]
-#   }
-#   ## var and tree$edge should contain the same number of inds:
-#   if(length(var) != (nrow(edges)+1)) stop("var contains more
-#                                           individuals than tree$edge does.")
-#
-#   ## ~ FOR LOOP ##
-#   diffs <- var[edges[,1]] - var[edges[,2]]
-#
-#   return(as.vector(diffs))
-# } # end get.branch.diffs
 
 
 

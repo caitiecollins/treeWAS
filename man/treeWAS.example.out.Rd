@@ -4,7 +4,9 @@
 \name{treeWAS.example.out}
 \alias{treeWAS.example.out}
 \title{Example output of treeWAS.}
-\format{A treeWAS class object, comprising a list of length 5.}
+\format{
+A treeWAS class object, comprising a list of length 5.
+}
 \usage{
 data(treeWAS.example.out)
 }

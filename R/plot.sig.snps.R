@@ -241,39 +241,6 @@ manhattan.plot <- function(p.vals,
 
 
 
-##########################
-## qqman Manhattan Plot ##
-##########################
-# require(qqman)
-#
-# # manhattan(gwasResults,
-# #           main = "Manhattan Plot",
-# #           ylim = c(0, 10),
-# #           cex = 0.6,
-# #           cex.axis = 0.9,
-# #           col = c("blue4", "orange3"),
-# #           suggestiveline = F,
-# #           genomewideline = F,
-# #           chrlabs = c(1:20, "P", "Q"))
-#
-# BP <- as.numeric(dimnames(snps.ori)[[2]])
-# if(is.null(BP)) BP <- c(1:ncol(snps.ori))
-# CHR <- sort(rep(1:20, ncol(snps.ori)/20))
-# P <- p.vals
-# df <- data.frame(BP, CHR, P)
-#
-# manhattan(df,
-#           main = "Manhattan Plot",
-#           ylim = c(0, 10),
-#           cex = 0.6,
-#           cex.axis = 0.9,
-#           col = c("blue4", "orange3"),
-#           suggestiveline = F,
-#           genomewideline = F,
-#           chrlabs = c(1:20, "P", "Q"))
-
-
-
 
 
 
@@ -400,10 +367,8 @@ plot_sig_snps <- function(corr.dat,
 
     ## Get plot limits:
     ## Get x-max:
-
     xmax <- max(corr.dat[!is.na(corr.dat)])+.3*max(corr.dat[!is.na(corr.dat)])
-    if(test == "terminal" & xmax > 1){
-      # xmax <- round(xmax, 1)
+    if((test == "terminal" || test == "subsequent") & xmax > 1){
       xmax <- 1
     }else{
       xmax <- ceiling(xmax)
@@ -424,7 +389,7 @@ plot_sig_snps <- function(corr.dat,
     ## if the true correlation value for SNP i is >
     ## max bin, then extend the x-axis of the plot
     ## to accommodate annotation:
-    if(xmax > max(h.null$breaks)){
+    if(xmax > max(h.null$breaks)){#print(1)}
 
       ## plot histogram of correlations btw real
       ## SNPs and phenotype: ##
@@ -712,23 +677,32 @@ plot_sig_snps <- function(corr.dat,
 
     h.null <- hist(as.vector(unlist(corr.dat)), plot=FALSE)
 
-    xmax <- ceiling(max(corr.dat)+.35*max(corr.dat))
+    ## Get plot limits:
+    ## Get x-max:
+    xmax <- max(corr.dat[!is.na(corr.dat)])+.3*max(corr.dat[!is.na(corr.dat)])
+    if((test == "terminal" || test == "subsequent") & xmax > 1){
+      xmax <- 1
+    }else{
+      xmax <- ceiling(xmax)
+    }
     ## Get y-max (for overlaying hists, sig.thresh, sig.loci):
     if(freq == TRUE){
       yvals <- h.null$counts
       ymax <- ceiling(max(yvals)+(0.2*max(yvals)))
+      # if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+.05))
       if(!is.null(h.null.subset)) ymax <- max(ymax, ceiling(max(h.null.subset$counts)+(0.2*max(h.null.subset$counts))))
     }else{
       yvals <- h.null$density
       ymax <- max(yvals)+(0.2*max(yvals))
+      # if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+0.005)
       if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+(0.2*max(h.null.subset$density)))
     }
-
+    
 
     ## if the true correlation value for SNP i is >
     ## max bin, then extend the x-axis of the plot
     ## to accommodate annotation:
-    if(xmax > max(h.null$breaks)){
+    if(xmax > max(h.null$breaks)){#print(1)}
       ## plot histogram of correlations btw real
       ## SNPs and phenotype: ##
       ## EXTENDING THE X-AXIS

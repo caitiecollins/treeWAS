@@ -4,7 +4,9 @@
 \name{snps}
 \alias{snps}
 \title{A genetic data matrix.}
-\format{A binary matrix with 100 rows and 20,003 columns.}
+\format{
+A binary matrix with 100 rows and 20,003 columns.
+}
 \usage{
 data(snps)
 }

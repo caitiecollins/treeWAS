@@ -2,15 +2,21 @@
 % Please edit documentation in R/subsequent.test.R
 \name{subsequent.test}
 \alias{subsequent.test}
-\title{Short one-phrase description.}
+\title{Subsequent test}
 \usage{
-subsequent.test(snps.reconstruction, phen.reconstruction, tree)
+subsequent.test(
+  snps.reconstruction,
+  phen.reconstruction,
+  tree,
+  correct.prop = FALSE,
+  categorical = FALSE
+)
 }
 \arguments{
 \item{tree}{A phylo object.}
 }
 \description{
-Longer proper discription of function...
+Calculates treeWAS score 3, the subsequent test.
 }
 \examples{
 

@@ -20,21 +20,21 @@
 #' @param snps.sim A matrix or list of matrices containing simulated snps.
 #' @param phen A factor or vector containing the phenotype (only allowed to contain two levels for now).
 #' @param tree A phylo object containing a phylogenetic tree in which the number of tips is equal to the
-#' length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.
+#'             length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.
 #' @param test A character string or vector containing one or more of the following available tests of association:
-#' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
-#' (note that within treeWAS, the first three tests are run in a loop by default).
-#' See details for more information on what these tests do and when they may be appropriate.
+#'             "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run 
+#'             (note that within treeWAS, the first three tests are run in a loop by default). 
+#'             See details for more information on what these tests do and when they may be appropriate.
 #' @param correct.prop A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for 
 #'                     phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across 
 #'                     the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous). 
-#'                     If \code{correct.prop} if \code{FALSE} (the default), the original versions of each test will be run as described in our
+#'                     If \code{correct.prop} is \code{FALSE} (the default), 
+#'                     the original versions of each test will be run as described in our
 #'                     \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
 #'                     If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated 
 #'                     across the terminal and all (internal and terminal) nodes, respectively.  
-#' @param n.tests An integer between 1 and 5 specifying the number of tests you are running on all loci,
-#' to be used in appropriately correcting for multiple testing.
-#' (i.e., the number of times you will be running the \code{get.sig.snps} function).
+#' @param categorical A logical indicating whether \code{phen} should be treated as a nominal categorical variable
+#'                    whose unique values should be treated as levels rather than as meaningful numbers. 
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -42,26 +42,6 @@
 #' @export
 #' @importFrom pryr mem_used
 #'
-
-
-
-##########
-## FDR: ##
-##########
-
-## NOTES: ##
-## FDR works by managing the number of FALSE discoveries, RELATIVE to the number of TOTAL discoveries.
-## Maintains Q = FALSE discoveries / TOTAL discoveries.
-## Eg. For Q = 0.05, both 5/100 and 50/1000 meet the criterion.
-## Hence, FDR is described as being both adaptive and scalable.
-
-## QUESTION! ##
-## HOW SHOULD WE HANDLE MULTIPLE TESTING CORRECTION WITH FDR WHEN RUNNING MULITPLE TESTS OF ASSOC??????
-## Eg. Bonf --> multiply divisor by 3
-## BUT--if we just run FDR p-value correction by multiplying the "n.tests" by n.tests,
-## would the result not be that we just increase the number of false positives accepted in each test?!
-## Could we pool the test results somehow??
-## Or is it OK to ignore the performance of multiple separate assoc tests when using FDR??
 
 ########################################################################
 
@@ -71,6 +51,7 @@ get.assoc.scores <- function(snps,
                              tree,
                              test = "terminal",
                              correct.prop = FALSE,
+                             categorical = FALSE,
                              snps.reconstruction = NULL,
                              snps.sim.reconstruction = NULL,
                              phen.reconstruction = NULL,
@@ -185,24 +166,30 @@ get.assoc.scores <- function(snps,
   ## convert phenotype to numeric:
   phen.ori <- phen
 
+  ## store ind names:
+  noms <- names(phen)
+  
   ## Check if phen is binary:
   levs <- unique(as.vector(unlist(phen)))
   levs <- levs[!is.na(levs)]
   n.levs <- length(levs)
-  ## If binary, convert phen to 0/1:
-  if(n.levs == 2){
-    ## store ind names:
-    noms <- names(phen)
-    ## convert to 0/1:
-    phen <- as.numeric(as.factor(phen))
-    if(length(phen[-c(which(phen==1), which(phen==2))])==0){
-      phen <- replace(phen, which(phen==1), 0)
-      phen <- replace(phen, which(phen==2), 1)
+  if(!is.numeric(phen)){
+    if(all.is.numeric(phen)){
+      phen <- as.numeric(as.character(phen))
+    }else{
+      phen <- as.numeric(as.factor(phen))
+      if(n.levs > 2){
+        if(categorical != TRUE){
+          warning("phen has more than 2 levels but is not numeric. 
+                  Setting 'categorical' to TRUE.")
+          categorical <- TRUE
+        }
+      }
     }
-    ## ensure ind names not lost:
-    names(phen) <- noms
   }
 
+  ## ensure ind names not lost:
+  names(phen) <- noms
 
   ########         ########         ########         ########         ########         ########         ########         ########
   ###############################################################################################################################
@@ -217,7 +204,7 @@ get.assoc.scores <- function(snps,
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
     corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test, 
-                           correct.prop=correct.prop)
+                           correct.prop=correct.prop, categorical=categorical)
 
     print(paste("Real data scores completed for", test, "test @", Sys.time()))
 
@@ -226,7 +213,7 @@ get.assoc.scores <- function(snps,
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test, 
-                           correct.prop=correct.prop)
+                           correct.prop=correct.prop, categorical=categorical)
 
     print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
 
@@ -241,7 +228,7 @@ get.assoc.scores <- function(snps,
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
     corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test, 
-                           correct.prop=correct.prop)
+                           correct.prop=correct.prop, categorical=categorical)
 
     print(paste("Real data scores completed for", test, "test @", Sys.time()))
 
@@ -250,7 +237,7 @@ get.assoc.scores <- function(snps,
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
     corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test, 
-                           correct.prop=correct.prop)
+                           correct.prop=correct.prop, categorical=categorical)
 
     print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
   }
@@ -312,19 +299,16 @@ get.assoc.scores <- function(snps,
 #' @param snps.names The column names of the original \code{snps} matrix from which the association score values
 #'                    in \code{corr.dat} were derived.
 #' @param test A character string or vector containing one or more of the following available tests of association:
-#' "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
-#' (note that within treeWAS, the first three tests are run in a loop by default).
-#' See details for more information on what these tests do and when they may be appropriate.
-#' @param n.tests An integer between 1 and 5 specifying the number of tests you are running on all loci,
-#' to be used in appropriately correcting for multiple testing.
-#' (i.e., the number of times you will be running the \code{get.sig.snps} function).
+#'             "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run 
+#'             (note that within treeWAS, the first three tests are run in a loop by default). 
+#'             See details for more information on what these tests do and when they may be appropriate.
 #' @param p.value A single number specifying the p.value below which correlations are deemed to be 'significant'.
-#' @param p.value.correct Specify if/how to correct for multiple testing:
-#' either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
-#' the Bonferroni and False Discovery Rate corrections). By default, 'bonf' is selected
-#' @param p.value.by Specify how to determine the location of the p.value threshold:
-#' either 'count' or 'density' (indicating, respectively, that the p.value threshold should
-#' be determined by exact count or with the use of a density function).
+#' @param p.value.correct Specify if/how to correct for multiple testing: 
+#'                        either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively, 
+#'                        the Bonferroni and False Discovery Rate corrections). By default, 'bonf' is selected
+#' @param p.value.by Specify how to determine the location of the p.value threshold: 
+#'                   either 'count' or 'density' (indicating, respectively, that the p.value threshold should 
+#'                   be determined by exact count or with the use of a density function).
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -358,10 +342,8 @@ get.assoc.scores <- function(snps,
 
 get.sig.snps <- function(corr.dat,
                          corr.sim,
-                         snps.names, # = colnames(snps),
+                         snps.names, 
                          test = "terminal",
-                         correct.prop=correct.prop,
-                         n.tests = 1,
                          p.value = 0.01,
                          p.value.correct = "bonf",
                          p.value.by = "count"){
@@ -370,6 +352,7 @@ get.sig.snps <- function(corr.dat,
   # corr.dat <- abs(corr.dat)
   # corr.sim <- abs(corr.sim)
 
+  n.tests <- length(test)
 
   ############################
   ## HANDLE P.VALUE OPTIONS ##
@@ -450,7 +433,7 @@ get.sig.snps <- function(corr.dat,
 
   ## 0 p.vals
   min.p <- paste("p-values listed as 0 are <",
-                 1/length(corr.sim), sep=" ") ## CHECK---IS THIS RIGHT? SHOULD WE BE MULTIPLYING THE DIVISOR BY N.TESTS ??????????
+                 1/length(corr.sim), sep=" ") ## CHECK---IS THIS RIGHT? SHOULD WE BE MULTIPLYING THE DIVISOR BY N.TESTS ?
 
   ## get list of those correlation values
   sig.corrs <- corr.dat[sig.snps]
@@ -541,10 +524,9 @@ assoc.test <- function(snps,
                        tree = NULL,
                        test = c("terminal",
                                 "simultaneous",
-                                "subsequent",
-                                "cor",
-                                "fisher"),
-                       correct.prop=FALSE){
+                                "subsequent"),
+                       correct.prop=FALSE,
+                       categorical=FALSE){
 
   #################
   ## CORRELATION ##
@@ -584,7 +566,7 @@ assoc.test <- function(snps,
   ################################################
   if(test=="terminal"){
     corr.dat <- terminal.test(snps = snps, phen = phen,
-                              correct.prop=correct.prop)
+                              correct.prop=correct.prop, categorical=categorical)
     # ~ Correlation "SCORE" =
     # ((nS1P1 + nS0P0) - (nS1P0 + nS0P1) / (n.total))
   } # end test terminal
@@ -593,7 +575,7 @@ assoc.test <- function(snps,
   ## SIMULTANEOUS TEST ##
   #######################
   if(test == "simultaneous"){
-    corr.dat <- simultaneous.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree)
+    corr.dat <- simultaneous.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree, categorical=categorical)
   } # end test simultaneous
 
   #####################
@@ -601,7 +583,7 @@ assoc.test <- function(snps,
   #####################
   if(test == "subsequent"){
     corr.dat <- subsequent.test(snps.reconstruction = snps, phen.reconstruction = phen, tree = tree,
-                                correct.prop=correct.prop)
+                                correct.prop=correct.prop, categorical=categorical)
   } # end test subsequent
 
 
@@ -642,7 +624,7 @@ assoc.test <- function(snps,
   }
 
   return(p)
-}  # end .get.p.vals (NEW)
+}  # end .get.p.vals
 
 
 
