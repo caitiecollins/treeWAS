@@ -27,6 +27,7 @@ treeWAS(
   plot.manhattan = TRUE,
   plot.null.dist = TRUE,
   plot.dist = FALSE,
+  plot.null.dist.pairs = "grid",
   snps.assoc = NULL,
   filename.plot = NULL,
   seed = NULL
@@ -62,18 +63,15 @@ values as meaningful numbers and may infer intermediate values.}
 (by default \code{10*ncol(snps)}). If memory errors arise during the analyis of a large dataset,
 it may be necesary to reduce \code{n.snps.sim} from a multiple of 10 to, for example, 5x the number of loci.}
 
-\item{chunk.size}{An integer indicating the number of \code{snps} loci to be analysed at one time. This provides a solution for
-machines with insufficient memory to analyse the dataset at hand.
-Note that smaller values of \code{chunk.size} will increase the computational time required
-(e.g., for \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).}
+\item{chunk.size}{An integer indicating the number of \code{snps} loci to be analysed at one time.
+This may be needed for large datasets or machines with insufficient memory.
+Smaller values of \code{chunk.size} will increase the computational time required
+(e.g., if \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).}
 
-\item{mem.lim}{Either a number or a logical value to establish a memory limit (in GB) that will be used to automatically update
-the \code{chunk.size} argument if there is not enough available memory to run treeWAS in one chunk.
+\item{mem.lim}{A logical or numeric value to set a memory limit for large datasets.
 If \code{FALSE} (the default), no limit is estimated and \code{chunk.size} is not changed.
-If \code{TRUE}, the amount of memory currently available is estimated with \code{memfree()} and \code{chunk.size} is
-scaled back to account for the amount of memory estimated to be needed by treeWAS for this dataset.
-If a single numeric value, this is taken to be the amount of memory (in GB) available/designated
-for use by treeWAS and \code{chunk.size} is updated to reflect this.}
+If \code{TRUE}, available memory is estimated with \code{memfree()} and \code{chunk.size} is reduced.
+A single numeric value can be used to set a memory limit (in GB) and \code{chunk.size} will be reduced accordingly.}
 
 \item{test}{A character string or vector containing one or more of the following available tests of association:
 \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
@@ -82,11 +80,9 @@ By default, the first three tests are run (see details).}
 \item{correct.prop}{A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for
 phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across
 the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous).
-If \code{correct.prop} is \code{FALSE} (the default), the original
-versions of each test will be run as described in our
-\href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
-If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated
-across the terminal and all (internal and terminal) nodes, respectively.}
+If \code{correct.prop} is \code{FALSE} (the default), the original version of each test is run.
+If \code{TRUE}, an alternate association metric based on the phi correlation coefficient
+is calculated across the terminal and all (internal and terminal) nodes, respectively.}
 
 \item{snps.reconstruction}{Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 for the ancestral state reconstruction of the genetic dataset,
@@ -128,6 +124,12 @@ only used if \code{tree} is a character string (see ?dist.dna).}
 
 \item{plot.dist}{A logical indicating whether to plot the true distribution of association score statistics
 (\code{TRUE}) or not (\code{FALSE}, the default).}
+
+\item{plot.null.dist.pairs}{Either a logical indicating, for categorical phenotypes only, whether to plot
+additional null distributions of association score statistics for each
+pairwise comparison of phenotype levels (\code{TRUE}) or not (\code{FALSE}),
+or the character string \code{"grid"} (the default) which will
+print all of these plots in one grid (N pairs x N tests).}
 
 \item{snps.assoc}{An optional character string or vector specifying known associated loci to be demarked in
 results plots (e.g., from previous studies or if data is simulated); else \code{NULL}.}

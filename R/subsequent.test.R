@@ -32,7 +32,7 @@
 
 subsequent.test <- function(snps.reconstruction,
                             phen.reconstruction,
-                            tree, 
+                            tree,
                             correct.prop = FALSE,
                             categorical = FALSE){
 
@@ -67,7 +67,7 @@ subsequent.test <- function(snps.reconstruction,
       phen.rec <- as.numeric(as.factor(phen.rec))
       if(n.levs > 2){
         if(categorical != TRUE){
-          warning("phen.rec has more than 2 levels but is not numeric. 
+          warning("phen.rec has more than 2 levels but is not numeric.
                   Setting 'categorical' to TRUE.")
           categorical <- TRUE
         }
@@ -96,13 +96,6 @@ subsequent.test <- function(snps.reconstruction,
   ## GET SCORE ACROSS BRANCHES ##
   ###############################
 
-  ## Get snps, phen values for ancestral & descendant nodes:
-  Pa <- phen.rec[edges[,1]]
-  Pd <- phen.rec[edges[,2]]
-  Sa <- snps.rec[edges[,1], ]
-  Sd <- snps.rec[edges[,2], ]
-  bl <- tree$edge.length
-  
   ## Get snps, phen values for all internal+terminal nodes:
   Sx <- snps.rec
   Px <- phen.rec
@@ -113,23 +106,30 @@ subsequent.test <- function(snps.reconstruction,
   ###############
   if(categorical == FALSE){
     if(correct.prop == FALSE){
+      ## Get snps, phen values for ancestral & descendant nodes:
+      Pa <- phen.rec[edges[,1]]
+      Pd <- phen.rec[edges[,2]]
+      Sa <- snps.rec[edges[,1], ]
+      Sd <- snps.rec[edges[,2], ]
+      bl <- tree$edge.length
+
       ## ORIGINAL INTEGRAL-BASED SCORE3 (without edge length):
       score3 <- get.score3(Pa = Pa, Pd = Pd, Sa = Sa, Sd = Sd, l = NULL)
-      
+
       ## Return with sign:
       score3 <- colSums(score3, na.rm=TRUE)
     }else{
       ## MARGINAL-CORRECTED SCORE 1 (Phi):
-      score3 <- ((colSums((1 - Px)*(1 - Sx), na.rm=TRUE)*colSums(Px*Sx, na.rm=TRUE)) - 
-                   (colSums((1 - Px)*Sx, na.rm=TRUE)*colSums(Px*(1 - Sx), na.rm=TRUE))) / 
-        (sqrt(colSums(1 - Sx, na.rm=TRUE)*colSums(Sx, na.rm=TRUE)*sum(1 - Px)*sum(Px)))
+      score3 <- ((colSums((1 - Px)*(1 - Sx), na.rm=TRUE)*colSums(Px*Sx, na.rm=TRUE)) -
+                   (colSums((1 - Px)*Sx, na.rm=TRUE)*colSums(Px*(1 - Sx), na.rm=TRUE))) /
+        (sqrt(colSums(1 - Sx, na.rm=TRUE)*colSums(Sx, na.rm=TRUE)*sum((1 - Px), na.rm=TRUE)*sum(Px, na.rm=TRUE)))
     }
   }else{
     ## CATEGORICAL SCORE 3 (Phi):
-    score3 <- suppressWarnings(sqrt(sapply(c(1:ncol(Sx)), function(e) 
+    score3 <- suppressWarnings(sqrt(sapply(c(1:ncol(Sx)), function(e)
       chisq.test(x=Px, y=Sx[,e], correct=F)$statistic)/length(Px)))
   }
- 
+
   # score3 <- abs(score3)
   names(score3) <- colnames(snps.rec)
 

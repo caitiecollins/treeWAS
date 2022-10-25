@@ -24,8 +24,8 @@
 #' \dontrun{
 #' ## basic use of fn
 #' out <- terminal.test(snps, phen)
-#' } 
-#' 
+#' }
+#'
 #' @importFrom scales rescale
 #' @importFrom Hmisc all.is.numeric
 #'
@@ -57,7 +57,7 @@ terminal.test <- function(snps,
       phen <- as.numeric(as.factor(phen))
       if(n.levs > 2){
         if(categorical != TRUE){
-          warning("phen has more than 2 levels but is not numeric. 
+          warning("phen has more than 2 levels but is not numeric.
                   Setting 'categorical' to TRUE.")
           categorical <- TRUE
         }
@@ -97,21 +97,21 @@ terminal.test <- function(snps,
     if(correct.prop == FALSE){
       ## ORIGINAL TERMINAL SCORE 1:
       score1 <- (Pd*Sd - (1 - Pd)*Sd - Pd*(1 - Sd) + (1 - Pd)*(1 - Sd))  ## CALCULATE SCORE 1 EQUATION
-      
+
       ## Return with sign:
       score1 <- colSums(score1, na.rm=TRUE)/length(Pd)
     }else{
       ## MARGINAL-CORRECTED SCORE 1 (Phi):
-      score1 <- ((colSums((1 - Pd)*(1 - Sd), na.rm=TRUE)*colSums(Pd*Sd, na.rm=TRUE)) - 
-                   (colSums((1 - Pd)*Sd, na.rm=TRUE)*colSums(Pd*(1 - Sd), na.rm=TRUE))) / 
-        (sqrt(colSums(1 - Sd, na.rm=TRUE)*colSums(Sd, na.rm=TRUE)*sum(1 - Pd)*sum(Pd)))
+      score1 <- ((colSums((1 - Pd)*(1 - Sd), na.rm=TRUE)*colSums(Pd*Sd, na.rm=TRUE)) -
+                   (colSums((1 - Pd)*Sd, na.rm=TRUE)*colSums(Pd*(1 - Sd), na.rm=TRUE))) /
+        (sqrt(colSums(1 - Sd, na.rm=TRUE)*colSums(Sd, na.rm=TRUE)*sum((1 - Pd), na.rm=TRUE)*sum(Pd, na.rm=TRUE)))
     }
   }else{
     ## CATEGORICAL SCORE 1 (Phi):
-    score1 <- suppressWarnings(sqrt(sapply(c(1:ncol(Sd)), function(e) 
+    score1 <- suppressWarnings(sqrt(sapply(c(1:ncol(Sd)), function(e)
       chisq.test(x=Pd, y=Sd[,e], correct=F)$statistic)/length(Pd)))
   }
-  
+
   # score1 <- abs(score1)
   names(score1) <- colnames(snps)
 

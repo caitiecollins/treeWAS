@@ -113,20 +113,59 @@ print.treeWAS <- function(x, sort.by.p = FALSE, digits = 3){
         print(signif(res[ord, ], digits = digits))
       }
     }
+    cat("\t \n")
 
-  } # end for loop
+  } # end for (i) loop
+
+
+
 
   ## Print pairwise results for categorical phens:
   if("pairwise" %in% names(x)){
-
-    cat("\t \n")
 
     cat("\t############################################ \n")
     cat("\t## Pairwise scores for significant snps:  ## \n")
     cat("\t############################################ \n")
 
-    print(x$pairwise)
-  }
+    PW <- x$pairwise$pairwise.combined
+    PW.res <- x$pairwise$pairwise.tests
+
+    ## No sig snps:
+    if(is.null(PW)){
+
+      cat("No snps achieved overall significance, so no pairwise tests performed. \n")
+
+    }else{
+      ## PW tests on sig.snps:
+      if(is.list(PW)){
+        for(p in 1:length(PW)){
+
+          pair <- names(PW)[p]
+
+          cat("\t", paste(c("########", rep("#", nchar(pair))), collapse=""), " \n")
+          cat("\t ## ", pair, " ## \n")
+          cat("\t", paste(c("########", rep("#", nchar(pair))), collapse=""), " \n")
+
+
+          cat("Significance thresholds: \n")
+          sig.thresh <- NA
+          for(t in 1:length(PW.res[[p]])){
+            sig.thresh[t] <- PW.res[[p]][[t]]$sig.thresh
+          } # end for (t) loop
+          names(sig.thresh) <- names(PW.res[[p]])
+          st.df <- data.frame(sig.thresh)
+          print(st.df)
+
+
+          print(signif(PW[[p]], digits = digits))
+
+          cat("\t \n")
+
+        } # end for (p) loop
+      }
+    }
+
+  } # end pairwise
 
 } # end print.treeWAS
 
@@ -313,28 +352,23 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @param n.snps.sim An integer specifying the number of loci to be simulated for estimating the null distribution
 #'                      (by default \code{10*ncol(snps)}). If memory errors arise during the analyis of a large dataset,
 #'                      it may be necesary to reduce \code{n.snps.sim} from a multiple of 10 to, for example, 5x the number of loci.
-#' @param chunk.size An integer indicating the number of \code{snps} loci to be analysed at one time. This provides a solution for
-#'                    machines with insufficient memory to analyse the dataset at hand.
-#'                    Note that smaller values of \code{chunk.size} will increase the computational time required
-#'                    (e.g., for \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).
-#' @param mem.lim Either a number or a logical value to establish a memory limit (in GB) that will be used to automatically update
-#'                the \code{chunk.size} argument if there is not enough available memory to run treeWAS in one chunk.
+#' @param chunk.size An integer indicating the number of \code{snps} loci to be analysed at one time.
+#'                   This may be needed for large datasets or machines with insufficient memory.
+#'                   Smaller values of \code{chunk.size} will increase the computational time required
+#'                   (e.g., if \code{chunk.size = ncol(snps)/2}, treeWAS will take twice as long to complete).
+#' @param mem.lim A logical or numeric value to set a memory limit for large datasets.
 #'                If \code{FALSE} (the default), no limit is estimated and \code{chunk.size} is not changed.
-#'                If \code{TRUE}, the amount of memory currently available is estimated with \code{memfree()} and \code{chunk.size} is
-#'                scaled back to account for the amount of memory estimated to be needed by treeWAS for this dataset.
-#'                If a single numeric value, this is taken to be the amount of memory (in GB) available/designated
-#'                for use by treeWAS and \code{chunk.size} is updated to reflect this.
+#'                If \code{TRUE}, available memory is estimated with \code{memfree()} and \code{chunk.size} is reduced.
+#'                A single numeric value can be used to set a memory limit (in GB) and \code{chunk.size} will be reduced accordingly.
 #' @param test A character string or vector containing one or more of the following available tests of association:
 #'              \code{"terminal"}, \code{"simultaneous"}, \code{"subsequent"}, \code{"cor"}, \code{"fisher"}.
 #'              By default, the first three tests are run (see details).
 #' @param correct.prop A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for
 #'                     phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across
 #'                     the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous).
-#'                     If \code{correct.prop} is \code{FALSE} (the default), the original
-#'                     versions of each test will be run as described in our
-#'                     \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
-#'                     If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated
-#'                     across the terminal and all (internal and terminal) nodes, respectively.
+#'                     If \code{correct.prop} is \code{FALSE} (the default), the original version of each test is run.
+#'                     If \code{TRUE}, an alternate association metric based on the phi correlation coefficient
+#'                     is calculated across the terminal and all (internal and terminal) nodes, respectively.
 #' @param snps.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
 #'                              for the ancestral state reconstruction of the genetic dataset,
 #'                              or a matrix containing this reconstruction if it has been performed elsewhere
@@ -364,6 +398,11 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'                        (\code{TRUE}, the default) or not (\code{FALSE}).
 #' @param plot.dist A logical indicating whether to plot the true distribution of association score statistics
 #'                    (\code{TRUE}) or not (\code{FALSE}, the default).
+#' @param plot.null.dist.pairs Either a logical indicating, for categorical phenotypes only, whether to plot
+#'                             additional null distributions of association score statistics for each
+#'                             pairwise comparison of phenotype levels (\code{TRUE}) or not (\code{FALSE}),
+#'                             or the character string \code{"grid"} (the default) which will
+#'                             print all of these plots in one grid (N pairs x N tests).
 #' @param snps.assoc An optional character string or vector specifying known associated loci to be demarked in
 #'                      results plots (e.g., from previous studies or if data is simulated); else \code{NULL}.
 #' @param filename.plot An optional character string denoting the file location for
@@ -715,6 +754,7 @@ treeWAS <- function(snps,
                     plot.manhattan = TRUE,
                     plot.null.dist = TRUE,
                     plot.dist = FALSE,
+                    plot.null.dist.pairs = "grid",
                     snps.assoc = NULL, # for (manhattan) plot
                     filename.plot = NULL,
                     seed = NULL){
@@ -768,18 +808,17 @@ treeWAS <- function(snps,
                           choices = c("count", "density"),
                           several.ok = FALSE)
 
-  ##############
-  ## get call ##
-  ##############
-  ## get arguments inputed to treeWAS for this run
-  # args <- match.call()
-
+  ##########
+  ## CALL ##
+  ##########
+  ## Get arguments inputed to treeWAS for this run
   ## TO DO: update arguments to get actual values used (report both?).
-
   args <- NA
 
   ## store input args to return call at end of fn:
+  # args <- match.call()
   args <- mget(names(formals()), sys.frame(sys.nframe()))
+
 
   ########################
   ## HANDLE SNPS & PHEN ##
@@ -1729,6 +1768,9 @@ treeWAS <- function(snps,
 
 
 
+
+
+
   ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ###### FOR LOOP for CHUNK-BY-CHUNK TREEWAS STARTS HERE #####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
@@ -2037,12 +2079,16 @@ treeWAS <- function(snps,
     SNPS.REC[[i]] <- snps.rec
     SNPS.SIM.REC[[i]] <- snps.sim.rec
 
-    } # end for (i) loop (CHUNKS)
+  } # end for (i) loop (CHUNKS)
+
   ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ####### END LOOP/OPTIONAL CHUNK-BY-CHUNK TREEWAS HERE ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ############################################################   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
   ######   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
+
+
+
 
   ############################
   ## (COMBINE CHUNKS FIRST) ##
@@ -2385,19 +2431,12 @@ treeWAS <- function(snps,
   ## return plot margins to their original state:
   par(mar=par.mar.ori)
 
-  #######################
-  ## end filename.plot ##
-  #######################
-  if(!is.null(filename.plot)){
-    dev.off()
-  }
 
 
   ###########################
   ## Get COMBINED results: ##
   ###########################
-  ## get uniques(sig.snps) for terminal, simultaneous, subsequent results combined
-  ## for best thresh only (ie. pval.0.01.bonf.count.10.x.n.snps)
+  ## get unique(sig.snps) for terminal, simultaneous, subsequent results combined.
   SNP.loci <- vector("list", length=length(test))
   names(SNP.loci) <- test
   for(t in 1:length(test)){
@@ -2460,67 +2499,190 @@ treeWAS <- function(snps,
       }
 
       ###################################
-      ## PAIRWISE CATEGORICAL SCORE 2: ##
+      ## PAIRWISE SCORES on SIG.SNPS:  ##
       ###################################
       if(length(snps.sig) > 0){
 
-        ## Get SNPs diffs: ##
-        edges <- tree$edge
-        snps.diffs <- snps.rec[edges[,1], ] - snps.rec[edges[,2], ]
+        print(paste("Running pairwise tests @", Sys.time()))
 
+        ## Get phen pairs:
         pairs <- t(combn(unique(phen.rec[!is.na(phen.rec)]), m=2))
-        S2 <- list()
+
+        ## Print plots in grid?
+        if(!is.null(plot.null.dist.pairs)){
+          if(plot.null.dist.pairs == "grid"){
+            mfrow.ori <- par()$mfrow
+            par(mfrow=c(nrow(pairs), length(TEST)))
+          }
+        }
+
+        SIG.LIST <- res.pairs <- PW.DF <- list()
+        #############################################
+        ## FOR (p) LOOP:
         for(p in 1:nrow(pairs)){
 
           ## Get phen diffs: ##
+          ph <- phen
+          ph[which(!ph %in% pairs[p,])] <- NA
+          ph <- as.numeric(as.factor(as.character(ph)))-1
+
           pr <- phen.rec
           pr[which(!pr %in% pairs[p,])] <- NA
           pr <- as.numeric(as.factor(as.character(pr)))-1
-          phen.diffs <- pr[edges[,1]] - pr[edges[,2]]
 
-          sp.diffs <- snps.diffs * phen.diffs
-          S2[[p]] <- colSums(sp.diffs, na.rm=TRUE)
+          r.toKeep <- which(!is.na(ph))
+          r.toKeep.rec <- which(!is.na(pr))
+
+          CORR.DAT <- CORR.SIM <- sig.list <- SIG.LIST[[p]] <- PW.DF[[p]] <- list()
+          ## FOR (t) LOOP:
+          for(t in 1:length(TEST)){
+
+            if(TEST[[t]] == "simultaneous"){
+              r.toKeep <- c(1:length(ph))
+              r.toKeep.rec <- c(1:length(pr))
+              }
+
+            assoc.scores <- get.assoc.scores(snps = snps[r.toKeep, snps.sig],
+                                             snps.sim = snps.sim[r.toKeep, ],
+                                             phen = ph[r.toKeep],
+                                             tree = tree,
+                                             test = TEST[[t]],
+                                             correct.prop = TRUE,
+                                             categorical = FALSE,
+                                             snps.reconstruction = snps.rec[r.toKeep.rec, snps.sig],
+                                             snps.sim.reconstruction = snps.sim.rec[r.toKeep.rec, ],
+                                             phen.reconstruction = pr[r.toKeep.rec],
+                                             unique.cols = TRUE)
+
+            CORR.DAT[[t]] <- assoc.scores$corr.dat
+            CORR.DAT[[t]][which(is.na(CORR.DAT[[t]]))] <- 0
+            CORR.SIM[[t]] <- assoc.scores$corr.sim
+            CORR.SIM[[t]][which(is.na(CORR.SIM[[t]]))] <- 0
+
+            sig.list[[t]] <- get.sig.snps(corr.dat = CORR.DAT[[t]],
+                                          corr.sim = CORR.SIM[[t]],
+                                          snps.names = colnames(snps)[snps.sig],
+                                          test = TEST[[t]],
+                                          p.value = p.value,
+                                          p.value.correct = p.value.correct,
+                                          p.value.by = p.value.by)
+
+            SIG.LIST[[p]][[t]] <- sig.list[[t]]
+
+            pw.df <- data.frame(sig.list[[t]]$corr.dat, sig.list[[t]]$p.vals)
+            names(pw.df) <- c(TEST[[t]], paste("p", TEST[[t]], sep="."))
+            PW.DF[[p]][[t]] <- pw.df
+
+            corr.dat <- sig.list[[t]]$corr.dat
+            corr.sim <- sig.list[[t]]$corr.sim
+            sig.thresh <- sig.list[[t]]$sig.thresh
+            sig.snps <- sig.list[[t]]$sig.snps
+            sig.snps.names <- sig.list[[t]]$sig.snps.names
+
+            ## (*) ADD ARG:
+            if(plot.null.dist.pairs == TRUE || plot.null.dist.pairs == "grid"){
+
+              ## Generate one histogram per test:
+              plot_sig_snps(corr.dat = abs(corr.dat),
+                            corr.sim = abs(corr.sim),
+                            corr.sim.subset = NULL,
+                            sig.corrs = abs(corr.dat[sig.snps]),
+                            sig.snps = sig.snps.names,
+                            sig.thresh = sig.thresh,
+                            test = TEST[[t]],
+                            sig.snps.col = "black",
+                            hist.col = rgb(0.5,0,1,0.5), # purple
+                            hist.subset.col = rgb(1,0,0,0.5),
+                            thresh.col = "red",
+                            snps.assoc = NULL,
+                            snps.assoc.col = "blue",
+                            bg = "lightgrey",
+                            grid = TRUE,
+                            freq = FALSE,
+                            plot.null.dist = TRUE,
+                            plot.dist = FALSE,
+                            main.title = paste("Null distribution \n(", TEST[[t]], ": ",
+                                               paste0(pairs[p,], collapse="_"), ")"
+                                               , sep=""))
+            } # end plot_sig_snps
+
+          } # end for (t) loop
+          #############################################
+          names(SIG.LIST[[p]]) <- test
+
+          ## get counts of n.pw.tests sig per snps.sig for phen.pair p:
+          pw.sig.snps <- as.vector(unlist(sapply(c(1:length(TEST)), function(e) sig.list[[e]]$sig.snps.names)))
+          if(length(pw.sig.snps) > 0){
+            pw.sig <- as.vector(table(factor(pw.sig.snps, levels=as.character(snps.sig))))
+          }else{
+            pw.sig <- rep(0, length(snps.sig))
+          }
+
+          ## Get score & p-values for t tests for this phen.pair:
+          pw.df <- do.call(cbind, PW.DF[[p]])
+
+          ## Get G0P1 table for this phen.pair:
+          snps.toKeep <- snps[r.toKeep, snps.sig]
+          if(length(snps.sig) == 1){
+            tb <- t(table(phen[r.toKeep], snps.toKeep))
+            cn <- paste(c("G0P","G1P"), rep(colnames(tb), each=2), sep="")
+            tb <- t(as.matrix(as.vector(unlist(tb))))
+            colnames(tb) <- cn
+          }else{
+            tb <- t(table(phen[r.toKeep], snps.toKeep[,1]))
+            cn <- paste(c("G0P","G1P"), rep(colnames(tb), each=2), sep="")
+            tb <- t(sapply(c(1:ncol(snps.toKeep)),
+                           function(e) as.vector(unlist(t(table(phen[r.toKeep], snps.toKeep[,e]))))))
+            colnames(tb) <- cn
+          }
+
+
+          res.pairs[[p]] <- cbind(data.frame("SNP.locus" = snps.sig,
+                                       "pw.sig" = pw.sig),
+                                       pw.df, tb)
+
         } # end for (p) loop
-        s2 <- do.call(rbind, S2)
-        rownames(s2) <- sapply(c(1:nrow(pairs)),
-                               function(e) paste0(pairs[e,], collapse=" : "))
-        ###############
-        ## FOR LOOP: ##
-        ###############
-        PT <- list()
-        for(j in 1:length(snps.sig)){
+        #############################################
 
-          ## PAIRWISE CATEGORICAL SCORE 1:
-          ## Cross-tabulate snps.sig[,j] x phen (w original levels):
-          snp <- snps[,snps.sig[j]]
-          tab <- table(phen, snp, dnn=c("phen", paste("snp", snps.sig[j], sep=".")))
+        ## Name pw list by phen pairs:
+        names(SIG.LIST) <- sapply(c(1:nrow(pairs)), function(p) paste0(pairs[p,], collapse="_"))
+        names(res.pairs) <- sapply(c(1:nrow(pairs)), function(p) paste0(pairs[p,], collapse="_"))
 
-          ## PAIRWISE CATEGORICAL SCORE 3:
-          ## Cross-tabulate snps.sig[,j] x phen.rec (w original levels):
-          snp.rec <- snps.rec[,snps.sig[j]]
-          tab.rec <- table(phen.rec, snp.rec,
-                           dnn=c("phen", paste("snp.rec", snps.sig[j], sep=".")))
+        ## Print plots in grid?
+        if(!is.null(plot.null.dist.pairs)){
+          if(plot.null.dist.pairs == "grid"){
+            par(mfrow=mfrow.ori)
+          }
+        }
 
-          ## PAIRWISE TESTS for SNPS.SIG J:
-          PT[[j]] <- pair.tests(x = tab, y = s2[, snps.sig[j]], z = tab.rec,
-                                method = p.value.correct)
+        ## ADD NAMES to res.pairs, sig.list by phen : pair, test...
 
-        } # end for (j) loop
-        names(PT) <- snps.sig
-        # PT
+        ## Enable manhattan plots etc for pairwise tests...
+        ## Build summary plot (tree+grid) fn?
 
+
+
+        ## Return res.pairs sig tables & SIG.LIST tests data with output:
+        PW <- list("pairwise.combined" = res.pairs, "pairwise.tests" = SIG.LIST)
       }else{
-        PT <- "No significant SNPs to test."
+        ## No sig. snps:
+        PW <- list("pairwise.combined" = NULL, "pairwise.tests" = NULL)
       }
 
       ## Add as last item of RES list.
-      RES[[(length(RES)+1)]] <- PT
+      RES[[(length(RES)+1)]] <- PW
 
       phen <- phen.output
     }
   } # end categorical sig.snps
   ##############################################################################
 
+  #######################
+  ## end filename.plot ##
+  #######################
+  if(!is.null(filename.plot)){
+    dev.off()
+  }
 
   phen <- phen.curr
 

@@ -17,7 +17,7 @@ Calculates treeWAS score 1, the terminal test.
 \dontrun{
 ## basic use of fn
 out <- terminal.test(snps, phen)
-} 
+}
 
 }
 \author{
