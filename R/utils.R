@@ -403,7 +403,7 @@ get.unique.matrix <- function(data, MARGIN=2, silent=TRUE){
   if(MARGIN == 1){
 
     if(!is.null(row.names(data))){
-      row.names(unique.data) <- row.names(data)[!duplicated(index)] ## TO DO: CHECK (MAKE SURE THIS IS OK)
+      row.names(unique.data) <- row.names(data)[!duplicated(index)] ## TO DO: CHECK
     }else{
       row.names(unique.data) <- c(1:nrow(unique.data))
     }
@@ -417,8 +417,8 @@ get.unique.matrix <- function(data, MARGIN=2, silent=TRUE){
     if(!is.null(colnames(data))){
       colnames(unique.data) <- colnames(data)[!duplicated(index)]
     }else{
-      colnames(unique.data) <- c(1:ncol(unique.data)) ## TO DO: CHECK! (NOT SURE WHY I DID THIS INSTEAD OF JUST USING THE FIRST INSTANCE.. (PROBLEMATIC ANYWHERE? MISLEADING?))
-      ## PLUS -- WOULD IT BE BETTER HERE TO USE THE NON-DUPLICATED INDEX RATHER THAN JUST NUMBERING 1:NCOL?
+      colnames(unique.data) <- c(1:ncol(unique.data)) ## TO DO: CHECK
+      ## WOULD IT BE BETTER HERE TO USE THE NON-DUPLICATED INDEX RATHER THAN JUST NUMBERING 1:NCOL?
     }
     if(length(unique(index)) == ncol(data)){
       if(silent == FALSE){
@@ -593,12 +593,12 @@ table.matrix <- function(data, MARGIN=1){
   ## make a factor in which each level
   ## is the smushed single-element vector
   ## of each unique row
-  cat <- factor(dat, levels = levels)
+  fdat <- factor(dat, levels = levels)
   ## get n. unique levels
-  n.levels <- length(levels(cat))
+  n.levels <- length(levels(fdat))
   ## get the unique index that
   ## each original ind/row should map to:
-  map.to <- (as.integer(cat) - 1)
+  map.to <- (as.integer(fdat) - 1)
   map.to <- map.to[!is.na(map.to)]
   if(length(map.to)) map.to <- map.to + 1
   ## get the number of inds at each unique level:

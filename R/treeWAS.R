@@ -961,11 +961,12 @@ treeWAS <- function(snps,
       }else{
         if(identical(names(phen.reconstruction)[ixt], tree$tip.label)){
           names(phen.reconstruction)[ixi] <- tree$node.label
-          cat("Assuming phen.reconstruction[Nterminal+1:Ntotal] correspond to tree$node.label,
-              although labels do not match.\n")
+          cat("Assuming phen.reconstruction[(length(phen)+1):length(phen.reconstruction)]
+               correspond to tree$node.label, although labels do not match.\n")
         }else{
-          warning("The names of phen.reconstruction[Nterminal+1:Ntotal] do not correspond to tree$node.label.
-                  Reconstructing phen internally instead.\n")
+          warning("The names of phen.reconstruction[(length(phen)+1):length(phen.reconstruction)]
+                   do not correspond to tree$node.label.
+                   Reconstructing phen internally instead.\n")
           phen.reconstruction <- "parsimony"
         }
       }
@@ -983,11 +984,13 @@ treeWAS <- function(snps,
       }else{
         if(identical(rownames(snps.reconstruction)[ixt], tree$tip.label)){
           rownames(snps.reconstruction)[ixi] <- tree$node.label
-          cat("Assuming snps.reconstruction[Nterminal+1:Ntotal,] correspond to tree$node.label,
-              although labels do not match.\n")
+          cat("Assuming snps.reconstruction[(nrow(snps)+1):nrow(snps.reconstruction), ]
+               correspond to tree$node.label,
+               although labels do not match.\n")
         }else{
-          warning("The names of snps.reconstruction[Nterminal+1:Ntotal,] do not correspond to tree$node.label.
-                  Reconstructing snps internally instead.\n")
+          warning("The names of snps.reconstruction[(nrow(snps)+1):nrow(snps.reconstruction),]
+                   do not correspond to tree$node.label.
+                   Reconstructing snps internally instead.\n")
           snps.reconstruction <- "parsimony"
         }
       }
@@ -1030,34 +1033,36 @@ treeWAS <- function(snps,
   if(length(unique(as.vector(unlist(snps[!is.na(snps)])))) != 2){
     stop("snps must be a binary matrix")
   }else{
-    ## Convert to numeric, binary (then logical?):
-    if(!is.numeric(snps)){
-      na.before <- length(which(is.na(snps)))
-      if(!all.is.numeric(snps)){
-        r.noms <- rownames(snps)
-        c.noms <- colnames(snps)
-        snps <- matrix(as.numeric(as.factor(snps))-1, nrow=nrow(snps), ncol=ncol(snps))
-        snps <- matrix(as.logical(snps), nrow=nrow(snps), ncol=ncol(snps)) ## logical
-        rownames(snps) <- r.noms
-        colnames(snps) <- c.noms
+    ## Convert to numeric, binary (then logical):
+    if(!is.numeric(snps) && !is.logical(snps)){
+      if(!is.numeric(snps)){
+        na.before <- length(which(is.na(snps)))
+        if(!all.is.numeric(snps)){
+          r.noms <- rownames(snps)
+          c.noms <- colnames(snps)
+          snps <- matrix(as.numeric(as.factor(snps))-1, nrow=nrow(snps), ncol=ncol(snps))
+          snps <- matrix(as.logical(snps), nrow=nrow(snps), ncol=ncol(snps)) ## logical
+          rownames(snps) <- r.noms
+          colnames(snps) <- c.noms
+        }else{
+          r.noms <- rownames(snps)
+          c.noms <- colnames(snps)
+          snps <- matrix(as.numeric(as.character(snps)), nrow=nrow(snps), ncol=ncol(snps))
+          snps <- matrix(as.logical(snps), nrow=nrow(snps), ncol=ncol(snps)) ## logical
+          rownames(snps) <- r.noms
+          colnames(snps) <- c.noms
+        }
+        na.after <- length(which(is.na(snps)))
+        if(na.after > na.before){
+          stop("NAs created in converting snps to numeric.")
+        }
       }else{
         r.noms <- rownames(snps)
         c.noms <- colnames(snps)
-        snps <- matrix(as.numeric(as.character(snps)), nrow=nrow(snps), ncol=ncol(snps))
         snps <- matrix(as.logical(snps), nrow=nrow(snps), ncol=ncol(snps)) ## logical
         rownames(snps) <- r.noms
         colnames(snps) <- c.noms
       }
-      na.after <- length(which(is.na(snps)))
-      if(na.after > na.before){
-        stop("NAs created in converting snps to numeric.")
-      }
-    }else{
-      r.noms <- rownames(snps)
-      c.noms <- colnames(snps)
-      snps <- matrix(as.logical(snps), nrow=nrow(snps), ncol=ncol(snps)) ## logical
-      rownames(snps) <- r.noms
-      colnames(snps) <- c.noms
     }
   }
   ####################################################################
@@ -1175,9 +1180,8 @@ treeWAS <- function(snps,
     snps <- snps[ord,]
     ## check:
     if(!identical(as.character(rownames(snps)), as.character(tree$tip.label))){
-      stop("Unable to rearrange snps such that rownames(snps)
-           match content and order of tree$tip.label.
-           Please check that these match.")
+      stop("Unable to rearrange snps such that rownames(snps) match content and order of tree$tip.label.
+            Please check that these match.")
     }
     }
 
@@ -1188,14 +1192,12 @@ treeWAS <- function(snps,
       snps.reconstruction <- snps.reconstruction[c(ord, (length(ord)+1):nrow(snps.reconstruction)),]
       ## check:
       if(!identical(as.character(rownames(snps.reconstruction)[1:nrow(snps)]), as.character(tree$tip.label))){
-        stop("Unable to rearrange snps.reconstruction such that
-             rownames(snps.reconstruction)[1:nrow(snps)]
-             match content and order of tree$tip.label.
-             Please check that these match.")
+        warning("Unable to rearrange snps.reconstruction such that rownames(snps.reconstruction)[1:nrow(snps)]
+                 match content and order of tree$tip.label. Performing a new parsimonious reconstruction instead.")
+        snps.reconstruction <- "parsimony"
       }
-      }
-
-      }
+    }
+  }
 
   ## REORDER PHEN TO MATCH TREE$TIP.LABEL
   if(!identical(as.character(names(phen)), as.character(tree$tip.label))){
@@ -1203,11 +1205,10 @@ treeWAS <- function(snps,
     phen <- phen[ord]
     ## check:
     if(!identical(as.character(names(phen)), as.character(tree$tip.label))){
-      stop("Unable to rearrange phen such that names(phen)
-           match content and order of tree$tip.label.
-           Please check that these match.")
+      stop("Unable to rearrange phen such that names(phen) match content and order of tree$tip.label.
+            Please check that these match.")
     }
-    }
+  }
 
   ####################################################################
   ############################################################
@@ -1232,7 +1233,6 @@ treeWAS <- function(snps,
   na.before <- length(which(is.na(phen)))
 
   ## CHECK for discrete vs. continuous:
-  ## NB: can only be binary or continuous at this point...
   levs <- unique(as.vector(unlist(phen)))
   n.levs <- length(levs[!is.na(levs)])
   ## BINARY: ##
@@ -1257,16 +1257,14 @@ treeWAS <- function(snps,
     ## CATEGORICAL, DISCRETE or CONTINUOUS: ##
     ## Convert phen to numeric:
     if(!is.numeric(phen)){
-      if(all.is.numeric(phen)){
-        phen <- as.numeric(as.character(phen))
-      }else{
-        if(is.null(phen.type) || if(!is.null(phen.type)){phen.type != "categorical"}){
+        if(all.is.numeric(phen)){
+          phen <- as.numeric(as.character(phen))
+        }else{
           phen.type <- "categorical"
           warning("phen has more than 2 levels but is not numeric.
              Setting phen.type to 'categorical'.")
         }
-        phen <- as.numeric(as.factor(phen))
-      }
+      phen <- as.numeric(as.factor(phen))
     }
 
     ## Set phen.rec.method: ##
@@ -1302,7 +1300,7 @@ treeWAS <- function(snps,
           Set phen.type to 'discrete' or 'categorical' if these better describe your data.\n", sep="")
       }
     }
-    } # end phen.type (categorical/discrete/continuous)
+  } # end phen.type (categorical/discrete/continuous)
   ## ensure ind names not lost
   names(phen) <- names(phen.ori)
 
@@ -1323,14 +1321,9 @@ treeWAS <- function(snps,
       if(length(phen.reconstruction) != max(tree$edge[,2])){
         warning("The number of individuals in the provided phen.reconstruction is not equal to the
                 total number of nodes in the tree. Performing a new reconstruction instead.\n")
-        if(phen.rec.method == "discrete"){
-          if(n.levs == 2){
-            phen.reconstruction <- "parsimony"
-          }else{
-            phen.reconstruction <- "ml"
-          }
-        }
-        if(phen.rec.method == "continuous") phen.reconstruction <- "ml"
+        phen.reconstruction <- "ml"
+        if(phen.rec.method == "discrete" && n.levs == 2){phen.reconstruction <- "parsimony"}
+        if(!is.null(phen.type)){if(phen.type == "categorical"){phen.reconstruction <- "parsimony"}}
       }else{
         ## If phen provided and correct length:
         phen.reconstruction.ori <- phen.reconstruction
@@ -1347,6 +1340,21 @@ treeWAS <- function(snps,
           }
         }
         if(length(phen.reconstruction) > 1) names(phen.reconstruction) <- names(phen.reconstruction.ori)
+        ##########
+        ## REORDER PHEN.REC TO MATCH TREE$TIP.LABEL
+        if(!identical(as.character(names(phen.reconstruction)[1:length(phen)]), as.character(tree$tip.label))){
+          ord <- match(tree$tip.label, names(phen.reconstruction)[1:length(phen)])
+          phen.reconstruction <- phen.reconstruction[c(ord, (length(ord)+1):length(phen.reconstruction))]
+          ## check:
+          if(!identical(as.character(names(phen.reconstruction)[1:length(phen)]), as.character(tree$tip.label))){
+            warning("Unable to rearrange phen.reconstruction such that names(phen.reconstruction)[1:length(phen)]
+                     match content and order of tree$tip.label. Performing a new reconstruction instead.")
+            phen.reconstruction <- "ml"
+            if(phen.rec.method == "discrete" && n.levs == 2){phen.reconstruction <- "parsimony"}
+            if(!is.null(phen.type)){if(phen.type == "categorical"){phen.reconstruction <- "parsimony"}}
+          }
+        }
+        ##########
       }
     }
 
@@ -1381,7 +1389,8 @@ treeWAS <- function(snps,
     if(!is.null(phen.rec)){
 
       ## PLOT TERMINAL PHEN + RECONSTRUCTED PHEN:
-      plot_phen(phen.nodes = phen.rec, tree = tree, main.title = "Phylogenetic tree", align.tip.label = T, RTL = F)
+      plot_phen(phen.nodes = phen.rec, tree = tree,
+                main.title = "Phylogenetic tree", align.tip.label = T, RTL = F)
 
 
     }else{
@@ -1968,47 +1977,25 @@ treeWAS <- function(snps,
 
           ## CHECK index:
           if(!identical(snps.rec.index, snps.index)){
-            warning("Careful-- snps and snps.rec should have the same index when reduced
-                    to their unique forms.\n") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-          }
-
-          ## CHECK again:
-          if(ncol(snps.reconstruction) != ncol(snps)){
-            warning("The number of columns in the provided snps.reconstruction is not equal to the number of
-                    columns in the snps matrix. Performing a new parsimonious reconstruction instead.\n")
-            snps.reconstruction <- snps.sim.reconstruction <- "parsimony"
-          }
+            warning("Careful-- snps and snps.rec do not reduce to the same set of unique columns.\n")
           }
         }
+      }
 
       ## If not user-provided or checks failed, reconstruct ancestral states:
       if(!is.matrix(snps.reconstruction)){
         snps.rec <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
       }
 
-
-
       #################################
       ## Reconstruct SIMULATED SNPs: ##
       #################################
-      # system.time(
       snps.sim.rec <- asr(var = snps.sim, tree = tree, type = snps.sim.reconstruction, unique.cols = TRUE)
-      # )
 
-      } # end reconstruction for tests 2 & 3
+     } # end reconstruction for tests 2 & 3
 
 
     ## !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ### !!! ###
-
-    # ## Get UNIQUE snps.sim.reconstruction
-    # snps.sim.rec.complete <- snps.sim.rec
-    # temp <- get.unique.matrix(snps.sim.rec, MARGIN=2)
-    # snps.sim.rec <- temp$unique.data
-    # snps.sim.rec.index <- temp$index
-    # if(!identical(snps.sim.rec.index, snps.sim.index)){
-    #   warning("Careful-- snps.sim and snps.sim.rec should have the same index when reduced
-    #           to their unique forms!") ## SHOULD THIS BE A "STOP" INSTEAD? OR IS THIS ERROR NOT FATAL OR NOT POSSIBLE????
-    # }
 
     print(paste("Reconstructions completed @", Sys.time()))
 

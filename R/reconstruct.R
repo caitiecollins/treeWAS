@@ -25,8 +25,8 @@
 #' performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} function in package \emph{ape}).
 #' @param method A character string specifying the type of ASR method to implement,
 #' either \code{'discrete'} or \code{'continuous'} (only used if \code{type} is set to "ML").
-#' @param unique.cols A logical indicating whether only unique column patterns are present in \code{var}, 
-#' if \code{var} is a matrix (if so (\code{TRUE}), a time-consuming step can be skipped); 
+#' @param unique.cols A logical indicating whether only unique column patterns are present in \code{var},
+#' if \code{var} is a matrix (if so (\code{TRUE}), a time-consuming step can be skipped);
 #' by default, \code{FALSE}.
 #'
 #' @return Depending on the dimensions of the input \code{var} object,
@@ -458,46 +458,14 @@ asr <- function(var,
         l <- max(tree$edge[,2])
         ord <- 1:l
 
-        ## Binary:
-        if(length(phen.levels[!is.na(phen.levels)]) == 2){
+        ## Step 2 (Non-binary --> get states):
+        rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
 
-          ## ML discrete reconstruction:
-          ## Step 2 (Binary --> get probs):
-          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
+        ## Bind list & reorder elements:
+        phen.rec <- do.call(rbind, rec[ord])
 
-          ## If NAs are present, replace column 1 0s with NA values
-          ## whenever column 3 (NA) has a 1 in it:
-          if(any(is.na(phen.levels))){
-            na.col <- which(is.na(phen.levels))
-            for(i in 1:length(rec)){
-              foo <- rec[[i]]
-              toReplace <- which(foo[,na.col] == 1)
-              if(length(toReplace) > 0){
-                foo[toReplace,1] <- NA
-                foo[toReplace,2] <- NA
-              }
-              rec[[i]] <- foo
-            } # end for loop
-          }
-          ## Bind list into matrix:
-          phen.rec <- do.call(cbind, rec[ord])
-          phen.rec <- as.vector(t(phen.rec[, seq(2, ncol(phen.rec), length(phen.levels))]))
-
-        }else{
-
-          ## Non-Binary (discrete):
-
-          ## ML discrete reconstruction:
-          ## Step 2 (Non-binary --> get states):
-          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
-
-          ## Bind list & reorder elements:
-          phen.rec <- do.call(rbind, rec[ord])
-
-          ## replace level #s w levels:
-          phen.rec <- attr(rec, "levels")[phen.rec]
-
-        } # end non-binary
+        ## replace level #s w levels:
+        phen.rec <- attr(rec, "levels")[phen.rec]
 
       }else{
 
@@ -522,8 +490,6 @@ asr <- function(var,
         phen.rec <- c(phen.terminal, phen.internal)
 
       }
-
-      # }
 
     } # end ML
 

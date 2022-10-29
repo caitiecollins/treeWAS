@@ -25,8 +25,8 @@ performed by \code{parsimony} or \code{ML} (as performed by the \code{ace} funct
 \item{method}{A character string specifying the type of ASR method to implement,
 either \code{'discrete'} or \code{'continuous'} (only used if \code{type} is set to "ML").}
 
-\item{unique.cols}{A logical indicating whether only unique column patterns are present in \code{var}, 
-if \code{var} is a matrix (if so (\code{TRUE}), a time-consuming step can be skipped); 
+\item{unique.cols}{A logical indicating whether only unique column patterns are present in \code{var},
+if \code{var} is a matrix (if so (\code{TRUE}), a time-consuming step can be skipped);
 by default, \code{FALSE}.}
 }
 \value{
