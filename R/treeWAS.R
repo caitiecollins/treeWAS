@@ -1855,7 +1855,7 @@ treeWAS <- function(snps,
 
     ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
 
-    snps.unique <- snps.index <- snps.sim.unique <- snps.sim.index <- NULL
+    snps.unique <- snps.index <- snps.sim.unique <- snps.sim.index <- snps.rec.index <- NULL
 
     #################
     ## Handle snps ##
@@ -1950,12 +1950,17 @@ treeWAS <- function(snps,
           if(!identical(snps.rec.index, snps.index)){
             warning("Careful-- snps and snps.rec do not reduce to the same set of unique columns.\n")
           }
+
         }
       }
 
       ## If not user-provided or checks failed, reconstruct ancestral states:
       if(!is.matrix(snps.reconstruction)){
         snps.rec <- asr(var = snps, tree = tree, type = snps.reconstruction, unique.cols = TRUE)
+      }
+
+      if(is.null(snps.rec.index)){
+        snps.rec.index <- snps.index
       }
 
       #################################
@@ -2009,14 +2014,21 @@ treeWAS <- function(snps,
       ## EXPAND CORR.DAT & CORR.SIM:
       cd <- assoc.scores$corr.dat
       cs <- assoc.scores$corr.sim
+
       if(TEST[[t]] %in% c("simultaneous", "subsequent")){
-        cd <- cd[snps.rec.index]
+        if(ncol(snps.rec) != ncol(snps)){
+          cd <- cd[snps.rec.index]
+        }else{
+          cd <- cd[snps.index]
+        }
       }else{
         cd <- cd[snps.index]
       }
       cs <- cs[snps.sim.index]
-      names(cd) <- colnames(snps.complete)
       names(cs) <- colnames(snps.sim.complete)
+
+      names(cd) <- colnames(snps.complete)
+
 
       ## STORE DATA FOR EACH TEST:
       CORR.DAT[[i]][[t]] <- cd
