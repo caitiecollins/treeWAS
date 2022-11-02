@@ -110,6 +110,36 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
   ## Note: plot_phen expects output from phen.sim as input, and phen.sim works w pruningwise trees...
   tree <- reorder.phylo(tree, order="pruningwise")
 
+  ## get number of terminal nodes
+  if(!is.null(tree$tip.label)){
+    n.ind <- length(tree$tip.label)
+  }else{
+    n.ind <- tree$Nnode+1
+  }
+
+  ## REORDER SNPS/PHEN to match TREE LABELS:
+  if(!is.null(names(phen.nodes))){
+    if(length(phen.nodes) == max(tree$edge)){
+      if(!is.null(tree$node.label) && all(names(phen.nodes) %in% c(tree$tip.label, tree$node.label))){
+        ord <- match(c(tree$tip.label, tree$node.label), names(phen.nodes))
+        phen.nodes <- phen.nodes[ord]
+      }else{
+        warning("Unable to rearrange phen.nodes such that names(phen.nodes)
+            match c(tree$tip.label, tree$node.label). Order may be incorrect.")
+      }
+    }
+    if(length(phen.nodes) == n.ind){
+      if(!is.null(tree$tip.label) && all(tree$tip.label %in% names(phen.nodes))){
+        ord <- match(tree$tip.label, names(phen.nodes))
+        phen.nodes <- phen.nodes[ord]
+      }else{
+        warning("Unable to rearrange phen.nodes such that names(phen.nodes)
+            match tree$tip.label. Order may be incorrect.")
+      }
+    }
+  }
+
+
   ## PLOT MARGINS: ##
   mar.ori <- par()$mar
   # mar.ori <- c(5,4,4,1)+0.1
@@ -132,19 +162,164 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
   #############################################################################
 
   ## SIDE-BY-SIDE PLOTS??
-  if(!is.null(phen.nodes) & !is.null(snp.nodes)) par(mfrow=c(1,2))
-
-  ## get number of terminal nodes
-  if(!is.null(tree$tip.label)){
-    n.ind <- length(tree$tip.label)
-  }else{
-    n.ind <- tree$Nnode+1
+  if(!is.null(phen.nodes) && !is.null(snp.nodes)){
+    par(mfrow=c(1,2))
+    main.title2 <- main.title
+    main.title <- FALSE
   }
+
+
 
   nodeCol <- "grey"
 
-  ## check if phen provided is for all nodes or only terminal nodes:
-  if(length(phen.nodes) == (n.ind + tree$Nnode)){
+
+  ## get COLOR for NODES
+  # nodeCol <- "grey"
+  if(all.is.numeric(phen.nodes[!is.na(phen.nodes)])){
+    var <- as.numeric(as.character(phen.nodes))
+    levs <- sort(unique(var[!is.na(var)]))
+  }else{
+    var <- as.character(phen.nodes)
+    levs <- unique(var[!is.na(var)])
+  }
+
+  if(length(levs) == 2){
+    ## binary:
+    # myCol <- c("red", "blue")
+    myCol <- c("blue", "red")
+    nodeCol <- var
+    ## for loop
+    for(i in 1:length(levs)){
+      nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
+    } # end for loop
+  }else{
+
+    if(is.numeric(var)){
+      ## numeric:
+      myCol <- num2col(var, col.pal = seasun, na.col = NA)
+      nodeCol <- myCol
+    }else{
+      ## categorical...
+      myCol <- funky(length(levs))
+      nodeCol <- var
+      ## for loop
+      for(i in 1:length(levs)){
+        nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
+      } # end for loop
+    }
+  }
+
+
+  nodeCol <- as.vector(unlist(nodeCol))
+  ## get COLOR for LEAVES ONLY
+  leafCol <- nodeCol[1:n.ind]
+
+
+  ## get edgeCol if phen provided is for internal nodes:
+  if(length(phen.nodes) == max(tree$edge)){
+
+    ## get COLOR of INTERNAL nodes ONLY
+    internalNodeCol <- nodeCol[(n.ind+1):length(nodeCol)]
+
+    ## get COLOR for EDGES
+    edgeCol <- rep("black", nrow(tree$edge))
+    for(i in 1:nrow(tree$edge)){
+      edgeCol[i] <- nodeCol[tree$edge[i,2]]
+      if(is.na(nodeCol[tree$edge[i,1]]) | is.na(nodeCol[tree$edge[i,2]])){
+        edgeCol[i] <- "grey"
+      }else{
+        ## No grey if truly continuous...
+        if(length(levs) < length(tree$tip.label)/10){
+          if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
+        }
+      }
+    }
+    edgeLabCol <- edgeCol
+
+    ## replace NAs w grey:
+    if(any(is.na(var))){
+      nodeCol[which(is.na(var))] <- "grey"
+    }
+
+  }else{
+    edgeCol <- "black"
+    nodeCol <- internalNodeCol <- edgeCol
+  }
+
+
+    ###############
+    ## plot TREE ##
+    ###############
+    if(plot==TRUE){
+
+      if(RTL == FALSE){
+        if(align.tip.label == FALSE){
+          suppressWarnings(plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=c(-0.5, 0), edge.width=3, edge.color=edgeCol, ...))
+          # Error in xx.tmp + lox :
+          #   (converted from warning) longer object length is not a multiple of shorter object length
+          tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.5, 0), col=leafCol, frame="none")
+        }else{
+          plot(tree, show.tip=T, tip.col=leafCol, edge.width=3, edge.color=edgeCol, align.tip.label=T, cex=0.5, ...)
+        }
+
+      }else{
+        plot(tree, show.tip=T, tip.col="white", cex=0.5, adj=c(-7.5), edge.width=3, edge.color=edgeCol, direction = "leftwards", ...)
+        tiplabels(text=tree$tip.label, cex=0.5, adj=c(1.5, 0), col=leafCol, frame="none")
+      }
+
+      ## Add title?
+      if(main.title == TRUE){
+        # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
+        title("Tree with phenotypic changes", cex.main=1, line=-0.5)
+      }else{
+        if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.5)
+      }
+
+      ## Add axis?
+      if(show.axis == TRUE){
+        mar.new2 <- c(2,0.5,0,0.5)
+        par(mar=mar.new2)
+        axisPhylo(cex.axis=0.7)
+      }
+
+  } # end plot = TRUE
+
+  #####################################################################################################
+
+  if(!is.null(snp.nodes)){
+
+    phen.nodes <- snp.nodes # for convenience
+
+    ## Check if > 1 column of snps(.rec) has been provided:
+    if(is.matrix(phen.nodes)){
+      warning("More than one column has been provided to snp.nodes. Only plotting snp.nodes[,1].")
+      phen.nodes <- phen.nodes[,1]
+    }
+
+    ## REORDER SNPS/PHEN to match TREE LABELS:
+    if(!is.null(names(phen.nodes))){
+      if(length(phen.nodes) == max(tree$edge)){
+        if(!is.null(tree$node.label) && all(names(phen.nodes) %in% c(tree$tip.label, tree$node.label))){
+          ord <- match(c(tree$tip.label, tree$node.label), names(phen.nodes))
+          phen.nodes <- phen.nodes[ord]
+        }else{
+          warning("Unable to rearrange snp.nodes such that names(snp.nodes)
+            match c(tree$tip.label, tree$node.label). Order may be incorrect.")
+        }
+      }
+      if(length(phen.nodes) == n.ind){
+        if(!is.null(tree$tip.label) && all(tree$tip.label %in% names(phen.nodes))){
+          ord <- match(tree$tip.label, names(phen.nodes))
+          phen.nodes <- phen.nodes[ord]
+        }else{
+          warning("Unable to rearrange snp.nodes such that names(snp.nodes)
+            match tree$tip.label. Order may be incorrect.")
+        }
+      }
+    }
+
+    nodeCol <- "grey"
+
 
     ## get COLOR for NODES
     # nodeCol <- "grey"
@@ -186,223 +361,11 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
     nodeCol <- as.vector(unlist(nodeCol))
     ## get COLOR for LEAVES ONLY
     leafCol <- nodeCol[1:n.ind]
-    ## get COLOR of INTERNAL nodes ONLY
-    internalNodeCol <- nodeCol[(n.ind+1):length(nodeCol)]
-
-    ## get COLOR for EDGES
-    edgeCol <- rep("black", nrow(tree$edge))
-    for(i in 1:nrow(tree$edge)){
-      edgeCol[i] <- nodeCol[tree$edge[i,2]]
-      if(is.na(nodeCol[tree$edge[i,1]]) | is.na(nodeCol[tree$edge[i,2]])){
-        edgeCol[i] <- "grey"
-      }else{
-        ## No grey if truly continuous...
-        if(length(levs) < length(tree$tip.label)/10){
-          if(nodeCol[tree$edge[i,1]] != nodeCol[tree$edge[i,2]]) edgeCol[i] <- "grey"
-        }
-      }
-    }
-    edgeLabCol <- edgeCol
-
-    ## replace NAs w grey:
-    if(any(is.na(var))){
-      nodeCol[which(is.na(var))] <- "grey"
-    }
 
 
-    ###############
-    ## plot TREE ##
-    ###############
-    if(plot==TRUE){
+    ## get edgeCol if phen provided is for internal nodes:
+    if(length(phen.nodes) == max(tree$edge)){
 
-      if(RTL == FALSE){
-        if(align.tip.label == FALSE){
-          suppressWarnings(plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=c(-0.5, 0), edge.width=3, edge.color=edgeCol, ...))
-          # Error in xx.tmp + lox :
-          #   (converted from warning) longer object length is not a multiple of shorter object length
-          tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.5, 0), col=leafCol, frame="none")
-        }else{
-          plot(tree, show.tip=T, tip.col=leafCol, edge.width=3, edge.color=edgeCol, align.tip.label=T, cex=0.5, ...)
-        }
-
-      }else{
-        plot(tree, show.tip=T, tip.col="white", cex=0.5, adj=c(-7.5), edge.width=3, edge.color=edgeCol, direction = "leftwards", ...)
-        tiplabels(text=tree$tip.label, cex=0.5, adj=c(1.5, 0), col=leafCol, frame="none")
-      }
-
-      ## Add title?
-      if(main.title == TRUE){
-        # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
-        title("Tree with phenotypic changes", cex.main=1, line=-0.5)
-      }else{
-        if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.5)
-      }
-
-      ## Add axis?
-      if(show.axis == TRUE){
-        mar.new2 <- c(2,0.5,0,0.5)
-        par(mar=mar.new2)
-        axisPhylo(cex.axis=0.7)
-      }
-
-    } # end plot = TRUE
-
-    #####################################################################################################
-
-  }else{ # end phen for all nodes
-
-    #######################################################################
-
-    ####################################################################
-    ## If the user has PROVIDED a phenotype (for terminal nodes only) ##
-    ####################################################################
-
-    phen <- phen.nodes
-
-    if(!is.null(phen)){
-      # phen <- as.factor(sample(c("A", "B", "C", "D"), 100, replace=TRUE))
-
-      ## get COLOR for LEAVES
-      # n.levels <- length(levels(as.factor(phen)))
-      # ## if we have only 2 levels, use standard red and blue
-      # if(n.levels==2){
-      #   leafCol <- c("red", "blue")
-      # }else{
-      #   ## but if we have n levels (n != 2), use funky palette
-      #   leafCol <- get("funky")(n.levels)
-      # }
-      #
-      # scheme <- as.numeric(phen)
-      # leafCol <- leafCol[scheme]
-
-      ## get tip.col:
-      leafCol <- "black"
-      if(all.is.numeric(phen)){
-        var <- as.numeric(as.character(phen))
-      }else{
-        var <- as.character(phen)
-      }
-      levs <- unique(var[!is.na(var)])
-      if(length(levs) == 2){
-        ## binary:
-        myCol <- c("red", "blue")
-        leafCol <- var
-        ## for loop
-        for(i in 1:length(levs)){
-          leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
-        } # end for loop
-      }else{
-        if(is.numeric(var)){
-          ## numeric:
-          myCol <- num2col(var, col.pal = seasun, na.col = NA)
-          leafCol <- myCol
-        }else{
-          ## categorical...
-          myCol <- funky(length(levs))
-          leafCol <- var
-          ## for loop
-          for(i in 1:length(levs)){
-            leafCol <- replace(leafCol, which(leafCol == levs[i]), myCol[i])
-          } # end for loop
-        }
-      }
-      ## replace NAs w grey:
-      if(any(is.na(var))){
-        leafCol[which(is.na(var))] <- "grey"
-      }
-
-      ## get COLOR for EDGES
-      edgeCol <- edgeLabCol <- "black" ## for NOW...
-
-      ## To Do: ##
-      ## Just automatically run reconstruction before generating colour scheme for all nodes?
-
-      ###############
-      ## plot TREE ##
-      ###############
-      if(plot==TRUE){
-        plot(tree, show.tip=FALSE, edge.width=2, edge.color=edgeCol, ...)
-        ## Add title?
-        if(main.title == TRUE){
-          title("Tree with phenotypic changes", cex.main=1, line=-0.5)
-        }else{
-          if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.5)
-        }
-
-        tiplabels(text=tree$tip.label, cex=0.6, adj=c(-0.5, 0), bg=transp(leafCol, 0.3))
-
-        ## Add axis?
-        if(show.axis == TRUE){
-          mar.new2 <- c(2,0.5,0,0.5)
-          par(mar=mar.new2)
-          axisPhylo(cex.axis=0.7)
-        }
-
-      } # end plot = TRUE
-    } # end if(!is.null(phen)) ## ie. PROVIDED phenotype & plotting
-  } # end if phen for terminal nodes only
-
-
-
-
-  #####################################################################################################
-
-  if(!is.null(snp.nodes)){
-
-    phen.nodes <- snp.nodes # for convenience
-
-    ## Check if > 1 column of snps(.rec) has been provided:
-    if(is.matrix(phen.nodes)){
-      warning("More than one column has been provided to snp.nodes. Only plotting snp.nodes[,1].")
-      phen.nodes <- phen.nodes[,1]
-    }
-
-
-    nodeCol <- "grey"
-
-    ## check if phen provided is for all nodes or only terminal nodes:
-    if(length(phen.nodes) == (n.ind + tree$Nnode)){
-
-      ## get COLOR for NODES
-      # nodeCol <- "grey"
-      if(all.is.numeric(phen.nodes[!is.na(phen.nodes)])){
-        var <- as.numeric(as.character(phen.nodes))
-        levs <- sort(unique(var[!is.na(var)]))
-      }else{
-        var <- as.character(phen.nodes)
-        levs <- unique(var[!is.na(var)])
-      }
-
-      if(length(levs) == 2){
-        ## binary:
-        # myCol <- c("red", "blue")
-        myCol <- c("blue", "red")
-        nodeCol <- var
-        ## for loop
-        for(i in 1:length(levs)){
-          nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
-        } # end for loop
-      }else{
-
-        if(is.numeric(var)){
-          ## numeric:
-          myCol <- num2col(var, col.pal = seasun, na.col = NA)
-          nodeCol <- myCol
-        }else{
-          ## categorical...
-          myCol <- funky(length(levs))
-          nodeCol <- var
-          ## for loop
-          for(i in 1:length(levs)){
-            nodeCol <- replace(nodeCol, which(nodeCol == levs[i]), myCol[i])
-          } # end for loop
-        }
-      }
-
-
-      nodeCol <- as.vector(unlist(nodeCol))
-      ## get COLOR for LEAVES ONLY
-      leafCol <- nodeCol[1:n.ind]
       ## get COLOR of INTERNAL nodes ONLY
       internalNodeCol <- nodeCol[(n.ind+1):length(nodeCol)]
 
@@ -425,6 +388,11 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
       if(any(is.na(var))){
         nodeCol[which(is.na(var))] <- "grey"
       }
+
+    }else{
+      edgeCol <- "black"
+      nodeCol <- internalNodeCol <- edgeCol
+    }
 
       ###############
       ## plot TREE ##
@@ -469,13 +437,19 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
         }
 
       } # end plot = TRUE
-    } # end check for length snp.nodes
+
   } # end snp.nodes
 
   #####################################################################################################
 
-  ## return plot par settings to 1 plot per window..
-  if(!is.null(phen.nodes) & !is.null(snp.nodes)) par(mfrow=c(1,1))
+  ## One common main title:
+  if(!is.null(phen.nodes) && !is.null(snp.nodes)){
+    if(!is.null(main.title2)) if(main.title2 != FALSE){
+      mtext(main.title2, cex=1, font=2, side=3, line=-1.1, outer=TRUE)
+    }
+    ## return plot par settings to 1 plot per window..
+    par(mfrow=c(1,1))
+  }
 
 
   ## Reset plot margins: ##

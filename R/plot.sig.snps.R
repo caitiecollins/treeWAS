@@ -100,7 +100,7 @@ manhattan.plot <- function(p.vals,
   sq <- sq[which(sq >= 0)]
   NS <- length(sq)-1
   N <- sq[2] - sq[1]
-  
+
   ## get colour for each point:
   if(col %in% col.pals){
     myCol <- eval(parse(text=paste(col, "(", NS, ")")))
@@ -108,8 +108,8 @@ manhattan.plot <- function(p.vals,
                                      function(e)
                                        rep(myCol[e], N))))
     myCol <- myCol[c(1:length(pval))]
-    
-  }else{ 
+
+  }else{
     ## from vector of colours?
     myCol <- as.vector(unlist(sapply(c(1:length(col)),
                                      function(e)
@@ -117,7 +117,7 @@ manhattan.plot <- function(p.vals,
     # myCol <- sort(myCol)
     myCol <- rep(myCol, ceiling(length(pval)/(N*(length(col)))))
     myCol <- myCol[1:length(pval)]
-  }    
+  }
 
   ## add transparency?
   if(!is.null(transp)){
@@ -642,18 +642,18 @@ plot_sig_snps <- function(corr.dat,
     if(!is.null(main.title)){
       if(main.title != FALSE){
         if(is.character(main.title)){
-          title(main.title, 
+          title(main.title,
                 cex.main=1)
         }else{
           if(!is.null(test)){
             title(paste("Null distribution \n(", test, "score)"
                         # \n (with significant SNPs indicated)"
-                        , sep=" "), 
+                        , sep=" "),
                   cex.main=1)
           }else{
             title(paste("Null distribution \n"
                         # \n (with significant SNPs indicated)"
-                        , sep=" "), 
+                        , sep=" "),
                   cex.main=1)
           }
         }
@@ -697,7 +697,7 @@ plot_sig_snps <- function(corr.dat,
       # if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+0.005)
       if(!is.null(h.null.subset)) ymax <- max(ymax, max(h.null.subset$density)+(0.2*max(h.null.subset$density)))
     }
-    
+
 
     ## if the true correlation value for SNP i is >
     ## max bin, then extend the x-axis of the plot
@@ -877,18 +877,18 @@ plot_sig_snps <- function(corr.dat,
     if(!is.null(main.title)){
       if(main.title != FALSE){
         if(is.character(main.title)){
-          title(main.title, 
+          title(main.title,
                 cex.main=1)
         }else{
           if(!is.null(test)){
             title(paste("Empirical distribution \n(", test, "score)"
                         # \n (with significant SNPs indicated)"
-                        , sep=" "), 
+                        , sep=" "),
                   cex.main=1)
           }else{
             title(paste("Empirical distribution \n"
                         # \n (with significant SNPs indicated)"
-                        , sep=" "), 
+                        , sep=" "),
                   cex.main=1)
           }
         }

@@ -860,9 +860,17 @@ treeWAS <- function(snps,
     } # end row NA check 1
 
     ## Ensure snps.rec is NOT user-provided if tree not provided:
-    if(class(snps.reconstruction) != "character") snps.reconstruction <- "parsimony"
+    if(length(snps.reconstruction) != 1){
+      snps.reconstruction <- "parsimony"
+      warning("Cannot use input snps.reconstruction if building tree internally.
+              Performing a new snps reconstruction via parsimony.")
+    }
     ## And phen.rec...
-    if(length(phen.reconstruction) != 1) phen.reconstruction <- "parsimony"
+    if(length(phen.reconstruction) != 1){
+      phen.reconstruction <- "parsimony"
+      warning("Cannot use input phen.reconstruction if building tree internally.
+              Performing a new phen reconstruction via parsimony.")
+    }
 
     ## Reconstruct tree: ##
     ## NOTE: Should really request WHOLE GENOMES here (add separate argument (seqs)) <------------- ##### TO DO #####
@@ -949,53 +957,6 @@ treeWAS <- function(snps,
   ixt <- c(1:length(tree$tip.label))
   ## get index for internal nodes:
   ixi <- c((nrow(snps)+1):max(tree$edge[,2]))
-
-  ## Check phen.rec names:
-  if(length(phen.reconstruction) == max(tree$edge[,2])){
-    if(!identical(names(phen.reconstruction)[ixi], tree$node.label)){
-      ## rearrange internal nodes if possible:
-      ord <- match(names(phen.reconstruction)[ixi], tree$node.label)
-      if(length(which(is.na(ord))) == 0){
-        phen.reconstruction[ixi] <- phen.reconstruction[ixi][ord]
-        names(phen.reconstruction)[ixi] <- names(phen.reconstruction[ixi])[ord]
-      }else{
-        if(identical(names(phen.reconstruction)[ixt], tree$tip.label)){
-          names(phen.reconstruction)[ixi] <- tree$node.label
-          cat("Assuming phen.reconstruction[(length(phen)+1):length(phen.reconstruction)]
-               correspond to tree$node.label, although labels do not match.\n")
-        }else{
-          warning("The names of phen.reconstruction[(length(phen)+1):length(phen.reconstruction)]
-                   do not correspond to tree$node.label.
-                   Reconstructing phen internally instead.\n")
-          phen.reconstruction <- "parsimony"
-        }
-      }
-      }
-    }
-
-  ## Check snps.rec rownames:
-  if(is.matrix(snps.reconstruction)){
-    if(!identical(rownames(snps.reconstruction)[ixi], tree$node.label)){
-      ## rearrange internal nodes if possible:
-      ord <- match(rownames(snps.reconstruction)[ixi], tree$node.label)
-      if(length(which(is.na(ord))) == 0){
-        snps.reconstruction[ixi,] <- snps.reconstruction[ixi[ord],]
-        rownames(snps.reconstruction)[ixi] <- rownames(snps.reconstruction)[ixi][ord]
-      }else{
-        if(identical(rownames(snps.reconstruction)[ixt], tree$tip.label)){
-          rownames(snps.reconstruction)[ixi] <- tree$node.label
-          cat("Assuming snps.reconstruction[(nrow(snps)+1):nrow(snps.reconstruction), ]
-               correspond to tree$node.label,
-               although labels do not match.\n")
-        }else{
-          warning("The names of snps.reconstruction[(nrow(snps)+1):nrow(snps.reconstruction),]
-                   do not correspond to tree$node.label.
-                   Reconstructing snps internally instead.\n")
-          snps.reconstruction <- "parsimony"
-        }
-      }
-      }
-    }
 
 
   ####################################################################
@@ -1177,27 +1138,30 @@ treeWAS <- function(snps,
   ##########################################
   if(!identical(as.character(rownames(snps)), as.character(tree$tip.label))){
     ord <- match(tree$tip.label, rownames(snps))
-    snps <- snps[ord,]
+    snps <- snps[ord, ]
     ## check:
     if(!identical(as.character(rownames(snps)), as.character(tree$tip.label))){
       stop("Unable to rearrange snps such that rownames(snps) match content and order of tree$tip.label.
             Please check that these match.")
     }
-    }
+  }
 
   ## (+ snps.reconstruction)
   if(is.matrix(snps.reconstruction)){
-    if(!identical(as.character(rownames(snps.reconstruction)[1:nrow(snps)]), as.character(tree$tip.label))){
-      ord <- match(tree$tip.label, rownames(snps.reconstruction)[1:nrow(snps)])
-      snps.reconstruction <- snps.reconstruction[c(ord, (length(ord)+1):nrow(snps.reconstruction)),]
-      ## check:
-      if(!identical(as.character(rownames(snps.reconstruction)[1:nrow(snps)]), as.character(tree$tip.label))){
-        warning("Unable to rearrange snps.reconstruction such that rownames(snps.reconstruction)[1:nrow(snps)]
-                 match content and order of tree$tip.label. Performing a new parsimonious reconstruction instead.")
+    ## REORDER SNPS/PHEN to match TREE LABELS:
+    if(!is.null(rownames(snps.reconstruction))){
+      if(!is.null(tree$node.label) && all(rownames(snps.reconstruction) %in% c(tree$tip.label, tree$node.label))){
+        ord <- match(c(tree$tip.label, tree$node.label), rownames(snps.reconstruction))
+        snps.reconstruction <- snps.reconstruction[ord, ]
+      }
+      if(!identical(rownames(snps.reconstruction), c(tree$tip.label, tree$node.label))){
+        warning("Unable to rearrange snps.reconstruction such that rownames(snps.reconstruction)
+                   match c(tree$tip.label, tree$node.label). Performing a new parsimonious reconstruction instead.")
         snps.reconstruction <- "parsimony"
       }
     }
   }
+
 
   ## REORDER PHEN TO MATCH TREE$TIP.LABEL
   if(!identical(as.character(names(phen)), as.character(tree$tip.label))){
@@ -1209,6 +1173,7 @@ treeWAS <- function(snps,
             Please check that these match.")
     }
   }
+
 
   ####################################################################
   ############################################################
@@ -1325,7 +1290,7 @@ treeWAS <- function(snps,
         if(phen.rec.method == "discrete" && n.levs == 2){phen.reconstruction <- "parsimony"}
         if(!is.null(phen.type)){if(phen.type == "categorical"){phen.reconstruction <- "parsimony"}}
       }else{
-        ## If phen provided and correct length:
+        ## If phen.rec provided and correct length:
         phen.reconstruction.ori <- phen.reconstruction
         levs <- unique(as.vector(unlist(phen.reconstruction)))
         n.levs <- length(levs[!is.na(levs)])
@@ -1340,15 +1305,22 @@ treeWAS <- function(snps,
           }
         }
         if(length(phen.reconstruction) > 1) names(phen.reconstruction) <- names(phen.reconstruction.ori)
+
         ##########
-        ## REORDER PHEN.REC TO MATCH TREE$TIP.LABEL
-        if(!identical(as.character(names(phen.reconstruction)[1:length(phen)]), as.character(tree$tip.label))){
-          ord <- match(tree$tip.label, names(phen.reconstruction)[1:length(phen)])
-          phen.reconstruction <- phen.reconstruction[c(ord, (length(ord)+1):length(phen.reconstruction))]
-          ## check:
-          if(!identical(as.character(names(phen.reconstruction)[1:length(phen)]), as.character(tree$tip.label))){
-            warning("Unable to rearrange phen.reconstruction such that names(phen.reconstruction)[1:length(phen)]
-                     match content and order of tree$tip.label. Performing a new reconstruction instead.")
+        ## REORDER PHEN.REC TO MATCH TREE$TIP.LABEL, NODE.LABEL:
+        # if(!identical(as.character(names(phen.reconstruction)[1:length(phen)]), as.character(tree$tip.label))){
+        #   ord <- match(tree$tip.label, names(phen.reconstruction)[1:length(phen)])
+        #   phen.reconstruction <- phen.reconstruction[c(ord, (length(ord)+1):length(phen.reconstruction))]
+        # }
+        if(!identical(as.character(names(phen.reconstruction)), as.character(c(tree$tip.label, tree$node.label)))){
+          if(!is.null(tree$node.label) && all(names(phen.reconstruction) %in% c(tree$tip.label, tree$node.label))){
+            ord <- match(c(tree$tip.label, tree$node.label), names(phen.reconstruction))
+            phen.reconstruction <- phen.reconstruction[ord]
+          }
+          ## check again:
+          if(!identical(as.character(names(phen.reconstruction)), as.character(c(tree$tip.label, tree$node.label)))){
+            warning("Unable to rearrange phen.reconstruction such that names(phen.reconstruction)
+               match c(tree$tip.label, tree$node.label). Performing a new reconstruction instead.")
             phen.reconstruction <- "ml"
             if(phen.rec.method == "discrete" && n.levs == 2){phen.reconstruction <- "parsimony"}
             if(!is.null(phen.type)){if(phen.type == "categorical"){phen.reconstruction <- "parsimony"}}
@@ -1391,7 +1363,6 @@ treeWAS <- function(snps,
       ## PLOT TERMINAL PHEN + RECONSTRUCTED PHEN:
       plot_phen(phen.nodes = phen.rec, tree = tree,
                 main.title = "Phylogenetic tree", align.tip.label = T, RTL = F)
-
 
     }else{
 
@@ -2038,7 +2009,11 @@ treeWAS <- function(snps,
       ## EXPAND CORR.DAT & CORR.SIM:
       cd <- assoc.scores$corr.dat
       cs <- assoc.scores$corr.sim
-      cd <- cd[snps.index]
+      if(TEST[[t]] %in% c("simultaneous", "subsequent")){
+        cd <- cd[snps.rec.index]
+      }else{
+        cd <- cd[snps.index]
+      }
       cs <- cs[snps.sim.index]
       names(cd) <- colnames(snps.complete)
       names(cs) <- colnames(snps.sim.complete)
@@ -2053,7 +2028,7 @@ treeWAS <- function(snps,
     ## EXPAND DATA BEFORE STORING FOR THIS CHUNK:
     snps.sim <- snps.sim.complete
     if(!is.null(snps.rec)){
-      snps.rec <- snps.rec[,snps.index]
+      snps.rec <- snps.rec[,snps.rec.index]
       colnames(snps.rec) <- colnames(snps.complete)
     }
     if(!is.null(snps.sim.rec)){

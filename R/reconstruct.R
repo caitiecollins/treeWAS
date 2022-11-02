@@ -91,6 +91,14 @@ asr <- function(var,
     ## Assign var to snps:
     snps <- var
 
+    if(all(rownames(snps) %in% tree$tip.label)){
+      ord <- match(tree$tip.label, rownames(snps))
+      snps <- snps[ord, ]
+    }else{
+      warning("Unable to rearrange var such that rownames(var)
+                   match tree$tip.label. Order may be incorrect")
+    }
+
     if(unique.cols == TRUE){
       all.unique <- TRUE
     }else{
@@ -241,7 +249,8 @@ asr <- function(var,
 
           ## ML discrete reconstruction:
           ## Step 2 (Binary --> get probs):
-          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
+          # rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
+          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
 
           ## If NAs are present, replace column 1 0s with NA values
           ## whenever column 3 (NA) has a 1 in it:
@@ -258,17 +267,8 @@ asr <- function(var,
             } # end for loop
           }
           ## Bind list into matrix:
-          snps.rec <- do.call(cbind, rec[ord])
-          snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))])
-
-          ## Convert to logical (but only for binary snps that were originally logical):
-          if(is.logical(snps)){
-            r.noms <- rownames(snps.rec)
-            c.noms <- colnames(snps.rec)
-            snps.rec <- matrix(as.logical(snps.rec), nrow=nrow(snps.rec), ncol=ncol(snps.rec)) ## logical
-            rownames(snps.rec) <- r.noms ## names may actually be assigned below
-            colnames(snps.rec) <- c.noms
-          }
+          snps.rec <- do.call(rbind, rec[ord])
+          # snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))]) # only for return="prob"
 
         }else{
 
@@ -276,6 +276,7 @@ asr <- function(var,
 
           ## ML discrete reconstruction:
           ## Step 2 (Non-binary --> get states):
+          # rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
           rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
 
           ## Print warning notice:
@@ -286,7 +287,20 @@ asr <- function(var,
 
         } # end non-binary
 
+        ## Convert to restore levels, variable class:
+        r.noms <- rownames(snps.rec)
+        c.noms <- colnames(snps.rec)
+        if(is.logical(snps.ori)){
+          snps.rec <- matrix(as.logical(snps.rec), nrow=nrow(snps.rec), ncol=ncol(snps.rec)) ## logical
+        }else{
+          ## replace level #s w levels:
+          snps.rec <- matrix(attr(rec, "levels")[snps.rec], nrow=nrow(snps.rec), ncol=ncol(snps.rec))
+        }
+        rownames(snps.rec) <- r.noms ## names re-assigned below?
+        colnames(snps.rec) <- c.noms
+
       } # end Discrete ML
+
 
       ## assign rownames for all terminal and internal nodes
       if(is.null(tree$node.label)){
@@ -319,6 +333,8 @@ asr <- function(var,
     }else{
       var.rec <- snps.rec[, index]
       rownames(var.rec) <- rownames(snps.rec)
+    }
+    if(ncol(var.rec) == ncol(snps.ori)){
       colnames(var.rec) <- colnames(snps.ori)
     }
 
@@ -377,6 +393,14 @@ asr <- function(var,
 
     ## Assign var to phen:
     phen <- var
+
+    if(all(names(phen) %in% tree$tip.label)){
+      ord <- match(tree$tip.label, names(phen))
+      phen <- phen[ord]
+    }else{
+      warning("Unable to rearrange var such that rownames(var)
+                   match tree$tip.label. Order may be incorrect")
+    }
 
     ###############################
     ## *If phen is NOT variable: ##
