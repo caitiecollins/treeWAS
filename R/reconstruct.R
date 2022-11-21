@@ -99,6 +99,9 @@ asr <- function(var,
                    match tree$tip.label. Order may be incorrect")
     }
 
+    ## Store input snps:
+    snps.ori <- snps
+
     if(unique.cols == TRUE){
       all.unique <- TRUE
     }else{
@@ -116,7 +119,6 @@ asr <- function(var,
       }
 
       ## work w only unique snps:
-      snps.ori <- snps
       snps <- snps.unique
     }
 
@@ -606,6 +608,9 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
     snps <- var
 
+    ## Store input snps:
+    snps.ori <- snps
+
     if(unique.cols == TRUE){
       all.unique <- TRUE
     }else{
@@ -623,7 +628,6 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
       }
 
       ## work w only unique snps:
-      snps.ori <- snps
       snps <- snps.unique
     }
 

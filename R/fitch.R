@@ -78,7 +78,7 @@ get.fitch.n.mts <- function(x, tree, snps=NULL){
   # if(any(is.na(levs))) levs <- levs[-which(is.na(levs))]
   if((!is.numeric(x) & !is.logical(x)) | length(levs[!is.na(levs)])!=2){
     stop("x must be a numeric matrix or vector, with two unique values, excluding NAs
-         (though we recommend that NAs be in the minority for each column).")
+         (though we recommend that NAs be in the minority for each column).\n")
   }
   if(any(is.na(levs))){
     if(is.matrix(x)){
@@ -86,15 +86,15 @@ get.fitch.n.mts <- function(x, tree, snps=NULL){
       toRemove <- which(nnas > 0.5)
       if(length(toRemove) > 0){
         cat(length(toRemove), "snps columns are over 50% NAs.
-            You may want to consider removing these columns as they are unlikely to be significant
-            and can generate inappropriate inferences during ancestral state reconstruction.")
+            You may want to remove these columns as they are unlikely to be significant
+            and can generate inappropriate inferences during ancestral state reconstruction.\n")
       }
     }else{
       nnas <- length(which(is.na(x)))/length(x)
       # toRemove <- which(nnas > 0.5)
       if(nnas > 0.5){
         cat("x is over 50% NAs.
-            This may generate inappropriate inferences during ancestral state reconstruction.")
+            This may generate inappropriate inferences during ancestral state reconstruction.\n")
       }
     }
   }
