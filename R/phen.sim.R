@@ -56,6 +56,7 @@ phen.sim <- function(tree,
                      n.subs = 15,
                      grp.min = 0.2,
                      # coaltree = TRUE,
+                     n.subs.var=TRUE, # simulate approximately n.subs subs
                      seed = NULL){
 
   if(!is.null(seed)) set.seed(seed)
@@ -102,10 +103,18 @@ phen.sim <- function(tree,
     while(toRepeat == TRUE){
 
       ## draw the number of substitutions to occur:
-      n.subs <- rpois(n=1, lambda=n.phen.subs)
-      ## if n.subs==0 or ==1, re-sample
-      while(n.subs <= 1){
+      ## draw an approximate n.subs given input n.subs
+      ## (eg to get a distribution around n.subs over multiple sims):
+      if(n.subs.var == TRUE){
         n.subs <- rpois(n=1, lambda=n.phen.subs)
+        ## if n.subs==0 or ==1, re-sample
+        while(n.subs <= 1){
+          n.subs <- rpois(n=1, lambda=n.phen.subs)
+        }
+
+      }else{
+        ## or draw exactly n.subs as input:
+        n.subs <- n.phen.subs
       }
 
       ## draw the branches to which you will assign the
@@ -114,6 +123,7 @@ phen.sim <- function(tree,
                           n.subs, replace=FALSE, prob=tree$edge.length)
       ## rearrange phen.loci
       phen.loci <- sort(phen.loci, decreasing=TRUE)
+
 
 
       ###############################
@@ -161,7 +171,8 @@ phen.sim <- function(tree,
       } # end for loop
 
       ## get phen of TERMINAL nodes (leaves)
-      n.ind <- tree$Nnode+1
+      # n.ind <- tree$Nnode+1
+      n.ind <- min(tree$edge[,1])-1
       phen.leaves <- as.factor(as.vector(unlist(phen.nodes[c(1:n.ind)])))
 
       ## Assign names to phen as tree$tip.labs in original order ##

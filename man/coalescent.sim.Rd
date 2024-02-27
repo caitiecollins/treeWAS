@@ -60,7 +60,7 @@ to specify that tree reconstruction is desired by one of these three methods
 (Unweighted Pair Group Method with Arithmetic Mean, Neighbour-Joining, Maximum-Likelihood).}
 
 \item{dist.dna.model}{A character string specifying the type of model to use in reconstructing the phylogenetic tree for
-calculating the genetic distance between individual genomes, only used if \code{tree} is 
+calculating the genetic distance between individual genomes, only used if \code{tree} is
 a character string (see ?dist.dna).}
 
 \item{grp.min}{An optional number between 0.1 and 0.9 to control the proportional size of the smaller phenotypic group.}
@@ -69,10 +69,10 @@ a character string (see ?dist.dna).}
 
 \item{set}{An integer (1, 2, or 3) required to select the method of generating associated loci if \code{n.snps.assoc} is not zero.}
 
-\item{coaltree}{A logical indicating whether to generate a coalescent tree (\code{TRUE}, the default), 
+\item{coaltree}{A logical indicating whether to generate a coalescent tree (\code{TRUE}, the default),
 or an rtree-type tree (\code{FALSE}, see ?rtree).}
 
-\item{s}{If \code{set} is 3, the \code{s} parameter controls a baseline number of substitutions to be 
+\item{s}{If \code{set} is 3, the \code{s} parameter controls a baseline number of substitutions to be
 experienced by the phenotype and associated loci: by default, 20.}
 
 \item{af}{If \code{set} is 3, the \code{af} parameter provides an association factor,
@@ -80,7 +80,7 @@ controlling the preference for association over non-association at associated lo
 
 \item{filename.plot}{An optional character string denoting the file location for saving any plots produced; else \code{NULL}.}
 
-\item{seed}{An optional integer to control the pseudo-randomisation process and allow for identical repeat runs of the function; 
+\item{seed}{An optional integer to control the pseudo-randomisation process and allow for identical repeat runs of the function;
 else \code{NULL}.}
 }
 \description{
@@ -102,9 +102,9 @@ to define the number of substitutions per site.
 It must be in the form of a \emph{named} vector (or table), or a vector in which the \emph{i}'th element
 contains the number of \emph{loci} that have been estimated to undergo \emph{i} substitutions on the tree.
 The vector must be of length \emph{max n.subs}, and "empty" indices must contain zeros.
-For example: the vector \code{n.subs = c(1833, 642, 17, 6, 1, 0, 0, 1)}, 
+For example: the vector \code{n.subs = c(1833, 642, 17, 6, 1, 0, 0, 1)},
 could be used to define the homoplasy distribution for a dataset with 2500 loci,
-where the maximum number of substitutions to be undergone on the tree by any locus is 8, 
+where the maximum number of substitutions to be undergone on the tree by any locus is 8,
 and no loci undergo either 6 or 7 substitutions.
 
 

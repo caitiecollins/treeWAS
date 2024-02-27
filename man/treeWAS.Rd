@@ -50,11 +50,12 @@ specifying the method of phylogenetic reconstruction.}
 
 \item{phen.type}{An optional character string specifying whether the phenotypic variable should be treated
 as either \code{"categorical"}, \code{"discrete"} or \code{"continuous"}.
-By default, \code{phen.type} is \code{NULL}, in which case ML reconstructions will be
-"discrete" for binary phenotypes and "continuous" for any non-binary phenotypes.
-Categorical phenotypes must have >= 3 unique values (<= 5 recommended);
-association tests will treat these as nominal (not ordered) levels and not as meaningful numbers.
-For continuous phenotypes, ancestral state reconstruction if performed via ML will treat
+If \code{phen.type} is \code{NULL} (the default), ancestral state reconstructions performed via ML
+will treat any binary phenotype as discrete and any non-binary phenotype as continuous.
+If \code{phen.type} is \code{"categorical"}, ML reconstructions and association tests will treat
+values as nominal (not ordered) levels and not as meaningful numbers.
+Categorical phenotypes must have >= 3 unique values (<= 5 recommended).
+If \code{phen.type} is \code{"continuous"}, ML reconstructions will treat
 values as meaningful numbers and may infer intermediate values.}
 
 \item{n.subs}{A numeric vector containing the homoplasy distribution (if known, see details), or \code{NULL} (the default).}

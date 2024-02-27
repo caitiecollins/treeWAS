@@ -16,6 +16,7 @@ Determine parsimony scores for all genetic loci, or a phenotypic variable, along
 An extension of the fitch function available in package phangorn.
 }
 \examples{
+\dontrun{
 
 ## generate a tree
 tree <- ape::rtree(100)
@@ -30,6 +31,7 @@ out <- get.fitch.n.mts(x=snps, tree)
 str(out)
 table(out)
 hist(out)
+}
 
 }
 \author{

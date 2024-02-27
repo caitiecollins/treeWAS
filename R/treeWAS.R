@@ -306,8 +306,6 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 
 
 
-
-
 #############
 ## treeWAS ##
 #############
@@ -342,11 +340,12 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #'                specifying the method of phylogenetic reconstruction.
 #' @param phen.type An optional character string specifying whether the phenotypic variable should be treated
 #'                  as either \code{"categorical"}, \code{"discrete"} or \code{"continuous"}.
-#'                  By default, \code{phen.type} is \code{NULL}, in which case ML reconstructions will be
-#'                  "discrete" for binary phenotypes and "continuous" for any non-binary phenotypes.
-#'                  Categorical phenotypes must have >= 3 unique values (<= 5 recommended);
-#'                  association tests will treat these as nominal (not ordered) levels and not as meaningful numbers.
-#'                  For continuous phenotypes, ancestral state reconstruction if performed via ML will treat
+#'                  If \code{phen.type} is \code{NULL} (the default), ancestral state reconstructions performed via ML
+#'                  will treat any binary phenotype as discrete and any non-binary phenotype as continuous.
+#'                  If \code{phen.type} is \code{"categorical"}, ML reconstructions and association tests will treat
+#'                  values as nominal (not ordered) levels and not as meaningful numbers.
+#'                  Categorical phenotypes must have >= 3 unique values (<= 5 recommended).
+#'                  If \code{phen.type} is \code{"continuous"}, ML reconstructions will treat
 #'                  values as meaningful numbers and may infer intermediate values.
 #' @param n.subs A numeric vector containing the homoplasy distribution (if known, see details), or \code{NULL} (the default).
 #' @param n.snps.sim An integer specifying the number of loci to be simulated for estimating the null distribution
@@ -713,6 +712,7 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @importFrom stats anova as.formula chisq.test cor density dist ecdf fisher.test ftable glm lm mantelhaen.test
 #' p.adjust quantile residuals rexp rnorm rpois
 #' @importFrom utils str write.table
+#' @importFrom dplyr n_distinct
 #'
 #' @export
 
@@ -755,7 +755,7 @@ treeWAS <- function(snps,
                     plot.null.dist = TRUE,
                     plot.dist = FALSE,
                     plot.null.dist.pairs = "grid",
-                    snps.assoc = NULL, # for (manhattan) plot
+                    snps.assoc = NULL, # (for manhattan plot)
                     filename.plot = NULL,
                     seed = NULL){
 
@@ -990,8 +990,8 @@ treeWAS <- function(snps,
   ## CHECK SNPS: ##
   #################
   ####################################################################
-  ## CHECK IF BINARY:
-  if(length(unique(as.vector(unlist(snps[!is.na(snps)])))) != 2){
+  ## CHECK IF/not BINARY:
+  if(dplyr::n_distinct(snps[!is.na(snps)]) != 2){
     stop("snps must be a binary matrix")
   }else{
     ## Convert to numeric, binary (then logical):
@@ -1786,7 +1786,7 @@ treeWAS <- function(snps,
           n.snps.sim <- ncol(snps)
 
           ## Print update notice:
-          cat("Note: Updating n.snps.sim to match the number of real loci after data cleaning.
+          cat("Note: Updating n.snps.sim to match the number of loci after data cleaning.
               Input:", n.snps.sim.ori, " -->
               Updated:", n.snps.sim, "\n")
 
@@ -1798,7 +1798,7 @@ treeWAS <- function(snps,
             n.snps.sim <- ncol(snps)*Nx
 
             ## Print update notice:
-            cat("Note: Updating n.snps.sim to match ", Nx, "x the number of real loci after data cleaning.
+            cat("Note: Updating n.snps.sim to match ", Nx, "x the number of loci after data cleaning.
                 Input: ", n.snps.sim.ori, " -->
                 Updated: ", n.snps.sim, "\n", sep="")
 

@@ -96,7 +96,7 @@ asr <- function(var,
       snps <- snps[ord, ]
     }else{
       warning("Unable to rearrange var such that rownames(var)
-                   match tree$tip.label. Order may be incorrect")
+               match tree$tip.label. Order may be incorrect.")
     }
 
     ## Store input snps:
@@ -166,7 +166,7 @@ asr <- function(var,
       na.var <- FALSE
       ## If ANY snps column contains NAs, we change rec fn
       ## for continuous recs for ALL columns (for consistency's sake).
-      if(any(is.na(as.vector(unlist(snps))))) na.var <- TRUE
+      if(any(is.na(snps))) na.var <- TRUE
 
 
       ## With CONTINUOUS ML rec, use anc.ML (or fastAnc!): ##
@@ -967,7 +967,7 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 #
 # ## NOTE: cost2 differs somewhat noticeably from original fitch cost
 # ## (ie. parsimony shifts distribution toward 1/reduces the weight of the upper tail...)
-# ## WHY? Which should we use to get n.subs????????????????????????????????????????????????????????????
+# ## WHY? Which should we use to get n.subs?
 #
 # ## get sub locations on branches for all original sites
 # snps.subs.edges <- subs.edges

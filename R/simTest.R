@@ -471,6 +471,7 @@
 #' @import adegenet
 #' @rawNamespace import(ape, except = zoom)
 #' @importFrom Hmisc all.is.numeric
+#' @importFrom ade4 dudi.pca
 #'
 #' @export
 
@@ -483,7 +484,7 @@ simTest <- function(
   set.number = 3,
   n.reps = 1,
   set.seed.as = "file.number",
-  working.dir = "/media/caitiecollins/88CC9BCECC9BB4C2/Cait 2016/Work/Xavier/Sims",
+  working.dir = "~/",
 
   ## data from file args:
   from.file = FALSE,
@@ -495,7 +496,7 @@ simTest <- function(
   n.ind = 100,
   n.snps = 10000, # gen.size
   # n.subs = 1, # theta (*2)
-  n.subs = dist_0.01, # theta (*2)
+  n.subs = treeWAS::dist_0.01, # theta (*2)
   n.phen.subs = 15, # theta_p = NULL
   n.snps.assoc = 10, # = 0
   assoc.prob = 90, # 100 (set2)
@@ -529,7 +530,7 @@ simTest <- function(
     filename.out <- filename.res <- filename.fisher.results <-
     filename.plink.results <- filename.pca <- filename.dapc <- filename.cmh <-
     filename.args <- filename.performance <- filename.score3 <-
-    filename.plot <- filename.tree.plot <- list()
+    filename.plots <- filename.tree.plot <- list()
 
 
   ####################################################################################################################################
@@ -852,8 +853,8 @@ simTest <- function(
                             set=set.number,
                             s = s,
                             af = af,
-                            filename=list(filename.tree.plot[[i]],
-                                          filename.panel.plot),
+                            filename.plot=list(filename.tree.plot[[i]],
+                                              filename.panel.plot),
                             seed = seed)
 
 
@@ -908,11 +909,11 @@ simTest <- function(
     ## save treeWAS plot ##
     #######################
     ## NB: plot.png will not be viewable until fn has finished running...
-    # filename.plot[[i]] <- list()
+    # filename.plots[[i]] <- list()
     # for(t in 1:length(treeWAS.test)){
     #
     #   ## Save both Manhattan and Hist per test:
-    #   filename.plot[[i]][[t]] <- c(## manhattan:
+    #   filename.plots[[i]][[t]] <- c(## manhattan:
     #     paste("./set",
     #           set.number,
     #           "_", number,
@@ -931,7 +932,7 @@ simTest <- function(
     # }
 
     ## Save both Manhattan and Hist per test:
-    filename.plot[[i]] <-
+    filename.plots[[i]] <-
                               ## null.dist:
                               paste("./set",
                                     set.number,
@@ -967,7 +968,7 @@ simTest <- function(
                      plot.null.dist = TRUE,
                      plot.dist = FALSE,
                      snps.assoc = snps.assoc,
-                     filename.plot = filename.plot[[i]],
+                     filename.plot = filename.plots[[i]],
                      seed = 1)
     )
 
@@ -978,7 +979,7 @@ simTest <- function(
 
     #####
 
-    # dev.copy(pdf, file=filename.plot[[i]], width=7, height=11) # , pointsize=12
+    # dev.copy(pdf, file=filename.plots[[i]], width=7, height=11) # , pointsize=12
     # dev.off()
 
     ##################################

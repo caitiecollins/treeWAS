@@ -6,23 +6,24 @@ Maintainer: Caitlin Collins <caitiecollins@gmail.com>
 Description: Perform microbial GWAS using phylogenetic trees to correct for population structure and recombination.
 License: GPL (>=2)
 LazyData: true
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Depends: R (>= 3.0.0), 
         adegenet, 
         ape
-Imports: graphics, 
-        stats, 
-        ape, 
-        adegenet, 
-        Hmisc, 
-        png, 
+Imports: ade4, 
         beeswarm, 
+	dplyr, 
         ggplot2,
+	graphics,
+	grid,
+        Hmisc, 
         phangorn, 
         phytools, 
+	png,
         pryr, 
-        rmarkdown, 
-        scales
+	rmarkdown,
+        scales,
+	stats
 Suggests: knitr
 VignetteBuilder: knitr
 Encoding: UTF-8

@@ -122,9 +122,10 @@ tree.reconstruct <- function(dna,
 
   tree <- NULL
 
-  ## TO DO: ADD PHENOTYPE-COLORING OPTIONS TO RECONSTRUCTED PHYLO PLOTS
 
-  ## Get distance matrix:
+  ##########################
+  ## Get distance matrix: ##
+  ##########################
   D <- dist.dna(dna, model = dist.dna.model)
 
   ## Handle MISSING data:

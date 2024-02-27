@@ -371,11 +371,11 @@ ggplot.bg <- ggplotbg
 #' (To get unique \emph{rows}, select \code{MARGIN} = 1;
 #' for unique \emph{columns}, select \code{MARGIN} = 2.)
 #'
-#' @details An extension of the base \code{unique.matrix} function that returns
-#' a unique matrix (by removing duplicate rows or columns) and also
-#' an index vector containing the indices (row or column numbers),
-#' in the matrix composed only of unique rows or columns,
-#' to which each row or column in the original matrix corresponds.
+#' @details An extension of the base \code{unique.matrix} function,
+#' \code{get.unique.matrix} returns a unique matrix
+#' (by removing duplicate rows or columns), as well as
+#' an index vector that maps each row/column in the original matrix
+#' to the corresponding unique row or column in the deduplicated unique matrix.
 #'
 #' @return A list with the following elements:
 #' \itemize{
@@ -417,8 +417,7 @@ get.unique.matrix <- function(data, MARGIN=2, silent=TRUE){
     if(!is.null(colnames(data))){
       colnames(unique.data) <- colnames(data)[!duplicated(index)]
     }else{
-      colnames(unique.data) <- c(1:ncol(unique.data)) ## TO DO: CHECK
-      ## WOULD IT BE BETTER HERE TO USE THE NON-DUPLICATED INDEX RATHER THAN JUST NUMBERING 1:NCOL?
+      colnames(unique.data) <- c(1:ncol(unique.data))
     }
     if(length(unique(index)) == ncol(data)){
       if(silent == FALSE){
@@ -471,7 +470,7 @@ get.unique.snps <- get.unique.matrix
 get.tip.order <- function(tree, original.format=TRUE){
 
   tree2 <- read.tree(text=write.tree(tree))
-  if(all.is.numeric(tree2$tip.label)){
+  if(Hmisc::all.is.numeric(tree2$tip.label)){
     if(original.format == TRUE){
       ## keeping this, for consistency's sake
       out1 <- as.numeric(tree2$tip.label)

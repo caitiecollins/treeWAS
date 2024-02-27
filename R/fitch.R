@@ -21,6 +21,7 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
 #' @examples
+#' \dontrun{
 #'
 #' ## generate a tree
 #' tree <- ape::rtree(100)
@@ -35,6 +36,7 @@
 #' str(out)
 #' table(out)
 #' hist(out)
+#' }
 #'
 #' @importFrom phangorn fitch
 #' @importFrom phangorn as.phyDat
@@ -72,9 +74,9 @@ get.fitch.n.mts <- function(x, tree, snps=NULL){
   }
 
   ## checks
-  # if(!is.matrix(x)) stop("x must be a matrix.") ## no it mustn't... works for phen too.
   # levs <- unique(as.vector(unlist(x)))
-  levs <- unique(as.vector(as.matrix(x)))
+  # levs <- unique(as.vector(as.matrix(x)))
+  levs <- unique(as.vector(x[!is.na(x)]))
   # if(any(is.na(levs))) levs <- levs[-which(is.na(levs))]
   if((!is.numeric(x) & !is.logical(x)) | length(levs[!is.na(levs)])!=2){
     stop("x must be a numeric matrix or vector, with two unique values, excluding NAs

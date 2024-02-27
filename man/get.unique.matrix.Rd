@@ -29,11 +29,11 @@ A wrapper for the \code{table.matrix} function that assigns consecutive
 row or column names to the output matrix's unique rows or columns.
 }
 \details{
-An extension of the base \code{unique.matrix} function that returns
-a unique matrix (by removing duplicate rows or columns) and also
-an index vector containing the indices (row or column numbers),
-in the matrix composed only of unique rows or columns,
-to which each row or column in the original matrix corresponds.
+An extension of the base \code{unique.matrix} function,
+\code{get.unique.matrix} returns a unique matrix
+(by removing duplicate rows or columns), as well as
+an index vector that maps each row/column in the original matrix
+to the corresponding unique row or column in the deduplicated unique matrix.
 }
 \author{
 Caitlin Collins \email{caitiecollins@gmail.com}

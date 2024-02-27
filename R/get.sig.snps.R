@@ -22,19 +22,19 @@
 #' @param tree A phylo object containing a phylogenetic tree in which the number of tips is equal to the
 #'             length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.
 #' @param test A character string or vector containing one or more of the following available tests of association:
-#'             "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run 
-#'             (note that within treeWAS, the first three tests are run in a loop by default). 
+#'             "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
+#'             (note that within treeWAS, the first three tests are run in a loop by default).
 #'             See details for more information on what these tests do and when they may be appropriate.
-#' @param correct.prop A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for 
-#'                     phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across 
-#'                     the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous). 
-#'                     If \code{correct.prop} is \code{FALSE} (the default), 
+#' @param correct.prop A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for
+#'                     phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across
+#'                     the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous).
+#'                     If \code{correct.prop} is \code{FALSE} (the default),
 #'                     the original versions of each test will be run as described in our
 #'                     \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
-#'                     If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated 
-#'                     across the terminal and all (internal and terminal) nodes, respectively.  
+#'                     If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated
+#'                     across the terminal and all (internal and terminal) nodes, respectively.
 #' @param categorical A logical indicating whether \code{phen} should be treated as a nominal categorical variable
-#'                    whose unique values should be treated as levels rather than as meaningful numbers. 
+#'                    whose unique values should be treated as levels rather than as meaningful numbers.
 #'
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
@@ -86,6 +86,7 @@ get.assoc.scores <- function(snps,
         all.unique <- TRUE
       }else{
         all.unique <- FALSE
+        colnoms <- colnames(snps)
       }
 
       ## work w only unique snps:
@@ -103,11 +104,14 @@ get.assoc.scores <- function(snps,
         all.unique <- TRUE
       }else{
         all.unique <- FALSE
+        colnoms <- colnames(snps.reconstruction)
       }
 
       ## work w only unique snps:
-      snps.ori <- snps
-      snps <- snps.unique
+      # snps.ori <- snps
+      # snps <- snps.unique
+      snps.reconstruction.ori <- snps.reconstruction
+      snps.reconstruction <- snps.reconstruction.unique
     }
   }
 
@@ -133,6 +137,7 @@ get.assoc.scores <- function(snps,
         all.unique.sim <- TRUE
       }else{
         all.unique.sim <- FALSE
+        colnoms.sim <- colnames(snps.sim)
       }
 
       ## work w only unique snps:
@@ -150,6 +155,7 @@ get.assoc.scores <- function(snps,
         all.unique.sim <- TRUE
       }else{
         all.unique.sim <- FALSE
+        colnoms.sim <- colnames(snps.sim.reconstruction)
       }
 
       ## work w only unique snps:
@@ -168,7 +174,7 @@ get.assoc.scores <- function(snps,
 
   ## store ind names:
   noms <- names(phen)
-  
+
   ## Check if phen is binary:
   levs <- unique(as.vector(unlist(phen)))
   levs <- levs[!is.na(levs)]
@@ -180,7 +186,7 @@ get.assoc.scores <- function(snps,
       phen <- as.numeric(as.factor(phen))
       if(n.levs > 2){
         if(categorical != TRUE){
-          warning("phen has more than 2 levels but is not numeric. 
+          warning("phen has more than 2 levels but is not numeric.
                   Setting 'categorical' to TRUE.")
           categorical <- TRUE
         }
@@ -203,7 +209,7 @@ get.assoc.scores <- function(snps,
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
-    corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test, 
+    corr.dat <- assoc.test(snps=snps, phen=phen, tree=NULL, test=test,
                            correct.prop=correct.prop, categorical=categorical)
 
     print(paste("Real data scores completed for", test, "test @", Sys.time()))
@@ -212,7 +218,7 @@ get.assoc.scores <- function(snps,
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
-    corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test, 
+    corr.sim <- assoc.test(snps=snps.sim, phen=phen, tree=NULL, test=test,
                            correct.prop=correct.prop, categorical=categorical)
 
     print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
@@ -227,7 +233,7 @@ get.assoc.scores <- function(snps,
     ########################################################
     ## Calculate correlations btw REAL SNPs and phenotype ##
     ########################################################
-    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test, 
+    corr.dat <- assoc.test(snps=snps.reconstruction, phen=phen.reconstruction, tree=tree, test=test,
                            correct.prop=correct.prop, categorical=categorical)
 
     print(paste("Real data scores completed for", test, "test @", Sys.time()))
@@ -236,7 +242,7 @@ get.assoc.scores <- function(snps,
     #############################################################
     ## Calculate correlations btw SIMULATED SNPs and phenotype ##
     #############################################################
-    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test, 
+    corr.sim <- assoc.test(snps=snps.sim.reconstruction, phen=phen.reconstruction, tree=tree, test=test,
                            correct.prop=correct.prop, categorical=categorical)
 
     print(paste("Simulated data scores completed for", test, "test @", Sys.time()))
@@ -299,15 +305,15 @@ get.assoc.scores <- function(snps,
 #' @param snps.names The column names of the original \code{snps} matrix from which the association score values
 #'                    in \code{corr.dat} were derived.
 #' @param test A character string or vector containing one or more of the following available tests of association:
-#'             "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run 
-#'             (note that within treeWAS, the first three tests are run in a loop by default). 
+#'             "terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
+#'             (note that within treeWAS, the first three tests are run in a loop by default).
 #'             See details for more information on what these tests do and when they may be appropriate.
 #' @param p.value A single number specifying the p.value below which correlations are deemed to be 'significant'.
-#' @param p.value.correct Specify if/how to correct for multiple testing: 
-#'                        either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively, 
+#' @param p.value.correct Specify if/how to correct for multiple testing:
+#'                        either FALSE, or one of 'bonf' or 'fdr' (indicating, respectively,
 #'                        the Bonferroni and False Discovery Rate corrections). By default, 'bonf' is selected
-#' @param p.value.by Specify how to determine the location of the p.value threshold: 
-#'                   either 'count' or 'density' (indicating, respectively, that the p.value threshold should 
+#' @param p.value.by Specify how to determine the location of the p.value threshold:
+#'                   either 'count' or 'density' (indicating, respectively, that the p.value threshold should
 #'                   be determined by exact count or with the use of a density function).
 #'
 #'
@@ -342,7 +348,7 @@ get.assoc.scores <- function(snps,
 
 get.sig.snps <- function(corr.dat,
                          corr.sim,
-                         snps.names, 
+                         snps.names,
                          test = "terminal",
                          p.value = 0.01,
                          p.value.correct = "bonf",
@@ -367,7 +373,7 @@ get.sig.snps <- function(corr.dat,
     ## bonf ##
     ##########
     if (p.value.correct == "bonf") p.value <- p.value/(length(corr.dat)*n.tests)
-    
+
     ################
     ## p.value.by ##
     ################

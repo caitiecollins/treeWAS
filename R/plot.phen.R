@@ -98,6 +98,7 @@
 #' @import adegenet
 #' @rawNamespace import(ape, except = zoom)
 #' @importFrom Hmisc all.is.numeric
+#' @importFrom graphics mtext
 #' @export
 
 ########################################################################
@@ -124,8 +125,18 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
         ord <- match(c(tree$tip.label, tree$node.label), names(phen.nodes))
         phen.nodes <- phen.nodes[ord]
       }else{
-        warning("Unable to rearrange phen.nodes such that names(phen.nodes)
-            match c(tree$tip.label, tree$node.label). Order may be incorrect.")
+        if(!is.null(tree$tip.label) && all(tree$tip.label %in% names(phen.nodes))){
+          ord <- match(tree$tip.label, names(phen.nodes))
+          ## If no node.labels, but order same for tip inds, assume order ok for node inds;
+          ## else, warn:
+          if(!identical(ord, c(1:length(tree$tip.label)))){
+            warning("Unable to rearrange phen.nodes such that names(phen.nodes)
+              match c(tree$tip.label, tree$node.label). Order may be incorrect.")
+          }
+        }else{
+          warning("Unable to rearrange phen.nodes such that names(phen.nodes)
+              match c(tree$tip.label, tree$node.label). Order may be incorrect.")
+        }
       }
     }
     if(length(phen.nodes) == n.ind){
@@ -175,7 +186,7 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
 
   ## get COLOR for NODES
   # nodeCol <- "grey"
-  if(all.is.numeric(phen.nodes[!is.na(phen.nodes)])){
+  if(Hmisc::all.is.numeric(phen.nodes[!is.na(phen.nodes)])){
     var <- as.numeric(as.character(phen.nodes))
     levs <- sort(unique(var[!is.na(var)]))
   }else{
@@ -197,6 +208,7 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
     if(is.numeric(var)){
       ## numeric:
       myCol <- num2col(var, col.pal = seasun, na.col = NA)
+      # myCol <- num2col(var, col.pal = grDevices::rgb(base,0,1-base), na.col = NA)
       nodeCol <- myCol
     }else{
       ## categorical...
@@ -303,8 +315,18 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
           ord <- match(c(tree$tip.label, tree$node.label), names(phen.nodes))
           phen.nodes <- phen.nodes[ord]
         }else{
-          warning("Unable to rearrange snp.nodes such that names(snp.nodes)
-            match c(tree$tip.label, tree$node.label). Order may be incorrect.")
+          if(!is.null(tree$tip.label) && all(tree$tip.label %in% names(phen.nodes))){
+            ord <- match(tree$tip.label, names(phen.nodes))
+            ## If no node.labels, but order same for tip inds, assume order ok for node inds;
+            ## else, warn:
+            if(!identical(ord, c(1:length(tree$tip.label)))){
+              warning("Unable to rearrange snp.nodes such that names(snp.nodes)
+              match c(tree$tip.label, tree$node.label). Order may be incorrect.")
+            }
+          }else{
+              warning("Unable to rearrange snp.nodes such that names(snp.nodes)
+                match c(tree$tip.label, tree$node.label). Order may be incorrect.")
+          }
         }
       }
       if(length(phen.nodes) == n.ind){
@@ -323,7 +345,7 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
 
     ## get COLOR for NODES
     # nodeCol <- "grey"
-    if(all.is.numeric(phen.nodes[!is.na(phen.nodes)])){
+    if(Hmisc::all.is.numeric(phen.nodes[!is.na(phen.nodes)])){
       var <- as.numeric(as.character(phen.nodes))
       levs <- sort(unique(var[!is.na(var)]))
     }else{
@@ -445,7 +467,7 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
   ## One common main title:
   if(!is.null(phen.nodes) && !is.null(snp.nodes)){
     if(!is.null(main.title2)) if(main.title2 != FALSE){
-      mtext(main.title2, cex=1, font=2, side=3, line=-1.1, outer=TRUE)
+      graphics::mtext(main.title2, cex=1, font=2, side=3, line=-1.1, outer=TRUE)
     }
     ## return plot par settings to 1 plot per window..
     par(mfrow=c(1,1))

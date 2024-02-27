@@ -29,17 +29,17 @@ get.assoc.scores(
 length of \code{phen} and the number of rows of \code{snps} and \code{snps.sim}.}
 
 \item{test}{A character string or vector containing one or more of the following available tests of association:
-"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run 
-(note that within treeWAS, the first three tests are run in a loop by default). 
+"terminal", "simultaneous", "subsequent", "cor", "fisher". By default, the terminal test is run
+(note that within treeWAS, the first three tests are run in a loop by default).
 See details for more information on what these tests do and when they may be appropriate.}
 
-\item{correct.prop}{A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for 
-phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across 
-the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous). 
-If \code{correct.prop} is \code{FALSE} (the default), 
+\item{correct.prop}{A logical indicating whether the \code{"terminal"} and \code{"subsequent"} tests will be corrected for
+phenotypic class imbalance. Recommended if the proportion of individuals varies significantly across
+the levels of the phenotype (if binary) or if the phenotype is skewed (if continuous).
+If \code{correct.prop} is \code{FALSE} (the default),
 the original versions of each test will be run as described in our
 \href{http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005958}{PLOS Computational Biology paper}.
-If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated 
+If \code{TRUE}, an alternate association metric (based on the phi correlation coefficient) is calculated
 across the terminal and all (internal and terminal) nodes, respectively.}
 
 \item{categorical}{A logical indicating whether \code{phen} should be treated as a nominal categorical variable

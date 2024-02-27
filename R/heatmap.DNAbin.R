@@ -46,9 +46,9 @@ heatmap.DNAbin <- function(dna, dist.dna.model="JC69"){
         col=rev(heat.colors(100)),
         xaxt="n", yaxt="n", xlab="", ylab="")
   axis(side=2, at=c(1:ncol(mat)),
-       lab=rev(names(dna)), las=2, cex.axis=1)
+       labels=rev(names(dna)), las=2, cex.axis=1)
   axis(side=3, at=c(1:ncol(mat)),
-       lab=names(dna), las=1, cex.axis=1)
+       labels=names(dna), las=1, cex.axis=1)
   ## return margin parameter to default:
   par(mar=c(5,4,4,2)+0.1)
 
