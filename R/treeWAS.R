@@ -712,7 +712,6 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @importFrom stats anova as.formula chisq.test cor density dist ecdf fisher.test ftable glm lm mantelhaen.test
 #' p.adjust quantile residuals rexp rnorm rpois
 #' @importFrom utils str write.table
-#' @importFrom dplyr n_distinct
 #'
 #' @export
 
@@ -991,7 +990,7 @@ treeWAS <- function(snps,
   #################
   ####################################################################
   ## CHECK IF/not BINARY:
-  if(dplyr::n_distinct(snps[!is.na(snps)]) != 2){
+  if(length(unique(as.vector(snps[!is.na(snps)]))) != 2){
     stop("snps must be a binary matrix")
   }else{
     ## Convert to numeric, binary (then logical):
