@@ -822,7 +822,7 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     phen.phyDat <- as.phyDat(as.matrix(phen),
                              type="USER", levels=phen.levels)
     ## pace == ancestral.pars
-    if(class(try(suppressWarnings(pace(tree, phen.phyDat, type="ACCTRAN")), silent=T)) == "try-error"){
+    if("try-error" %in% class(try(suppressWarnings(pace(tree, phen.phyDat, type="ACCTRAN")), silent=T))){
 
       rec <- phen.pa.ACCTRAN <- pace(tree, phen.phyDat, type="MPR")
 

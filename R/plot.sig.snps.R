@@ -63,7 +63,7 @@ manhattan.plot <- function(p.vals,
 
   # Handle thresholds
   if(!is.null(sig.thresh)){
-    if(class(sig.thresh) == "list") sig.thresh <- as.vector(unlist(sig.thresh))
+    if(is.list(sig.thresh)) sig.thresh <- as.vector(unlist(sig.thresh))
     sig.thresh.complete <- sig.thresh
     sig.thresh <- unique(sig.thresh)
   }
@@ -316,7 +316,7 @@ plot_sig_snps <- function(corr.dat,
 
   # thresh <- sig.thresh
   if(!is.null(sig.thresh)){
-    if(class(sig.thresh) == "list") sig.thresh <- as.vector(unlist(sig.thresh))
+    if(is.list(sig.thresh)) sig.thresh <- as.vector(unlist(sig.thresh))
     sig.thresh.complete <- sig.thresh
     sig.thresh <- unique(sig.thresh)
   }

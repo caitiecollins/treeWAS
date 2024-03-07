@@ -31,7 +31,7 @@ heatmap.DNAbin <- function(dna, dist.dna.model="JC69"){
 
   # require(ape)
 
-  if(class(dna) != "DNAbin") dna <- as.DNAbin(dna)
+  if(!"DNAbin" %in% class(dna)) dna <- as.DNAbin(dna)
 
   #############
   ## HEATMAP ##

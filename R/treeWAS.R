@@ -779,9 +779,9 @@ treeWAS <- function(snps,
   ## TREE ##
   if(is.character(tree)){
     tree <- tolower(tree)
-    if(class(try(match.arg(arg = tree,
-                           choices = c("bionj", "nj", "parsimony", "nj*", "bionj*"),
-                           several.ok = FALSE), silent=TRUE)) == "try-error"){
+    if("try-error" %in% class(try(match.arg(arg = tree,
+                             choices = c("bionj", "nj", "parsimony", "nj*", "bionj*"),
+                             several.ok = FALSE), silent=TRUE))){
       tree <- "bionj"
       cat("If tree is not a phylo object, please specify one of the following reconstruction methods:
           'NJ', 'BIONJ', 'parsimony', 'NJ*', 'BIONJ*'. Choosing 'BIONJ' by default.\n")
@@ -840,8 +840,7 @@ treeWAS <- function(snps,
   #################
 
   ## RECONSTRUCTED TREE ##
-
-  if(class(tree) == "character"){
+  if("character" %in% class(tree)){
 
     ## Check Rows first: (mandatory) ##
     NA.tab <- sapply(c(1:nrow(snps)), function(e) length(which(is.na(snps[e,]))))
@@ -889,9 +888,7 @@ treeWAS <- function(snps,
     ## USER-PROVIDED TREE ##
 
     ## If user has already submitted a tree as input:
-    ## Work with a centered phylo tree for
-    ## consistency and visualisation's sake:
-    if(class(tree) != "phylo") tree <- as.phylo(tree)
+    if(!"phylo" %in% class(tree)) tree <- as.phylo(tree)
 
     ## HANDLE TREE: ##
     ## Always work with trees in "pruningwise" order:
@@ -1489,7 +1486,7 @@ treeWAS <- function(snps,
       if(mem.lim == TRUE){
         mem.lim <- NULL
         ## run memfree, or warn if it fails:
-        if(class(try(memfree(), silent=TRUE)) == "try-error"){
+        if("try-error" %in% class(try(memfree(), silent=TRUE))){
           warning("Unable to determine amount of available memory.
                   Set mem.lim or chunk.size by hand.")
         }else{
@@ -1868,7 +1865,7 @@ treeWAS <- function(snps,
     snps.sim <- snps.mat
 
     ## Handle matrix/list input:
-    if(class(snps.sim) == "list"){
+    if("list" %in% class(snps.sim)){
       ## If list of length 1...
       if(length(snps.sim) == 1){
         ## keep matrix:
