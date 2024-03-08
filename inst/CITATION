@@ -1,0 +1,34 @@
+citHeader("To cite the treeWAS package:")
+
+## Method reference:
+citEntry(
+  entry="Article",
+  title = "A phylogenetic method to perform genome-wide association studies in microbes that accounts for population structure and recombination",
+  journal= "PLOS Computational Biology",
+  year = "2018",
+  author = c(person(c("Caitlin"), "Collins"),
+                    person(c("Xavier"), "Didelot")),
+  volume   = "14",
+  number   = "2",
+  pages    = "1-21",
+  doi = "10.1371/journal.pcbi.1005958",
+  textVersion = "Collins C, Didelot X (2018). 'A phylogenetic method to perform genome-wide association studies in
+  microbes that accounts for population structure and recombination.' PLOS Computational Biology,
+  *14*(2), 1-21. doi:10.1371/journal.pcbi.1005958 <https://doi.org/10.1371/journal.pcbi.1005958>."
+)
+
+
+## R package reference:
+bibentry(bibtype = "Article",
+         title = "treeWAS: Phylogenetic tree-based microbial GWAS",
+         author = c(person(c("Caitlin"), "Collins"),
+                    person(c("Xavier"), "Didelot")),
+         year = "2018",
+         journal  = "R package version 1.0",
+         textVersion = "Collins C, Didelot X (2018). 'treeWAS: Phylogenetic tree-based microbial GWAS'. R package version 1.0.")
+
+
+
+
+
+
