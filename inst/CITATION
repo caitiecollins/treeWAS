@@ -18,15 +18,6 @@ citEntry(
 )
 
 
-## R package reference:
-bibentry(bibtype = "Article",
-         title = "treeWAS: Phylogenetic tree-based microbial GWAS",
-         author = c(person(c("Caitlin"), "Collins"),
-                    person(c("Xavier"), "Didelot")),
-         year = "2018",
-         journal  = "R package version 1.0",
-         textVersion = "Collins C, Didelot X (2018). 'treeWAS: Phylogenetic tree-based microbial GWAS'. R package version 1.0.")
-
 
 
 
