@@ -85,11 +85,7 @@ snp.sim <- function(n.snps = 10000,
   ##################################
   ## GET MUTATIONS' branch & loci ##
   ##################################
-  # if(!is.null(tree$tip.label)){
-  #   n.ind <- length(tree$tip.label)
-  # }else{
   n.ind <- min(tree$edge[,1])-1 # tree$Nnode+1
-  #}
   gen.size <- n.snps
   edges <- tree$edge
 

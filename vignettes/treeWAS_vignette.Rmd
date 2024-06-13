@@ -233,11 +233,11 @@ str(snps.reconstruction)
 
 
 ```{r, eval=FALSE}
-## Load colours:
-data(phen.plot.col)
+## Reconstruct ancestral states of phenotype:
+phen.reconstruction <- asr(phen, tree, method="parsimony")
 
 ## Plot tree showing phenotype:
-p <- plot_phen(tree, phen.nodes=phen.plot.col$all.nodes)
+p <- plot_phen(tree, phen.nodes=phen.reconstruction)
 ```
 
 ```{r fig.width=3, fig.height=4, fig.align = "left", echo=FALSE}

@@ -1758,7 +1758,7 @@ treeWAS <- function(snps,
 
     if(length(CHUNKS) > 1){
       ## Print update notice:
-      cat("########### Running chunk ", i, " of ", length(CHUNKS), "###########")
+      cat("########### Running chunk ", i, " of ", length(CHUNKS), "###########\n")
     }
 
     snps <- SNPS[[i]]

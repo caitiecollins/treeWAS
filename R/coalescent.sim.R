@@ -310,18 +310,19 @@ coalescent.sim <- function(n.ind = 100,
     ## QUESTION -- HOW TO INTERPRET/PREDICT THE RELATIVE EFFECTS OF ASSOC.FACTOR AND N.SUBS (+ BRANCH LENGTH)
     ## ON ASSOC STRENGTH, N.SUBS PER TREE ?
 
-    if(is.null(s)) s <- 20 # n.subs
-    if(is.null(af)) af <- 10 # association factor
+    if(is.null(s)) s <- 15 # n.subs
+    if(is.null(af)) af <- 10 # association factor*
+    ## (*af = the relative prob of var1 changing state twd being in-phase w var2 vs. changing to the opposite state, out-of-step w var2 )
     ## Modify s to account for sum(tree$edge.length):
-    ## --> ~ s/10 (= 2) for coaltree
-    ## OR --> ~ s/100 (= 0.2) for rtree
+    ## --> ~ s/10 (= 1.5) for coaltree
+    ## OR --> ~ s/100 (= 0.15) for rtree
     s <- s/sum(tree$edge.length)
 
 
-    Q.mat <- matrix(c(NA, 1*s, 1*s, 0,
-                      1*af*s, NA, 0, 1*af*s,
-                      1*af*s, 0, NA, 1*af*s,
-                      0, 1*s, 1*s, NA),
+    Q.mat <- matrix(c(NA,     1*s, 1*s, 0,
+                      1*af*s, NA,  0,   1*af*s,
+                      1*af*s, 0,   NA,  1*af*s,
+                      0,      1*s, 1*s, NA),
                     nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
 
     diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
@@ -448,15 +449,14 @@ coalescent.sim <- function(n.ind = 100,
   ###################
 
   ## TO DO: #######################################
-  ## CHECK SNP SIMULATION FOR COMPUTATIONAL SPEED! #########################################################################################
-  #################################################
+  ## CHECK SNP SIMULATION FOR COMPUTATIONAL SPEED
   ## 10 --> 53 --> 12.5
   ## Are the remaining extra 2.5 seconds still just a result of the while loop??
-  ## Or have I slowed anything down in the post-processing steps as well??????????????????
+  ## Or has anything slowed down in the post-processing steps as well?
 
   #   n.snps <- 10000 # 13.3
   #   n.snps <- 100000 # 153.8
-  #   n.snps <- 1000000 # >> 1941.7 (stopped trying..)
+  #   n.snps <- 1000000 # >> 1941.7
   #
 
   if(!is.null(seed)) set.seed(seed)

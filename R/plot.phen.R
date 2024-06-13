@@ -122,8 +122,20 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
   if(!is.null(names(phen.nodes))){
     if(length(phen.nodes) == max(tree$edge)){
       if(!is.null(tree$node.label) && all(names(phen.nodes) %in% c(tree$tip.label, tree$node.label))){
-        ord <- match(c(tree$tip.label, tree$node.label), names(phen.nodes))
-        phen.nodes <- phen.nodes[ord]
+        if(length(unique(c(tree$tip.label, tree$node.label))) < length(c(tree$tip.label, tree$node.label))){
+          warning("Unable to rearrange phen.nodes to match tree labels
+                  because not all c(tree$tip.label, tree$node.label) are unique.
+                  Order may be incorrect.")
+        }else{
+         if(length(unique(names(phen.nodes))) < length(names(phen.nodes))){
+           warning("Unable to rearrange phen.nodes to match tree labels
+                  because not all names(phen.nodes) are unique.
+                  Order may be incorrect.")
+         }else{
+           ord <- match(c(tree$tip.label, tree$node.label), names(phen.nodes))
+           phen.nodes <- phen.nodes[ord]
+         }
+        }
       }else{
         if(!is.null(tree$tip.label) && all(tree$tip.label %in% names(phen.nodes))){
           ord <- match(tree$tip.label, names(phen.nodes))
@@ -266,9 +278,10 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
 
       if(RTL == FALSE){
         if(align.tip.label == FALSE){
-          suppressWarnings(plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=c(-0.5, 0), edge.width=3, edge.color=edgeCol, ...))
+          # suppressWarnings(plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=c(-0.5, 0), edge.width=3, edge.color=edgeCol, ...))
           # Error in xx.tmp + lox :
-          #   (converted from warning) longer object length is not a multiple of shorter object length
+          #   (converted from warning) longer object length is not a multiple of shorter object length ## from adj w 2 values...
+          suppressWarnings(plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=-0.5, edge.width=3, edge.color=edgeCol, ...))
           tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.5, 0), col=leafCol, frame="none")
         }else{
           plot(tree, show.tip=T, tip.col=leafCol, edge.width=3, edge.color=edgeCol, align.tip.label=T, cex=0.5, ...)
