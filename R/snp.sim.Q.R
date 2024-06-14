@@ -20,6 +20,34 @@
 #' Currently under development. Please use the regular snp.sim function to simulate genetic data.
 #'
 #' @param n.snps An integer specifying the number of snps columns to be simulated.
+#'               At present, all snps are simulated to be correlated to the
+#'               provided \code{phen.reconstruction} along the provided \code{tree}.
+#' @param tree A \code{phylo} object containing the phylogenetic tree; or, a character string,
+#'                one of \code{"NJ"}, \code{"BIONJ"} (the default), or \code{"parsimony"};
+#'                or, if NAs are present in the distance matrix, one of: \code{"NJ*"} or \code{"BIONJ*"},
+#'                specifying the method of phylogenetic reconstruction.
+#' @param phen.reconstruction Either a character string specifying \code{"parsimony"} (the default) or \code{"ML"} (maximum likelihood)
+#'                              for the ancestral state reconstruction of the phenotypic variable,
+#'                              or a vector containing this reconstruction if it has been performed elsewhere.
+#' @param s If \code{set} is 3, the \code{s} parameter controls a baseline number of substitutions to be
+#'          experienced by the phenotype and associated loci: by default, 20.
+#' @param af If \code{set} is 3, the \code{af} parameter provides an association factor,
+#'              controlling the preference for association over non-association at associated loci:  by default, 10 (for a 10x preference).
+#' @param plot A logical indicating whether to generate a plot of the phylogenetic tree (\code{TRUE}) or not (\code{FALSE}, the default).
+#' @param heatmap A logical indicating whether to produce a heatmap of the genetic distance
+#'                  between the simulated genomes of the n.ind individuals.
+#' @param reconstruct Either a logical indicating whether to attempt to reconstruct
+#'                      a phylogenetic tree using the simulated genetic data, or one of c("UPGMA", "nj", "ml")
+#'                      to specify that tree reconstruction is desired by one of these three methods
+#'                      (Unweighted Pair Group Method with Arithmetic Mean, Neighbour-Joining, Maximum-Likelihood).
+#' @param dist.dna.model A character string specifying the type of model to use in reconstructing the phylogenetic tree for
+#'                          calculating the genetic distance between individual genomes, only used if \code{tree} is
+#'                          a character string (see ?dist.dna).
+#' @param grp.min (Not yet (re-)implemented in this function.)
+#'                An optional number between 0.1 and 0.9 to control the proportional size of the smaller phenotypic group.
+#' @param row.names An optional vector containing row names for the individuals to be simulated.
+#' @param seed An optional integer to control the pseudo-randomisation process and allow for identical repeat runs of the function;
+#'             else \code{NULL}.
 #'
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
@@ -38,33 +66,31 @@
 #  @useDynLib phangorn, .registration = TRUE
 
 snp.sim.Q <- function(n.snps = 10,
-                      tree = coalescent.tree.sim(100),
-                      phen.reconstruction, ## provide phen.rec and use this to set s=n.phen.subs... 
-                      s = 15, ## n.subs for correlated snps.assoc
+                      tree = coalescent.tree.sim(100, seed=1),
+                      phen.reconstruction, ## provide phen.rec and use this to set s=n.phen.subs...
+                      s = NULL, ## n.subs for correlated snps.assoc
                       af = 10, ## association factor (relative odds of assoc vs. non-assoc in Q mat)
                       snp.root = NULL,
-                      # assoc.prob = 100,
                       heatmap = FALSE,
                       reconstruct = FALSE,
                       dist.dna.model = "JC69",
                       grp.min = 0.25,
                       row.names = NULL,
-                      set=3,
                       seed=1){
-  
+
   # require(adegenet)
   # require(ape)
-  
+
   temp <- snps <- snps.assoc <- tree.reconstructed <- sets <- phen <- phen.nodes <- NULL
-  
+
   n.snps.assoc <- n.snps
-  
+
   ## HANDLE TREE: ##
   ## Always work with trees in "pruningwise" order:
   tree <- reorder.phylo(tree, order="pruningwise")
   ## Trees must be rooted:
   # if(!is.rooted(tree)) tree <- midpoint(tree)
-  
+
   ####################################################################
   ############################
   ## Get Anc-Des EDGE ORDER ##
@@ -74,19 +100,19 @@ snp.sim.Q <- function(n.snps = 10,
   ## Get for loop index of rows in tree$edge[,1], in pairs, from lowest to highest:
   x <- as.vector(unlist(sapply(c(1:length(ix)), function(e) which(tree$edge[,1] == ix[e]))))
   ####################################################################
-  
-  
+
+
   ##################################
   ## GET MUTATIONS' branch & loci ##
   ##################################
   n.ind <- min(tree$edge[,1])-1 # tree$Nnode+1
   gen.size <- n.snps
   edges <- tree$edge
-  
+
   if(!is.null(seed)) set.seed(seed)
-  
+
   ## Simulate genotype (& phen) for root individual: ##
-  
+
   ## if snp.root given:
   if(!is.null(snp.root)){
     if(length(snp.root) == 1){
@@ -106,12 +132,12 @@ snp.sim.Q <- function(n.snps = 10,
       }
     }
   }
-  
+
   ## check phen.rec:
   if(!is.null(phen.reconstruction)){
     if(length(unique(phen.reconstruction[!is.na(phen.reconstruction)])) == 2){
       phen.reconstruction <- as.logical(as.numeric(phen.reconstruction))
-      
+
       ## Infer n.phen.subs:
       n.phen.subs <- length(which(phen.reconstruction[tree$edge[,1]] != phen.reconstruction[tree$edge[,2]]))
     }else{
@@ -123,8 +149,8 @@ snp.sim.Q <- function(n.snps = 10,
     phen.reconstruction <- NULL
     n.phen.subs <- NULL
   }
-  
-  
+
+
   ## For n.subs = n or = dist approaches:
   gen.root <- sample(c(TRUE, FALSE), gen.size, replace=TRUE)
   if(is.null(phen.reconstruction)){
@@ -132,154 +158,154 @@ snp.sim.Q <- function(n.snps = 10,
   }else{
     phen.root <- phen.reconstruction[min(tree$edge[,1])]
   }
-  
-  
+
+
   ## get the sum of all branch lengths in the tree:
   time.total <- sum(tree$edge.length)
-  
+
   ## make dummy variables in which to store the resulting n.mts variables:
   L <- lambda <- n.mts <- new.nt <- NA
-  
+
   snps.assoc <- NULL
-  
+
   ## if n.snps.assoc is neither NULL nor 0:
   if(is.null(n.snps.assoc)) n.snps.assoc <- 0
   if(n.snps.assoc != 0){
-    
+
     ## get non.assoc gen.size
     gen.size.ori <- gen.size
     gen.size <- gen.size-n.snps.assoc
-    
+
     ## assign snps.assoc to be the last n.snps.assoc snps columns
     snps.assoc <- c((gen.size+1):(gen.size+n.snps.assoc))
   }
-    
-    
+
+
   ######################################################################################################################################################################
   ######################################################################################################################################################################
-  
-  
+
+
   #########################
   ## SIM ASSOCIATED SNPS ##
   #########################
-  
+
   ## Need to treat ASSOCIATED SNPs differently:
   ## (non.assoc.snps do NOT need to pass the "while" check;
   ## they just need to match phen.loci at this point.)
-  
+
   snps.assoc.nodes <- phen.nodes <- NULL
-  
+
   if(n.snps.assoc != 0){
-    
+
     ## (*) Now assuming phen.rec provided as input
-    ## If s provided, s overrides n.phen.subs; 
-    ## else s=n.phen.subs as inferred from phen.reconstruction: 
+    ## If s provided, s overrides n.phen.subs;
+    ## else s=n.phen.subs as inferred from phen.reconstruction:
     if(is.null(s)){
       if(!is.null(n.phen.subs)){
         s <- n.phen.subs
       }else{
-        s <- 15 
+        s <- 15
         warning("Setting s (n.subs for snps.assoc in Q rate matrix) as 15.
                 User must provide phen.reconstruction (s=n.phen.subs) or set s argument to specify manually.")
       }
     }
     ## Scale s to account for total edge.length:
     s <- s/sum(tree$edge.length)
-    
+
     ## Set af = the association factor:
-    ## *af = the relative odds of var1 changing state towards being in-phase w var2 vs. 
-    ## changing to the opposite state, out-of-step w var2, over a given branch length...  
+    ## *af = the relative odds of var1 changing state towards being in-phase w var2 vs.
+    ## changing to the opposite state, out-of-step w var2, over a given branch length...
     ## (Q is actually an instantaneous transition rate matrix, but we will account for branch lengths later.)
     if(is.null(af)){
-      af <- 10 
+      af <- 10
       warning("Setting association factor af = 10.")
     }
-    
-    
+
+
     ## Get Q, the dependent transition rate/prob matrix:
     Q.mat <- matrix(c(NA,     1*s, 1*s, 0,
                       1*af*s, NA,  0,   1*af*s,
                       1*af*s, 0,   NA,  1*af*s,
                       0,      1*s, 1*s, NA),
                     nrow=4, byrow=T, dimnames=rep(list(c("0|0", "0|1", "1|0", "1|1")), 2))
-    
+
     diag(Q.mat) <- sapply(c(1:nrow(Q.mat)), function(e) -sum(Q.mat[e, c(1:ncol(Q.mat))[-e]]))
     Q <- Q.mat
-    
-    
-    
+
+
+
     ## get snps.loci for all ASSOCIATED snps, conditional on phen, Q: ##
     snps.assoc.nodes <- list()
     N.OVERLAP <- list()
-    
+
     Qt <- list()
-    
+
     ## get snps.loci for FIRST ASSSOCIATED snp WITH PHEN.loci:
     i <- 1
     edges <- tree$edge
     root.nt <- gen.root[snps.assoc[i]]
-    
-    
+
+
     ## Need to update tree$edge.length probs to mirror sampling without replacement...
     ## BUT only remove branches from the calculation once they have had a sub on them...?
     # N.SUBS.TOTAL <- rpois(1, n.phen.subs)  ############
-    
+
     ###############
-    ## FOR LOOP: ## 
+    ## FOR LOOP: ##
     ###############
     for(i in 1:n.snps.assoc){
       ## get nt for root at this locus:
       root.nt <- gen.root[snps.assoc[i]]
-      
+
       snp.node <- as.list(rep(NA, length(unique(as.vector(edges)))))
-      
+
       snp.node[[edges[x[1], 1]]] <- root.nt
-      
+
       ## go from last to first edge in edges:
       for(e in x){
-        
+
         probs <- NULL
-        
+
         ####################################################
         ## get conditional probs for each edge w matexpo! ##
         ####################################################
         ## (run within code...)
         Qt[[e]] <- matexpo(Q*tree$edge.length[e])
-        
+
         P <- Qt[[e]]
         rownames(P) <- rownames(Qt[[e]]) <- rownames(Q)
         colnames(P) <- colnames(Qt[[e]]) <- colnames(Q)
-        
+
         if(snp.node[[edges[e, 1]]] == FALSE & phen.reconstruction[[edges[e, 1]]] == FALSE) probs <- P[1,]
         if(snp.node[[edges[e, 1]]] == FALSE & phen.reconstruction[[edges[e, 1]]] == TRUE) probs <- P[2,]
         if(snp.node[[edges[e, 1]]] == TRUE & phen.reconstruction[[edges[e, 1]]] == FALSE) probs <- P[3,]
         if(snp.node[[edges[e, 1]]] == TRUE & phen.reconstruction[[edges[e, 1]]] == TRUE) probs <- P[4,]
-        
+
         ## Now we KNOW, A PRIORI, the phen.node for the DESCENDANT!
         probs.mod <- replace(probs, which(!as.logical(as.numeric(keepLastN(colnames(Q), 1))) == phen.reconstruction[[edges[e, 2]]]), 0)
         SP.dec <- sample(colnames(Q), 1, prob = probs.mod)
-        
+
         S.dec <- as.logical(as.numeric(keepFirstN(SP.dec, 1)))
         names(S.dec) <- NULL
-        
+
         snp.node[[edges[e, 2]]] <- S.dec
-        
+
       } # end for (e) loop
-      
+
       ## STORE SNPS.ASSOC (FOR ALL NODES):
       snps.assoc.nodes[[i]] <- as.vector(unlist(snp.node))
-      
+
       ## Get proportion overlap btw phen and snps.assoc.i:
       N.overlap <- length(which(phen.reconstruction[1:n.ind] == snps.assoc.nodes[[i]][1:n.ind]))
       N.overlap <- max(N.overlap, (n.ind-N.overlap))
       N.OVERLAP[[i]] <- N.overlap
-      
+
     } # end for loop
-    
+
     ## Bind SNPs.ASSOC into matrix:
     snps.assoc.nodes <- do.call("cbind", snps.assoc.nodes)
-    
-    
+
+
     ###################################################
     ## TEMP -- COMPARE PHEN & ALL SNPS.ASSOC w PLOT: ##
     ###################################################
@@ -322,28 +348,28 @@ snp.sim.Q <- function(n.snps = 10,
         }
       }
     }
-    
-    
+
+
     par(mfrow=c(1,1)) # end temp panel plot
-    
+
     gc()
-    
+
   } # end of snps.assoc generation
-  
-  
-  
+
+
+
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###
-  
-  
+
+
   ###########################################
   ## GET COMPLETE SNPS MATRIX ("genomes"): ##
   ###########################################
-  
+
   if(!is.null(temp)){
     ## Create snps matrix:
     snps <- temp
     rm(temp)
-    
+
     ## Attach snps.assoc loci to last column:
     if(!is.null(snps.assoc.nodes)){
       snps <- cbind(snps[,c(1:(ncol(snps)-(n.snps.assoc)))], snps.assoc.nodes[1:n.ind,])
@@ -351,31 +377,31 @@ snp.sim.Q <- function(n.snps = 10,
     ## keep only rows containing terminal individuals:
     snps <- snps[1:n.ind, ]
   }else{
-    
+
     ## If only snps.assoc simulated (no non-assoc snps):
     snps <- snps.assoc.nodes[1:n.ind,]
   }
-  
-  
+
+
   ####   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ###   ####
-  
-  
+
+
   ##############################
   ## PLOTS & TREECONSTRUCTION ##
   ##############################
   tree.reconstructed <- NULL
   if(heatmap == TRUE || reconstruct!=FALSE){
-    
+
     ## CONVERT TO CHARACTER: ##
     dna <- snps
     dna <- replace(dna, which(dna == TRUE), "a")
     dna <- replace(dna, which(dna == "FALSE"), "t")
-    
+
     ## Get DNAbin object:
     dna <- as.DNAbin(dna)
     # rownames(dna) <- c(1:nrow(snps))
-    
-    
+
+
     #############
     ## HEATMAP ##
     #############
@@ -383,7 +409,7 @@ snp.sim.Q <- function(n.snps = 10,
       heatmap.DNAbin(dna=dna,
                      dist.dna.model=dist.dna.model)
     }
-    
+
     ##########################################
     ## PLOT 2: RECONSTRUCTING THE PHYLOGENY ##
     ##########################################
@@ -393,35 +419,35 @@ snp.sim.Q <- function(n.snps = 10,
                                              dist.dna.model=dist.dna.model,
                                              plot=TRUE)
     }
-    
+
     ## Remove unnecessary object:
     rm(dna)
-    
+
   } # end heatmap, treeconstruction
-  
-  
+
+
   ##################
   ## CONVERT SNPS ##
   ##################
-  
+
   ## (NO LONGER) CONVERT TO NUMERIC: ##
   ## Convert from logical to binary SNPs (for terminal nodes only):
   # snps <- replace(snps, which(snps == TRUE), 1)
-  
+
   ## Reassort snps.assoc to new columns:
   if(!is.null(snps.assoc)){
-    
+
     if(!is.null(temp)){
       rm(temp)
-    
+
       ## update snps.assoc to reflect true loci
       gen.size.final <- ncol(snps)
       snps.assoc.loci.ori <- c((gen.size.final-(n.snps.assoc-1)):gen.size.final)
-      
+
       #########################################
       ## RANDOMIZE SNPS.ASSOC LOCI POSITIONS ##
       #########################################
-      
+
       ## Re-enabled snps.assoc loci "randomization" by
       ## just drawing indices and shuffling the columns accordingly...
       ## draw which SNPs will be associated to the phenotype
@@ -429,10 +455,10 @@ snp.sim.Q <- function(n.snps = 10,
       snps.assoc.loci <- sort(sample(c(1:gen.size.final),
                                      n.snps.assoc,
                                      replace=FALSE))
-      
+
       snps.indices <- c(1:gen.size.final)
       snps.ori <- snps
-      
+
       snps.non.assoc <- snps[,c(1:(gen.size.final-n.snps.assoc))]
       snps.assoc <- snps[,snps.assoc.loci.ori]
       snps.new <- matrix(99, nrow=nrow(snps), ncol=gen.size.final)
@@ -442,11 +468,11 @@ snp.sim.Q <- function(n.snps = 10,
       snps.assoc <- snps.assoc.loci
     }
   } # end snps.assoc randomization
-  
+
   ###############################
   ## Assign row & column names ##
   ###############################
-  
+
   ## assign/generate row.names
   if(!is.null(row.names)){
     ## If row.names have been provided in args list, assign them:
@@ -477,18 +503,18 @@ snp.sim.Q <- function(n.snps = 10,
       }
     }
   }
-  
+
   ## generate column names:
   colnames(snps) <- 1:ncol(snps)
-  
+
   ##################
   ## get RESULTS: ##
   ##################
   out <- list(snps, snps.assoc, snps.assoc.nodes, tree.reconstructed, phen, phen.nodes)
   names(out) <- c("snps", "snps.assoc", "snps.assoc.nodes", "tree.reconstructed",  "phen", "phen.nodes")
-  
+
   return(out)
-  
+
 } # end snp.sim.Q
 
 

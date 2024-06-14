@@ -43,8 +43,6 @@
 #'                          calculating the genetic distance between individual genomes, only used if \code{tree} is
 #'                          a character string (see ?dist.dna).
 #' @param grp.min An optional number between 0.1 and 0.9 to control the proportional size of the smaller phenotypic group.
-#' @param seed An optional integer controlling the pseudo-random process of simulation; else \code{NULL}.
-#'                Two instances of coalescent.sim with the same seed and arguments will produce identical output.
 #' @param row.names An optional vector containing row names for the individuals to be simulated.
 #' @param set An integer (1, 2, or 3) required to select the method of generating associated loci if \code{n.snps.assoc} is not zero.
 #' @param coaltree A logical indicating whether to generate a coalescent tree (\code{TRUE}, the default),
