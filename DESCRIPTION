@@ -14,16 +14,16 @@ Depends: R (>= 3.0.0),
 Imports: ade4, 
         beeswarm, 
         ggplot2,
-	graphics,
-	grid,
+		graphics,
+		grid,
         Hmisc, 
+        knitr,
         phangorn, 
         phytools, 
-	png,
+		png,
         pryr, 
-	rmarkdown,
+		rmarkdown,
         scales,
-	stats
-Suggests: knitr
+		stats
 VignetteBuilder: knitr
 Encoding: UTF-8
