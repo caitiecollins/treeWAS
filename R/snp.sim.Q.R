@@ -68,7 +68,7 @@
 snp.sim.Q <- function(n.snps = 10,
                       tree = coalescent.tree.sim(100, seed=1),
                       phen.reconstruction, ## provide phen.rec and use this to set s=n.phen.subs...
-                      s = NULL, ## n.subs for correlated snps.assoc
+                      s = NULL, ## n.subs for correlated snps.assoc (s over-rides n.phen.subs)
                       af = 10, ## association factor (relative odds of assoc vs. non-assoc in Q mat)
                       snp.root = NULL,
                       heatmap = FALSE,
@@ -116,7 +116,7 @@ snp.sim.Q <- function(n.snps = 10,
   ## if snp.root given:
   if(!is.null(snp.root)){
     if(length(snp.root) == 1){
-      ## select only root state --> different SNP sim method (???)
+      ## select only root state --> different SNP sim method?
       if(snp.root %in% c(0, FALSE)) gen.root <- rep(FALSE, gen.size)
       if(snp.root %in% c(1, TRUE)) gen.root <- rep(TRUE, gen.size)
     }else{
@@ -136,7 +136,9 @@ snp.sim.Q <- function(n.snps = 10,
   ## check phen.rec:
   if(!is.null(phen.reconstruction)){
     if(length(unique(phen.reconstruction[!is.na(phen.reconstruction)])) == 2){
+      p.noms <- names(phen.reconstruction)
       phen.reconstruction <- as.logical(as.numeric(phen.reconstruction))
+      names(phen.reconstruction) <- p.noms
 
       ## Infer n.phen.subs:
       n.phen.subs <- length(which(phen.reconstruction[tree$edge[,1]] != phen.reconstruction[tree$edge[,2]]))
@@ -253,11 +255,13 @@ snp.sim.Q <- function(n.snps = 10,
     ###############
     ## FOR LOOP: ##
     ###############
+    set.seed(seed)
     for(i in 1:n.snps.assoc){
       ## get nt for root at this locus:
       root.nt <- gen.root[snps.assoc[i]]
 
       snp.node <- as.list(rep(NA, length(unique(as.vector(edges)))))
+      names(snp.node) <- names(phen.reconstruction)
 
       snp.node[[edges[x[1], 1]]] <- root.nt
 
@@ -269,7 +273,6 @@ snp.sim.Q <- function(n.snps = 10,
         ####################################################
         ## get conditional probs for each edge w matexpo! ##
         ####################################################
-        ## (run within code...)
         Qt[[e]] <- matexpo(Q*tree$edge.length[e])
 
         P <- Qt[[e]]
@@ -281,7 +284,7 @@ snp.sim.Q <- function(n.snps = 10,
         if(snp.node[[edges[e, 1]]] == TRUE & phen.reconstruction[[edges[e, 1]]] == FALSE) probs <- P[3,]
         if(snp.node[[edges[e, 1]]] == TRUE & phen.reconstruction[[edges[e, 1]]] == TRUE) probs <- P[4,]
 
-        ## Now we KNOW, A PRIORI, the phen.node for the DESCENDANT!
+        ## Now we KNOW, a priori, the phen.node for the DESCENDANT
         probs.mod <- replace(probs, which(!as.logical(as.numeric(keepLastN(colnames(Q), 1))) == phen.reconstruction[[edges[e, 2]]]), 0)
         SP.dec <- sample(colnames(Q), 1, prob = probs.mod)
 
@@ -295,15 +298,29 @@ snp.sim.Q <- function(n.snps = 10,
       ## STORE SNPS.ASSOC (FOR ALL NODES):
       snps.assoc.nodes[[i]] <- as.vector(unlist(snp.node))
 
+
+      ################################################
+      ##### ##### ##### ##### ##### ##### ##### #####
       ## Get proportion overlap btw phen and snps.assoc.i:
-      N.overlap <- length(which(phen.reconstruction[1:n.ind] == snps.assoc.nodes[[i]][1:n.ind]))
-      N.overlap <- max(N.overlap, (n.ind-N.overlap))
+      N.overlap.pos <- length(which(phen.reconstruction[1:n.ind] == snps.assoc.nodes[[i]][1:n.ind]))
+      # N.overlap <- max(N.overlap, (n.ind-N.overlap))
+      N.overlap.neg <- n.ind - N.overlap.pos
+      if(N.overlap.pos > N.overlap.neg){
+        N.overlap <- +round((N.overlap.pos/n.ind), 2)
+      }else{
+        N.overlap <- -round((N.overlap.neg/n.ind), 2)
+      }
+
       N.OVERLAP[[i]] <- N.overlap
+
+      ##### ##### ##### ##### ##### ##### ##### #####
+      ################################################
 
     } # end for loop
 
     ## Bind SNPs.ASSOC into matrix:
     snps.assoc.nodes <- do.call("cbind", snps.assoc.nodes)
+    rownames(snps.assoc.nodes) <- names(phen.reconstruction)
 
 
     ###################################################
@@ -314,37 +331,37 @@ snp.sim.Q <- function(n.snps = 10,
     if(n.snps.assoc >= 10){
       ## just plot first 10:
       for(i in 1:5){
-        plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+        plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE, show.axis=FALSE,
                   main.title=paste("snp.assoc", i, sep=" "))
-        title(N.OVERLAP[[i]], line=0, font.main=1)
+        title(N.OVERLAP[[i]], line=2.8, font.main=1, cex.main=0.8)
       }
       plot_phen(tree, phen.nodes=phen.reconstruction, main.title="phen")
       for(i in 6:10){
-        plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+        plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE, show.axis=FALSE,
                   main.title=paste("snp.assoc", i, sep=" "))
-        title(N.OVERLAP[[i]], line=0, font.main=1)
+        title(N.OVERLAP[[i]], line=2.8, font.main=1, cex.main=0.8)
       }
     }else{
       ## plot up to 5:
       if(n.snps.assoc <= 5){
         par(mfrow=c(1,(n.snps.assoc+1)))
         for(i in 1:n.snps.assoc){
-          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE, show.axis=FALSE,
                     main.title=paste("snp.assoc", i, sep=" "))
-          title(N.OVERLAP[[i]], line=0, font.main=1)
+          title(N.OVERLAP[[i]], line=2.8, font.main=1)
         }
       }else{
         ## plot btw 5 and 10:
         for(i in 1:5){
-          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE, show.axis=FALSE,
                     main.title=paste("snp.assoc", i, sep=" "))
-          title(N.OVERLAP[[i]], line=0, font.main=1)
+          title(N.OVERLAP[[i]], line=2.8, font.main=1)
         }
         plot_phen(tree, phen.nodes=phen.reconstruction, main.title="phen")
         for(i in 6:n.snps.assoc){
-          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE,
+          plot_phen(tree, phen.nodes=snps.assoc.nodes[,i], RTL = TRUE, show.axis=FALSE,
                     main.title=paste("snp.assoc", i, sep=" "))
-          title(N.OVERLAP[[i]], line=0, font.main=1)
+          title(N.OVERLAP[[i]], line=2.8, font.main=1)
         }
       }
     }
@@ -507,11 +524,18 @@ snp.sim.Q <- function(n.snps = 10,
   ## generate column names:
   colnames(snps) <- 1:ncol(snps)
 
+  ## Get association +/-:
+  snps.assoc.direction <- NULL
+  if(!is.null(N.OVERLAP)){
+    snps.assoc.direction <- as.vector(unlist(N.OVERLAP))
+  }
+
+
   ##################
   ## get RESULTS: ##
   ##################
-  out <- list(snps, snps.assoc, snps.assoc.nodes, tree.reconstructed, phen, phen.nodes)
-  names(out) <- c("snps", "snps.assoc", "snps.assoc.nodes", "tree.reconstructed",  "phen", "phen.nodes")
+  out <- list(snps, snps.assoc, snps.assoc.nodes, snps.assoc.direction, tree.reconstructed, phen, phen.nodes)
+  names(out) <- c("snps", "snps.assoc", "snps.assoc.nodes", "snps.assoc.direction", "tree.reconstructed",  "phen", "phen.nodes")
 
   return(out)
 

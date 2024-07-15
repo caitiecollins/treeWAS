@@ -162,15 +162,26 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
     }
   }
 
+  ####################################################################
+  ############################
+  ## Get Anc-Des EDGE ORDER ##
+  ############################
+  ## Get sequence from lowest ("root", Nterm+1) to highest ancestral node:
+  ix <- c(min(tree$edge[,1]):max(tree$edge[,1]))
+  ## Get for loop index of rows in tree$edge[,1], in pairs, from lowest to highest:
+  x <- as.vector(unlist(sapply(c(1:length(ix)), function(e) which(tree$edge[,1] == ix[e]))))
+  ####################################################################
 
   ## PLOT MARGINS: ##
   mar.ori <- par()$mar
   # mar.ori <- c(5,4,4,1)+0.1
   if(RTL==FALSE){
-    mar.new <- c(1.5,0.5,0.5,0.5)
+    # mar.new <- c(1.5,0.5,0.5,0.5)
+    mar.new <- c(1.5, 0.05, 0.05, 0.05)
     # mar.new <- c(4, 2, 4, 0.5) + 0.1
   }else{
-    mar.new <- c(1.5,0.5,0.5,0.5)
+    # mar.new <- c(1.5,0.5,0.5,0.5)
+    mar.new <- c(1.5, 0.05, 0.05, 0.05)
     # mar.new <- c(5, 4, 4, 2) + 0.1
   }
   ## Set plot margins:
@@ -247,7 +258,8 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
 
     ## get COLOR for EDGES
     edgeCol <- rep("black", nrow(tree$edge))
-    for(i in 1:nrow(tree$edge)){
+    # for(i in 1:nrow(tree$edge)){
+    for(i in x){
       edgeCol[i] <- nodeCol[tree$edge[i,2]]
       if(is.na(nodeCol[tree$edge[i,1]]) | is.na(nodeCol[tree$edge[i,2]])){
         edgeCol[i] <- "grey"
@@ -282,7 +294,7 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
           # Error in xx.tmp + lox :
           #   (converted from warning) longer object length is not a multiple of shorter object length ## from adj w 2 values...
           suppressWarnings(plot(tree, show.tip=T, tip.col="transparent", cex=0.5, adj=-0.5, edge.width=3, edge.color=edgeCol, ...))
-          tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.5, 0), col=leafCol, frame="none")
+          tiplabels(text=tree$tip.label, cex=0.5, adj=c(-0.5, 0), col=leafCol, frame="none") # cex=1.5
         }else{
           plot(tree, show.tip=T, tip.col=leafCol, edge.width=3, edge.color=edgeCol, align.tip.label=T, cex=0.5, ...)
         }
