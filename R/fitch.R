@@ -74,14 +74,13 @@ get.fitch.n.mts <- function(x, tree, snps=NULL){
   }
 
   ## checks
-  # levs <- unique(as.vector(unlist(x)))
-  # levs <- unique(as.vector(as.matrix(x)))
+  ## do not include NA as a level:
   levs <- unique(as.vector(x[!is.na(x)]))
-  # if(any(is.na(levs))) levs <- levs[-which(is.na(levs))]
   if((!is.numeric(x) & !is.logical(x)) | length(levs[!is.na(levs)])!=2){
     stop("x must be a numeric matrix or vector, with two unique values, excluding NAs
          (though we recommend that NAs be in the minority for each column).\n")
   }
+  # levs <- unique(as.vector(x))
   if(any(is.na(levs))){
     if(is.matrix(x)){
       nnas <- sapply(c(1:ncol(x)), function(e) length(which(is.na(x[,e])))/nrow(x))
@@ -103,15 +102,16 @@ get.fitch.n.mts <- function(x, tree, snps=NULL){
 
   x.levels <- sort(levs, na.last = TRUE)
   ## returns only unique patterns...
-  x.phyDat <- as.phyDat(as.matrix(x),
-                           type="USER", levels=x.levels)
+  ## *use levels=states (eg. c(0,1)), but keep NAs in x and
+  ##  use ambiguity=NA to allow NAs without counting them twd parsimony score values.
+  x.phyDat <- phangorn::as.phyDat(as.matrix(x),
+                           type="USER", levels=x.levels, ambiguity=NA)
   ## get index of all original x columns to map to unique pattern
   index <- attr(x.phyDat, "index")
 
-  fitch.phangorn <- phangorn::fitch
   ## get parsimony score for all unique patterns in x
-  ## NB: For fitch.phangorn, x data must be of class phyDat
-  fitch.unique <- fitch.phangorn(tree, x.phyDat, site="site")
+  ## NB: For phangorn::fitch, x data must be of class phyDat
+  fitch.unique <- phangorn::fitch(tree, x.phyDat, site="site")
   # table(fitch.unique)
 
   ## get score for all original sites

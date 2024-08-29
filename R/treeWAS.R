@@ -1888,6 +1888,23 @@ treeWAS <- function(snps,
     ## (moved to initial checks)
 
 
+    ##########################
+    ## Add NAs to snps.sim? ##  ### ###  ### ###  ### ###  ### ###  ### ###  ###
+    ##########################
+    ## Try distributing NAs proportionately (as with n.subs),
+    ## but randomly* across each site
+    ## (*could do 3-state (c(0,1,NA) reconstruction, in case neighbouring inds have NAs at a given site,
+    ## which could affect scores; but, would have to modify snps.sim not to simulate NA ancestors)
+    ## Get number of NAs per snps locus column:
+    NA.tab <- sapply(c(1:ncol(snps)), function(e) length(which(is.na(snps[,e]))))
+    NA.tab <- rep(NA.tab, round(ncol(snps.sim)/ncol(snps)))
+    ss.nr <- nrow(snps.sim)
+    ## Sample indices for each column
+    col_inds <- lapply(seq_along(NA.tab), function(x) sample(ss.nr, NA.tab[x], replace = FALSE))
+    snps.sim[unlist(col_inds)] <- NA
+
+    ### ###  ### ###  ### ###  ### ###  ### ###  ### ###### ###  ### ###  ### ##
+
     ###########################
     ## GET UNIQUE SNPS(.SIM) ##
     ###########################
