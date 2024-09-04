@@ -307,9 +307,9 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
       ## Add title?
       if(main.title == TRUE){
         # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
-        title("Tree with phenotypic changes", cex.main=1, line=-0.5)
+        title("Tree with phenotypic changes", cex.main=1, line=-0.75)
       }else{
-        if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.5)
+        if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.75) # line=-0.5
       }
 
       ## Add axis?
@@ -470,9 +470,9 @@ plot_phen <- function(tree, phen.nodes, snp.nodes=NULL, plot=TRUE, RTL=FALSE, LT
         ## Add title?
         if(main.title == TRUE){
           # if(is.ultrametric(tree)) title("Coalescent tree w/ phenotypic changes")
-          title("Tree with phenotypic changes", cex.main=1, line=-0.5)
+          title("Tree with phenotypic changes", cex.main=1, line=-0.75)
         }else{
-          if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.5)
+          if(!is.null(main.title)) if(main.title != FALSE) title(main.title, cex.main=1, line=-0.75)
         }
 
 
