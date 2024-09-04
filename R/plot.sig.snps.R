@@ -368,6 +368,10 @@ plot_sig_snps <- function(corr.dat,
     ## Get plot limits:
     ## Get x-max:
     xmax <- max(corr.dat[!is.na(corr.dat)])+.3*max(corr.dat[!is.na(corr.dat)])
+    ## Extend x-max to match corr.sim if higher
+    xmax.sim <- max(corr.sim[!is.na(corr.sim)])+.3*max(corr.sim[!is.na(corr.sim)])
+    xmax <- max(xmax, xmax.sim)
+
     if((test == "terminal" || test == "subsequent") & xmax > 1){
       xmax <- 1
     }else{
@@ -596,10 +600,11 @@ plot_sig_snps <- function(corr.dat,
            col=myCol, font=1, pos=4, cex=1) # font=2 # cex=1
 
     }else{
-      text(x=(max(h.null$breaks)*3/4),
+      # x=(max(h.null$breaks)*3/4),
+      text(x=max(sig.thresh),
            y=(max(yvals)*7/8),
            labels="no significant SNPs found",
-           col="red", font=3, pos=3, cex = 1)
+           col="red", font=3, pos=2, cex = 1)
     }
 
 
@@ -680,6 +685,10 @@ plot_sig_snps <- function(corr.dat,
     ## Get plot limits:
     ## Get x-max:
     xmax <- max(corr.dat[!is.na(corr.dat)])+.3*max(corr.dat[!is.na(corr.dat)])
+    ## Extend x-max to match corr.sim if higher
+    xmax.sim <- max(corr.sim[!is.na(corr.sim)])+.3*max(corr.sim[!is.na(corr.sim)])
+    xmax <- max(xmax, xmax.sim)
+
     if((test == "terminal" || test == "subsequent") & xmax > 1){
       xmax <- 1
     }else{
@@ -834,10 +843,10 @@ plot_sig_snps <- function(corr.dat,
            col=myCol, font=1, pos=4, cex = 1)
 
     }else{
-      text(x=(max(h.null$breaks)*3/4),
+      text(x=max(sig.thresh),
            y=(max(yvals)*3/4),
            labels="no significant SNPs found",
-           col="red", font=3, pos=3, cex = 1)
+           col="red", font=3, pos=2, cex = 1)
     }
 
 
