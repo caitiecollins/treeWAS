@@ -1904,7 +1904,8 @@ treeWAS <- function(snps,
     #   snps.sim[unlist(col.inds)] <- NA
     # }
 
-    ## Keep NAs where they appear in snps? (keep correlations btw missingness and phen states)
+    ## Keep NAs where they appear in snps? (keeps correlations btw missingness and phen states)
+    ## *may want to consider keeping NAs with their observed n.subs when sampling in snps.sim?
     if(any(is.na(snps))){
       ss.nr <- nrow(snps.sim)
       ## Get NA row indices for each column; add column multiplier to get matrix index:

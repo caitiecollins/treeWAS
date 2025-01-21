@@ -102,8 +102,8 @@ get.fitch.n.mts <- function(x, tree, snps=NULL){
 
   x.levels <- sort(levs, na.last = TRUE)
   ## returns only unique patterns...
-  ## *use levels=states (eg. c(0,1)), but keep NAs in x and
-  ##  use ambiguity=NA to allow NAs without counting them twd parsimony score values.
+  ## *use levels=states (eg. c(0,1)), but keep NAs in x and use ambiguity=NA
+  ## to allow NAs without counting them twd parsimony score values.
   x.phyDat <- phangorn::as.phyDat(as.matrix(x),
                            type="USER", levels=x.levels, ambiguity=NA)
   ## get index of all original x columns to map to unique pattern

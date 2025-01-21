@@ -223,7 +223,7 @@ asr <- function(var,
         # snps.levels <- sort(unique(as.vector(snps)))
         snps.levels <- sort(unique(as.vector(snps)), na.last = TRUE)
         ## returns only unique patterns...
-        snps.phyDat <- as.phyDat(as.matrix(snps),
+        snps.phyDat <- phangorn::as.phyDat(as.matrix(snps),
                                  type="USER", levels=snps.levels)
         ## get index of all original snps columns to map to unique pattern
         index.phyDat <- attr(snps.phyDat, "index")
@@ -258,19 +258,35 @@ asr <- function(var,
           ## whenever column 3 (NA) has a 1 in it:
           if(any(is.na(snps.levels))){
             na.col <- which(is.na(snps.levels))
-            for(i in 1:length(rec)){
-              foo <- rec[[i]]
-              toReplace <- which(foo[,na.col] == 1)
+
+            ## (*this expects each ind of snps.rec to be a matrix w ncol=n.snps.levels:)
+            if(is.matrix(rec[[1]])){
+
+              for(i in 1:length(rec)){
+                foo <- rec[[i]]
+                toReplace <- which(foo[,na.col] == 1)
+                if(length(toReplace) > 0){
+                  foo[toReplace,1] <- NA
+                  foo[toReplace,2] <- NA
+                }
+                rec[[i]] <- foo
+              } # end for loop
+
+              ## Bind list into matrix:
+              snps.rec <- do.call(rbind, rec[ord])
+              # snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))]) # only for return="prob"
+
+            }else{
+              ## If each ind of the snps.rec list is just a vector with values in snps.levels...
+              ## Bind list into matrix:
+              snps.rec <- do.call(rbind, rec[ord])
+              ## Replace snps.level=NA with NA before converting to logical below...
+              toReplace <- which(snps.rec == na.col)
               if(length(toReplace) > 0){
-                foo[toReplace,1] <- NA
-                foo[toReplace,2] <- NA
+                snps.rec[toReplace] <- NA
               }
-              rec[[i]] <- foo
-            } # end for loop
+            }
           }
-          ## Bind list into matrix:
-          snps.rec <- do.call(rbind, rec[ord])
-          # snps.rec <- t(snps.rec[, seq(2, ncol(snps.rec), length(snps.levels))]) # only for return="prob"
 
         }else{
 
@@ -293,6 +309,7 @@ asr <- function(var,
         r.noms <- rownames(snps.rec)
         c.noms <- colnames(snps.rec)
         if(is.logical(snps.ori)){
+          snps.rec <- matrix(as.numeric(as.factor(snps.rec))-1, nrow=nrow(snps.rec), ncol=ncol(snps.rec))
           snps.rec <- matrix(as.logical(snps.rec), nrow=nrow(snps.rec), ncol=ncol(snps.rec)) ## logical
         }else{
           ## replace level #s w levels:
@@ -471,7 +488,7 @@ asr <- function(var,
         ## get levels (ie. 0, 1)
         phen.levels <- sort(unique(phen), na.last = TRUE)
         ## returns only unique patterns...
-        phen.phyDat <- as.phyDat(as.matrix(phen),
+        phen.phyDat <- phangorn::as.phyDat(as.matrix(phen),
                                  type="USER", levels=phen.levels)
         ## get index of all original snps columns to map to unique pattern
         index.phyDat <- attr(phen.phyDat, "index")
@@ -663,10 +680,10 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     index.phyDat <- attr(snps.phyDat, "index")
 
     ## pace == ancestral.pars
-    rec <- pa.ACCTRAN <- pace(tree, snps.phyDat, type="ACCTRAN")
+    rec <- pa.ACCTRAN <- phangorn::pace(tree, snps.phyDat, type="ACCTRAN")
 
     ## NOTE: pace  --> diff resuls w MPR vs. ACCTRAN
-    # rec <- pa.MPR <- pace(tree, snps.phyDat, type="MPR")
+    # rec <- pa.MPR <- phangorn::pace(tree, snps.phyDat, type="MPR")
     #diffs <- sapply(c(1:length(pa.ACCTRAN)), function(e) identical(pa.MPR[[e]], pa.ACCTRAN[[e]]))
 
     ## ML discrete alternative:
@@ -800,7 +817,7 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     phen.ori <- phen
     ## Make phen numeric:
     if(!is.numeric(phen)){
-      if(all.is.numeric(phen)){
+      if(Hmisc::all.is.numeric(phen)){
         phen <- as.numeric(as.character(phen))
       }else{
         phen <- as.numeric(as.factor(phen))
@@ -818,16 +835,16 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
                                                    so that individuals can be correctly identified.")
 
     ## get levels (ie. 0, 1)
-    phen.levels <- sort(unique(phen))
-    phen.phyDat <- as.phyDat(as.matrix(phen),
-                             type="USER", levels=phen.levels)
+    phen.levels <- sort(unique(phen), na.last = TRUE)
+    phen.phyDat <- phangorn::as.phyDat(as.matrix(phen),
+                             type="USER", levels=phen.levels, ambiguity=NA)
     ## pace == ancestral.pars
-    if("try-error" %in% class(try(suppressWarnings(pace(tree, phen.phyDat, type="ACCTRAN")), silent=T))){
+    if("try-error" %in% class(try(suppressWarnings(phangorn::pace(tree, phen.phyDat, type="ACCTRAN")), silent=T))){
 
-      rec <- phen.pa.ACCTRAN <- pace(tree, phen.phyDat, type="MPR")
+      rec <- phen.pa.ACCTRAN <- phangorn::pace(tree, phen.phyDat, type="MPR")
 
     }else{
-      rec <- phen.pa.ACCTRAN <- pace(tree, phen.phyDat, type="ACCTRAN")
+      rec <- phen.pa.ACCTRAN <- phangorn::pace(tree, phen.phyDat, type="ACCTRAN")
 
     }
     ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
