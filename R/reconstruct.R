@@ -143,7 +143,7 @@ asr <- function(var,
       if(method == "continuous"){
         # Check snps is numeric:
         if(!is.numeric(snps)){
-          if(!all.is.numeric(snps[!is.na(snps)])){
+          if(!Hmisc::all.is.numeric(snps[!is.na(snps)])){
             stop("For a continuous reconstruction, the matrix must be numeric.\n")
           }else{
             r.noms <- rownames(snps)
@@ -194,7 +194,7 @@ asr <- function(var,
           ## Continuous ML rec: ##
           ## get internal values (when (any) var contains NAs):
           var <- var[!is.na(var)]
-          snps.ML[[i]] <- anc.ML(tree, var) ## require(phytools)
+          snps.ML[[i]] <- phytools::anc.ML(tree, var) ## require(phytools)
           var.internal <- snps.ML[[i]]$ace
 
           ## get reconstruction from terminal & internal values
@@ -230,10 +230,10 @@ asr <- function(var,
 
         ## ML discrete reconstruction:
         ## Step 1:
-        fit <- pml(tree, snps.phyDat)
+        fit <- phangorn::pml(tree, snps.phyDat)
         ## (Step 2 below -- if binary, get probs; if not, get states...)
-        # rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
-        # rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
+        # rec <- rec.ml <- phangorn::ancestral.pml(fit, type = "ml", return = "prob")
+        # rec <- rec.ml <- phangorn::ancestral.pml(fit, type = "ml", return = "phyDat")
 
         ###########################################
         ## convert reconstruction back to snps.. ##
@@ -251,8 +251,8 @@ asr <- function(var,
 
           ## ML discrete reconstruction:
           ## Step 2 (Binary --> get probs):
-          # rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
-          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
+          # rec <- rec.ml <- phangorn::ancestral.pml(fit, type = "ml", return = "prob")
+          rec <- rec.ml <- phangorn::ancestral.pml(fit, type = "ml", return = "phyDat")
 
           ## If NAs are present, replace column 1 0s with NA values
           ## whenever column 3 (NA) has a 1 in it:
@@ -294,8 +294,8 @@ asr <- function(var,
 
           ## ML discrete reconstruction:
           ## Step 2 (Non-binary --> get states):
-          # rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "prob")
-          rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
+          # rec <- rec.ml <- phangorn::ancestral.pml(fit, type = "ml", return = "prob")
+          rec <- rec.ml <- phangorn::ancestral.pml(fit, type = "ml", return = "phyDat")
 
           ## Print warning notice:
           cat("Reconstructing non-binary genetic data matrix.\n")
@@ -305,6 +305,7 @@ asr <- function(var,
 
         } # end non-binary
 
+
         ## Convert to restore levels, variable class:
         r.noms <- rownames(snps.rec)
         c.noms <- colnames(snps.rec)
@@ -313,7 +314,11 @@ asr <- function(var,
           snps.rec <- matrix(as.logical(snps.rec), nrow=nrow(snps.rec), ncol=ncol(snps.rec)) ## logical
         }else{
           ## replace level #s w levels:
-          snps.rec <- matrix(attr(rec, "levels")[snps.rec], nrow=nrow(snps.rec), ncol=ncol(snps.rec))
+          # snps.rec <- matrix(attr(rec, "levels")[snps.rec], nrow=nrow(snps.rec), ncol=ncol(snps.rec))
+          # snps.levs <- as.numeric(attr(rec, "levels"))
+          # identical(snps.levels, snps.levs)
+          snps.rec <- matrix(snps.levels[snps.rec], nrow=nrow(snps.rec), ncol=ncol(snps.rec))
+
         }
         rownames(snps.rec) <- r.noms ## names re-assigned below?
         colnames(snps.rec) <- c.noms
@@ -445,7 +450,7 @@ asr <- function(var,
       if(method == "continuous"){
         ## Check phen is numeric:
         if(!is.numeric(phen)){
-          if(!all.is.numeric(phen)){
+          if(!Hmisc::all.is.numeric(phen)){
             stop("For a continuous reconstruction, phen must be numeric.\n")
           }else{
             noms <- names(phen)
@@ -495,20 +500,21 @@ asr <- function(var,
 
         ## ML discrete reconstruction:
         ## Step 1:
-        fit <- pml(tree, phen.phyDat)
+        fit <- phangorn::pml(tree, phen.phyDat)
 
         ## Want to KEEP rec list in order of tree$tip.label to match tree$edge!
         l <- max(tree$edge[,2])
         ord <- 1:l
 
         ## Step 2 (Non-binary --> get states):
-        rec <- rec.ml <- ancestral.pml(fit, type = "ml", return = "phyDat")
+        rec <- rec.ml <- phangorn::ancestral.pml(fit, type = "ml", return = "phyDat")
 
         ## Bind list & reorder elements:
         phen.rec <- do.call(rbind, rec[ord])
 
         ## replace level #s w levels:
-        phen.rec <- attr(rec, "levels")[phen.rec]
+        # phen.rec <- attr(rec, "levels")[phen.rec]
+        phen.rec <- phen.levels[phen.rec]
 
       }else{
 
@@ -522,11 +528,11 @@ asr <- function(var,
         ## With MISSING DATA in any columns: ##
         ## Continuous ML rec: ##
         ## get internal values:
-        phen.internal <- fastAnc(tree, phen) ## require(phytools)
+        phen.internal <- phytools::fastAnc(tree, phen) ## require(phytools)
 
         ## get internal values (when (any) var contains NAs):
         # phen2 <- phen[!is.na(phen)]
-        # phen.ML <- anc.ML(tree, phen2) ## require(phytools)
+        # phen.ML <- phytools::anc.ML(tree, phen2) ## require(phytools)
         # phen.internal <- phen.ML$ace
 
         ## get reconstruction from terminal & internal values
@@ -687,8 +693,8 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
     #diffs <- sapply(c(1:length(pa.ACCTRAN)), function(e) identical(pa.MPR[[e]], pa.ACCTRAN[[e]]))
 
     ## ML discrete alternative:
-    # fit <- pml(tree, snps.phyDat)
-    # rec.ml <- ancestral.pml(fit, type = "ml")
+    # fit <- phangorn::pml(tree, snps.phyDat)
+    # rec.ml <- phangorn::ancestral.pml(fit, type = "ml")
 
     ###########################################
     ## convert reconstruction back to snps.. ##
@@ -882,7 +888,8 @@ get.ancestral.pars <- function(var, tree, unique.cols = FALSE){
 
       ## Get values:
       pr <- phen.rec
-      levs <- attr(rec, "levels")
+      # levs <- attr(rec, "levels")
+      levs <- phen.levels
       foo <- matrix(rep(levs, nrow(pr)), nrow=nrow(pr), byrow=TRUE)
       pr2 <-  rep(NA, nrow(pr))
       for(e in 1:nrow(foo)){

@@ -53,7 +53,7 @@ print.treeWAS <- function(x, sort.by.p = FALSE, digits = 3){
 
   ## only sort/print if any sig loci present:
   if(l > 0){
-    if(all.is.numeric(res)){
+    if(Hmisc::all.is.numeric(res)){
       res <- as.character(sort(as.numeric(res, decreasing=FALSE)))
     }else{
       ## get corresponding loci:
@@ -994,7 +994,7 @@ treeWAS <- function(snps,
     if(!is.numeric(snps) && !is.logical(snps)){
       if(!is.numeric(snps)){
         na.before <- length(which(is.na(snps)))
-        if(!all.is.numeric(snps)){
+        if(!Hmisc::all.is.numeric(snps)){
           r.noms <- rownames(snps)
           c.noms <- colnames(snps)
           snps <- matrix(as.numeric(as.factor(snps))-1, nrow=nrow(snps), ncol=ncol(snps))
@@ -1200,7 +1200,7 @@ treeWAS <- function(snps,
   if(n.levs == 2){
     ## Convert phen to numeric:
     if(!is.numeric(phen)){
-      if(all.is.numeric(phen)){
+      if(Hmisc::all.is.numeric(phen)){
         phen <- as.numeric(as.character(phen))
       }else{
         phen <- as.numeric(as.factor(phen))
@@ -1218,7 +1218,7 @@ treeWAS <- function(snps,
     ## CATEGORICAL, DISCRETE or CONTINUOUS: ##
     ## Convert phen to numeric:
     if(!is.numeric(phen)){
-        if(all.is.numeric(phen)){
+        if(Hmisc::all.is.numeric(phen)){
           phen <- as.numeric(as.character(phen))
         }else{
           phen.type <- "categorical"
@@ -1293,7 +1293,7 @@ treeWAS <- function(snps,
         ## Convert phen.reconstruction to numeric:
         if(!is.numeric(phen.reconstruction)){
           ## convert to numeric if possible:
-          if(all.is.numeric(phen.reconstruction)){
+          if(Hmisc::all.is.numeric(phen.reconstruction)){
             phen.reconstruction <- as.numeric(as.character(phen.reconstruction))
           }else{
             ## convert from factor:
@@ -1366,7 +1366,7 @@ treeWAS <- function(snps,
 
       ## get tip.col:
       leafCol <- "black"
-      if(all.is.numeric(phen)){
+      if(Hmisc::all.is.numeric(phen)){
         var <- as.numeric(as.character(phen))
       }else{
         var <- as.character(phen)
@@ -1658,7 +1658,7 @@ treeWAS <- function(snps,
     ## check for names first!
     if(!is.null(names(dist))){
       ## only modify if names are numeric
-      if(all.is.numeric(names(dist))){
+      if(Hmisc::all.is.numeric(names(dist))){
         noms <- as.numeric(names(dist))
         aligned <- sapply(c(1:length(dist)), function(e) noms[e] == e)
         ## if any names do not correspond to their index, add zeros where missing:
@@ -2139,6 +2139,7 @@ treeWAS <- function(snps,
   #################
   ## GET RESULTS ##
   #################
+  phen.curr <- phen # store current phen for output
 
   ## set margins for plotting:
   par.mar.ori <- par()$mar
@@ -2296,7 +2297,6 @@ treeWAS <- function(snps,
     ########################################
     ## 5) Return results list ##############
     ########################################
-    phen.curr <- phen # store current phen for output
     if(length(sig.snps)==0) sig.snps <- sig.corrs <- NULL
 
     ###########
@@ -2319,7 +2319,7 @@ treeWAS <- function(snps,
         noms <- names(phen)
         ## If binary, convert phen to 0/1:
         phen <- as.numeric(as.factor(phen))
-        phen <- rescale(phen, to=c(0,1)) # require(scales)
+        phen <- scales::rescale(phen, to=c(0,1)) # require(scales)
         ## ensure ind names not lost:
         names(phen) <- noms
 
