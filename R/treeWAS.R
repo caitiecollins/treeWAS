@@ -2140,6 +2140,8 @@ treeWAS <- function(snps,
   ## GET RESULTS ##
   #################
   phen.curr <- phen # store current phen for output
+  phen.rec.curr <- phen.rec # store current phen.rec for output
+
 
   ## set margins for plotting:
   par.mar.ori <- par()$mar
@@ -2683,6 +2685,7 @@ treeWAS <- function(snps,
   }
 
   phen <- phen.curr
+  phen.rec <- phen.rec.curr
 
   ## Also return data (in the form we were working with):
   dat <- list("snps" = snps,

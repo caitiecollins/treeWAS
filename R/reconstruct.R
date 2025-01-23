@@ -374,6 +374,7 @@ asr <- function(var,
     #################
     levs <- unique(as.vector(unlist(var)))
     levs <- levs[!is.na(levs)] # no NAs allowed in phen variables in GWAS.
+    phen.levels <- levs
     ## BINARY: ##
     if(length(levs) == 2){
       ## Choose parsimony if none:
