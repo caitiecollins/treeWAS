@@ -142,9 +142,19 @@ asr <- function(var,
 
       if(method == "continuous"){
         # Check snps is numeric:
+        lgc <- FALSE
+        if(is.logical(snps)) lgc <- TRUE
         if(!is.numeric(snps)){
           if(!Hmisc::all.is.numeric(snps[!is.na(snps)])){
-            stop("For a continuous reconstruction, the matrix must be numeric.\n")
+            if(lgc == TRUE){
+              r.noms <- rownames(snps)
+              c.noms <- colnames(snps)
+              snps <- matrix(as.numeric(snps), nrow=nrow(snps), ncol=ncol(snps))
+              rownames(snps) <- r.noms
+              colnames(snps) <- c.noms
+            }else{
+              stop("For a continuous reconstruction, the matrix must be numeric.\n")
+            }
           }else{
             r.noms <- rownames(snps)
             c.noms <- colnames(snps)
@@ -178,9 +188,6 @@ asr <- function(var,
         ##################################
 
         snps.rec <- snps.ML <- list()
-
-        lgc <- FALSE
-        if(is.logical(snps)) lgc <- TRUE
 
         for(i in 1:ncol(snps)){
 
@@ -286,6 +293,11 @@ asr <- function(var,
                 snps.rec[toReplace] <- NA
               }
             }
+          }else{
+
+            ## If no NAs in snps:
+            ## Bind list into matrix:
+            snps.rec <- do.call(rbind, rec[ord])
           }
 
         }else{
@@ -323,8 +335,19 @@ asr <- function(var,
         rownames(snps.rec) <- r.noms ## names re-assigned below?
         colnames(snps.rec) <- c.noms
 
-      } # end Discrete ML
 
+
+        ## Handle index.phyDat! ##
+        colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
+        ## get reconstruction for all pre-phyDat sites
+        if(ncol(snps) != ncol(snps.rec)){
+          snps.rec.complete <- snps.rec[, index.phyDat]
+          rownames(snps.rec.complete) <- rownames(snps.rec)
+          colnames(snps.rec.complete) <- 1:ncol(snps.rec.complete)
+          snps.rec <- snps.rec.complete
+        }
+
+      } # end Discrete ML
 
       ## assign rownames for all terminal and internal nodes
       if(is.null(tree$node.label)){
@@ -332,17 +355,7 @@ asr <- function(var,
       }else{
         rownames(snps.rec) <- c(tree$tip.label, tree$node.label)
       }
-      colnames(snps.rec) <- c(1:length(snps.phyDat[[1]]))
 
-
-      ## Handle index.phyDat! ##
-      ## get reconstruction for all pre-phyDat sites
-      if(ncol(snps) != ncol(snps.rec)){
-        snps.rec.complete <- snps.rec[, index.phyDat]
-        rownames(snps.rec.complete) <- rownames(snps.rec)
-        colnames(snps.rec.complete) <- 1:ncol(snps.rec.complete)
-        snps.rec <- snps.rec.complete
-      }
 
     } # end ML
 
