@@ -706,7 +706,6 @@ write.treeWAS <- function(x, filename="./treeWAS_results"){
 #' @importFrom Hmisc all.is.numeric
 #' @importFrom phangorn midpoint
 #' @importFrom scales rescale
-#' @importFrom pryr object_size
 #' @importFrom grDevices col2rgb dev.off heat.colors pdf rgb
 #' @importFrom graphics arrows axis barplot box hist image lines par plot.new points rect text title
 #' @importFrom stats anova as.formula chisq.test cor density dist ecdf fisher.test ftable glm lm mantelhaen.test
@@ -1523,7 +1522,7 @@ treeWAS <- function(snps,
 
       ## Check memory occuppied by snps:
       # require(pryr)
-      memreq <- as.numeric(object_size(snps))/1000000000 # bytes --> GB
+      memreq <- as.numeric(object.size(snps))/1000000000 # bytes --> GB
 
       ## Get n.snps.sim factor:
       fac <- n.snps.sim/ncol(snps)
@@ -1607,7 +1606,7 @@ treeWAS <- function(snps,
   # ## Check memory used in current R session (only):
   # mem_used()
   # ## Check memory occuppied by a given object:
-  # object_size(snps)
+  # object.size(snps)
   # memfree <- as.numeric(system("awk '/MemFree/ {print $2}' /proc/meminfo",  intern=TRUE))
   # memfree/1000000 # convert from KB to GB (??)
   ## CHECK UNITS OF memfree
