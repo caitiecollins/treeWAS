@@ -21,7 +21,6 @@ Imports: ade4,
         phangorn, 
         phytools, 
 		png,
-        pryr, 
 		rmarkdown,
         scales,
 		stats

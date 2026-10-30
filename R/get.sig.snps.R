@@ -40,7 +40,6 @@
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
 #' @export
-#' @importFrom pryr mem_used
 #'
 
 ########################################################################
@@ -320,7 +319,6 @@ get.assoc.scores <- function(snps,
 #' @author Caitlin Collins \email{caitiecollins@@gmail.com}
 #'
 #' @export
-#' @importFrom pryr mem_used
 #'
 
 
